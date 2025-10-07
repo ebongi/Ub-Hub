@@ -15,6 +15,7 @@ class ThemeProvider extends ChangeNotifier {
     
     brightness: Brightness.light,
     primarySwatch: Colors.blue,
+    primaryColor: Colors.blue,
     scaffoldBackgroundColor: const Color(0xFFF7F8FA),
     textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
     appBarTheme: AppBarTheme(
@@ -39,6 +40,7 @@ class ThemeProvider extends ChangeNotifier {
     
     brightness: Brightness.dark,
     primarySwatch: Colors.blue,
+    primaryColor: Colors.blue,
     scaffoldBackgroundColor: const Color(0xFF121212),
     textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(

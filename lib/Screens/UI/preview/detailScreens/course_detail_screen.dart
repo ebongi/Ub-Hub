@@ -28,7 +28,7 @@ class CourseDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Course ID: ${course.id}',
+                'Course ID: ${course.code}',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),

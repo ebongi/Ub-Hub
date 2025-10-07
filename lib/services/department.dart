@@ -5,6 +5,7 @@ class Department {
   final String name;
   final String schoolId;
   final String description;
+  final String? imageUrl;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -13,6 +14,7 @@ class Department {
     required this.name,
     required this.schoolId,
     required this.description,
+    this.imageUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -24,6 +26,7 @@ class Department {
       name: data?['name'] ?? '',
       schoolId: data?['schoolId'] ?? '',
       description: data?['description'] ?? '',
+      imageUrl: data?['imageUrl'],
       createdAt: (data?['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (data?['updatedAt'] as Timestamp?)?.toDate(),
     );
@@ -34,6 +37,7 @@ class Department {
       'name': name,
       'schoolId': schoolId,
       'description': description,
+      'imageUrl': imageUrl,
       if (id.isNotEmpty) 'id': id,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),

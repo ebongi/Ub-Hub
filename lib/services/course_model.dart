@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Course {
-  final String id;
+  final String code;
   final String name;
   final String departmentId;
   final String? semester;
@@ -9,7 +9,7 @@ class Course {
   final DateTime? updatedAt;
 
   Course({
-    required this.id,
+    required this.code,
     required this.name,
     required this.departmentId,
     this.semester,
@@ -20,8 +20,8 @@ class Course {
   factory Course.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data();
     return Course(
-      id: snapshot.id,
       name: data?['name'] ?? '',
+      code: data?['code'] ?? '',
       departmentId: data?['departmentId'] ?? '',
       semester: data?['semester'],
       createdAt: (data?['createdAt'] as Timestamp?)?.toDate(),
@@ -32,6 +32,7 @@ class Course {
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
+      'code': code,
       'departmentId': departmentId,
       if (semester != null) 'semester': semester,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),

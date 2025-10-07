@@ -65,7 +65,7 @@ class CourseListState extends State<CourseList> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    subtitle: Text(course.id, style: GoogleFonts.poppins()),
+                    subtitle: Text(course.code, style: GoogleFonts.poppins()),
                     onTap: () {
                       Navigator.push(
                         context,

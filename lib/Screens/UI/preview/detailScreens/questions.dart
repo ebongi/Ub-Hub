@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/Screens/Shared/constanst.dart';
 import 'package:html_unescape/html_unescape.dart';
 
@@ -27,6 +28,7 @@ class _QuestionsState extends State<Questions> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SafeArea(
       child: Scaffold(
         body: FutureBuilder<Map<String, dynamic>>(
@@ -59,7 +61,7 @@ class _QuestionsState extends State<Questions> {
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: ListTile(
-                    leading: CircleAvatar(child: Text('${index + 1}')),
+                    leading: CircleAvatar(child: Text('${index + 1}',style: GoogleFonts.poppins(),)),
                     title: Text(
                       _unescape.convert(question['question'] as String),
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -75,6 +77,7 @@ class _QuestionsState extends State<Questions> {
           },
         ),
         floatingActionButton: FloatingActionButton.extended(
+          backgroundColor: theme.primaryColor,
           onPressed: _loadQuestions,
           label: const Text("Reload"),
           icon: Icon(Icons.refresh, color: Colors.blue.shade900),

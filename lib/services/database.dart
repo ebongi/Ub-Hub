@@ -1,26 +1,45 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neo/services/course_model.dart' show Course;
 import 'package:neo/services/department.dart' show Department;
- 
- 
+import 'package:firebase_storage/firebase_storage.dart';
+
 
 class DatabaseService {
   final String? uid;
   DatabaseService({this.uid});
 
   // Collection references
-  final CollectionReference users =
-      FirebaseFirestore.instance.collection('Users');
-  final CollectionReference departmentCollection =
-      FirebaseFirestore.instance.collection('departments');
-  final CollectionReference courseCollection =
-      FirebaseFirestore.instance.collection('courses');
+  final CollectionReference users = FirebaseFirestore.instance.collection(
+    'Users',
+  );
+  final CollectionReference departmentCollection = FirebaseFirestore.instance
+      .collection('departments');
+  final CollectionReference courseCollection = FirebaseFirestore.instance
+      .collection('courses');
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  Future updateUserData({String? name, String? matricule}) async {
+
+  Future updateUserData({
+    String? name,
+    String? matricule,
+    String? degreeProgramm,
+    String? gender,
+    String? nationality,
+    String? email,
+    String? phonenumber,
+  }) async {
     if (uid == null) return;
-    return await users.doc(
-      uid,
-    ).set({'Name': name, 'Matricule': matricule});
+    return await users.doc(uid).set({
+      'Name': name,
+      'Matricule': matricule,
+      'Degree Program': degreeProgramm,
+      'Gender': gender,
+      'Nationality': nationality,
+      'Email': email,
+      'Phone Number': phonenumber,
+    });
   }
 
   Stream get userData {
@@ -36,7 +55,9 @@ class DatabaseService {
   // department list from snapshot
   List<Department> _departmentListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.docs.map((doc) {
-      return Department.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+      return Department.fromFirestore(
+        doc as DocumentSnapshot<Map<String, dynamic>>,
+      );
     }).toList();
   }
 
@@ -55,7 +76,9 @@ class DatabaseService {
   // course list from snapshot
   List<Course> _courseListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.docs.map((doc) {
-      return Course.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+      return Course.fromFirestore(
+        doc as DocumentSnapshot<Map<String, dynamic>>,
+      );
     }).toList();
   }
 
@@ -69,5 +92,15 @@ class DatabaseService {
     return await courseCollection.add(course.toFirestore());
   }
 
-  // You can add more methods here for reading, updating, and deleting data.
+  // Upload an image and get the URL
+  Future<String> uploadDepartmentImage(Uint8List imageData, String departmentName) async {
+    final ref = _storage
+        .ref()
+        .child('department_images')
+        .child('$departmentName-${DateTime.now().toIso8601String()}.jpg');
+    // Use putData which works for web and mobile
+    await ref.putData(imageData, SettableMetadata(contentType: 'image/jpeg'));
+    return await ref.getDownloadURL();
+  }
+  //  I'll be adding more methods to Delete, Upload, and Read courses here
 }

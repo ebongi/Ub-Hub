@@ -147,54 +147,50 @@ class _SigninState extends State<Signin> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    FloatingActionButton.extended(
-                      backgroundColor: Colors.lightBlue,
-                      onPressed: () async {
-                        if (_isLoading) return;
-
-                        if (_formkey.currentState?.validate() ?? false) {
-                          setState(() => _isLoading = true);
-                          try {
-                            // ignore: unused_local_variable
-                            dynamic result = await _authentication
-                                .signUserWithEmailAndPassword(
-                                  email: _emailcontroller.text.trim(),
-                                  password: _passwordcontroller.text.trim(),
-                                );
-
-                            // if (result != null) {
-                            //   // The AuthWrapper will see the new user and navigate to Home.
-                            //   // We just need to pop the registration screen.
-                            //   if (mounted) Navigator.of(context).pop();
-                            // }
-                          } catch (e) {
-                            // Show a user-friendly error message
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    " Error occured while signing in User: ${e.toString()}",
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: FloatingActionButton.extended(
+                        backgroundColor: Colors.lightBlue,
+                        onPressed: () async {
+                          if (_isLoading) return;
+                      
+                          if (_formkey.currentState?.validate() ?? false) {
+                            setState(() => _isLoading = true);
+                            try {
+                              // ignore: unused_local_variable
+                              dynamic result = await _authentication
+                                  .signUserWithEmailAndPassword(
+                                    email: _emailcontroller.text.trim(),
+                                    password: _passwordcontroller.text.trim(),
+                                  );
+                            } catch (e) {
+                              // Show a user-friendly error message
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      " Error occured while signing in User: ${e.toString()}",
+                                    ),
+                                    backgroundColor: Colors.red,
                                   ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } finally {
-                            // Ensure loading state is always turned off
-                            if (mounted) {
-                              setState(() => _isLoading = false);
+                                );
+                              }
+                            } finally {
+                              // Ensure loading state is always turned off
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                              }
                             }
                           }
-                        }
-                      },
-                      label: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          :  Text(
-                              "                            Sign In                            ",
-                              style:  theme.textTheme.bodyMedium!.copyWith(
-                                fontSize: 20
-                              )
-                            ),
+                        },
+                        label: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "Sign In",
+                                style: theme.textTheme.bodyMedium!.copyWith(fontSize: 20),
+                              ),
+                      ),
                     ),
                     SizedBox(height: 10),
 
