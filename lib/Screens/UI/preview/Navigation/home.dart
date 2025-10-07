@@ -30,7 +30,7 @@ class _HomeState extends State<Home> {
   ];
 
   void addDepartment() async {
-    XFile? _imageFile;
+    XFile? imageFile;
     final dbService = DatabaseService();
     showDialog(
       context: context,
@@ -41,12 +41,12 @@ class _HomeState extends State<Home> {
         final adddepartmentKey = GlobalKey<FormState>();
 
         return StatefulBuilder(builder: (context, setDialogState) {
-          Future<void> _pickImage() async {
+          Future<void> pickImage() async {
             final picker = ImagePicker();
             final pickedFile = await picker.pickImage(source: ImageSource.gallery);
             if (pickedFile != null) {
               setDialogState(() {
-                _imageFile = pickedFile;
+                imageFile = pickedFile;
               });
             }
           }
@@ -109,9 +109,9 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  _imageFile == null
+                  imageFile == null
                       ? OutlinedButton.icon(
-                          onPressed: _pickImage,
+                          onPressed: pickImage,
                           icon: const Icon(Icons.image),
                           label: const Text('Select Image'),
                         )
@@ -119,12 +119,12 @@ class _HomeState extends State<Home> {
                           children: [
                             // Use a FutureBuilder to display the image from bytes
                             FutureBuilder<List<int>>(
-                              future: _imageFile!.readAsBytes(),
+                              future: imageFile!.readAsBytes(),
                               builder: (context, snapshot) => snapshot.hasData
                                   ? Image.memory(snapshot.data as Uint8List, height: 100, fit: BoxFit.cover)
                                   : const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
                             ),
-                            TextButton(onPressed: _pickImage, child: const Text('Change Image'))
+                            TextButton(onPressed: pickImage, child: const Text('Change Image'))
                           ],
                         ),
                   const SizedBox(height: 10),
@@ -137,7 +137,7 @@ class _HomeState extends State<Home> {
                           if (!adddepartmentKey.currentState!.validate()) {
                             return;
                           }
-                          if (_imageFile == null) {
+                          if (imageFile == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Please select an image for the department.'),
@@ -147,10 +147,10 @@ class _HomeState extends State<Home> {
                             return;
                           }
 
-                          if (adddepartmentKey.currentState!.validate() && _imageFile != null) { // This check is a bit redundant now but safe
+                          if (adddepartmentKey.currentState!.validate() && imageFile != null) { // This check is a bit redundant now but safe
                             String? imageUrl;
                             try {
-                              final imageBytes = await _imageFile!.readAsBytes();
+                              final imageBytes = await imageFile!.readAsBytes();
                               imageUrl = await dbService.uploadDepartmentImage(imageBytes, departname.text);
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
