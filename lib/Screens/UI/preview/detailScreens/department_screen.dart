@@ -65,12 +65,14 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                   );
                   try {
                     await dbService.createCourse(newCourse);
+                    if (!context.mounted) return;
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Course "${newCourse.name}" added!')),
                     );
                   } catch (e) {
-                    Navigator.pop(context);
+                    if (!context.mounted) return;
+                    Navigator.pop(context); // It's generally safe to pop, but good practice to check.
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Failed to add course: $e')),
                     );

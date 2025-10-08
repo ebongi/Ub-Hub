@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:neo/services/course_material.dart';
 import 'package:neo/services/course_model.dart' show Course;
 import 'package:neo/services/department.dart' show Department;
 import 'package:firebase_storage/firebase_storage.dart';
-
 
 class DatabaseService {
   final String? uid;
@@ -17,28 +17,22 @@ class DatabaseService {
       .collection('departments');
   final CollectionReference courseCollection = FirebaseFirestore.instance
       .collection('courses');
+  final CollectionReference materialsCollection =
+      FirebaseFirestore.instance.collection('course_materials');
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-
-  Future updateUserData({
+  // Update user data in Firestore
+  Future<void> updateUserData({
     String? name,
     String? matricule,
-    String? degreeProgramm,
-    String? gender,
-    String? nationality,
-    String? email,
-    String? phonenumber,
+    String? phoneNumber,
   }) async {
     if (uid == null) return;
     return await users.doc(uid).set({
-      'Name': name,
-      'Matricule': matricule,
-      'Degree Program': degreeProgramm,
-      'Gender': gender,
-      'Nationality': nationality,
-      'Email': email,
-      'Phone Number': phonenumber,
-    });
+      if (name != null) 'name': name,
+      if (matricule != null) 'matricule': matricule,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
+    }, SetOptions(merge: true)); // Use merge to avoid overwriting other fields
   }
 
   Stream get userData {
@@ -92,7 +86,10 @@ class DatabaseService {
   }
 
   // Upload an image and get the URL
-  Future<String> uploadDepartmentImage(Uint8List imageData, String departmentName) async {
+  Future<String> uploadDepartmentImage(
+    Uint8List imageData,
+    String departmentName,
+  ) async {
     final ref = _storage
         .ref()
         .child('department_images')
@@ -101,5 +98,37 @@ class DatabaseService {
     await ref.putData(imageData, SettableMetadata(contentType: 'image/jpeg'));
     return await ref.getDownloadURL();
   }
+
+  // Upload a course material file and get the URL
+  Future<String> uploadCourseMaterialFile(
+    Uint8List fileData,
+    String courseId,
+    String fileName,
+  ) async {
+    final ref = _storage
+        .ref()
+        .child('course_materials')
+        .child(courseId)
+        .child(fileName);
+    await ref.putData(fileData);
+    return await ref.getDownloadURL();
+  }
+
+  // Create a new course material document
+  Future<void> addCourseMaterial(CourseMaterial material) async {
+    await materialsCollection.add(material.toFirestore());
+  }
+
+  // Get materials for a specific course
+  Stream<List<CourseMaterial>> getCourseMaterials(String courseId) {
+    return materialsCollection
+        .where('courseId', isEqualTo: courseId)
+        .orderBy('uploadedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CourseMaterial.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+            .toList());
+  }
+
   //  I'll be adding more methods to Delete, Upload, and Read courses here
 }

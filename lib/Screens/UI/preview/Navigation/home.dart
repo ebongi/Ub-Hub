@@ -137,21 +137,14 @@ class _HomeState extends State<Home> {
                           if (!adddepartmentKey.currentState!.validate()) {
                             return;
                           }
-                          if (imageFile == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please select an image for the department.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
 
-                          if (adddepartmentKey.currentState!.validate() && imageFile != null) { // This check is a bit redundant now but safe
+                          if (adddepartmentKey.currentState!.validate()) {
                             String? imageUrl;
                             try {
-                              final imageBytes = await imageFile!.readAsBytes();
-                              imageUrl = await dbService.uploadDepartmentImage(imageBytes, departname.text);
+                              if (imageFile != null) {
+                                final imageBytes = await imageFile!.readAsBytes();
+                                imageUrl = await dbService.uploadDepartmentImage(imageBytes, departname.text);
+                              }
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Image upload failed: $e')),
@@ -159,6 +152,7 @@ class _HomeState extends State<Home> {
                               return; // Stop if image upload fails
                             }
                             final newDepartment = Department(
+                              id: '', // Firestore will generate this
                               name: departname.text,
                               schoolId: schoolid.text,
                               description: description.text,
@@ -233,12 +227,8 @@ class _HomeState extends State<Home> {
     final theme = Theme.of(context);
     final user = Provider.of<User?>(context);
 
-    // Use a StreamProvider to fetch and provide the list of departments
-    return StreamProvider<List<Department>?>.value(
-      value: DatabaseService(uid: user?.uid ?? '').departments,
-      initialData: [],
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -253,15 +243,14 @@ class _HomeState extends State<Home> {
                   // DepartmentSection now consumes the stream provided above
                   Consumer<List<Department>?>(
                     builder: (context, departments, child) {
-                      if (departments == null || departments.isEmpty) {
-                        return const Center(
-                          child: Text("Error loading departments."),
-                        );
+                      if (departments == null) {
+                        return const Center(child: CircularProgressIndicator());
                       }
-                      // if (departments.isEmpty) {
-                      //   return const Center(child: CircularProgressIndicator());
-                      // }
-                      return DepartmentSection(departments: departments);
+                      if (departments.isEmpty) {
+                        return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text("No departments available yet.")));
+                      }
+                      final recentDepartments = departments.take(3).toList();
+                      return DepartmentSection(departments: recentDepartments);
                     },
                   ),
                   const ViewSection(title: "Requirements"),
@@ -279,7 +268,6 @@ class _HomeState extends State<Home> {
           },
           child: Icon(Icons.add, color: Colors.white),
         ),
-      ),
     );
   }
 }
@@ -544,7 +532,7 @@ class AppBarUser extends StatelessWidget {
               children: [
                 Consumer<UserModel>(
                   builder: (context, value, child) => Text(
-                    "Hello, ${value.name.isNotEmpty ? value.name.toUpperCase() : 'Mate'}",
+                    "Hello, ${value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,

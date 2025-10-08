@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:neo/Screens/UI/preview/Navigation/navigationbar.dart';
+ 
 import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:neo/Screens/UI/preview/Navigation/navigationbar.dart';
 import 'package:neo/Screens/authentication/authenticate.dart';
+ 
 import 'package:provider/provider.dart';
 
 class AuthWrapper extends StatefulWidget {

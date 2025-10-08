@@ -178,7 +178,7 @@ class _SigninState extends State<Signin> {
                               }
                             } finally {
                               // Ensure loading state is always turned off
-                              if (mounted) {
+                              if (mounted) { // Add this check
                                 setState(() => _isLoading = false);
                               }
                             }

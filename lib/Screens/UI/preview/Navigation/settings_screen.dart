@@ -22,6 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _loadVersionDetails();
   }
+
   Future<void> _loadVersionDetails() async {
     final appinfo = await PackageInfo.fromPlatform();
     setState(() {
@@ -43,7 +44,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Card(
             child: ListTile(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context)=> const Accountdetails())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Accountdetails()),
+              ),
               leading: const Icon(Icons.person),
               title: Text(
                 "Account",
@@ -135,7 +139,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Divider(),
-          SizedBox(height: 30,),
+          SizedBox(height: 30),
           Column(
             children: [
               Text(
@@ -143,10 +147,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: GoogleFonts.poppins().copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
-                   letterSpacing: 1.3
+                  letterSpacing: 1.3,
                 ),
               ),
-              Text("Version $_version+$buildnumber", style: GoogleFonts.poppins()),
+              Text(
+                "Version $_version+$buildnumber",
+                style: GoogleFonts.poppins(),
+              ),
             ],
           ),
         ],
