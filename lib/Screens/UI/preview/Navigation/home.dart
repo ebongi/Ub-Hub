@@ -3,8 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:neo/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dart' show showAddDepartmentDialog;
-// import 'package:neo/Screens/UI/dialogs/add_department_dialog.dart';
+import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dart'
+    show showAddDepartmentDialog;
+import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
+
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:neo/services/department.dart';
@@ -28,6 +30,7 @@ class _HomeState extends State<Home> {
     Requirement(name: "CST", imageUrl: "assets/images/cst.png"),
     Requirement(name: "Sports", imageUrl: "assets/images/sports.png"),
   ];
+  // int _notificationCount = ;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +117,7 @@ class RequirementSection extends StatelessWidget {
           return Container(
             // padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15), 
+              borderRadius: BorderRadius.circular(15),
               color: theme.scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
@@ -128,7 +131,7 @@ class RequirementSection extends StatelessWidget {
             ),
             child: GestureDetector(
               ///Implement code to navigate to the requirement scren
-              onTap: () => Navigator.push( 
+              onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
@@ -140,7 +143,7 @@ class RequirementSection extends StatelessWidget {
                 ),
               ),
               child: Column(
-                children: [ 
+                children: [
                   Hero(
                     tag: requirement.name,
                     child: Image.asset(requirement.imageUrl),
@@ -297,7 +300,7 @@ class IntroWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                  Text(
+                Text(
                   "Explore courses, resources, and collaborate with peers.", // This can be const
                   style: GoogleFonts.poppins(
                     fontSize: 14,
@@ -344,7 +347,7 @@ class AppBarUser extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Consumer<UserModel>(
-                  builder: (context, value, child) =>   Text(
+                  builder: (context, value, child) => Text(
                     "Hello, ${value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
                     style: GoogleFonts.poppins(
                       fontSize: 22,
@@ -353,7 +356,7 @@ class AppBarUser extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                  Text(
+                Text(
                   "What do you want to study today?",
                   style: GoogleFonts.poppins(
                     fontSize: 16,
@@ -364,13 +367,25 @@ class AppBarUser extends StatelessWidget {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(
-            Icons.notifications_none_outlined,
-            color: Colors.blue,
-            size: 32,
-          ),
+        Stack(
+          children: [
+            IconButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Notifications()),
+              ),
+              icon: Icon(Icons.notifications_outlined),
+            ),
+            Positioned(
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -61,6 +61,7 @@ Future<void> showAddCourseDialog(
                   name: courseNameController.text,
                   code: courseCodeController.text,
                   departmentId: departmentId,
+                  createdAt: DateTime.now(),
                 );
                 try {
                   await dbService.createCourse(newCourse);

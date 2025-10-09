@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/Screens/UI/preview/Settings/accountdetails.dart';
+import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 import 'package:neo/services/auth.dart' show Authentication;
 import 'package:neo/theme_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -57,7 +58,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Card(
             child: ListTile(
-              onTap: () async {},
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Notifications()),
+              ),
               leading: const Icon(Icons.notifications),
               title: Text(
                 "Notifications",

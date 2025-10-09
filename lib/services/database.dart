@@ -54,8 +54,8 @@ class DatabaseService {
     }).toList();
   }
 
-  Stream get courseData {
-    return courseCollection.snapshots();
+  Stream<List<Object?>> get courseData {
+    return courseCollection.snapshots().map(_courseListFromSnapshot);
   }
 
   // Get courses for a specific department
