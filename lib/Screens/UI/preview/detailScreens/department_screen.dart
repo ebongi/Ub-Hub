@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neo/Screens/UI/preview/ComputerCourses/add_course_dialog.dart' show showAddCourseDialog;
 import 'package:neo/Screens/UI/preview/ComputerCourses/course_view.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/questions.dart';
 import 'package:neo/services/course_model.dart';
 import 'package:neo/services/database.dart';
+ 
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -20,81 +21,25 @@ class DepartmentScreen extends StatefulWidget {
 }
 
 class _DepartmentScreenState extends State<DepartmentScreen> {
-  void _addCourse() {
-    final dbService = DatabaseService();
-    final courseNameController = TextEditingController();
-    final courseCodeController = TextEditingController();
-    final addCourseKey = GlobalKey<FormState>();
+  late final DatabaseService _dbService;
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Add Course", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-          content: Form(
-            key: addCourseKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: courseNameController,
-                  decoration: const InputDecoration(labelText: "Course Name"),
-                  validator: (value) => value == null || value.isEmpty ? 'Please enter a course name' : null,
-                ),
-                TextFormField(
-                  controller: courseCodeController,
-                  decoration: const InputDecoration(labelText: "Course Code"),
-                  validator: (value) => value == null || value.isEmpty ? 'Please enter a course code' : null,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (addCourseKey.currentState!.validate()) {
-                  final newCourse = Course(
-                     
-                    name: courseNameController.text,
-                    code: courseCodeController.text,
-                    departmentId: widget.departmentId,
-                  );
-                  try {
-                    await dbService.createCourse(newCourse);
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Course "${newCourse.name}" added!')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    Navigator.pop(context); // It's generally safe to pop, but good practice to check.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to add course: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text("Add"),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    _dbService = DatabaseService();
   }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       animationDuration: const Duration(milliseconds: 400),
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop(),),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           scrolledUnderElevation: 10,
           title: Text(
             widget.departmentName,
@@ -104,7 +49,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
             ),
           ),
           bottom: TabBar(
-            labelStyle: GoogleFonts.poppins(
+            labelStyle: GoogleFonts.poppins( // Consider moving this to your theme data
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -114,16 +59,16 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
             indicatorSize: TabBarIndicatorSize.label,
             isScrollable: false,
             tabs: const [
+              Tab(text: "About"),
               Tab(text: "Courses"),
-              Tab(text: "Tutorials"),
-              Tab(text: "Questions"),
             ],
           ),
         ),
         body: TabBarView(
           children: [
+            const Center(child: Text("Department Details goes here")),
             StreamBuilder<List<Course>>(
-              stream: DatabaseService().getCoursesForDepartment(widget.departmentId),
+              stream: _dbService.getCoursesForDepartment(widget.departmentId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -136,19 +81,24 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                          Text("No course Found!",style: GoogleFonts.poppins().copyWith(
+                        Text(
+                          "No course Found!",
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.red
-                          ),),
-                        const SizedBox(height: 10,),
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         ElevatedButton.icon(
-                           
                           onPressed: _addCourse,
-                          label:   Text("Add Course",style: GoogleFonts.poppins().copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue
-                          ),),
-                          icon: Icon(Icons.add,color: Colors.blue,),
+                          label: const Text(
+                            "Add Course",
+                            // style: GoogleFonts.poppins().copyWith(
+                            //   fontWeight: FontWeight.bold,
+                            //   color: Colors.blue,
+                            // ),
+                          ),
+                          icon: const Icon(Icons.add, color: Colors.blue),
                         ),
                       ],
                     ),
@@ -156,14 +106,16 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                 }
 
                 final courses = snapshot.data!;
-                return CourseList(courses: courses);
+                return CourseList(courses: courses, addcourse: _addCourse);
               },
             ),
-            const Center(child: Text("Tab 2")),
-            const Questions(),
           ],
         ),
       ),
     );
+  }
+
+  void _addCourse() {
+    showAddCourseDialog(context, widget.departmentId);
   }
 }

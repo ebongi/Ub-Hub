@@ -22,6 +22,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    
     FilePickerResult? result;
 
     await showDialog(
@@ -29,8 +30,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final theme = Theme.of(context);
             return AlertDialog(
               title: const Text("Add New Material"),
+              backgroundColor: theme.scaffoldBackgroundColor == const Color(0xFF121212)
+                  ? const Color(0xFF121212)
+                  : const Color(0xFFF7F8FA),
               content: Form(
                 key: formKey,
                 child: SingleChildScrollView(
@@ -42,6 +47,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         decoration: const InputDecoration(labelText: "Title"),
                         validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
                       ),
+                      SizedBox(height: 10,),
                       TextFormField(
                         controller: descriptionController,
                         decoration: const InputDecoration(labelText: "Description (Optional)"),

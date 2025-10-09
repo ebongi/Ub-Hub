@@ -4,8 +4,9 @@ import 'package:neo/Screens/UI/preview/detailScreens/course_detail_screen.dart';
 import 'package:neo/services/course_model.dart';
 
 class CourseList extends StatefulWidget {
-  const CourseList({super.key, required this.courses});
+  const CourseList({super.key, required this.courses, required this.addcourse});
   final List<Course> courses;
+  final VoidCallback addcourse;
   @override
   CourseListState createState() => CourseListState();
 }
@@ -37,9 +38,9 @@ class CourseListState extends State<CourseList> {
         children: [
           Padding(
             padding: const EdgeInsets.all(10),
-            child: TextField(
+            child: TextField( 
               onChanged: updateSearch,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Search Courses...',
                 prefixIcon: Icon(Icons.search),
               ),
@@ -47,7 +48,7 @@ class CourseListState extends State<CourseList> {
           ),
           Expanded(
             child: ListView.builder(
-              physics: BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               itemCount: filteredCourses.length,
               itemBuilder: (context, index) {
                 final course = filteredCourses[index];
@@ -81,9 +82,11 @@ class CourseListState extends State<CourseList> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: Icon(Icons.add, color: Colors.white),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.lightBlue,
+        onPressed: widget.addcourse,
+        label: const Text("Add Course "),
+        icon: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

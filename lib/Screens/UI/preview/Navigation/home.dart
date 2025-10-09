@@ -1,12 +1,12 @@
-import 'dart:typed_data' show Uint8List;
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:neo/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dart' show showAddDepartmentDialog;
+// import 'package:neo/Screens/UI/dialogs/add_department_dialog.dart';
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:neo/services/database.dart';
 import 'package:neo/services/department.dart';
 import 'package:neo/Screens/UI/preview/Requirements/requirement_detail_screen.dart';
 
@@ -29,245 +29,56 @@ class _HomeState extends State<Home> {
     Requirement(name: "Sports", imageUrl: "assets/images/sports.png"),
   ];
 
-  void addDepartment() async {
-    XFile? imageFile;
-    final dbService = DatabaseService();
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final departname = TextEditingController();
-        final schoolid = TextEditingController();
-        final description = TextEditingController();
-        final adddepartmentKey = GlobalKey<FormState>();
-
-        return StatefulBuilder(builder: (context, setDialogState) {
-          Future<void> pickImage() async {
-            final picker = ImagePicker();
-            final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-            if (pickedFile != null) {
-              setDialogState(() {
-                imageFile = pickedFile;
-              });
-            }
-          }
-
-          return AlertDialog(
-          backgroundColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
-          contentTextStyle: GoogleFonts.poppins(),
-          title: Center(
-            child: Text(
-              "Add Department",
-              style: GoogleFonts.poppins().copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ),
-
-          content: Form(
-            key: adddepartmentKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 5,
-                children: [
-                  TextFormField(
-                    controller: departname,
-                    autofocus: true,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Department name cannot be empty'
-                        : null,
-                    decoration: InputDecoration(
-                      hintText: "Deparment name",
-                      icon: Icon(Icons.person),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: schoolid,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'School ID cannot be empty'
-                        : null,
-                    decoration: InputDecoration(
-                      hintText: "School ID",
-                      icon: Icon(Icons.school),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    maxLength: 250,
-                    maxLines: 8,
-                    expands: false,
-                    controller: description,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Description cannot be empty'
-                        : null,
-                    decoration: InputDecoration(
-                      hintText: "Enter the description of your department here",
-                      icon: Icon(Icons.description),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  imageFile == null
-                      ? OutlinedButton.icon(
-                          onPressed: pickImage,
-                          icon: const Icon(Icons.image),
-                          label: const Text('Select Image'),
-                        )
-                      : Column(
-                          children: [
-                            // Use a FutureBuilder to display the image from bytes
-                            FutureBuilder<List<int>>(
-                              future: imageFile!.readAsBytes(),
-                              builder: (context, snapshot) => snapshot.hasData
-                                  ? Image.memory(snapshot.data as Uint8List, height: 100, fit: BoxFit.cover)
-                                  : const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                            ),
-                            TextButton(onPressed: pickImage, child: const Text('Change Image'))
-                          ],
-                        ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          if (!adddepartmentKey.currentState!.validate()) {
-                            return;
-                          }
-
-                          if (adddepartmentKey.currentState!.validate()) {
-                            String? imageUrl;
-                            try {
-                              if (imageFile != null) {
-                                final imageBytes = await imageFile!.readAsBytes();
-                                imageUrl = await dbService.uploadDepartmentImage(imageBytes, departname.text);
-                              }
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Image upload failed: $e')),
-                              );
-                              return; // Stop if image upload fails
-                            }
-                            final newDepartment = Department(
-                              id: '', // Firestore will generate this
-                              name: departname.text,
-                              schoolId: schoolid.text,
-                              description: description.text,
-                              imageUrl: imageUrl,
-                              createdAt: DateTime.now(),
-                            );
-                            try {
-                              final docRef = await dbService.createDepartment(newDepartment);
-                              Navigator.pop(dialogContext); // Use dialogContext to pop the dialog
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Department "${departname.text}" added successfully!',
-                                  ),
-                                ),
-                              );
-                              // Navigate to the new department's screen
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DepartmentScreen(
-                                    departmentName: newDepartment.name,
-                                    departmentId: docRef.id,
-                                  ),
-                                ),
-                              );
-                            } catch (e) {
-                              Navigator.pop(dialogContext); // Use dialogContext
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to add department: $e'),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        child: Text(
-                          "Add",
-                          style: GoogleFonts.poppins().copyWith(
-                            fontSize: 18,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                        },
-                        child: Text(
-                          "Cancel",
-                          style: GoogleFonts.poppins().copyWith(
-                            fontSize: 18,
-                            color: Colors.red,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),);
-        });
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // ignore: unused_local_variable
     final user = Provider.of<User?>(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppBarUser(),
-                  const SizedBox(height: 20),
-                  IntroWidget(),
-                  const ViewSection(title: "Departments"),
-                  // DepartmentSection now consumes the stream provided above
-                  Consumer<List<Department>?>(
-                    builder: (context, departments, child) {
-                      if (departments == null) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (departments.isEmpty) {
-                        return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text("No departments available yet.")));
-                      }
-                      final recentDepartments = departments.take(3).toList();
-                      return DepartmentSection(departments: recentDepartments);
-                    },
-                  ),
-                  const ViewSection(title: "Requirements"),
-                  RequirementSection(requirements: requirements),
-                ],
-              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppBarUser(),
+                const SizedBox(height: 20), // Can be const
+                IntroWidget(),
+                const ViewSection(title: "Departments"),
+                // DepartmentSection now consumes the stream provided above
+                Consumer<List<Department>?>(
+                  builder: (context, departments, child) {
+                    if (departments == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (departments.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text("No departments available yet."),
+                        ),
+                      );
+                    }
+                    final recentDepartments = departments.take(3).toList();
+                    return DepartmentSection(departments: recentDepartments);
+                  },
+                ),
+                const ViewSection(title: "Requirements"),
+                RequirementSection(requirements: requirements),
+              ],
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          tooltip: "Add Department",
-          backgroundColor: Colors.blue,
-          onPressed: () async {
-            addDepartment();
-          },
-          child: Icon(Icons.add, color: Colors.white),
-        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: "Add Department",
+        backgroundColor: Colors.blue,
+        onPressed: () => showAddDepartmentDialog(context),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
@@ -303,7 +114,7 @@ class RequirementSection extends StatelessWidget {
           return Container(
             // padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(15), 
               color: theme.scaffoldBackgroundColor,
               boxShadow: [
                 BoxShadow(
@@ -317,7 +128,7 @@ class RequirementSection extends StatelessWidget {
             ),
             child: GestureDetector(
               ///Implement code to navigate to the requirement scren
-              onTap: () => Navigator.push(
+              onTap: () => Navigator.push( 
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
@@ -329,7 +140,7 @@ class RequirementSection extends StatelessWidget {
                 ),
               ),
               child: Column(
-                children: [
+                children: [ 
                   Hero(
                     tag: requirement.name,
                     child: Image.asset(requirement.imageUrl),
@@ -411,12 +222,15 @@ class DepartmentSection extends StatelessWidget {
               child: Stack(
                 children: [
                   Container(
-            decoration: BoxDecoration( // Use NetworkImage if imageUrl is present
+                    decoration: BoxDecoration(
+                      // Use NetworkImage if imageUrl is present
                       borderRadius: BorderRadius.circular(20),
                       image: DecorationImage(
-                image: (department.imageUrl != null && department.imageUrl!.isNotEmpty)
-                    ? NetworkImage(department.imageUrl!)
-                    : AssetImage(uiData.imageUrl) as ImageProvider,
+                        image:
+                            (department.imageUrl != null &&
+                                department.imageUrl!.isNotEmpty)
+                            ? NetworkImage(department.imageUrl!)
+                            : AssetImage(uiData.imageUrl) as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -458,7 +272,7 @@ class DepartmentSection extends StatelessWidget {
 }
 
 class IntroWidget extends StatelessWidget {
-  const IntroWidget({super.key});
+  const IntroWidget({super.key}); // Can be const
 
   @override
   Widget build(BuildContext context) {
@@ -483,8 +297,8 @@ class IntroWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  "Explore courses, resources, and collaborate with peers.",
+                  Text(
+                  "Explore courses, resources, and collaborate with peers.", // This can be const
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.8),
@@ -525,13 +339,12 @@ class AppBarUser extends StatelessWidget {
       children: [
         Row(
           children: [
-            
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Consumer<UserModel>(
-                  builder: (context, value, child) => Text(
+                  builder: (context, value, child) =>   Text(
                     "Hello, ${value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
                     style: GoogleFonts.poppins(
                       fontSize: 22,
@@ -540,7 +353,7 @@ class AppBarUser extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                  Text(
                   "What do you want to study today?",
                   style: GoogleFonts.poppins(
                     fontSize: 16,
