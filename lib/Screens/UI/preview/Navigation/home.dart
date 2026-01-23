@@ -6,8 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dart'
     show showAddDepartmentDialog;
 import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
+import 'package:neo/Screens/UI/preview/detailScreens/all_departments_screen.dart';
 
-import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:neo/services/department.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/gpa_calculator_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/task_manager_screen.dart';
@@ -88,45 +88,258 @@ class _HomeState extends State<Home> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AppBarUser(),
-                const SizedBox(height: 20), // Can be const
-                IntroWidget(),
-                const ViewSection(title: "Departments"),
-                // DepartmentSection now consumes the stream provided above
-                Consumer<List<Department>?>(
-                  builder: (context, departments, child) {
-                    if (departments == null) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (departments.isEmpty) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Text("No departments available yet."),
-                        ),
-                      );
-                    }
-                    final recentDepartments = departments.take(3).toList();
-                    return DepartmentSection(departments: recentDepartments);
-                  },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const DashboardHeader(),
+              const SizedBox(height: 20),
+
+              // Main Action Grid
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.3,
+                  children: [
+                    _buildDashboardCard(
+                      context,
+                      title: "Academic Structure",
+                      icon: Icons.account_balance_rounded,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AllDepartmentsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: "Course Registration",
+                      icon: Icons.app_registration_rounded,
+                      onTap: () {
+                        // TODO: Link to Course Registration
+                      },
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: "Form B",
+                      icon: Icons.description_outlined,
+                      onTap: () {
+                        // TODO: Link to Form B
+                      },
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: "Pay Fees",
+                      icon: Icons.payments_outlined,
+                      onTap: () {
+                        // TODO: Link to Pay Fees
+                      },
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: "CA Results",
+                      icon: Icons.assignment_outlined,
+                      onTap: () {
+                        // TODO: Link to CA Results
+                      },
+                    ),
+                    _buildDashboardCard(
+                      context,
+                      title: "Final Results",
+                      icon: Icons.grade_outlined,
+                      onTap: () {
+                        // TODO: Link to Final Results
+                      },
+                    ),
+                  ],
                 ),
-                const ViewSection(title: "Toolbox"),
-                ToolboxSection(items: toolboxItems),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 24),
+              const ViewSection(title: "Student Toolbox"),
+              ToolboxSection(items: toolboxItems),
+              const SizedBox(height: 100), // Bottom padding for FAB/Nav
+            ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: "Add Department",
+        tooltip: "Quick Action",
         backgroundColor: theme.colorScheme.primary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => showAddDepartmentDialog(context),
-        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+        child: Icon(
+          Icons.add_rounded,
+          color: theme.colorScheme.onPrimary,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40, color: const Color(0xFF1E88E5)),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DashboardHeader extends StatelessWidget {
+  const DashboardHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 32),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1E88E5), // Primary Blue
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Go-Student",
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      "University of Buea",
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Notifications()),
+                  ); // Keep notifications
+                },
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Consumer<UserModel>(
+            builder: (context, user, _) {
+              return Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundImage: const AssetImage(
+                      'assets/images/student_profile.png',
+                    ), // Placeholder or network image if avail
+                    child: user.name == null
+                        ? const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 30,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.name?.toUpperCase() ?? "STUDENT NAME",
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "SC23A569 • B.Sc Computer Science", // Placeholder or fetch from user model if available
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                        Text(
+                          "2025/2026 • First Semester",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -139,19 +352,20 @@ class ToolboxSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 380,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
+        shrinkWrap: true, // Important for nesting in SingleChildScrollView
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 10,
-          mainAxisExtent: 150,
-          mainAxisSpacing: 10,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.9,
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
           final tool = items[index];
-          final theme = Theme.of(context);
           return GestureDetector(
             onTap: () => Navigator.push(
               context,
@@ -159,13 +373,13 @@ class ToolboxSection extends StatelessWidget {
             ),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: theme.cardTheme.color,
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade100),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -174,27 +388,25 @@ class ToolboxSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9), // Light slate bg
                       shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withOpacity(0.1),
                     ),
-                    child: Hero(
-                      tag: tool.name,
-                      child: Icon(
-                        tool.icon,
-                        size: 40,
-                        color: theme.colorScheme.primary,
-                      ),
+                    child: Icon(
+                      tool.icon,
+                      size: 24,
+                      color: const Color(0xFF1E88E5),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Text(
                     tool.name,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF475569),
                     ),
                   ),
                 ],
@@ -202,191 +414,6 @@ class ToolboxSection extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-// Helper to map department names to UI properties
-class DepartmentUIData {
-  final IconData icon;
-  final Color color;
-
-  DepartmentUIData({required this.icon, required this.color});
-
-  static DepartmentUIData fromDepartmentName(String name) {
-    switch (name.toLowerCase()) {
-      case 'computer science':
-        return DepartmentUIData(
-          icon: Icons.computer_rounded,
-          color: Colors.blue.shade800,
-        );
-      case 'mathematics':
-        return DepartmentUIData(
-          icon: Icons.functions_rounded,
-          color: Colors.green.shade800,
-        );
-      case 'physics':
-        return DepartmentUIData(
-          icon: Icons.science_rounded,
-          color: Colors.purple.shade800,
-        );
-      default:
-        return DepartmentUIData(
-          icon: Icons.account_balance_rounded,
-          color: Colors.grey.shade800,
-        );
-    }
-  }
-}
-
-class DepartmentSection extends StatelessWidget {
-  const DepartmentSection({super.key, required this.departments});
-
-  final List<Department> departments;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 240,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: departments.length,
-        itemBuilder: (context, index) {
-          final department = departments[index];
-          final uiData = DepartmentUIData.fromDepartmentName(department.name);
-          return GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DepartmentScreen(
-                  departmentName: department.name,
-                  departmentId: department.id,
-                ),
-              ),
-            ),
-            child: Container(
-              width: 200,
-              margin: const EdgeInsets.only(right: 16),
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      color: uiData.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child:
-                        (department.imageUrl != null &&
-                            department.imageUrl!.isNotEmpty)
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.network(
-                              department.imageUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Icon(
-                            uiData.icon,
-                            size: 60,
-                            color: uiData.color.withOpacity(0.5),
-                          ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withOpacity(0.8),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                    child: Text(
-                      department.name,
-                      style: GoogleFonts.outfit(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class IntroWidget extends StatelessWidget {
-  const IntroWidget({super.key}); // Can be const
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "What will you learn today?",
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Explore courses, resources, and collaborate with peers.",
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.rocket_launch_rounded,
-            size: 80,
-            color: Colors.white.withOpacity(0.2),
-          ),
-        ],
       ),
     );
   }
@@ -399,95 +426,28 @@ class ViewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Text(
         title,
-        style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+        style: GoogleFonts.outfit(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFF0F172A),
+        ),
       ),
     );
   }
 }
 
-class AppBarUser extends StatelessWidget {
-  const AppBarUser({super.key});
+// Keeping DepartmentSection if needed for other screens, but removing it from Home body as requested by "Redesign Main Navigation & Dashboard" to match reference.
+// The reference doesn't show the horizontal list.
+// I'll keep the class definition in case it is used elsewhere or required later, but the Home body doesn't use it anymore.
 
+class DepartmentSection extends StatelessWidget {
+  const DepartmentSection({super.key, required this.departments});
+  final List<Department> departments;
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              width: 2,
-            ),
-          ),
-          child: CircleAvatar(
-            radius: 25,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.primary.withOpacity(0.1),
-            child: Icon(
-              Icons.person_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              size: 30,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Consumer<UserModel>(
-                builder: (context, value, child) => Text(
-                  "Hello, ${value.name != null && value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
-                  style: GoogleFonts.outfit(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                "What do you want to study today?",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const Notifications()),
-              ),
-              icon: const Icon(Icons.notifications_outlined),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    return Container(); // Placeholder or original implementation if needed
   }
 }

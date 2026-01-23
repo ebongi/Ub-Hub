@@ -7,6 +7,8 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/department.dart';
 import 'package:provider/provider.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
 
@@ -33,7 +35,6 @@ class _NavBarState extends State<NavBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return StreamProvider<List<Department>?>.value(
       value: DatabaseService().departments,
@@ -42,52 +43,46 @@ class _NavBarState extends State<NavBar> {
         body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(0.05)),
-            ),
+            color: Colors.white,
             boxShadow: [
               BoxShadow(
                 blurRadius: 20,
-                color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+                color: Colors.black.withOpacity(0.04),
+                offset: const Offset(0, -4),
               ),
             ],
           ),
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: 15.0,
+                horizontal: 16.0,
                 vertical: 8,
               ),
               child: GNav(
-                rippleColor: isDarkMode
-                    ? Colors.white10
-                    : Colors.black.withOpacity(0.05),
-                hoverColor: isDarkMode
-                    ? Colors.white10
-                    : Colors.black.withOpacity(0.05),
+                rippleColor: theme.colorScheme.primary.withOpacity(0.1),
+                hoverColor: theme.colorScheme.primary.withOpacity(0.1),
                 gap: 8,
-                activeColor: isDarkMode
-                    ? Colors.cyanAccent
-                    : theme.colorScheme.primary,
+                activeColor: theme.colorScheme.primary,
                 iconSize: 24,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 12,
                 ),
                 duration: const Duration(milliseconds: 400),
-                tabBackgroundColor: isDarkMode
-                    ? Colors.cyanAccent.withOpacity(0.1)
-                    : theme.colorScheme.primary.withOpacity(0.1),
-                color: isDarkMode ? Colors.white38 : Colors.grey[600],
+                tabBackgroundColor: theme.colorScheme.primary.withOpacity(0.08),
+                color: const Color(0xFF64748B), // Slate 500 for inactive
                 tabs: const [
-                  GButton(icon: Icons.home_rounded, text: 'Home'),
-                  GButton(icon: Icons.grid_view_rounded, text: 'Depts'),
+                  GButton(icon: Icons.grid_view_rounded, text: 'Dashboard'),
+                  GButton(icon: Icons.school_rounded, text: 'Academics'),
                   GButton(icon: Icons.person_rounded, text: 'Profile'),
                   GButton(icon: Icons.settings_rounded, text: 'Settings'),
                 ],
                 selectedIndex: _selectedIndex,
                 onTabChange: _onItemTapped,
+                textStyle: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
           ),

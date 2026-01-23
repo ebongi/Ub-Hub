@@ -23,7 +23,6 @@ class _SigninState extends State<Signin> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -88,9 +87,7 @@ class _SigninState extends State<Signin> {
                         view_password
                             ? Icons.visibility_rounded
                             : Icons.visibility_off_rounded,
-                        color: isDarkMode
-                            ? Colors.cyanAccent
-                            : theme.colorScheme.primary,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     validator: (password) =>
@@ -117,7 +114,7 @@ class _SigninState extends State<Signin> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(e.message),
-                                backgroundColor: Colors.redAccent,
+                                backgroundColor: theme.colorScheme.error,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -132,7 +129,7 @@ class _SigninState extends State<Signin> {
                                 content: const Text(
                                   "An unexpected error occurred",
                                 ),
-                                backgroundColor: Colors.redAccent,
+                                backgroundColor: theme.colorScheme.error,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -157,9 +154,8 @@ class _SigninState extends State<Signin> {
                         Text(
                           "Don't have an account?",
                           style: GoogleFonts.outfit(
-                            color: isDarkMode
-                                ? Colors.white70
-                                : Colors.grey[600],
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withOpacity(0.7),
                             fontSize: 15,
                           ),
                         ),
@@ -168,9 +164,7 @@ class _SigninState extends State<Signin> {
                           child: Text(
                             "Sign Up",
                             style: GoogleFonts.outfit(
-                              color: isDarkMode
-                                  ? Colors.cyanAccent
-                                  : theme.colorScheme.primary,
+                              color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),

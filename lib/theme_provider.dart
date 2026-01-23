@@ -15,27 +15,35 @@ class ThemeProvider extends ChangeNotifier {
     useMaterial3: true,
     brightness: Brightness.light,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color.fromARGB(255, 22, 38, 75),
-      primary: const Color(0xFF0F172A),
-      surface: const Color(0xFFF8FAFC),
+      seedColor: const Color(0xFF1E88E5), // Professional Blue
+      primary: const Color(0xFF1E88E5),
+      secondary: const Color(0xFF42A5F5),
+      surface: Colors.white,
+      background: const Color(0xFFF8FAFC), // Light Slate
+      error: const Color(0xFFEF4444),
     ),
     scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-    textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme).apply(
+      bodyColor: const Color(0xFF1E293B), // Slate 800
+      displayColor: const Color(0xFF0F172A), // Slate 900
+    ),
     appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFFF8FAFC),
-      centerTitle: false,
+      backgroundColor: const Color(0xFF1E88E5),
+      centerTitle: true,
       elevation: 0,
       titleTextStyle: GoogleFonts.outfit(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF0F172A),
+        color: Colors.white,
       ),
-      iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+      iconTheme: const IconThemeData(color: Colors.white),
+      actionsIconTheme: const IconThemeData(color: Colors.white),
     ),
     cardTheme: CardThemeData(
       elevation: 2,
       color: Colors.white,
-      shadowColor: Colors.black.withOpacity(0.05),
+      shadowColor: Colors.black.withOpacity(0.06),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -43,11 +51,30 @@ class ThemeProvider extends ChangeNotifier {
       fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 2),
+      ),
+      labelStyle: const TextStyle(color: Color(0xFF64748B)),
+      prefixIconColor: const Color(0xFF64748B),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1E88E5),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        textStyle: GoogleFonts.outfit(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     ),
   );
@@ -56,18 +83,18 @@ class ThemeProvider extends ChangeNotifier {
     useMaterial3: true,
     brightness: Brightness.dark,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueGrey,
+      seedColor: const Color(0xFF1E88E5),
       brightness: Brightness.dark,
-      primary: Colors.blueGrey,
-      surface: const Color(0xFF1E293B),
-      background: const Color(0xFF0F172A),
+      primary: const Color(0xFF1E88E5),
+      surface: const Color(0xFF1E293B), // Slate 800
+      background: const Color(0xFF0F172A), // Slate 900
     ),
     scaffoldBackgroundColor: const Color(0xFF0F172A),
     textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
       backgroundColor: const Color(0xFF0F172A),
       elevation: 0,
-      centerTitle: false,
+      centerTitle: true,
       titleTextStyle: GoogleFonts.outfit(
         fontSize: 20,
         fontWeight: FontWeight.w600,
@@ -78,6 +105,7 @@ class ThemeProvider extends ChangeNotifier {
     cardTheme: CardThemeData(
       color: const Color(0xFF1E293B),
       elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.white.withOpacity(0.05)),
@@ -88,12 +116,28 @@ class ThemeProvider extends ChangeNotifier {
       fillColor: const Color(0xFF1E293B),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
       ),
-      hintStyle: const TextStyle(color: Colors.white38),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 2),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1E88E5),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      ),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF1E293B),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
   );

@@ -27,7 +27,6 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
   await showDialog(
     context: context,
     builder: (dialogContext) {
-      final theme = Theme.of(dialogContext);
       return StatefulBuilder(
         builder: (context, setDialogState) {
           Future<void> pickImage() async {
@@ -44,21 +43,32 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
           }
 
           return AlertDialog(
-            backgroundColor:
-                theme.scaffoldBackgroundColor == const Color(0xFF121212)
-                ? const Color(0xFF121212)
-                : const Color(0xFFF7F8FA),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 30,
-              vertical: 5,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            contentTextStyle: GoogleFonts.outfit(),
-            title: Center(
-              child: Text(
-                "Add Department",
-                style: GoogleFonts.outfit().copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+            titlePadding: EdgeInsets.zero,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 20,
+            ),
+            title: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1E88E5), // Primary Blue
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  "Add Department",
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -75,40 +85,90 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                       validator: (value) => value == null || value.isEmpty
                           ? 'Department name cannot be empty'
                           : null,
-                      decoration: const InputDecoration(
-                        hintText: "Deparment name",
-                        icon: Icon(Icons.person),
+                      style: GoogleFonts.outfit(),
+                      decoration: InputDecoration(
+                        labelText: "Department Name",
+                        prefixIcon: const Icon(
+                          Icons.business_rounded,
+                          color: Color(0xFF64748B),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1E88E5),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: schoolid,
                       enabled: !isLoading,
                       validator: (value) => value == null || value.isEmpty
                           ? 'School ID cannot be empty'
                           : null,
-                      decoration: const InputDecoration(
-                        hintText: "School ID",
-                        icon: Icon(Icons.school),
+                      style: GoogleFonts.outfit(),
+                      decoration: InputDecoration(
+                        labelText: "School ID",
+                        prefixIcon: const Icon(
+                          Icons.school_rounded,
+                          color: Color(0xFF64748B),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1E88E5),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     TextFormField(
                       maxLength: 250,
-                      maxLines: 2,
-                      expands: false,
+                      maxLines: 3,
                       enabled: !isLoading,
                       controller: description,
                       validator: (value) => value == null || value.isEmpty
                           ? 'Description cannot be empty'
                           : null,
-                      decoration: const InputDecoration(
-                        hintText:
-                            "Enter the description of your department here",
-                        icon: Icon(Icons.description),
+                      style: GoogleFonts.outfit(),
+                      decoration: InputDecoration(
+                        labelText: "Description",
+                        prefixIcon: const Icon(
+                          Icons.description_rounded,
+                          color: Color(0xFF64748B),
+                        ),
+                        hintText: "Enter a brief description",
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF1E88E5),
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
                     imageFile == null
                         ? OutlinedButton.icon(
                             onPressed: isLoading ? null : pickImage,
