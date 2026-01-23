@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neo/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
 import 'package:neo/services/course_material.dart';
 import 'package:neo/services/course_model.dart';
 import 'package:neo/services/database.dart';
@@ -18,223 +19,200 @@ class CourseDetailScreen extends StatefulWidget {
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final DatabaseService _dbService = DatabaseService();
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.course.name,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _addMaterial(),
+          ),
+        ],
+      ),
+      body: StreamBuilder<List<CourseMaterial>>(
+        stream: _dbService.getCourseMaterials(widget.course.id),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No materials for this course yet.",
+                    style: GoogleFonts.outfit(color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final materials = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: materials.length,
+            itemBuilder: (context, index) =>
+                _buildMaterialTile(materials[index]),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMaterialTile(CourseMaterial material) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Icon(
+          material.fileType == 'pdf'
+              ? Icons.picture_as_pdf
+              : Icons.insert_drive_file,
+          color: Colors.blue,
+        ),
+        title: Text(
+          material.title,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        ),
+        subtitle: material.description != null
+            ? Text(
+                material.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(fontSize: 12),
+              )
+            : null,
+        trailing: const Icon(Icons.download),
+        onTap: () async {
+          if (material.fileType.toLowerCase() == 'pdf') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PDFViewerScreen(
+                  url: material.fileUrl,
+                  title: material.title,
+                ),
+              ),
+            );
+            return;
+          }
+
+          final uri = Uri.parse(material.fileUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        },
+      ),
+    );
+  }
+
   Future<void> _addMaterial() async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    
     FilePickerResult? result;
+    bool isLoading = false;
 
     await showDialog(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final theme = Theme.of(context);
-            return AlertDialog(
-              title: const Text("Add New Material"),
-              backgroundColor: theme.scaffoldBackgroundColor == const Color(0xFF121212)
-                  ? const Color(0xFF121212)
-                  : const Color(0xFFF7F8FA),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: titleController,
-                        decoration: const InputDecoration(labelText: "Title"),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
-                      ),
-                      SizedBox(height: 10,),
-                      TextFormField(
-                        controller: descriptionController,
-                        decoration: const InputDecoration(labelText: "Description (Optional)"),
-                      ),
-                      const SizedBox(height: 20),
-                      result == null
-                          ? OutlinedButton.icon(
-                              onPressed: () async {
-                                final pickedFile = await FilePicker.platform.pickFiles(
-                                  type: FileType.custom,
-                                  allowedExtensions: ['pdf', 'doc', 'docx', 'png', 'jpg'],
-                                );
-                                if (pickedFile != null) {
-                                  setDialogState(() => result = pickedFile);
-                                }
-                              },
-                              icon: const Icon(Icons.attach_file),
-                              label: const Text("Select File"),
-                            )
-                          : Column(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.green, size: 30),
-                                Text(result!.files.single.name, overflow: TextOverflow.ellipsis),
-                              ],
-                            ),
-                    ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text("Add Course Material"),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: "Title"),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
-                ),
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(labelText: "Description"),
+                  ),
+                  const SizedBox(height: 20),
+                  result == null
+                      ? ElevatedButton.icon(
+                          onPressed: () async {
+                            final res = await FilePicker.platform.pickFiles(
+                              withData: true,
+                            );
+                            if (res != null) setState(() => result = res);
+                          },
+                          icon: const Icon(Icons.attach_file),
+                          label: const Text("Select File"),
+                        )
+                      : Text("Selected: ${result!.files.single.name}"),
+                ],
               ),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Cancel")),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState!.validate() && result != null) {
-                      Navigator.pop(dialogContext); // Close dialog immediately
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Uploading material...'), duration: Duration(seconds: 10)),
-                      );
-
-                      try {
-                        final file = result!.files.single;
-                        final fileBytes = file.bytes;
-
-                        if (fileBytes == null) {
-                          // This can happen if the file is too large or on certain platforms.
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Could not read file data. Please try another file.'), backgroundColor: Colors.red),
-                          );
-                          return;
-                        }
-
-                        final fileName = file.name;
-
-                        final fileUrl = await _dbService.uploadCourseMaterialFile(fileBytes, widget.course.code, fileName);
-
-                        final newMaterial = CourseMaterial(
-                          courseId: widget.course.code,
-                          title: titleController.text,
-                          description: descriptionController.text,
-                          fileUrl: fileUrl,
-                          fileName: fileName,
-                          fileType: file.extension ?? 'file',
-                          uploadedAt: DateTime.now(),
-                        );
-
-                        await _dbService.addCourseMaterial(newMaterial);
-
-                        if (!context.mounted) return;
-
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Material added successfully!'), backgroundColor: Colors.green),
-                        );
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
-                        );
-                      }
-                    } else if (result == null) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select a file.'), backgroundColor: Colors.orange),
-                      );
-                    }
-                  },
-                  child: const Text("Upload"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.course.name, style: GoogleFonts.poppins(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: "About"),
-              Tab(text: "Resources"),
-              Tab(text: "Questions"),
-            ],
+            ),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildAboutTab(),
-            _buildResourcesTab(),
-            const Center(child: Text("Past Questions will be available here.")),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      if (formKey.currentState!.validate() && result != null) {
+                        setState(() => isLoading = true);
+                        try {
+                          final file = result!.files.single;
+                          final url = await _dbService.uploadMaterialFile(
+                            file.bytes!,
+                            widget.course.code,
+                            file.name,
+                            false,
+                          );
+
+                          final material = CourseMaterial(
+                            title: titleController.text,
+                            description: descriptionController.text,
+                            fileUrl: url,
+                            fileName: file.name,
+                            fileType: file.extension ?? 'file',
+                            uploadedAt: DateTime.now(),
+                            courseId: widget.course.id,
+                          );
+
+                          await _dbService.addMaterial(material);
+                          Navigator.pop(context);
+                        } catch (e) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text("Error: $e")));
+                        } finally {
+                          setState(() => isLoading = false);
+                        }
+                      }
+                    },
+              child: isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text("Upload"),
+            ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _addMaterial,
-          tooltip: 'Add Material',
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAboutTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Course Code: ${widget.course.code}', style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey.shade600)),
-          const Divider(height: 32),
-          _buildDetailSection(context, icon: Icons.info_outline, title: 'About this course', content: 'Details about this course will be available here soon.'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResourcesTab() {
-    return StreamBuilder<List<CourseMaterial>>(
-      stream: _dbService.getCourseMaterials(widget.course.code),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text("No materials yet. Be the first to add one!"));
-        }
-        final materials = snapshot.data!;
-        return ListView.builder(
-          itemCount: materials.length,
-          itemBuilder: (context, index) {
-            final material = materials[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: Icon(material.fileType == 'pdf' ? Icons.picture_as_pdf : Icons.insert_drive_file, color: Colors.blue),
-                title: Text(material.title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-                subtitle: Text(material.fileName),
-                onTap: () async {
-                  final url = Uri.parse(material.fileUrl);
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not open ${material.fileName}')),
-                    );
-                  }
-                },
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailSection(BuildContext context, {required IconData icon, required String title, required String content}) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: Colors.blue),
-        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        subtitle: Text(content, style: GoogleFonts.poppins()),
       ),
     );
   }

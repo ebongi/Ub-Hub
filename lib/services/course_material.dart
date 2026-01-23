@@ -1,8 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class CourseMaterial {
   final String id;
-  final String courseId;
+  final String? courseId;
+  final String? departmentId;
   final String title;
   final String? description;
   final String fileUrl;
@@ -12,38 +11,45 @@ class CourseMaterial {
 
   CourseMaterial({
     this.id = '',
-    required this.courseId,
+    this.courseId,
+    this.departmentId,
     required this.title,
     this.description,
     required this.fileUrl,
     required this.fileName,
     required this.fileType,
     required this.uploadedAt,
-  });
+  }) : assert(
+         courseId != null || departmentId != null,
+         'Either courseId or departmentId must be provided',
+       );
 
-  factory CourseMaterial.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data()!;
+  factory CourseMaterial.fromSupabase(Map<String, dynamic> json) {
     return CourseMaterial(
-      id: snapshot.id,
-      courseId: data['courseId'] ?? '',
-      title: data['title'] ?? '',
-      description: data['description'],
-      fileUrl: data['fileUrl'] ?? '',
-      fileName: data['fileName'] ?? '',
-      fileType: data['fileType'] ?? '',
-      uploadedAt: (data['uploadedAt'] as Timestamp).toDate(),
+      id: json['id'] ?? '',
+      courseId: json['course_id'],
+      departmentId: json['department_id'],
+      title: json['name'] ?? '',
+      fileUrl: json['file_url'] ?? '',
+      fileType: json['file_type'] ?? '',
+      uploadedAt: json['uploaded_at'] != null
+          ? DateTime.parse(json['uploaded_at'])
+          : DateTime.now(),
+      fileName: json['file_name'] ?? '',
+      description: json['description'],
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toSupabase() {
     return {
-      'courseId': courseId,
-      'title': title,
+      'course_id': courseId,
+      'department_id': departmentId,
+      'name': title,
+      'file_url': fileUrl,
+      'file_type': fileType,
+      'file_name': fileName,
       'description': description,
-      'fileUrl': fileUrl,
-      'fileName': fileName,
-      'fileType': fileType,
-      'uploadedAt': Timestamp.fromDate(uploadedAt),
+      if (id.isNotEmpty) 'id': id,
     };
   }
 }

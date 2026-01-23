@@ -1,134 +1,240 @@
 import 'dart:typed_data';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:neo/services/course_material.dart';
 import 'package:neo/services/course_model.dart' show Course;
 import 'package:neo/services/department.dart' show Department;
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:neo/services/exam_event.dart' show ExamEvent;
+import 'package:neo/services/payment_models.dart'
+    show PaymentTransaction, PaymentStatus;
 
 class DatabaseService {
   final String? uid;
   DatabaseService({this.uid});
 
-  // Collection references
-  final CollectionReference users = FirebaseFirestore.instance.collection(
-    'Users',
-  );
-  final CollectionReference departmentCollection = FirebaseFirestore.instance
-      .collection('departments');
-  final CollectionReference courseCollection = FirebaseFirestore.instance
-      .collection('courses');
-  final CollectionReference materialsCollection =
-      FirebaseFirestore.instance.collection('course_materials');
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final _supabase = Supabase.instance.client;
 
-  // Update user data in Firestore
+  // Update user data in Supabase 'profiles' table
   Future<void> updateUserData({
     String? name,
     String? matricule,
     String? phoneNumber,
   }) async {
     if (uid == null) return;
-    return await users.doc(uid).set({
+    return await _supabase.from('profiles').upsert({
+      'id': uid,
       if (name != null) 'name': name,
       if (matricule != null) 'matricule': matricule,
-      if (phoneNumber != null) 'phoneNumber': phoneNumber,
-    }, SetOptions(merge: true)); // Use merge to avoid overwriting other fields
+      if (phoneNumber != null) 'phone_number': phoneNumber,
+    });
   }
 
-  Stream get userData {
+  Stream<Map<String, dynamic>> get userData {
     if (uid == null) return Stream.empty();
-    return users.doc(uid).snapshots();
+    return _supabase
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .eq('id', uid!)
+        .map((data) => data.first);
   }
 
   // Get departments stream
   Stream<List<Department>> get departments {
-    return departmentCollection.snapshots().map(_departmentListFromSnapshot);
-  }
-
-  // department list from snapshot
-  List<Department> _departmentListFromSnapshot(QuerySnapshot snapshot) {
-    return snapshot.docs.map((doc) {
-      return Department.fromFirestore(
-        doc as DocumentSnapshot<Map<String, dynamic>>,
-      );
-    }).toList();
-  }
-
-  Stream<List<Object?>> get courseData {
-    return courseCollection.snapshots().map(_courseListFromSnapshot);
+    return _supabase
+        .from('departments')
+        .stream(primaryKey: ['id'])
+        .order('name')
+        .map(
+          (data) => data.map((json) => Department.fromSupabase(json)).toList(),
+        );
   }
 
   // Get courses for a specific department
   Stream<List<Course>> getCoursesForDepartment(String departmentId) {
-    return courseCollection
-        .where('departmentId', isEqualTo: departmentId)
-        .snapshots()
-        .map(_courseListFromSnapshot);
+    return _supabase
+        .from('courses')
+        .stream(primaryKey: ['id'])
+        .eq('department_id', departmentId)
+        .map((data) => data.map((json) => Course.fromSupabase(json)).toList());
   }
 
-  // course list from snapshot
-  List<Course> _courseListFromSnapshot(QuerySnapshot snapshot) {
-    return snapshot.docs.map((doc) {
-      return Course.fromFirestore(
-        doc as DocumentSnapshot<Map<String, dynamic>>,
-      );
-    }).toList();
+  // Get all courses (for notifications)
+  Stream<List<Course>> get allCourses {
+    return _supabase
+        .from('courses')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map((data) => data.map((json) => Course.fromSupabase(json)).toList());
   }
 
   // Create a new department
-  Future<DocumentReference> createDepartment(Department department) async {
-    return await departmentCollection.add(department.toFirestore());
+  Future<String> createDepartment(Department department) async {
+    final data = await _supabase
+        .from('departments')
+        .insert(department.toSupabase())
+        .select()
+        .single();
+    return data['id'] as String;
   }
 
   // Create a new course
-  Future<DocumentReference> createCourse(Course course) async {
-    return await courseCollection.add(course.toFirestore());
+  Future<String> createCourse(Course course) async {
+    final data = await _supabase
+        .from('courses')
+        .insert(course.toSupabase())
+        .select()
+        .single();
+    return data['id'] as String;
   }
 
-  // Upload an image and get the URL
+  // Upload an image and get the public URL
   Future<String> uploadDepartmentImage(
     Uint8List imageData,
     String departmentName,
   ) async {
-    final ref = _storage
-        .ref()
-        .child('department_images')
-        .child('$departmentName-${DateTime.now().toIso8601String()}.jpg');
-    // Use putData which works for web and mobile
-    await ref.putData(imageData, SettableMetadata(contentType: 'image/jpeg'));
-    return await ref.getDownloadURL();
+    final fileName =
+        '$departmentName-${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final path = 'department_images/$fileName';
+
+    await _supabase.storage
+        .from('department_images')
+        .uploadBinary(
+          path,
+          imageData,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+
+    return _supabase.storage.from('department_images').getPublicUrl(path);
   }
 
-  // Upload a course material file and get the URL
-  Future<String> uploadCourseMaterialFile(
+  // Upload a material file (course or department) and get the public URL
+  Future<String> uploadMaterialFile(
     Uint8List fileData,
-    String courseId,
+    String targetId, // courseCode or departmentId
     String fileName,
+    bool isDepartment,
   ) async {
-    final ref = _storage
-        .ref()
-        .child('course_materials')
-        .child(courseId)
-        .child(fileName);
-    await ref.putData(fileData);
-    return await ref.getDownloadURL();
+    // Use the existing 'course_materials' bucket for all documents
+    const folder = 'course_materials';
+    final path = isDepartment
+        ? 'department/$targetId/$fileName'
+        : 'course/$targetId/$fileName';
+    await _supabase.storage.from(folder).uploadBinary(path, fileData);
+    return _supabase.storage.from(folder).getPublicUrl(path);
   }
 
-  // Create a new course material document
-  Future<void> addCourseMaterial(CourseMaterial material) async {
-    await materialsCollection.add(material.toFirestore());
+  // Create a new material record
+  Future<void> addMaterial(CourseMaterial material) async {
+    await _supabase.from('course_materials').insert(material.toSupabase());
   }
 
   // Get materials for a specific course
   Stream<List<CourseMaterial>> getCourseMaterials(String courseId) {
-    return materialsCollection
-        .where('courseId', isEqualTo: courseId)
-        .orderBy('uploadedAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CourseMaterial.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
-            .toList());
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .eq('course_id', courseId)
+        .order('uploaded_at', ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+        );
   }
 
-  //  I'll be adding more methods to Delete, Upload, and Read courses here
+  // Get materials for a specific department
+  Stream<List<CourseMaterial>> getDepartmentMaterials(String departmentId) {
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .eq('department_id', departmentId)
+        .order('uploaded_at', ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+        );
+  }
+
+  // Get exams for the current user
+  Stream<List<ExamEvent>> get exams {
+    if (uid == null) return Stream.empty();
+    return _supabase
+        .from('exams')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', uid!)
+        .order('start_time', ascending: true)
+        .map(
+          (data) => data.map((json) => ExamEvent.fromSupabase(json)).toList(),
+        );
+  }
+
+  // Create a new exam
+  Future<void> addExam(ExamEvent exam) async {
+    await _supabase.from('exams').insert(exam.toSupabase());
+  }
+
+  // Update an exam
+  Future<void> updateExam(ExamEvent exam) async {
+    await _supabase.from('exams').update(exam.toSupabase()).eq('id', exam.id);
+  }
+
+  // Delete an exam
+  Future<void> deleteExam(String examId) async {
+    await _supabase.from('exams').delete().eq('id', examId);
+  }
+
+  // ==================== Payment Transaction Methods ====================
+
+  /// Create a new payment transaction record
+  Future<String> createPaymentTransaction(
+    PaymentTransaction transaction,
+  ) async {
+    final data = await _supabase
+        .from('payment_transactions')
+        .insert(transaction.toSupabase())
+        .select()
+        .single();
+    return data['id'] as String;
+  }
+
+  /// Update payment transaction status
+  Future<void> updatePaymentStatus(
+    String paymentRef,
+    PaymentStatus status, {
+    String? departmentId,
+  }) async {
+    await _supabase
+        .from('payment_transactions')
+        .update({
+          'status': status.name,
+          if (departmentId != null) 'department_id': departmentId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('payment_ref', paymentRef);
+  }
+
+  /// Get payment transaction by payment reference
+  Future<PaymentTransaction?> getPaymentByRef(String paymentRef) async {
+    final data = await _supabase
+        .from('payment_transactions')
+        .select()
+        .eq('payment_ref', paymentRef)
+        .maybeSingle();
+
+    if (data == null) return null;
+    return PaymentTransaction.fromSupabase(data);
+  }
+
+  /// Get all payment transactions for the current user
+  Stream<List<PaymentTransaction>> get userPayments {
+    if (uid == null) return Stream.empty();
+    return _supabase
+        .from('payment_transactions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', uid!)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data
+              .map((json) => PaymentTransaction.fromSupabase(json))
+              .toList(),
+        );
+  }
 }

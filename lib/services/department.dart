@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Department {
   final String id;
   final String name;
@@ -12,35 +10,36 @@ class Department {
   Department({
     this.id = '',
     required this.name,
-    required this.schoolId,
-    required this.description,
+    this.schoolId = '',
+    this.description = '',
     this.imageUrl,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory Department.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data();
+  factory Department.fromSupabase(Map<String, dynamic> json) {
     return Department(
-      id: snapshot.id,
-      name: data?['name'] ?? '',
-      schoolId: data?['schoolId'] ?? '',
-      description: data?['description'] ?? '',
-      imageUrl: data?['imageUrl'],
-      createdAt: (data?['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (data?['updatedAt'] as Timestamp?)?.toDate(),
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      schoolId: json['school_id'] ?? '',
+      description: json['description'] ?? '',
+      imageUrl: json['image_url'],
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toSupabase() {
     return {
       'name': name,
-      'schoolId': schoolId,
+      'school_id': schoolId,
       'description': description,
-      'imageUrl': imageUrl,
+      'image_url': imageUrl,
       if (id.isNotEmpty) 'id': id,
-      if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
-      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
   }
 }

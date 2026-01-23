@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1002439415745",
-    "project_id": "facultyofscienceapp-neo",
-    "storage_bucket": "facultyofscienceapp-neo.firebasestorage.app"
+    "project_number": "734910045094",
+    "project_id": "go-study-ub-hub",
+    "storage_bucket": "go-study-ub-hub.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1002439415745:android:6474e2eca9769745374140",
+        "mobilesdk_app_id": "1:734910045094:android:9f156655cd853bef7d4d67",
         "android_client_info": {
           "package_name": "com.example.neo"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB_JkBvu6AjB01Wh4Sc3GDnY6iuy-PjQPg"
+          "current_key": "AIzaSyCJMvVZlmP0HbRo29WKU97qQ8wZSEX1FGg"
         }
       ],
       "services": {

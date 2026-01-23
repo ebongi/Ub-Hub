@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 class Notifications extends StatefulWidget {
   const Notifications({super.key});
 
-
   @override
   State<Notifications> createState() => _NotificationsState();
 }
@@ -78,25 +77,28 @@ class _NotificationsState extends State<Notifications> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(subtitle),
-                      if (creationDate != null) Text(DateFormat.yMMMd().add_jm().format(creationDate), style: Theme.of(context).textTheme.bodySmall),
+                      if (creationDate != null)
+                        Text(
+                          DateFormat.yMMMd().add_jm().format(creationDate),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                     ],
                   ),
                   // Customize the appearance here
                 ),
               );
-            }
-            );
-          }
+            },
+          );
+        },
       ),
-      );
-    
+    );
   }
 
   // Helper function to combine department and course streams
   Stream<List<dynamic>> _getCombinedStream(DatabaseService dbService) {
     return CombineLatestStream.list<dynamic>([
       dbService.departments,
-      dbService.courseData, // Make sure this stream returns a List<Course>
+      dbService.allCourses, // Corrected from courseData
     ]).map((results) {
       final List<Department> departments = results[0] as List<Department>;
       final List<Course> courses = results[1] as List<Course>;

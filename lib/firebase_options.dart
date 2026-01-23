@@ -41,46 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBHGSS8XCQ3EJ74XQ562O9s9mmZZb93i_Y',
-    appId: '1:1002439415745:web:897b362af6a9acb5374140',
-    messagingSenderId: '1002439415745',
-    projectId: 'facultyofscienceapp-neo',
-    authDomain: 'facultyofscienceapp-neo.firebaseapp.com',
-    storageBucket: 'facultyofscienceapp-neo.firebasestorage.app',
+    apiKey: 'AIzaSyCWPcdxu6NYd2HEsAoyLKrMC2ptcxk6Ifo',
+    appId: '1:734910045094:web:f355d6e4d1be24027d4d67',
+    messagingSenderId: '734910045094',
+    projectId: 'go-study-ub-hub',
+    authDomain: 'go-study-ub-hub.firebaseapp.com',
+    storageBucket: 'go-study-ub-hub.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB_JkBvu6AjB01Wh4Sc3GDnY6iuy-PjQPg',
-    appId: '1:1002439415745:android:6474e2eca9769745374140',
-    messagingSenderId: '1002439415745',
-    projectId: 'facultyofscienceapp-neo',
-    storageBucket: 'facultyofscienceapp-neo.firebasestorage.app',
+    apiKey: 'AIzaSyCJMvVZlmP0HbRo29WKU97qQ8wZSEX1FGg',
+    appId: '1:734910045094:android:9f156655cd853bef7d4d67',
+    messagingSenderId: '734910045094',
+    projectId: 'go-study-ub-hub',
+    storageBucket: 'go-study-ub-hub.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCEtC729G0fd2F9rn8HrcBVUhkN7lxLDuc',
-    appId: '1:1002439415745:ios:f2239d51bb9e2ad4374140',
-    messagingSenderId: '1002439415745',
-    projectId: 'facultyofscienceapp-neo',
-    storageBucket: 'facultyofscienceapp-neo.firebasestorage.app',
+    apiKey: 'AIzaSyB7cN6j0FAMqKUua19Zi0pVyFb_nzAVZmM',
+    appId: '1:734910045094:ios:699f1e59a6c1ec9b7d4d67',
+    messagingSenderId: '734910045094',
+    projectId: 'go-study-ub-hub',
+    storageBucket: 'go-study-ub-hub.firebasestorage.app',
     iosBundleId: 'com.example.neo',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCEtC729G0fd2F9rn8HrcBVUhkN7lxLDuc',
-    appId: '1:1002439415745:ios:f2239d51bb9e2ad4374140',
-    messagingSenderId: '1002439415745',
-    projectId: 'facultyofscienceapp-neo',
-    storageBucket: 'facultyofscienceapp-neo.firebasestorage.app',
+    apiKey: 'AIzaSyB7cN6j0FAMqKUua19Zi0pVyFb_nzAVZmM',
+    appId: '1:734910045094:ios:699f1e59a6c1ec9b7d4d67',
+    messagingSenderId: '734910045094',
+    projectId: 'go-study-ub-hub',
+    storageBucket: 'go-study-ub-hub.firebasestorage.app',
     iosBundleId: 'com.example.neo',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBHGSS8XCQ3EJ74XQ562O9s9mmZZb93i_Y',
-    appId: '1:1002439415745:web:d80f5a22f38793d9374140',
-    messagingSenderId: '1002439415745',
-    projectId: 'facultyofscienceapp-neo',
-    authDomain: 'facultyofscienceapp-neo.firebaseapp.com',
-    storageBucket: 'facultyofscienceapp-neo.firebasestorage.app',
+    apiKey: 'AIzaSyCWPcdxu6NYd2HEsAoyLKrMC2ptcxk6Ifo',
+    appId: '1:734910045094:web:2783520e6456658e7d4d67',
+    messagingSenderId: '734910045094',
+    projectId: 'go-study-ub-hub',
+    authDomain: 'go-study-ub-hub.firebaseapp.com',
+    storageBucket: 'go-study-ub-hub.firebasestorage.app',
   );
+
 }

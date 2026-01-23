@@ -8,11 +8,29 @@ import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dar
 import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:neo/services/department.dart';
-import 'package:neo/Screens/UI/preview/Requirements/requirement_detail_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/gpa_calculator_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/task_manager_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/document_scanner_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 
 import 'package:provider/provider.dart';
+
+class ToolItem {
+  final String name;
+  final IconData icon;
+  final Color backgroundColor;
+  final Widget widget;
+
+  ToolItem({
+    required this.name,
+    required this.icon,
+    required this.backgroundColor,
+    required this.widget,
+  });
+}
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -22,21 +40,49 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final List<Requirement> requirements = [
-    Requirement(name: "English", imageUrl: "assets/images/language.png"),
-    Requirement(name: "French", imageUrl: "assets/images/Learning-bro.png"),
-    Requirement(name: "Law", imageUrl: "assets/images/law.png"),
-    Requirement(name: "CVE", imageUrl: "assets/images/cve.png"),
-    Requirement(name: "CST", imageUrl: "assets/images/cst.png"),
-    Requirement(name: "Sports", imageUrl: "assets/images/sports.png"),
+  final List<ToolItem> toolboxItems = [
+    ToolItem(
+      name: "GPA Calculator",
+      icon: Icons.calculate_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const GPACalculatorScreen(),
+    ),
+    ToolItem(
+      name: "Task Manager",
+      icon: Icons.checklist_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const TaskManagerScreen(),
+    ),
+    ToolItem(
+      name: "Focus Timer",
+      icon: Icons.timer_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const FocusTimerScreen(),
+    ),
+    ToolItem(
+      name: "Doc Scanner",
+      icon: Icons.document_scanner_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const DocumentScannerScreen(),
+    ),
+    ToolItem(
+      name: "Resume Builder",
+      icon: Icons.description_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const FlashcardsScreen(),
+    ),
+    ToolItem(
+      name: "Exam Schedule",
+      icon: Icons.calendar_month_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const ExamScheduleScreen(),
+    ),
   ];
   // int _notificationCount = ;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // ignore: unused_local_variable
-    final user = Provider.of<User?>(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -69,8 +115,8 @@ class _HomeState extends State<Home> {
                     return DepartmentSection(departments: recentDepartments);
                   },
                 ),
-                const ViewSection(title: "Requirements"),
-                RequirementSection(requirements: requirements),
+                const ViewSection(title: "Toolbox"),
+                ToolboxSection(items: toolboxItems),
               ],
             ),
           ),
@@ -78,84 +124,77 @@ class _HomeState extends State<Home> {
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: "Add Department",
-        backgroundColor: Colors.blue,
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () => showAddDepartmentDialog(context),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
     );
   }
 }
 
-class Requirement {
-  final String name;
-  final String imageUrl;
-  final Widget? widget;
+class ToolboxSection extends StatelessWidget {
+  const ToolboxSection({super.key, required this.items});
 
-  Requirement({required this.name, required this.imageUrl, this.widget});
-}
-
-class RequirementSection extends StatelessWidget {
-  const RequirementSection({super.key, required this.requirements});
-
-  final List<Requirement> requirements;
+  final List<ToolItem> items;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SizedBox(
       height: 380,
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 7,
-          mainAxisExtent: 180,
-          mainAxisSpacing: 7,
+          crossAxisSpacing: 10,
+          mainAxisExtent: 150,
+          mainAxisSpacing: 10,
         ),
-        itemCount: requirements.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
-          final requirement = requirements[index];
-          return Container(
-            // padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              color: theme.scaffoldBackgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-
-              // border: Border.all(),
+          final tool = items[index];
+          final theme = Theme.of(context);
+          return GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => tool.widget),
             ),
-            child: GestureDetector(
-              ///Implement code to navigate to the requirement scren
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      requirement.widget ??
-                      RequirementDetailScreen(
-                        title: requirement.name,
-                        imageUrl: requirement.imageUrl,
-                      ),
-                ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: theme.cardTheme.color,
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Hero(
-                    tag: requirement.name,
-                    child: Image.asset(requirement.imageUrl),
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Text(
-                      requirement.name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                    ),
+                    child: Hero(
+                      tag: tool.name,
+                      child: Icon(
+                        tool.icon,
+                        size: 40,
+                        color: theme.colorScheme.primary,
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    tool.name,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -170,22 +209,31 @@ class RequirementSection extends StatelessWidget {
 
 // Helper to map department names to UI properties
 class DepartmentUIData {
-  final String imageUrl;
+  final IconData icon;
   final Color color;
 
-  DepartmentUIData({required this.imageUrl, required this.color});
+  DepartmentUIData({required this.icon, required this.color});
 
   static DepartmentUIData fromDepartmentName(String name) {
     switch (name.toLowerCase()) {
       case 'computer science':
         return DepartmentUIData(
-          imageUrl: 'assets/images/code.png',
+          icon: Icons.computer_rounded,
           color: Colors.blue.shade800,
         );
-      // Add other departments here
+      case 'mathematics':
+        return DepartmentUIData(
+          icon: Icons.functions_rounded,
+          color: Colors.green.shade800,
+        );
+      case 'physics':
+        return DepartmentUIData(
+          icon: Icons.science_rounded,
+          color: Colors.purple.shade800,
+        );
       default:
         return DepartmentUIData(
-          imageUrl: 'assets/images/departmentdefault.jpg',
+          icon: Icons.account_balance_rounded,
           color: Colors.grey.shade800,
         );
     }
@@ -225,25 +273,36 @@ class DepartmentSection extends StatelessWidget {
               child: Stack(
                 children: [
                   Container(
+                    width: double.infinity,
+                    height: double.infinity,
                     decoration: BoxDecoration(
-                      // Use NetworkImage if imageUrl is present
+                      color: uiData.color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
-                      image: DecorationImage(
-                        image:
-                            (department.imageUrl != null &&
-                                department.imageUrl!.isNotEmpty)
-                            ? NetworkImage(department.imageUrl!)
-                            : AssetImage(uiData.imageUrl) as ImageProvider,
-                        fit: BoxFit.cover,
-                      ),
                     ),
+                    child:
+                        (department.imageUrl != null &&
+                            department.imageUrl!.isNotEmpty)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.network(
+                              department.imageUrl!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Icon(
+                            uiData.icon,
+                            size: 60,
+                            color: uiData.color.withOpacity(0.5),
+                          ),
                   ),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         colors: [
-                          Colors.blue.withOpacity(0.7),
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.8),
                           Colors.transparent,
                         ],
                         begin: Alignment.bottomCenter,
@@ -257,7 +316,7 @@ class DepartmentSection extends StatelessWidget {
                     right: 20,
                     child: Text(
                       department.name,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -280,10 +339,22 @@ class IntroWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.blue.shade700,
-        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withOpacity(0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -293,7 +364,7 @@ class IntroWidget extends StatelessWidget {
               children: [
                 Text(
                   "What will you learn today?",
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -301,14 +372,19 @@ class IntroWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Explore courses, resources, and collaborate with peers.", // This can be const
-                  style: GoogleFonts.poppins(
+                  "Explore courses, resources, and collaborate with peers.",
+                  style: GoogleFonts.outfit(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
             ),
+          ),
+          Icon(
+            Icons.rocket_launch_rounded,
+            size: 80,
+            color: Colors.white.withOpacity(0.2),
           ),
         ],
       ),
@@ -326,7 +402,7 @@ class ViewSection extends StatelessWidget {
       padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 4.0),
       child: Text(
         title,
-        style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold),
+        style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -338,35 +414,57 @@ class AppBarUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Consumer<UserModel>(
-                  builder: (context, value, child) => Text(
-                    "Hello, ${value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "What do you want to study today?",
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
+        Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              width: 2,
             ),
-          ],
+          ),
+          child: CircleAvatar(
+            radius: 25,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(0.1),
+            child: Icon(
+              Icons.person_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              size: 30,
+            ),
+          ),
         ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Consumer<UserModel>(
+                builder: (context, value, child) => Text(
+                  "Hello, ${value.name != null && value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
+                  style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "What do you want to study today?",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
         Stack(
           children: [
             IconButton(
@@ -374,12 +472,14 @@ class AppBarUser extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => const Notifications()),
               ),
-              icon: Icon(Icons.notifications_outlined),
+              icon: const Icon(Icons.notifications_outlined),
             ),
             Positioned(
+              right: 8,
+              top: 8,
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),

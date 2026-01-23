@@ -12,52 +12,89 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   final lightTheme = ThemeData(
-    
+    useMaterial3: true,
     brightness: Brightness.light,
-    primarySwatch: Colors.blue,
-    primaryColor: Colors.blue,
-    scaffoldBackgroundColor: const Color(0xFFF7F8FA),
-    textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color.fromARGB(255, 22, 38, 75),
+      primary: const Color(0xFF0F172A),
+      surface: const Color(0xFFF8FAFC),
+    ),
+    scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.blue.shade700,
-      titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-      iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: const Color(0xFFF8FAFC),
+      centerTitle: false,
+      elevation: 0,
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF0F172A),
+      ),
+      iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
     ),
     cardTheme: CardThemeData(
-      elevation: 3,
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      color: Colors.white,
+      shadowColor: Colors.black.withOpacity(0.05),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
       fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
     ),
   );
 
   final darkTheme = ThemeData(
-    
+    useMaterial3: true,
     brightness: Brightness.dark,
-    primarySwatch: Colors.blue,
-    primaryColor: Colors.blue,
-    scaffoldBackgroundColor: const Color(0xFF121212),
-    textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.blueGrey,
+      brightness: Brightness.dark,
+      primary: Colors.blueGrey,
+      surface: const Color(0xFF1E293B),
+      background: const Color(0xFF0F172A),
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0F172A),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
     appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFF1F1F1F),
-      titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-      iconTheme: const IconThemeData(color: Colors.black,),
+      backgroundColor: const Color(0xFF0F172A),
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
+      ),
+      iconTheme: const IconThemeData(color: Colors.white),
     ),
     cardTheme: CardThemeData(
-      color: const Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFF1E293B),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       filled: true,
-      fillColor: const Color(0xFF2A2A2A),
+      fillColor: const Color(0xFF1E293B),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      hintStyle: const TextStyle(color: Colors.white38),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color(0xFF0F172A),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
   );
 }

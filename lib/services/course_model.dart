@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Course {
+  final String id;
   final String code;
   final String name;
   final String departmentId;
@@ -9,6 +8,7 @@ class Course {
   final DateTime? updatedAt;
 
   Course({
+    this.id = '',
     required this.code,
     required this.name,
     required this.departmentId,
@@ -17,26 +17,29 @@ class Course {
     this.updatedAt,
   });
 
-  factory Course.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data();
+  factory Course.fromSupabase(Map<String, dynamic> json) {
     return Course(
-      name: data?['name'] ?? '',
-      code: data?['code'] ?? '',
-      departmentId: data?['departmentId'] ?? '',
-      semester: data?['semester'],
-      createdAt: (data?['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (data?['updatedAt'] as Timestamp?)?.toDate(),
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      code: json['course_code'] ?? '',
+      departmentId: json['department_id'] ?? '',
+      semester: json['semester'],
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toSupabase() {
     return {
       'name': name,
-      'code': code,
-      'departmentId': departmentId,
+      'course_code': code,
+      'department_id': departmentId,
       if (semester != null) 'semester': semester,
-      if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
-      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+      if (id.isNotEmpty) 'id': id,
     };
   }
 }

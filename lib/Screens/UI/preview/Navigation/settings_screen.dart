@@ -39,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // final DatabaseService _database =   DatabaseService();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Settings', style: GoogleFonts.poppins())),
+      appBar: AppBar(title: Text('Settings', style: GoogleFonts.outfit())),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -52,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.person),
               title: Text(
                 "Account",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.notifications),
               title: Text(
                 "Notifications",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.person_add),
               title: Text(
                 "Invite friends",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -85,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.star),
               title: Text(
                 "Rating",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -95,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.feedback),
               title: Text(
                 "Feedback",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -105,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.description),
               title: Text(
                 "About",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -115,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.dark_mode_outlined),
               title: Text(
                 'Dark Mode',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
               trailing: Switch(
                 value: themeProvider.themeMode == ThemeMode.dark,
@@ -134,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListTile(
               title: Text(
                 'Logout',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
               leading: const Icon(Icons.logout),
               onTap: () async {
@@ -148,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 "Go-Study",
-                style: GoogleFonts.poppins().copyWith(
+                style: GoogleFonts.outfit().copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                   letterSpacing: 1.3,
@@ -156,7 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Text(
                 "Version $_version+$buildnumber",
-                style: GoogleFonts.poppins(),
+                style: GoogleFonts.outfit(),
               ),
             ],
           ),

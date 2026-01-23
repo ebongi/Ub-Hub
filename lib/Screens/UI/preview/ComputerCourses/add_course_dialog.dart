@@ -24,7 +24,7 @@ Future<void> showAddCourseDialog(
             : const Color(0xFFF7F8FA),
         title: Text(
           "Add Course",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         content: Form(
           key: addCourseKey,

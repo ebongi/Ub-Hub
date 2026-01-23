@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -25,17 +25,17 @@ class _AccountdetailsState extends State<Accountdetails> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<User?>(context, listen: false);
+    final user = Provider.of<sb.User?>(context, listen: false);
     final userModel = Provider.of<UserModel>(context, listen: false);
 
     _nameController = TextEditingController(
-      text: user?.displayName ?? userModel.name,
+      text: user?.userMetadata?['name'] ?? userModel.name,
     );
     _matriculeController = TextEditingController(
       text: userModel.matricule ?? 'N/A',
     );
     _phoneController = TextEditingController(
-      text: user?.phoneNumber ?? userModel.phoneNumber ?? 'N/A',
+      text: userModel.phoneNumber ?? 'N/A',
     );
   }
 
@@ -51,17 +51,17 @@ class _AccountdetailsState extends State<Accountdetails> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      final user = Provider.of<User?>(context, listen: false);
+      final user = Provider.of<sb.User?>(context, listen: false);
       final userModel = Provider.of<UserModel>(context, listen: false);
-      final dbService = DatabaseService(uid: user!.uid);
+      final dbService = DatabaseService(uid: user!.id);
 
       try {
-        // Update display name in Firebase Auth
-        if (user.displayName != _nameController.text) {
-          await user.updateDisplayName(_nameController.text);
-        }
+        // Update user metadata in Supabase Auth
+        await sb.Supabase.instance.client.auth.updateUser(
+          sb.UserAttributes(data: {'name': _nameController.text}),
+        );
 
-        // Update custom data in Firestore
+        // Update custom data in Supabase profiles table
         await dbService.updateUserData(
           name: _nameController.text,
           matricule: _matriculeController.text,
@@ -95,9 +95,7 @@ class _AccountdetailsState extends State<Accountdetails> {
         }
       } finally {
         if (mounted) {
-          setState(
-            () => _isLoading = false,
-          ); // This is already correct, but good to confirm.
+          setState(() => _isLoading = false);
         }
       }
     }
@@ -106,7 +104,7 @@ class _AccountdetailsState extends State<Accountdetails> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = Provider.of<User?>(context);
+    final user = Provider.of<sb.User?>(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final userModel = Provider.of<UserModel>(context);
 
@@ -150,13 +148,23 @@ class _AccountdetailsState extends State<Accountdetails> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                backgroundColor: theme.primaryColor.withOpacity(0.8),
-                radius: screenWidth * 0.2, // Radius is 20% of screen width
-                child: Icon(
-                  Icons.person,
-                  size: screenWidth * 0.25,
-                  color: Colors.white,
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                  radius: screenWidth * 0.18,
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: screenWidth * 0.2,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -254,14 +262,14 @@ class _AccountdetailsState extends State<Accountdetails> {
             leading: Icon(icon),
             title: Text(
               label,
-              style: GoogleFonts.poppins(
+              style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
             subtitle: Text(
               value,
-              style: GoogleFonts.poppins(fontSize: 18, letterSpacing: 1.2),
+              style: GoogleFonts.outfit(fontSize: 18, letterSpacing: 1.2),
             ),
           ),
           const Divider(),

@@ -1,10 +1,14 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/ComputerCourses/add_course_dialog.dart' show showAddCourseDialog;
-import 'package:neo/Screens/UI/preview/ComputerCourses/course_view.dart';
+import 'package:neo/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
+    show showAddCourseDialog;
+import 'package:neo/Screens/UI/preview/detailScreens/course_detail_screen.dart';
+import 'package:neo/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:neo/services/course_material.dart';
 import 'package:neo/services/course_model.dart';
 import 'package:neo/services/database.dart';
- 
+import 'package:url_launcher/url_launcher.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -32,87 +36,441 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       animationDuration: const Duration(milliseconds: 400),
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
           scrolledUnderElevation: 10,
           title: Text(
             widget.departmentName,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           bottom: TabBar(
-            labelStyle: GoogleFonts.poppins( // Consider moving this to your theme data
+            labelStyle: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 14,
             ),
-            unselectedLabelStyle: GoogleFonts.poppins(fontSize: 16),
-            indicatorAnimation: TabIndicatorAnimation.elastic,
+            unselectedLabelStyle: GoogleFonts.outfit(fontSize: 14),
             indicatorColor: Colors.blue,
             indicatorSize: TabBarIndicatorSize.label,
             isScrollable: false,
             tabs: const [
-              Tab(text: "About"),
-              Tab(text: "Courses"),
+              Tab(text: "About", icon: Icon(Icons.info_outline)),
+              Tab(text: "Courses", icon: Icon(Icons.school_outlined)),
+              Tab(text: "Resources", icon: Icon(Icons.folder_outlined)),
             ],
           ),
         ),
         body: TabBarView(
           children: [
-            const Center(child: Text("Department Details goes here")),
-            StreamBuilder<List<Course>>(
-              stream: _dbService.getCoursesForDepartment(widget.departmentId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "No course Found!",
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          onPressed: _addCourse,
-                          label: const Text(
-                            "Add Course",
-                            // style: GoogleFonts.poppins().copyWith(
-                            //   fontWeight: FontWeight.bold,
-                            //   color: Colors.blue,
-                            // ),
-                          ),
-                          icon: const Icon(Icons.add, color: Colors.blue),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+            _buildAboutTab(),
+            _buildCoursesTab(),
+            _buildResourcesTab(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showUploadSelection,
+          tooltip: 'Add Material or Course',
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
+  }
 
-                final courses = snapshot.data!;
-                return CourseList(courses: courses, addcourse: _addCourse);
+  Widget _buildAboutTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "About ${widget.departmentName}",
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Details and descriptions about this department will appear here. Students can find general information, faculty details, and more.",
+            style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey[700]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoursesTab() {
+    return StreamBuilder<List<Course>>(
+      stream: _dbService.getCoursesForDepartment(widget.departmentId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return _buildEmptyState("No courses found!", _addCourse);
+        }
+
+        final courses = snapshot.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.all(8),
+          itemCount: courses.length,
+          itemBuilder: (context, index) {
+            final course = courses[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: ExpansionTile(
+                leading: const Icon(Icons.assignment, color: Colors.blue),
+                title: Text(
+                  course.name,
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(course.code),
+                trailing: IconButton(
+                  icon: const Icon(Icons.open_in_new, size: 20),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CourseDetailScreen(course: course),
+                    ),
+                  ),
+                ),
+                children: [_buildCourseMaterials(course)],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCourseMaterials(Course course) {
+    return StreamBuilder<List<CourseMaterial>>(
+      stream: _dbService.getCourseMaterials(course.id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: LinearProgressIndicator(),
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return ListTile(
+            title: Text(
+              "No materials yet",
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          );
+        }
+
+        final materials = snapshot.data!;
+        return Column(
+          children: materials.map((m) => _buildMaterialTile(m)).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildResourcesTab() {
+    return StreamBuilder<List<CourseMaterial>>(
+      stream: _dbService.getDepartmentMaterials(widget.departmentId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No department resources yet."));
+        }
+
+        final materials = snapshot.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.all(8),
+          itemCount: materials.length,
+          itemBuilder: (context, index) => _buildMaterialTile(materials[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildMaterialTile(CourseMaterial material) {
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        material.fileType == 'pdf'
+            ? Icons.picture_as_pdf
+            : Icons.insert_drive_file,
+        color: Colors.blue[300],
+        size: 20,
+      ),
+      title: Text(
+        material.title,
+        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      subtitle: material.description != null && material.description!.isNotEmpty
+          ? Text(
+              material.description!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(fontSize: 12),
+            )
+          : null,
+      trailing: const Icon(Icons.download_rounded, size: 20),
+      onTap: () => _openFile(material),
+    );
+  }
+
+  Widget _buildEmptyState(String message, VoidCallback onAction) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            message,
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: onAction,
+            icon: const Icon(Icons.add),
+            label: const Text("Add New"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUploadSelection() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.school),
+              title: const Text("Add New Course"),
+              onTap: () {
+                Navigator.pop(context);
+                _addCourse();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_shared),
+              title: const Text("Upload Department Resource"),
+              onTap: () {
+                Navigator.pop(context);
+                _addMaterial(isDepartment: true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.note_add),
+              title: const Text("Upload Course Material"),
+              onTap: () async {
+                Navigator.pop(context);
+                final courses = await _dbService
+                    .getCoursesForDepartment(widget.departmentId)
+                    .first;
+                if (courses.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Add a course first!")),
+                  );
+                  return;
+                }
+                _showCourseSelectionForUpload(courses);
               },
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _showCourseSelectionForUpload(List<Course> courses) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Select Course"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: courses.length,
+            itemBuilder: (context, index) => ListTile(
+              title: Text(courses[index].name),
+              onTap: () {
+                Navigator.pop(context);
+                _addMaterial(isDepartment: false, course: courses[index]);
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addMaterial({
+    required bool isDepartment,
+    Course? course,
+  }) async {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    FilePickerResult? result;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+            isDepartment ? "Add Dept Resource" : "Add Course Material",
+          ),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (course != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        "Course: ${course.name}",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: "Title"),
+                    validator: (v) => v!.isEmpty ? "Required" : null,
+                  ),
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(labelText: "Description"),
+                  ),
+                  const SizedBox(height: 20),
+                  result == null
+                      ? ElevatedButton.icon(
+                          onPressed: () async {
+                            final res = await FilePicker.platform.pickFiles(
+                              withData: true,
+                            );
+                            if (res != null) setState(() => result = res);
+                          },
+                          icon: const Icon(Icons.attach_file),
+                          label: const Text("Select File"),
+                        )
+                      : Text("Selected: ${result!.files.single.name}"),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate() && result != null) {
+                  Navigator.pop(context);
+                  _uploadLogic(
+                    titleController.text,
+                    descriptionController.text,
+                    result!,
+                    isDepartment,
+                    course,
+                  );
+                }
+              },
+              child: const Text("Upload"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _uploadLogic(
+    String title,
+    String desc,
+    FilePickerResult result,
+    bool isDept,
+    Course? course,
+  ) async {
+    try {
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null) throw "Could not read file";
+
+      final targetId = isDept ? widget.departmentId : course!.code;
+      final url = await _dbService.uploadMaterialFile(
+        bytes,
+        targetId,
+        file.name,
+        isDept,
+      );
+
+      final material = CourseMaterial(
+        title: title,
+        description: desc,
+        fileUrl: url,
+        fileName: file.name,
+        fileType: file.extension ?? 'file',
+        uploadedAt: DateTime.now(),
+        departmentId: isDept ? widget.departmentId : null,
+        courseId: isDept ? null : course!.id,
+      );
+
+      await _dbService.addMaterial(material);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Upload successful!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _openFile(CourseMaterial material) async {
+    if (material.fileType.toLowerCase() == 'pdf') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              PDFViewerScreen(url: material.fileUrl, title: material.title),
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(material.fileUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _addCourse() {

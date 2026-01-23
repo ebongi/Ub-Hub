@@ -39,45 +39,59 @@ class _NavBarState extends State<NavBar> {
       value: DatabaseService().departments,
       initialData: null,
       child: Scaffold(
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _widgetOptions,
-        ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 20,
-              color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
-            )
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
-            child: GNav(
-              rippleColor: theme.splashColor,
-              hoverColor: theme.hoverColor,
-              gap: 8,
-              activeColor: Colors.white,
-              iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: Colors.blue.shade700,
-              color: isDarkMode ? Colors.white70 : Colors.black,
-              tabs: const [
-                GButton(icon: Icons.home_outlined, text: 'Home'),
-                GButton(icon: Icons.school_outlined, text: 'Departments'),
-                GButton(icon: Icons.person_outline, text: 'Profile'),
-                GButton(icon: Icons.settings_outlined, text: 'Settings'),
-              ],
-              selectedIndex: _selectedIndex,
-              onTabChange: _onItemTapped,
+        body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            border: Border(
+              top: BorderSide(color: Colors.white.withOpacity(0.05)),
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 20,
+                color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 15.0,
+                vertical: 8,
+              ),
+              child: GNav(
+                rippleColor: isDarkMode
+                    ? Colors.white10
+                    : Colors.black.withOpacity(0.05),
+                hoverColor: isDarkMode
+                    ? Colors.white10
+                    : Colors.black.withOpacity(0.05),
+                gap: 8,
+                activeColor: isDarkMode
+                    ? Colors.cyanAccent
+                    : theme.colorScheme.primary,
+                iconSize: 24,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                duration: const Duration(milliseconds: 400),
+                tabBackgroundColor: isDarkMode
+                    ? Colors.cyanAccent.withOpacity(0.1)
+                    : theme.colorScheme.primary.withOpacity(0.1),
+                color: isDarkMode ? Colors.white38 : Colors.grey[600],
+                tabs: const [
+                  GButton(icon: Icons.home_rounded, text: 'Home'),
+                  GButton(icon: Icons.grid_view_rounded, text: 'Depts'),
+                  GButton(icon: Icons.person_rounded, text: 'Profile'),
+                  GButton(icon: Icons.settings_rounded, text: 'Settings'),
+                ],
+                selectedIndex: _selectedIndex,
+                onTabChange: _onItemTapped,
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
