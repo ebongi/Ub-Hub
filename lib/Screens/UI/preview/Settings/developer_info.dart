@@ -15,8 +15,6 @@ class DeveloperInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFF030E22), // App's background color
       appBar: AppBar(
@@ -59,7 +57,7 @@ class DeveloperInfoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                "Ebongi Joe",
+                "Ebong Sume",
                 style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -67,12 +65,31 @@ class DeveloperInfoScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                "Full Stack Developer",
+                "Mobile & Software Developer",
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   color: Colors.cyanAccent,
                   fontWeight: FontWeight.w500,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.location_on_rounded,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Buea, Cameroon",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               // Bio Card
@@ -84,12 +101,12 @@ class DeveloperInfoScreen extends StatelessWidget {
                   border: Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
                 child: Text(
-                  "Passionate about building innovative mobile and web solutions that improve student life. With a focus on performance and premium UI/UX design.",
+                  "BSc Computer Science student at the University of Buea with a track record of award-winning coding projects. Highly proficient in Flutter (Dart), React Native with a strong foundation in Data Structures and Algorithm Design. Committed to building efficient, scalable mobile and web applications.",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.8),
-                    height: 1.5,
+                    fontSize: 15,
+                    color: Colors.white.withOpacity(0.9),
+                    height: 1.6,
                   ),
                 ),
               ),
@@ -105,15 +122,17 @@ class DeveloperInfoScreen extends StatelessWidget {
               _buildSocialTile(
                 icon: Icons.alternate_email_rounded,
                 title: "Email",
-                subtitle: "joe.ebongi@example.com",
-                onTap: () => _launchURL("mailto:joe.ebongi@example.com"),
+                subtitle: "sumeebong7@gmail.com",
+                onTap: () => _launchURL("mailto:sumeebong7@gmail.com"),
               ),
               const SizedBox(height: 12),
               _buildSocialTile(
                 icon: FontAwesomeIcons.linkedin,
                 title: "LinkedIn",
-                subtitle: "linkedin.com/in/ebongijoe",
-                onTap: () => _launchURL("https://linkedin.com/in/ebongijoe"),
+                subtitle: "linkedin.com/in/ebong-sume-4b0816298",
+                onTap: () => _launchURL(
+                  "https://www.linkedin.com/in/ebong-sume-4b0816298",
+                ),
               ),
               const SizedBox(height: 40),
             ],
