@@ -159,6 +159,16 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                     : () async {
                         if (!adddepartmentKey.currentState!.validate()) return;
 
+                        if (imageFile == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please select a department image'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                          return;
+                        }
+
                         // Show payment dialog with phone number input
                         final fee = NkwaService.getDepartmentCreationFee();
                         final phoneController = TextEditingController();
