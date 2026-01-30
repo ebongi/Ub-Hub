@@ -66,15 +66,6 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.neo',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB7cN6j0FAMqKUua19Zi0pVyFb_nzAVZmM',
-    appId: '1:734910045094:ios:699f1e59a6c1ec9b7d4d67',
-    messagingSenderId: '734910045094',
-    projectId: 'go-study-ub-hub',
-    storageBucket: 'go-study-ub-hub.firebasestorage.app',
-    iosBundleId: 'com.example.neo',
-  );
-
   static FirebaseOptions get macos => FirebaseOptions(
     apiKey: AppConfig.firebaseApiKeyIos,
     appId: AppConfig.firebaseAppIdIos,
