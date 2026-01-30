@@ -11,9 +11,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:neo/core/app_config.dart';
 import 'package:neo/Screens/UI/preview/Navigation/splash_screen.dart';
 
+import 'package:neo/services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.init();
+  await NotificationService().init();
 
   await sb.Supabase.initialize(
     url: SupabaseConfig.url,

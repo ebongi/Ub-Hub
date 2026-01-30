@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:neo/services/database.dart';
 import 'package:neo/services/exam_event.dart';
+import 'package:neo/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateExamScreen extends StatefulWidget {
@@ -138,6 +139,18 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
         } else {
           await dbService.updateExam(examEvent);
         }
+
+        // Schedule notification for the exam
+        await NotificationService().scheduleNotification(
+          id: examEvent.hashCode,
+          title: "Upcoming Exam: ${examEvent.name}",
+          body:
+              "Venue: ${examEvent.venue ?? 'TBD'} @ ${DateFormat('HH:mm').format(examEvent.startTime)}",
+          scheduledDate: examEvent.startTime.subtract(
+            const Duration(minutes: 30),
+          ), // 30 mins before
+        );
+
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {

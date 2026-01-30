@@ -1,30 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-
-class TodoTask {
-  String id;
-  String title;
-  String description;
-  DateTime? deadline;
-  DateTime? reminder;
-  double progress; // 0.0 to 1.0
-  String priority; // Low, Medium, High
-  String category;
-  bool isDone;
-
-  TodoTask({
-    required this.id,
-    required this.title,
-    this.description = "",
-    this.deadline,
-    this.reminder,
-    this.progress = 0.0,
-    this.priority = "Medium",
-    this.category = "Personal",
-    this.isDone = false,
-  });
-}
+import 'package:neo/services/database.dart';
+import 'package:neo/services/task_model.dart';
+import 'package:neo/services/notification_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaskManagerScreen extends StatefulWidget {
   const TaskManagerScreen({super.key});
@@ -34,25 +14,7 @@ class TaskManagerScreen extends StatefulWidget {
 }
 
 class _TaskManagerScreenState extends State<TaskManagerScreen> {
-  final List<TodoTask> _tasks = [
-    TodoTask(
-      id: "1",
-      title: "Complete Assignment 1",
-      description: "Submit the math report before 5 PM",
-      deadline: DateTime.now().add(const Duration(days: 1)),
-      priority: "High",
-      category: "Academic",
-      progress: 0.34,
-    ),
-    TodoTask(
-      id: "2",
-      title: "Read Chapter 4",
-      isDone: true,
-      category: "Academic",
-      progress: 1.0,
-    ),
-  ];
-
+  final _supabase = Supabase.instance.client;
   String _searchQuery = "";
   String _selectedCategory = "All";
   final List<String> _categories = [
@@ -63,49 +25,9 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     "Side projects",
   ];
 
-  List<TodoTask> get _filteredTasks {
-    return _tasks.where((task) {
-      final matchesSearch = task.title.toLowerCase().contains(
-        _searchQuery.toLowerCase(),
-      );
-      final matchesCategory =
-          _selectedCategory == "All" || task.category == _selectedCategory;
-      return matchesSearch && matchesCategory;
-    }).toList();
-  }
-
-  Map<String, List<TodoTask>> get _groupedTasks {
-    final Map<String, List<TodoTask>> grouped = {
-      "Overdue": [],
-      "Today": [],
-      "Upcoming": [],
-      "Completed": [],
-    };
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    for (var task in _filteredTasks) {
-      if (task.isDone) {
-        grouped["Completed"]!.add(task);
-      } else if (task.deadline == null) {
-        grouped["Upcoming"]!.add(task);
-      } else {
-        final taskDate = DateTime(
-          task.deadline!.year,
-          task.deadline!.month,
-          task.deadline!.day,
-        );
-        if (taskDate.isBefore(today)) {
-          grouped["Overdue"]!.add(task);
-        } else if (taskDate.isAtSameMomentAs(today)) {
-          grouped["Today"]!.add(task);
-        } else {
-          grouped["Upcoming"]!.add(task);
-        }
-      }
-    }
-    return grouped;
+  DatabaseService get _dbService {
+    final user = _supabase.auth.currentUser;
+    return DatabaseService(uid: user?.id);
   }
 
   void _showAddTaskDialog() {
@@ -115,7 +37,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     DateTime? selectedReminder;
     double progress = 0.0;
     String priority = "Medium";
-    String category = _categories[1]; // Default to first non-All category
+    String category = _categories[1];
 
     showDialog(
       context: context,
@@ -244,23 +166,35 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
               child: const Text("CANCEL"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (nameController.text.isNotEmpty) {
-                  setState(() {
-                    _tasks.add(
-                      TodoTask(
-                        id: DateTime.now().toString(),
-                        title: nameController.text,
-                        description: descController.text,
-                        deadline: selectedDeadline,
-                        reminder: selectedReminder,
-                        progress: progress,
-                        priority: priority,
-                        category: category,
-                      ),
+                  final user = _supabase.auth.currentUser;
+                  if (user == null) return;
+
+                  final newTask = TodoTask(
+                    userId: user.id,
+                    title: nameController.text,
+                    description: descController.text,
+                    deadline: selectedDeadline,
+                    reminder: selectedReminder,
+                    progress: progress,
+                    priority: priority,
+                    category: category,
+                    isDone: false,
+                  );
+
+                  await _dbService.addTask(newTask);
+
+                  if (selectedReminder != null) {
+                    await NotificationService().scheduleNotification(
+                      id: newTask.hashCode,
+                      title: "Task Reminder",
+                      body: "Don't forget: ${newTask.title}",
+                      scheduledDate: selectedReminder!,
                     );
-                  });
-                  Navigator.pop(context);
+                  }
+
+                  if (mounted) Navigator.pop(context);
                 }
               },
               child: const Text("OKAY"),
@@ -273,8 +207,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groups = _groupedTasks;
     final theme = Theme.of(context);
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text("Please sign in")));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -282,7 +220,6 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
           "To-Do List",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
       ),
       body: Column(
         children: [
@@ -321,39 +258,69 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             ),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: groups.entries.where((e) => e.value.isNotEmpty).expand((
-                entry,
-              ) {
-                return [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          entry.key,
-                          style: GoogleFonts.outfit(
-                            color: entry.key == "Overdue"
-                                ? Colors.red
-                                : Colors.blue,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+            child: StreamBuilder<List<TodoTask>>(
+              stream: _dbService.tasks,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+
+                final allTasks = snapshot.data ?? [];
+                final filteredTasks = allTasks.where((task) {
+                  final matchesSearch = task.title.toLowerCase().contains(
+                    _searchQuery.toLowerCase(),
+                  );
+                  final matchesCategory =
+                      _selectedCategory == "All" ||
+                      task.category == _selectedCategory;
+                  return matchesSearch && matchesCategory;
+                }).toList();
+
+                final groups = _groupTasks(filteredTasks);
+
+                if (filteredTasks.isEmpty) {
+                  return const Center(child: Text("No tasks found"));
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: groups.entries
+                      .where((e) => e.value.isNotEmpty)
+                      .expand((entry) {
+                        return [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  entry.key,
+                                  style: GoogleFonts.outfit(
+                                    color: entry.key == "Overdue"
+                                        ? Colors.red
+                                        : Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  "${entry.value.length}",
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          "${entry.value.length}",
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(thickness: 1.5),
-                  ...entry.value.map((task) => _buildTaskTile(task)),
-                  const SizedBox(height: 16),
-                ];
-              }).toList(),
+                          const Divider(thickness: 1.5),
+                          ...entry.value.map((task) => _buildTaskTile(task)),
+                          const SizedBox(height: 16),
+                        ];
+                      })
+                      .toList(),
+                );
+              },
             ),
           ),
         ],
@@ -365,6 +332,40 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     );
   }
 
+  Map<String, List<TodoTask>> _groupTasks(List<TodoTask> tasks) {
+    final Map<String, List<TodoTask>> grouped = {
+      "Overdue": [],
+      "Today": [],
+      "Upcoming": [],
+      "Completed": [],
+    };
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    for (var task in tasks) {
+      if (task.isDone) {
+        grouped["Completed"]!.add(task);
+      } else if (task.deadline == null) {
+        grouped["Upcoming"]!.add(task);
+      } else {
+        final taskDate = DateTime(
+          task.deadline!.year,
+          task.deadline!.month,
+          task.deadline!.day,
+        );
+        if (taskDate.isBefore(today)) {
+          grouped["Overdue"]!.add(task);
+        } else if (taskDate.isAtSameMomentAs(today)) {
+          grouped["Today"]!.add(task);
+        } else {
+          grouped["Upcoming"]!.add(task);
+        }
+      }
+    }
+    return grouped;
+  }
+
   Widget _buildTaskTile(TodoTask task) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -372,7 +373,21 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
       child: ExpansionTile(
         leading: Checkbox(
           value: task.isDone,
-          onChanged: (val) => setState(() => task.isDone = val ?? false),
+          onChanged: (val) async {
+            final updatedTask = TodoTask(
+              id: task.id,
+              userId: task.userId,
+              title: task.title,
+              description: task.description,
+              deadline: task.deadline,
+              reminder: task.reminder,
+              progress: val == true ? 1.0 : task.progress,
+              priority: task.priority,
+              category: task.category,
+              isDone: val ?? false,
+            );
+            await _dbService.updateTask(updatedTask);
+          },
         ),
         title: Text(
           task.title,
@@ -430,7 +445,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                   alignment: Alignment.centerRight,
                   child: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.grey),
-                    onPressed: () => setState(() => _tasks.remove(task)),
+                    onPressed: () async {
+                      await _dbService.deleteTask(task.id);
+                      await NotificationService().cancelNotification(
+                        task.hashCode,
+                      );
+                    },
                   ),
                 ),
               ],
