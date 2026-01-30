@@ -25,7 +25,6 @@ class _AboutScreenState extends State<AboutScreen> {
     setState(() {
       _version = info.version;
       _buildNumber = info.buildNumber;
-      _appName = info.appName;
     });
   }
 
