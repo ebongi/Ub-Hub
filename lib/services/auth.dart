@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:neo/services/database.dart';
 
 class Authentication {
-  final _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  Authentication({SupabaseClient? client})
+    : _supabase = client ?? Supabase.instance.client;
+
+  User? get currentUser => _supabase.auth.currentUser;
 
   // Register a new User with Email and password
   Future createUserWithEmailAndPassword({

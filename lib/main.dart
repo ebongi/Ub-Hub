@@ -1,3 +1,4 @@
+import 'package:neo/services/message_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:neo/Screens/Shared/constanst.dart';
@@ -8,6 +9,7 @@ import 'package:neo/core/supabase_config.dart';
 import 'package:neo/Screens/onboarding/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:neo/core/app_config.dart';
+import 'package:neo/Screens/UI/preview/Navigation/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => UserModel()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         StreamProvider<sb.User?>(
@@ -56,7 +59,7 @@ class MyApp extends StatelessWidget {
             '/auth': (context) => const AuthWrapper(),
             '/onboarding': (context) => const OnboardingScreen(),
           },
-          home: AppEntryPoint(isFirstLaunch: isFirstLaunch),
+          home: SplashScreen(isFirstLaunch: isFirstLaunch),
         );
       },
     );

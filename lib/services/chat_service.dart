@@ -39,14 +39,17 @@ class ChatMessageModel {
 }
 
 class ChatService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  ChatService({SupabaseClient? supabase})
+    : _supabase = supabase ?? Supabase.instance.client;
 
   Stream<List<ChatMessageModel>> getMessagesStream({String roomId = 'global'}) {
     return _supabase
         .from('messages')
         .stream(primaryKey: ['id'])
         .eq('room_id', roomId)
-        .order('created_at')
+        .order('created_at', ascending: false)
         .map(
           (data) =>
               data.map((json) => ChatMessageModel.fromJson(json)).toList(),

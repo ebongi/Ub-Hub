@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:neo/Screens/Shared/animations.dart';
 import 'package:neo/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +19,7 @@ import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 
+import 'package:neo/services/message_provider.dart';
 import 'package:provider/provider.dart';
 
 class ToolItem {
@@ -35,13 +37,29 @@ class ToolItem {
 }
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final SupabaseClient? supabaseClient;
+  const Home({super.key, this.supabaseClient});
 
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
+  late final SupabaseClient _supabase;
+
+  @override
+  void initState() {
+    super.initState();
+    _supabase = widget.supabaseClient ?? Supabase.instance.client;
+  }
+
+  Stream<List<Department>> getDepartmentStream() {
+    return _supabase
+        .from('departments')
+        .stream(primaryKey: ['id'])
+        .map((data) => data.map((e) => Department.fromSupabase(e)).toList());
+  }
+
   final List<ToolItem> toolboxItems = [
     ToolItem(
       name: "GPA Calculator",
@@ -127,19 +145,63 @@ class _HomeState extends State<Home> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            heroTag: "chatFAB",
-            tooltip: "Global Chat",
-            backgroundColor: theme.colorScheme.secondary,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ChatScreen()),
-            ),
-            child: Icon(
-              Icons.chat_rounded,
-              // color: theme.colorScheme.onSecondary,
-              color: theme.colorScheme.onSecondary.withOpacity(0.5),
-            ),
+          Consumer<MessageProvider>(
+            builder: (context, messageProvider, child) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: FloatingActionButton(
+                      heroTag: "chatFAB",
+                      tooltip: "Global Chat",
+                      backgroundColor: theme.colorScheme.secondary,
+                      onPressed: () {
+                        messageProvider.setChatOpen(true);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ChatScreen()),
+                        ).then((_) {
+                          messageProvider.setChatOpen(false);
+                        });
+                      },
+                      child: Icon(
+                        Icons.chat_rounded,
+                        color: theme.colorScheme.onSecondary,
+                      ),
+                    ),
+                  ),
+                  if (messageProvider.unreadCount > 0)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          messageProvider.unreadCount > 99
+                              ? '99+'
+                              : messageProvider.unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
@@ -147,7 +209,11 @@ class _HomeState extends State<Home> {
             tooltip: "Add Department",
             backgroundColor: theme.colorScheme.primary,
             onPressed: () => showAddDepartmentDialog(context),
-            child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+            child: Icon(
+              Icons.add,
+              color: theme.colorScheme.onPrimary,
+              size: 30,
+            ),
           ),
         ],
       ),

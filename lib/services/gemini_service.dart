@@ -1,24 +1,26 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/foundation.dart';
 import 'package:neo/core/app_config.dart';
+import 'package:neo/services/gemini_client.dart';
 
 class GeminiService {
   // Read API key from environment
   static final String _apiKey = AppConfig.geminiApiKey;
   static const String _modelName = 'gemini-2.5-flash-lite';
 
-  late final GenerativeModel _model;
-  late final ChatSession _chat;
+  final GeminiClient _client;
 
-  GeminiService() {
-    _model = GenerativeModel(model: _modelName, apiKey: _apiKey);
-    _chat = _model.startChat();
-  }
+  GeminiService({GeminiClient? client})
+    : _client =
+          client ??
+          GeminiChatSessionClient(
+            GenerativeModel(model: _modelName, apiKey: _apiKey).startChat(),
+          );
 
   Future<String> sendMessage(String message) async {
     try {
-      final response = await _chat.sendMessage(Content.text(message));
-      return response.text ?? "I couldn't generate a response.";
+      final responseText = await _client.sendMessage(message);
+      return responseText ?? "I couldn't generate a response.";
     } catch (e) {
       if (kDebugMode) {
         print('Gemini Error: $e');
@@ -29,12 +31,7 @@ class GeminiService {
 
   Stream<String> streamMessage(String message) async* {
     try {
-      final response = _chat.sendMessageStream(Content.text(message));
-      await for (final chunk in response) {
-        if (chunk.text != null) {
-          yield chunk.text!;
-        }
-      }
+      yield* _client.sendMessageStream(message);
     } catch (e) {
       if (kDebugMode) {
         print('Gemini Stream Error: $e');

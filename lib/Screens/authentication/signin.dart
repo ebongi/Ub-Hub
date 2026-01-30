@@ -5,7 +5,8 @@ import 'package:neo/Screens/Shared/constanst.dart';
 import 'package:neo/services/auth.dart';
 
 class Signin extends StatefulWidget {
-  const Signin({super.key, required this.istoggle});
+  final Authentication? authService;
+  const Signin({super.key, required this.istoggle, this.authService});
   final Function istoggle;
 
   @override
@@ -16,9 +17,15 @@ class _SigninState extends State<Signin> {
   final _emailcontroller = TextEditingController();
   final _passwordcontroller = TextEditingController();
   final _formkey = GlobalKey<FormState>();
-  final Authentication _authentication = Authentication();
+  late final Authentication _authentication;
   bool view_password = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authentication = widget.authService ?? Authentication();
+  }
 
   @override
   Widget build(BuildContext context) {
