@@ -4,6 +4,7 @@ import 'package:neo/Screens/UI/preview/Settings/accountdetails.dart';
 import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 import 'package:neo/Screens/UI/preview/Settings/about.dart';
 import 'package:neo/Screens/UI/preview/Settings/feedback.dart';
+import 'package:neo/Screens/UI/preview/Settings/developer_info.dart';
 import 'package:neo/Screens/UI/preview/Settings/rating.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:neo/services/auth.dart' show Authentication;
@@ -105,6 +106,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.feedback),
               title: Text(
                 "Feedback",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DeveloperInfoScreen(),
+                ),
+              ),
+              leading: const Icon(Icons.code),
+              title: Text(
+                "Developer",
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
