@@ -13,7 +13,6 @@ class AboutScreen extends StatefulWidget {
 class _AboutScreenState extends State<AboutScreen> {
   String _version = '';
   String _buildNumber = '';
-  String _appName = 'Ub-Hub';
 
   @override
   void initState() {
@@ -32,8 +31,6 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFF030E22),
       appBar: AppBar(
@@ -103,7 +100,8 @@ class _AboutScreenState extends State<AboutScreen> {
             const SizedBox(height: 30),
             _buildCategoryHeader("Productivity & Focus"),
             _buildFeatureTile(
-              icon: Icons.timer_3d_rounded,
+              icon: Icons
+                  .hourglass_bottom_rounded, // Changed from Icons.timer_3d_rounded
               title: "3D Study Timer",
               description:
                   "Boost focus with our visually immersive study companion.",
