@@ -5,7 +5,7 @@ import 'package:neo/core/app_config.dart';
 class GeminiService {
   // Read API key from environment
   static final String _apiKey = AppConfig.geminiApiKey;
-  static const String _modelName = 'gemini-2.5-pro';
+  static const String _modelName = 'gemini-2.5-flash-lite';
 
   late final GenerativeModel _model;
   late final ChatSession _chat;
