@@ -1,10 +1,11 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/foundation.dart';
+import 'package:neo/core/app_config.dart';
 
 class GeminiService {
-  // TODO: Replace with your actual API key
-  static const String _apiKey = 'AIzaSyBd6SdJGAnXpHKnuJl4lSPF_54alfy9WhQ';
-  static const String _modelName = 'gemini-2.5-flash';
+  // Read API key from environment
+  static final String _apiKey = AppConfig.geminiApiKey;
+  static const String _modelName = 'gemini-2.5-pro';
 
   late final GenerativeModel _model;
   late final ChatSession _chat;
@@ -22,7 +23,7 @@ class GeminiService {
       if (kDebugMode) {
         print('Gemini Error: $e');
       }
-      return "Sorry, I encountered an error connecting to the AI service. Please check your API key / internet connection.";
+      return "Sorry, I encountered an error connecting to the AI service: $e";
     }
   }
 
@@ -38,7 +39,7 @@ class GeminiService {
       if (kDebugMode) {
         print('Gemini Stream Error: $e');
       }
-      yield "Error: Could not stream response.";
+      yield "Error: Could not load stream. ($e)";
     }
   }
 }

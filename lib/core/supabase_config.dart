@@ -1,5 +1,6 @@
+import 'package:neo/core/app_config.dart';
+
 class SupabaseConfig {
-  static const String url = 'https://urglmgtjxtljzsjodmbf.supabase.co';
-  static const String anonKey =
-      'sb_publishable_sYKZjmroRV_LWRJzLGuUYw_FZ3h1Gcq';
+  static String get url => AppConfig.supabaseUrl;
+  static String get anonKey => AppConfig.supabaseAnonKey;
 }

@@ -5,14 +5,21 @@ import 'package:neo/Screens/authentication/wrap.dart';
 import 'package:neo/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:neo/core/supabase_config.dart';
+import 'package:neo/Screens/onboarding/onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:neo/core/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.init();
 
   await sb.Supabase.initialize(
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
+
+  final prefs = await SharedPreferences.getInstance();
+  final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
 
   runApp(
     MultiProvider(
@@ -26,27 +33,60 @@ void main() async {
           initialData: sb.Supabase.instance.client.auth.currentUser,
         ),
       ],
-      child: const MyApp(),
+      child: MyApp(isFirstLaunch: isFirstLaunch),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isFirstLaunch;
+  const MyApp({super.key, required this.isFirstLaunch});
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: "Go Study",
+          title: "UB STUDIES",
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const AuthWrapper(),
+          routes: {
+            '/auth': (context) => const AuthWrapper(),
+            '/onboarding': (context) => const OnboardingScreen(),
+          },
+          home: AppEntryPoint(isFirstLaunch: isFirstLaunch),
         );
       },
     );
+  }
+}
+
+class AppEntryPoint extends StatelessWidget {
+  final bool isFirstLaunch;
+  const AppEntryPoint({super.key, required this.isFirstLaunch});
+
+  @override
+  Widget build(BuildContext context) {
+    if (isFirstLaunch) {
+      // Pre-cache onboarding images for smoother experience
+      _precacheImages(context);
+      return const OnboardingScreen();
+    }
+
+    return const AuthWrapper();
+  }
+
+  void _precacheImages(BuildContext context) {
+    const images = [
+      'Learning-bro.png',
+      'gpa_calc.png',
+      'folder.png',
+      'team_work.png',
+    ];
+    for (final image in images) {
+      precacheImage(AssetImage('assets/images/$image'), context);
+    }
   }
 }

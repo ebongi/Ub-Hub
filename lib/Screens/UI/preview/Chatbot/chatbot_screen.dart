@@ -42,23 +42,43 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     // Streaming Logic
     try {
       String fullResponse = "";
+      bool hasError = false;
       await for (final chunk in _geminiService.streamMessage(text)) {
         if (!mounted) return;
 
+        if (chunk.startsWith("Error:")) {
+          fullResponse = chunk;
+          hasError = true;
+          break;
+        }
+
         fullResponse += chunk;
         setState(() {
-          // Update the last message (AI's placeholder)
-          _messages.last = ChatMessage(text: fullResponse, isUser: false);
-          _isLoading =
-              false; // We are receiving data, so no longer "waiting" for start
+          _messages.last = ChatMessage(
+            text: fullResponse,
+            isUser: false,
+            isError: hasError,
+          );
+          _isLoading = false;
         });
-        _scrollToBottom(); // Auto-scroll as text comes in
+        _scrollToBottom();
+      }
+
+      if (hasError) {
+        setState(() {
+          _messages.last = ChatMessage(
+            text: fullResponse,
+            isUser: false,
+            isError: true,
+          );
+          _isLoading = false;
+        });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _messages.last = ChatMessage(
-          text: "Sorry, I encountered an error. Please try again.",
+          text: "Sorry, I encountered a critical error: $e",
           isUser: false,
           isError: true,
         );

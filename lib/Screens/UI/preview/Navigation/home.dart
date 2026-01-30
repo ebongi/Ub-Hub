@@ -16,6 +16,7 @@ import 'package:neo/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/document_scanner_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
+import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 
 import 'package:provider/provider.dart';
 
@@ -123,11 +124,32 @@ class _HomeState extends State<Home> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Add Department",
-        backgroundColor: theme.colorScheme.primary,
-        onPressed: () => showAddDepartmentDialog(context),
-        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: "chatFAB",
+            tooltip: "Global Chat",
+            backgroundColor: theme.colorScheme.secondary,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChatScreen()),
+            ),
+            child: Icon(
+              Icons.chat_rounded,
+              // color: theme.colorScheme.onSecondary,
+              color: theme.colorScheme.onSecondary.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: "addDeptFAB",
+            tooltip: "Add Department",
+            backgroundColor: theme.colorScheme.primary,
+            onPressed: () => showAddDepartmentDialog(context),
+            child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+          ),
+        ],
       ),
     );
   }

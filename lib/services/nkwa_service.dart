@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:neo/services/payment_models.dart';
+import 'package:neo/core/app_config.dart';
 
 /// Service for handling Nkwa Pay integration
 class NkwaService {
-  // Nkwa API credentials
-  static const String _apiKey = 'G2ufFuh77jUEwQN_CBRy_';
+  // Nkwa API credentials from environment
+  static final String _apiKey = AppConfig.nkwaApiKey;
   static const String _stagingUrl = 'https://api.pay.staging.mynkwa.com';
   static const String _productionUrl = 'https://api.pay.mynkwa.com';
 
