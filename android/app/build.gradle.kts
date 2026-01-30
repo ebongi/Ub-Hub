@@ -12,13 +12,18 @@ android {
     namespace = "com.example.neo"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    
     compileOptions {
+        // Flag to enable support for the new language APIs
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
+    
     defaultConfig {
         // TODO: Specify your own unique Application ID[](https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.neo"
@@ -28,7 +33,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        multiDexEnabled = true
     }
+    
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -48,6 +56,8 @@ dependencies {
     // implementation("com.google.firebase:firebase-auth")
     // implementation("com.google.firebase:firebase-firestore")
     // See https://firebase.google.com/docs/android/setup#available-libraries for more
+    
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
 
 flutter {

@@ -19,7 +19,7 @@ class NotificationService {
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings(
-          '@mip-map/ic_launcher',
+          '@mipmap/ic_launcher',
         ); // Standard launcher icon
 
     const DarwinInitializationSettings initializationSettingsDarwin =

@@ -15,15 +15,21 @@ import 'package:neo/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppConfig.init();
-  await NotificationService().init();
 
-  await sb.Supabase.initialize(
-    url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
-  );
+  // Run initializations in parallel
+  final initResults = await Future.wait([
+    AppConfig.init(),
+    sb.Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    ),
+    SharedPreferences.getInstance(),
+  ]);
 
-  final prefs = await SharedPreferences.getInstance();
+  // Initialize notifications without blocking the first frame
+  NotificationService().init();
+
+  final prefs = initResults[2] as SharedPreferences;
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
 
   runApp(
