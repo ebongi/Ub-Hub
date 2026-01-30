@@ -37,7 +37,7 @@ class OnboardingScreen extends StatelessWidget {
       allowImplicitScrolling: true,
       pages: [
         PageViewModel(
-          title: "Welcome to UB STUDIES",
+          title: "Welcome to Ub Studies",
           body:
               "Your ultimate academic companion for the University of Buea. Stay organized and excel in your studies.",
           image: _buildImage('Learning-bro.png'),
