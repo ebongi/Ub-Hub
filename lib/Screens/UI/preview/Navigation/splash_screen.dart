@@ -121,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   children: [
                     Text(
-                      "UB Studies",
+                      "Ub Studies",
                       style: GoogleFonts.outfit(
                         fontSize: 42,
                         fontWeight: FontWeight.bold,
