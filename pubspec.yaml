@@ -66,6 +66,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0
   flutter_timezone: ^3.0.1
+  flutter_svg: ^2.0.10
   
 
 dev_dependencies:
@@ -84,7 +85,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/appicon.jpeg"
+  image_path: "assets/images/logo.png"
   min_sdk_android: 21
   adaptive_icon_background: "#0F172A"
 

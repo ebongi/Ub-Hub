@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/main.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatefulWidget {
   final bool isFirstLaunch;
@@ -94,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(24),
                   color: Colors.white.withOpacity(0.1),
                   boxShadow: [
                     BoxShadow(
@@ -104,10 +105,10 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.auto_stories_rounded,
-                  size: 80,
-                  color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/images/logo.svg',
+                  height: 120,
+                  width: 120,
                 ),
               ),
             ),
