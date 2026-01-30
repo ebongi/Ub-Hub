@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:neo/Screens/Shared/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
@@ -58,9 +59,10 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
               fontSize: 14,
             ),
             unselectedLabelStyle: GoogleFonts.outfit(fontSize: 14),
-            indicatorColor: Colors.blue,
+            indicatorColor: Colors.blueAccent,
             indicatorSize: TabBarIndicatorSize.label,
             isScrollable: false,
+            labelColor: Colors.blueAccent,
             tabs: const [
               Tab(text: "About", icon: Icon(Icons.info_outline)),
               Tab(text: "Courses", icon: Icon(Icons.school_outlined)),
@@ -122,35 +124,91 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         }
 
         final courses = snapshot.data!;
-        return ListView.builder(
-          padding: const EdgeInsets.all(8),
-          itemCount: courses.length,
-          itemBuilder: (context, index) {
-            final course = courses[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: ExpansionTile(
-                leading: const Icon(Icons.assignment, color: Colors.blue),
-                title: Text(
-                  course.name,
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(course.code),
-                trailing: IconButton(
-                  icon: const Icon(Icons.open_in_new, size: 20),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CourseDetailScreen(course: course),
-                    ),
-                  ),
-                ),
-                children: [_buildCourseMaterials(course)],
-              ),
-            );
-          },
+
+        // Group courses by level
+        final level200 = courses.where((c) => c.level == '200').toList();
+        final level300 = courses.where((c) => c.level == '300').toList();
+        final level400 = courses.where((c) => c.level == '400').toList();
+        final others = courses
+            .where((c) => !['200', '300', '400'].contains(c.level))
+            .toList();
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (level200.isNotEmpty) ...[
+              _buildLevelHeader("Level 200"),
+              ...level200.map((c) => _buildCourseTile(c)),
+            ],
+            if (level300.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildLevelHeader("Level 300"),
+              ...level300.map((c) => _buildCourseTile(c)),
+            ],
+            if (level400.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildLevelHeader("Level 400"),
+              ...level400.map((c) => _buildCourseTile(c)),
+            ],
+            if (others.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildLevelHeader("Other Courses"),
+              ...others.map((c) => _buildCourseTile(c)),
+            ],
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildLevelHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: GoogleFonts.outfit(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseTile(Course course) {
+    return FadeInSlide(
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        child: ExpansionTile(
+          shape: Border.all(color: Colors.transparent),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.assignment, color: Colors.blue),
+          ),
+          title: Text(
+            course.name,
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            course.code,
+            style: GoogleFonts.outfit(color: Colors.grey[600]),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.open_in_new, size: 20),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CourseDetailScreen(course: course),
+              ),
+            ),
+          ),
+          children: [_buildCourseMaterials(course)],
+        ),
+      ),
     );
   }
 
@@ -178,7 +236,14 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
 
         final materials = snapshot.data!;
         return Column(
-          children: materials.map((m) => _buildMaterialTile(m)).toList(),
+          children: materials.asMap().entries.map((entry) {
+            final index = entry.key;
+            final m = entry.value;
+            return FadeInSlide(
+              delay: index * 0.05,
+              child: _buildMaterialTile(m),
+            );
+          }).toList(),
         );
       },
     );
@@ -199,7 +264,10 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         return ListView.builder(
           padding: const EdgeInsets.all(8),
           itemCount: materials.length,
-          itemBuilder: (context, index) => _buildMaterialTile(materials[index]),
+          itemBuilder: (context, index) => FadeInSlide(
+            delay: index * 0.1,
+            child: _buildMaterialTile(materials[index]),
+          ),
         );
       },
     );
@@ -359,6 +427,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                     decoration: const InputDecoration(labelText: "Title"),
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
+                  SizedBox(height: 10),
                   TextFormField(
                     controller: descriptionController,
                     decoration: const InputDecoration(labelText: "Description"),
@@ -383,7 +452,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
             ),
             ElevatedButton(
               onPressed: () async {

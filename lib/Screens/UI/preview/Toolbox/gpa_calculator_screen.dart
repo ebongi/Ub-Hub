@@ -58,17 +58,31 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cardColor = theme.cardTheme.color;
-    final primaryColor = theme.colorScheme.primary;
+    const bgColor = Color(0xFF0F172A); // Midnight blue from theme_provider
+    const cardColor = Color(0xFF1E293B);
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           "GPA Calculator",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -78,15 +92,8 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
             child: Container(
               height: 50,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
+                color: Colors.black.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  ),
-                ],
               ),
               child: Row(
                 children: [
@@ -95,18 +102,35 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                       onTap: () => setState(() => _isUG = true),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _isUG ? primaryColor : Colors.transparent,
+                          color: _isUG ? cardColor : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
+                          border: _isUG
+                              ? Border.all(
+                                  color: Colors.white.withOpacity(0.05),
+                                )
+                              : null,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          "UG",
-                          style: GoogleFonts.outfit(
-                            color: _isUG
-                                ? Colors.white
-                                : theme.textTheme.bodyMedium?.color,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isUG)
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            if (_isUG) const SizedBox(width: 8),
+                            Text(
+                              "UG",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: _isUG
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -116,18 +140,35 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                       onTap: () => setState(() => _isUG = false),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: !_isUG ? primaryColor : Colors.transparent,
+                          color: !_isUG ? cardColor : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
+                          border: !_isUG
+                              ? Border.all(
+                                  color: Colors.white.withOpacity(0.05),
+                                )
+                              : null,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          "MBA",
-                          style: GoogleFonts.outfit(
-                            color: !_isUG
-                                ? Colors.white
-                                : theme.textTheme.bodyMedium?.color,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (!_isUG)
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            if (!_isUG) const SizedBox(width: 8),
+                            Text(
+                              "MBA",
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontWeight: !_isUG
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -152,15 +193,17 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                       child: Container(
                         height: 60,
                         decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.1),
+                          color: cardColor.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: primaryColor.withOpacity(0.3),
-                            width: 1,
-                            style: BorderStyle.solid,
+                            color: Colors.white.withOpacity(0.05),
                           ),
                         ),
-                        child: Icon(Icons.add, color: primaryColor, size: 30),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 30,
+                        ),
                       ),
                     ),
                   );
@@ -176,13 +219,7 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,8 +231,9 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                             child: TextFormField(
                               initialValue: course.name,
                               style: GoogleFonts.outfit(
+                                color: Colors.white,
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
@@ -203,7 +241,7 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                                 focusedBorder: InputBorder.none,
                                 contentPadding: EdgeInsets.zero,
                                 isDense: true,
-                                hintText: "Course Name",
+                                filled: false,
                               ),
                               onChanged: (val) => course.name = val,
                             ),
@@ -211,7 +249,7 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                           Text(
                             coursePoints.toStringAsFixed(2),
                             style: GoogleFonts.outfit(
-                              color: Colors.grey,
+                              color: Colors.white70,
                               fontSize: 14,
                             ),
                           ),
@@ -222,7 +260,6 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                         children: [
                           Expanded(
                             child: _buildDropdownField(
-                              context,
                               "Credit",
                               course.credits.toString(),
                               _creditValues.map((e) => e.toString()).toList(),
@@ -238,7 +275,6 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildDropdownField(
-                              context,
                               "Grade",
                               course.grade,
                               _gradePoints.keys.toList(),
@@ -260,11 +296,8 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1))),
-        ),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+        color: Colors.transparent,
         child: Row(
           children: [
             // Reset Button
@@ -275,40 +308,41 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                 width: 55,
                 height: 55,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: const Color(0xFF1E3A8A), // Dark blue
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(Icons.refresh, color: theme.colorScheme.onSurface),
+                child: const Icon(Icons.refresh, color: Colors.white),
               ),
             ),
             const SizedBox(width: 16),
             // Calculate Button
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
+              child: InkWell(
+                onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      backgroundColor: theme.cardTheme.color,
+                      backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(color: Colors.white.withOpacity(0.1)),
                       ),
                       title: Text(
                         "Calculation Result",
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(color: Colors.white),
                       ),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             "Your Cumulative GPA is",
-                            style: GoogleFonts.outfit(color: Colors.grey),
+                            style: GoogleFonts.outfit(color: Colors.white70),
                           ),
                           const SizedBox(height: 10),
                           Text(
                             _totalGpa.toStringAsFixed(2),
                             style: GoogleFonts.outfit(
-                              color: primaryColor,
+                              color: const Color(0xFFD97706),
                               fontSize: 48,
                               fontWeight: FontWeight.bold,
                             ),
@@ -316,7 +350,7 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                           const SizedBox(height: 10),
                           Text(
                             _isUG ? "Undergraduate Level" : "Graduate Level",
-                            style: GoogleFonts.outfit(color: Colors.grey),
+                            style: GoogleFonts.outfit(color: Colors.white38),
                           ),
                         ],
                       ),
@@ -325,27 +359,34 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
                           onPressed: () => Navigator.pop(context),
                           child: Text(
                             "Close",
-                            style: GoogleFonts.outfit(color: primaryColor),
+                            style: GoogleFonts.outfit(color: Colors.white),
                           ),
                         ),
                       ],
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  minimumSize: const Size(double.infinity, 55),
-                  shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+                child: Container(
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD97706), // Yellow/Orange
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  "Calculate",
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.calculate_outlined, color: Colors.white),
+                      const SizedBox(width: 10),
+                      Text(
+                        "Calculate",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -357,7 +398,6 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
   }
 
   Widget _buildDropdownField(
-    BuildContext context,
     String label,
     String value,
     List<String> items,
@@ -367,26 +407,21 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
       height: 55,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.white24),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            top: -8,
-            left: 0,
+            top: -10,
+            left: 5,
             child: Container(
-              color: Theme.of(context).cardTheme.color,
               padding: const EdgeInsets.symmetric(horizontal: 4),
+              color: const Color(0xFF1E293B),
               child: Text(
                 label,
-                style: GoogleFonts.outfit(
-                  color: Colors.grey,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: GoogleFonts.outfit(color: Colors.white60, fontSize: 12),
               ),
             ),
           ),
@@ -394,15 +429,17 @@ class _GPACalculatorScreenState extends State<GPACalculatorScreen> {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+              dropdownColor: const Color(0xFF1E293B),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.white60,
+              ),
               items: items.map((String val) {
                 return DropdownMenuItem<String>(
                   value: val,
                   child: Text(
                     val,
-                    style: GoogleFonts.outfit(
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
+                    style: GoogleFonts.outfit(color: Colors.white),
                   ),
                 );
               }).toList(),

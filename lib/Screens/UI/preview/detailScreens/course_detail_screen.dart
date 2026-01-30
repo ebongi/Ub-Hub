@@ -80,7 +80,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           material.fileType == 'pdf'
               ? Icons.picture_as_pdf
               : Icons.insert_drive_file,
-          color: Colors.blue,
+          color: Colors.red,
         ),
         title: Text(
           material.title,
@@ -141,6 +141,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     decoration: const InputDecoration(labelText: "Title"),
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
+                  SizedBox(height: 20),
                   TextFormField(
                     controller: descriptionController,
                     decoration: const InputDecoration(labelText: "Description"),
@@ -165,7 +166,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
             ),
             ElevatedButton(
               onPressed: isLoading

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/Shared/constanst.dart' show DepartmentUIData;
+import 'package:neo/Screens/UI/preview/Navigation/home.dart'
+    show DepartmentUIData;
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:neo/services/department.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +51,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(

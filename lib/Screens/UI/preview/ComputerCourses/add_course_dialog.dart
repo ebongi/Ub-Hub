@@ -12,6 +12,7 @@ Future<void> showAddCourseDialog(
   final courseNameController = TextEditingController();
   final courseCodeController = TextEditingController();
   final addCourseKey = GlobalKey<FormState>();
+  String? selectedLevel;
 
   return showDialog(
     context: context,
@@ -46,6 +47,19 @@ Future<void> showAddCourseDialog(
                     ? 'Please enter a course code'
                     : null,
               ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedLevel,
+                decoration: const InputDecoration(labelText: "Level"),
+                items: const [
+                  DropdownMenuItem(value: "200", child: Text("Level 200")),
+                  DropdownMenuItem(value: "300", child: Text("Level 300")),
+                  DropdownMenuItem(value: "400", child: Text("Level 400")),
+                ],
+                onChanged: (value) => selectedLevel = value,
+                validator: (value) =>
+                    value == null ? 'Please select a level' : null,
+              ),
             ],
           ),
         ),
@@ -61,6 +75,7 @@ Future<void> showAddCourseDialog(
                   name: courseNameController.text,
                   code: courseCodeController.text,
                   departmentId: departmentId,
+                  level: selectedLevel,
                   createdAt: DateTime.now(),
                 );
                 try {

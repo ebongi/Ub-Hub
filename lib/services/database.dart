@@ -6,6 +6,7 @@ import 'package:neo/services/department.dart' show Department;
 import 'package:neo/services/exam_event.dart' show ExamEvent;
 import 'package:neo/services/payment_models.dart'
     show PaymentTransaction, PaymentStatus;
+import 'package:neo/services/task_model.dart';
 
 class DatabaseService {
   final String? uid;
@@ -236,5 +237,35 @@ class DatabaseService {
               .map((json) => PaymentTransaction.fromSupabase(json))
               .toList(),
         );
+  }
+
+  // ==================== Task To-Do Persistence ====================
+
+  /// Get tasks for the current user
+  Stream<List<TodoTask>> get tasks {
+    if (uid == null) return Stream.empty();
+    return _supabase
+        .from('tasks')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', uid!)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data.map((json) => TodoTask.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Create a new task
+  Future<void> addTask(TodoTask task) async {
+    await _supabase.from('tasks').insert(task.toSupabase());
+  }
+
+  /// Update a task
+  Future<void> updateTask(TodoTask task) async {
+    await _supabase.from('tasks').update(task.toSupabase()).eq('id', task.id);
+  }
+
+  /// Delete a task
+  Future<void> deleteTask(String taskId) async {
+    await _supabase.from('tasks').delete().eq('id', taskId);
   }
 }

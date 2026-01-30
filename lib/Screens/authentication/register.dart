@@ -33,6 +33,7 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -107,8 +108,10 @@ class _RegisterState extends State<Register> {
                         _isPasswordObscured
                             ? Icons.visibility_off_rounded
                             : Icons.visibility_rounded,
-                        color: theme.colorScheme.primary,
-                      ), // Removed cyanAccent check to enforce brand blue
+                        color: isDarkMode
+                            ? Colors.cyanAccent
+                            : theme.colorScheme.primary,
+                      ),
                     ),
                     validator: (password) =>
                         password == null || password.length < 6
@@ -144,7 +147,7 @@ class _RegisterState extends State<Register> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(e.message),
-                                backgroundColor: theme.colorScheme.error,
+                                backgroundColor: Colors.redAccent,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -159,7 +162,7 @@ class _RegisterState extends State<Register> {
                                 content: const Text(
                                   "An unexpected error occurred",
                                 ),
-                                backgroundColor: theme.colorScheme.error,
+                                backgroundColor: Colors.redAccent,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -184,8 +187,9 @@ class _RegisterState extends State<Register> {
                         Text(
                           "Already have an account?",
                           style: GoogleFonts.outfit(
-                            color: theme.textTheme.bodyMedium?.color
-                                ?.withOpacity(0.7),
+                            color: isDarkMode
+                                ? Colors.white70
+                                : Colors.grey[600],
                             fontSize: 15,
                           ),
                         ),
@@ -194,7 +198,9 @@ class _RegisterState extends State<Register> {
                           child: Text(
                             "Sign In",
                             style: GoogleFonts.outfit(
-                              color: theme.colorScheme.primary,
+                              color: isDarkMode
+                                  ? Colors.cyanAccent
+                                  : theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
