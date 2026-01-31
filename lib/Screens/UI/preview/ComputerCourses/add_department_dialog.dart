@@ -22,6 +22,9 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
   final description = TextEditingController();
   final adddepartmentKey = GlobalKey<FormState>();
 
+  final fee = NkwaService.getDepartmentCreationFee();
+  final phoneController = TextEditingController();
+
   bool isLoading = false;
 
   await showDialog(
@@ -108,6 +111,34 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                         icon: Icon(Icons.description),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: phoneController,
+                      enabled: !isLoading,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: "Phone: 237600000000",
+                        icon: Icon(Icons.phone),
+                        helperText: 'Format: 237XXXXXXXXX',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Phone number is required';
+                        }
+                        if (!NkwaService.isValidPhoneNumber(value)) {
+                          return 'Invalid phone number format';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Creation Fee: $fee XAF (via Mobile Money)',
+                      style: GoogleFonts.outfit().copyWith(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 15),
                     imageFile == null
                         ? OutlinedButton.icon(
@@ -169,81 +200,6 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                           return;
                         }
 
-                        // Show payment dialog with phone number input
-                        final fee = NkwaService.getDepartmentCreationFee();
-                        final phoneController = TextEditingController();
-
-                        final paymentData = await showDialog<Map<String, dynamic>>(
-                          context: dialogContext,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Payment Required'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Creating a department requires a payment of $fee XAF via Mobile Money.',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  controller: phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Phone Number',
-                                    hintText: '237600000000',
-                                    prefixIcon: Icon(Icons.phone),
-                                    helperText: 'Format: 237XXXXXXXXX',
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Phone number is required';
-                                    }
-                                    if (!NkwaService.isValidPhoneNumber(
-                                      value,
-                                    )) {
-                                      return 'Invalid phone number format';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadiusGeometry.circular(
-                                      12,
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  if (NkwaService.isValidPhoneNumber(
-                                    phoneController.text,
-                                  )) {
-                                    Navigator.pop(ctx, {
-                                      'proceed': true,
-                                      'phone': NkwaService.formatPhoneNumber(
-                                        phoneController.text,
-                                      ),
-                                    });
-                                  }
-                                },
-                                child: const Text('Proceed to Payment'),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (paymentData?['proceed'] != true) return;
-
                         setDialogState(() => isLoading = true);
 
                         try {
@@ -253,7 +209,9 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                             throw Exception('User not authenticated');
                           }
 
-                          final phoneNumber = paymentData!['phone'] as String;
+                          final phoneNumber = NkwaService.formatPhoneNumber(
+                            phoneController.text,
+                          );
 
                           // Generate payment reference
                           final paymentRef = NkwaService.generatePaymentRef();
