@@ -176,19 +176,20 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const bgColor = Color(0xFF0F172A);
+    final bgColor = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         title: Text(
           "Resume Builder",
-          style: GoogleFonts.outfit(color: Colors.white),
+          style: GoogleFonts.outfit(color: theme.textTheme.titleLarge?.color),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -197,8 +198,8 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
           colorScheme: theme.colorScheme.copyWith(
             primary: Colors.blue,
             secondary: Colors.blue,
-            surface: const Color(0xFF1E293B),
-            onSurface: Colors.white,
+            surface: theme.cardColor,
+            onSurface: theme.textTheme.bodyLarge?.color,
           ),
           canvasColor: bgColor,
         ),
@@ -234,9 +235,13 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
                   if (_currentStep > 0)
                     TextButton(
                       onPressed: details.onStepCancel,
-                      child: const Text(
+                      child: Text(
                         "Back",
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                            0.7,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -247,14 +252,20 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
             Step(
               title: Text(
                 "Personal Info",
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
               content: Column(
                 children: [
-                  _buildInput(_nameController, "Full Name"),
-                  _buildInput(_emailController, "Email"),
-                  _buildInput(_phoneController, "Phone Number"),
-                  _buildInput(_linkedinController, "LinkedIn / Portfolio URL"),
+                  _buildInput(context, _nameController, "Full Name"),
+                  _buildInput(context, _emailController, "Email"),
+                  _buildInput(context, _phoneController, "Phone Number"),
+                  _buildInput(
+                    context,
+                    _linkedinController,
+                    "LinkedIn / Portfolio URL",
+                  ),
                 ],
               ),
               isActive: _currentStep >= 0,
@@ -262,14 +273,20 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
             Step(
               title: Text(
                 "Education",
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
               content: Column(
                 children: [
-                  _buildInput(_universityController, "University / College"),
-                  _buildInput(_degreeController, "Degree / Major"),
-                  _buildInput(_gradYearController, "Graduation Year"),
-                  _buildInput(_gpaController, "GPA (Optional)"),
+                  _buildInput(
+                    context,
+                    _universityController,
+                    "University / College",
+                  ),
+                  _buildInput(context, _degreeController, "Degree / Major"),
+                  _buildInput(context, _gradYearController, "Graduation Year"),
+                  _buildInput(context, _gpaController, "GPA (Optional)"),
                 ],
               ),
               isActive: _currentStep >= 1,
@@ -277,19 +294,25 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
             Step(
               title: Text(
                 "Skills",
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
               content: Column(
                 children: [
                   _buildInput(
+                    context,
                     _skillsController,
                     "Skills (Comma separated)",
                     maxLines: 3,
                   ),
                   const SizedBox(height: 5),
-                  const Text(
+                  Text(
                     "e.g. Flutter, Dart, Python, Team Leadership",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(
+                      color: theme.textTheme.bodySmall?.color,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -298,7 +321,9 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
             Step(
               title: Text(
                 "Experience",
-                style: GoogleFonts.outfit(color: Colors.white),
+                style: GoogleFonts.outfit(
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
               content: Column(
                 children: [
@@ -308,17 +333,22 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: isDark ? Colors.white10 : Colors.black12,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListTile(
                           title: Text(
                             e.role,
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: theme.textTheme.bodyLarge?.color,
+                            ),
                           ),
                           subtitle: Text(
                             e.company,
-                            style: const TextStyle(color: Colors.white70),
+                            style: TextStyle(
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(0.7),
+                            ),
                           ),
                           trailing: IconButton(
                             icon: const Icon(
@@ -332,16 +362,27 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
                       ),
                     ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     "Add Experience / Project",
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                        0.7,
+                      ),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  _buildInput(_roleController, "Role / Title"),
-                  _buildInput(_companyController, "Company / Project Name"),
-                  _buildInput(_descController, "Description", maxLines: 2),
+                  _buildInput(context, _roleController, "Role / Title"),
+                  _buildInput(
+                    context,
+                    _companyController,
+                    "Company / Project Name",
+                  ),
+                  _buildInput(
+                    context,
+                    _descController,
+                    "Description",
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
                     onPressed: _addExperience,
@@ -362,27 +403,33 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
   }
 
   Widget _buildInput(
+    BuildContext context,
     TextEditingController controller,
     String label, {
     int maxLines = 1,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        style: const TextStyle(color: Colors.white),
+        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.white70),
+          labelStyle: TextStyle(
+            color: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          ),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+            borderSide: BorderSide(color: Theme.of(context).dividerColor),
           ),
           focusedBorder: const OutlineInputBorder(
             borderSide: BorderSide(color: Colors.blue),
           ),
           filled: true,
-          fillColor: Colors.black12,
+          fillColor: isDark ? Colors.white10 : Colors.black12.withOpacity(0.05),
         ),
       ),
     );

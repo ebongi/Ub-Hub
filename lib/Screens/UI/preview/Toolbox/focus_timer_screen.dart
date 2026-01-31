@@ -77,7 +77,9 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Deep midnight blue
+      backgroundColor: Theme.of(
+        context,
+      ).scaffoldBackgroundColor, // Deep midnight blue or light background
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -86,10 +88,10 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
           "Focus Mode",
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
-        leading: const BackButton(color: Colors.white),
+        leading: BackButton(color: Theme.of(context).iconTheme.color),
       ),
       body: Stack(
         children: [
@@ -99,7 +101,12 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
               animation: _rotationController,
               builder: (context, child) {
                 return CustomPaint(
-                  painter: ParticlePainter(progress: _rotationController.value),
+                  painter: ParticlePainter(
+                    progress: _rotationController.value,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.1),
+                  ),
                 );
               },
             ),
@@ -148,10 +155,15 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                           offset: const Offset(0, 20),
                         ),
                       ],
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                        colors: Theme.of(context).brightness == Brightness.dark
+                            ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                            : [
+                                const Color(0xFFF1F5F9),
+                                const Color(0xFFE2E8F0),
+                              ],
                       ),
                     ),
                     child: Stack(
@@ -164,9 +176,17 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                           child: CircularProgressIndicator(
                             value: _secondsRemaining / (25 * 60),
                             strokeWidth: 4,
-                            backgroundColor: Colors.white10,
+                            backgroundColor:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white10
+                                : Colors.black12,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              _isRunning ? Colors.cyanAccent : Colors.white24,
+                              _isRunning
+                                  ? Colors.cyanAccent
+                                  : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white24
+                                        : Colors.black26),
                             ),
                           ),
                         ),
@@ -177,7 +197,9 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Theme.of(
+                                context,
+                              ).dividerColor.withOpacity(0.1),
                             ),
                             gradient: RadialGradient(
                               colors: [
@@ -200,7 +222,9 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                                 letterSpacing: 4,
                                 color: _isRunning
                                     ? Colors.cyanAccent
-                                    : Colors.white38,
+                                    : Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.color,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -210,7 +234,9 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                               style: GoogleFonts.outfit(
                                 fontSize: 64,
                                 fontWeight: FontWeight.w200,
-                                color: Colors.white,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge?.color,
                                 shadows: [
                                   Shadow(
                                     color: Colors.cyanAccent.withOpacity(
@@ -235,6 +261,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildFuturisticButton(
+                      context,
                       onPressed: _startTimer,
                       icon: _isRunning
                           ? Icons.pause_rounded
@@ -244,6 +271,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                     ),
                     const SizedBox(width: 24),
                     _buildFuturisticButton(
+                      context,
                       onPressed: _resetTimer,
                       icon: Icons.refresh_rounded,
                       label: "RESET",
@@ -259,7 +287,8 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
     );
   }
 
-  Widget _buildFuturisticButton({
+  Widget _buildFuturisticButton(
+    BuildContext context, {
     required VoidCallback onPressed,
     required IconData icon,
     required String label,
@@ -274,23 +303,34 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
           border: Border.all(
             color: isPrimary
                 ? Colors.cyanAccent.withOpacity(0.5)
-                : Colors.white24,
+                : Theme.of(context).dividerColor.withOpacity(0.2),
           ),
           gradient: LinearGradient(
             colors: isPrimary
                 ? [Colors.cyanAccent.withOpacity(0.2), Colors.transparent]
-                : [Colors.white.withOpacity(0.05), Colors.transparent],
+                : [
+                    Theme.of(context).cardColor.withOpacity(0.5),
+                    Colors.transparent,
+                  ],
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 20),
+            Icon(
+              icon,
+              color: isPrimary
+                  ? Colors.white
+                  : Theme.of(context).iconTheme.color,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: Colors.white,
+                color: isPrimary
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyLarge?.color,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
                 fontSize: 12,
@@ -305,11 +345,12 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
 
 class ParticlePainter extends CustomPainter {
   final double progress;
-  ParticlePainter({required this.progress});
+  final Color? color;
+  ParticlePainter({required this.progress, this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.1);
+    final paint = Paint()..color = color ?? Colors.white.withOpacity(0.1);
     final random = math.Random(42);
 
     for (int i = 0; i < 50; i++) {

@@ -16,12 +16,20 @@ class DeveloperInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF030E22), // App's background color
+      backgroundColor: Theme.of(
+        context,
+      ).scaffoldBackgroundColor, // App's background color
       appBar: AppBar(
-        title: Text("Developer", style: GoogleFonts.outfit()),
+        title: Text(
+          "Developer",
+          style: GoogleFonts.outfit(
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: Theme.of(context).iconTheme.color),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -61,7 +69,7 @@ class DeveloperInfoScreen extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               Text(
@@ -76,9 +84,11 @@ class DeveloperInfoScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_on_rounded,
-                    color: Colors.white70,
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     size: 16,
                   ),
                   const SizedBox(width: 4),
@@ -86,7 +96,9 @@ class DeveloperInfoScreen extends StatelessWidget {
                     "Buea, Cameroon",
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: Colors.white70,
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -96,16 +108,22 @@ class DeveloperInfoScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.1),
+                  ),
                 ),
                 child: Text(
                   "BSc Computer Science student at the University of Buea with a track record of award-winning coding projects. Highly proficient in Flutter (Dart), React Native with a strong foundation in Data Structures and Algorithm Design. Committed to building efficient, scalable mobile and web applications.",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 15,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.9),
                     height: 1.6,
                   ),
                 ),
@@ -113,6 +131,7 @@ class DeveloperInfoScreen extends StatelessWidget {
               const SizedBox(height: 40),
               // Social Links
               _buildSocialTile(
+                context,
                 icon: FontAwesomeIcons.github,
                 title: "GitHub",
                 subtitle: "github.com/ebongi",
@@ -120,6 +139,7 @@ class DeveloperInfoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _buildSocialTile(
+                context,
                 icon: Icons.alternate_email_rounded,
                 title: "Email",
                 subtitle: "sumeebong7@gmail.com",
@@ -127,6 +147,7 @@ class DeveloperInfoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _buildSocialTile(
+                context,
                 icon: FontAwesomeIcons.linkedin,
                 title: "LinkedIn",
                 subtitle: "linkedin.com/in/ebong-sume-4b0816298",
@@ -142,7 +163,8 @@ class DeveloperInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSocialTile({
+  Widget _buildSocialTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -154,9 +176,13 @@ class DeveloperInfoScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.1),
+          ),
         ),
         child: Row(
           children: [
@@ -171,14 +197,16 @@ class DeveloperInfoScreen extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -186,7 +214,7 @@ class DeveloperInfoScreen extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withOpacity(0.3),
+              color: Theme.of(context).iconTheme.color?.withOpacity(0.3),
               size: 16,
             ),
           ],
