@@ -94,8 +94,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 style: GoogleFonts.outfit(fontSize: 12),
               )
             : null,
-        trailing: const Icon(Icons.download),
-        onTap: () async {
+        trailing: IconButton(
+          icon: const Icon(Icons.download),
+          onPressed: () => _downloadFile(material.fileUrl),
+        ),
+        onTap: () {
           if (material.fileType.toLowerCase() == 'pdf') {
             Navigator.push(
               context,
@@ -106,16 +109,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 ),
               ),
             );
-            return;
-          }
-
-          final uri = Uri.parse(material.fileUrl);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            _downloadFile(material.fileUrl);
           }
         },
       ),
     );
+  }
+
+  Future<void> _downloadFile(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch download link')),
+        );
+      }
+    }
   }
 
   Future<void> _addMaterial() async {

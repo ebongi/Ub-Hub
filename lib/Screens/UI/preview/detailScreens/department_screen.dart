@@ -295,9 +295,25 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
               style: GoogleFonts.outfit(fontSize: 12),
             )
           : null,
-      trailing: const Icon(Icons.download_rounded, size: 20),
+      trailing: IconButton(
+        icon: const Icon(Icons.download_rounded, size: 20),
+        onPressed: () => _downloadFile(material.fileUrl),
+      ),
       onTap: () => _openFile(material),
     );
+  }
+
+  Future<void> _downloadFile(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch download link')),
+        );
+      }
+    }
   }
 
   Widget _buildEmptyState(String message, VoidCallback onAction) {
