@@ -5,6 +5,7 @@ import 'package:neo/Screens/UI/preview/Navigation/home.dart'
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:neo/services/department.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AllDepartmentsScreen extends StatefulWidget {
   const AllDepartmentsScreen({super.key});
@@ -126,9 +127,17 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                           child:
                               (department.imageUrl != null &&
                                   department.imageUrl!.isNotEmpty)
-                              ? Image.network(
-                                  department.imageUrl!,
+                              ? CachedNetworkImage(
+                                  imageUrl: department.imageUrl!,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    uiData.icon,
+                                    size: 40,
+                                    color: uiData.color.withOpacity(0.5),
+                                  ),
                                 )
                               : Icon(
                                   uiData.icon,

@@ -8,6 +8,10 @@ class CourseMaterial {
   final String fileName;
   final String fileType; // e.g., 'pdf', 'image', 'link'
   final DateTime uploadedAt;
+  final String materialCategory; // e.g., 'regular', 'past_question', 'answer'
+  final bool isPastQuestion;
+  final bool isAnswer;
+  final String? linkedMaterialId; // ID of the linked question or answer
 
   CourseMaterial({
     this.id = '',
@@ -19,6 +23,10 @@ class CourseMaterial {
     required this.fileName,
     required this.fileType,
     required this.uploadedAt,
+    this.materialCategory = 'regular',
+    this.isPastQuestion = false,
+    this.isAnswer = false,
+    this.linkedMaterialId,
   }) : assert(
          courseId != null || departmentId != null,
          'Either courseId or departmentId must be provided',
@@ -37,6 +45,10 @@ class CourseMaterial {
           : DateTime.now(),
       fileName: json['file_name'] ?? '',
       description: json['description'],
+      materialCategory: json['material_category'] ?? 'regular',
+      isPastQuestion: json['is_past_question'] ?? false,
+      isAnswer: json['is_answer'] ?? false,
+      linkedMaterialId: json['linked_material_id'],
     );
   }
 
@@ -49,6 +61,10 @@ class CourseMaterial {
       'file_type': fileType,
       'file_name': fileName,
       'description': description,
+      'material_category': materialCategory,
+      'is_past_question': isPastQuestion,
+      'is_answer': isAnswer,
+      'linked_material_id': linkedMaterialId,
       if (id.isNotEmpty) 'id': id,
     };
   }

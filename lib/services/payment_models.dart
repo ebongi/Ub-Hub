@@ -56,6 +56,8 @@ class PaymentTransaction {
   final String currency;
   final PaymentStatus status;
   final String? departmentId;
+  final String? materialId;
+  final String itemType; // 'department' or 'material'
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -67,6 +69,8 @@ class PaymentTransaction {
     required this.currency,
     required this.status,
     this.departmentId,
+    this.materialId,
+    required this.itemType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -80,6 +84,8 @@ class PaymentTransaction {
       currency: json['currency'] as String,
       status: _parsePaymentStatus(json['status'] as String),
       departmentId: json['department_id'] as String?,
+      materialId: json['material_id'] as String?,
+      itemType: json['item_type'] as String? ?? 'department',
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -94,6 +100,8 @@ class PaymentTransaction {
       'currency': currency,
       'status': status.name,
       if (departmentId != null) 'department_id': departmentId,
+      if (materialId != null) 'material_id': materialId,
+      'item_type': itemType,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -119,6 +127,8 @@ class PaymentTransaction {
     String? currency,
     PaymentStatus? status,
     String? departmentId,
+    String? materialId,
+    String? itemType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -130,6 +140,8 @@ class PaymentTransaction {
       currency: currency ?? this.currency,
       status: status ?? this.status,
       departmentId: departmentId ?? this.departmentId,
+      materialId: materialId ?? this.materialId,
+      itemType: itemType ?? this.itemType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

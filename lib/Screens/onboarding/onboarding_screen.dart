@@ -40,28 +40,28 @@ class OnboardingScreen extends StatelessWidget {
           title: "Welcome to Ub Studies",
           body:
               "Your ultimate academic companion for the University of Buea. Stay organized and excel in your studies.",
-          image: _buildImage('Learning-bro.png'),
+          image: _buildImage('4.png'),
           decoration: pageDecoration,
         ),
         PageViewModel(
           title: "Track Your Progress",
           body:
               "Calculate your GPA with ease and stay focused using our advanced 3D study timer.",
-          image: _buildImage('gpa_calc.png'),
+          image: _buildImage('2.png'),
           decoration: pageDecoration,
         ),
         PageViewModel(
           title: "Resource Hub",
           body:
               "Access department materials, past questions, and important academic updates all in one place.",
-          image: _buildImage('folder.png'),
+          image: _buildImage('3.png'),
           decoration: pageDecoration,
         ),
         PageViewModel(
           title: "Connect & Collaborate",
           body:
               "Join the global chat to discuss with peers and use our AI assistant for instant study help.",
-          image: _buildImage('team_work.png'),
+          image: _buildImage('1.png'),
           decoration: pageDecoration,
         ),
       ],

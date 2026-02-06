@@ -20,10 +20,8 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
   final departname = TextEditingController();
   final schoolid = TextEditingController();
   final description = TextEditingController();
-  final adddepartmentKey = GlobalKey<FormState>();
-
-  final fee = NkwaService.getDepartmentCreationFee();
   final phoneController = TextEditingController();
+  final adddepartmentKey = GlobalKey<FormState>();
 
   bool isLoading = false;
 
@@ -116,27 +114,20 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                       controller: phoneController,
                       enabled: !isLoading,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        hintText: "Phone: 237600000000",
-                        icon: Icon(Icons.phone),
-                        helperText: 'Format: 237XXXXXXXXX',
-                      ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Phone number is required';
+                          return 'Phone number is required for payment';
                         }
-                        if (!NkwaService.isValidPhoneNumber(value)) {
-                          return 'Invalid phone number format';
+                        // Simple check, service has more robust formatting
+                        if (value.length < 9) {
+                          return 'Enter a valid Cameroon phone number';
                         }
                         return null;
                       },
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Creation Fee: $fee XAF (via Mobile Money)',
-                      style: GoogleFonts.outfit().copyWith(
-                        fontSize: 12,
-                        color: Colors.grey,
+                      decoration: const InputDecoration(
+                        hintText: "Payment Phone (e.g. 6xxxxxxxx)",
+                        icon: Icon(Icons.phone_android),
+                        helperText: "Fee: 1000 XAF",
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -209,55 +200,129 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                             throw Exception('User not authenticated');
                           }
 
-                          final phoneNumber = NkwaService.formatPhoneNumber(
+                          String? imageUrl;
+                          if (imageFile != null) {
+                            final imageBytes = await imageFile!.readAsBytes();
+                            imageUrl = await dbService.uploadDepartmentImage(
+                              imageBytes,
+                              departname.text,
+                            );
+                          }
+
+                          // --- PAYMENT FLOW ---
+                          setDialogState(() => isLoading = true);
+
+                          final paymentRef = NkwaService.generatePaymentRef();
+                          final amount = NkwaService.getDepartmentCreationFee();
+                          final formattedPhone = NkwaService.formatPhoneNumber(
                             phoneController.text,
                           );
 
-                          // Generate payment reference
-                          final paymentRef = NkwaService.generatePaymentRef();
-
-                          // Create payment transaction record
+                          // 1. Create pending transaction in Supabase
                           final transaction = PaymentTransaction(
                             id: '',
                             userId: userId,
                             paymentRef: paymentRef,
-                            amount: fee,
+                            amount: amount,
                             currency: NkwaService.getCurrency(),
                             status: PaymentStatus.pending,
+                            departmentId: null, // No ID yet
+                            itemType: 'department',
                             createdAt: DateTime.now(),
                             updatedAt: DateTime.now(),
                           );
 
                           await dbService.createPaymentTransaction(transaction);
 
-                          // Collect payment via Nkwa API
-                          final paymentResponse =
+                          // 2. Initiate Nkwa Payment
+                          final collectResponse =
                               await NkwaService.collectPayment(
-                                amount: fee,
-                                phoneNumber: phoneNumber,
+                                amount: amount,
+                                phoneNumber: formattedPhone,
                                 description:
-                                    'Department creation: ${departname.text}',
+                                    'Payment for Department: ${departname.text}',
                               );
 
-                          final paymentId = paymentResponse['id'] as String;
+                          final nkwaPaymentId =
+                              collectResponse['id'] ??
+                              collectResponse['paymentId'];
+                          if (nkwaPaymentId == null) {
+                            throw Exception(
+                              'Failed to get payment ID from Nkwa',
+                            );
+                          }
 
-                          // Close the form dialog
+                          // 3. Poll for status
+                          PaymentStatus status = PaymentStatus.pending;
+                          int attempts = 0;
+                          while (status == PaymentStatus.pending &&
+                              attempts < 60) {
+                            print(
+                              'Polling department payment attempt ${attempts + 1}/60...',
+                            );
+                            await Future.delayed(const Duration(seconds: 3));
+                            status = await NkwaService.checkPaymentStatus(
+                              nkwaPaymentId.toString(),
+                            );
+                            attempts++;
+                          }
+
+                          // 4. Update status in Supabase (initial update, departmentId still null)
+                          await dbService.updatePaymentStatus(
+                            paymentRef,
+                            status,
+                            departmentId: null,
+                          );
+
+                          if (status != PaymentStatus.success) {
+                            throw Exception(
+                              'Payment failed or timed out. Please try again.',
+                            );
+                          }
+
+                          // 5. SUCCESS! Now create the department
+                          final newDepartment = Department(
+                            id: '',
+                            name: departname.text,
+                            schoolId: schoolid.text,
+                            description: description.text,
+                            imageUrl: imageUrl,
+                            createdAt: DateTime.now(),
+                          );
+
+                          final departmentId = await dbService.createDepartment(
+                            newDepartment,
+                          );
+
+                          // 6. Final link update: Update the transaction with the new departmentId
+                          await dbService.updatePaymentStatus(
+                            paymentRef,
+                            status,
+                            departmentId: departmentId,
+                          );
+
                           if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
+                            Navigator.pop(dialogContext); // Close dialog
                           }
 
                           if (context.mounted) {
-                            // Show payment processing dialog
-                            await _showNkwaPaymentDialog(
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Department "${departname.text}" created successfully!',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+
+                            Navigator.push(
                               context,
-                              dbService,
-                              paymentRef,
-                              paymentId,
-                              departname.text,
-                              schoolid.text,
-                              description.text,
-                              imageFile,
-                              phoneNumber,
+                              MaterialPageRoute(
+                                builder: (_) => DepartmentScreen(
+                                  departmentName: departname.text,
+                                  departmentId: departmentId,
+                                ),
+                              ),
                             );
                           }
                         } catch (e) {
@@ -266,7 +331,10 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Payment initialization failed: $e',
+                                  e
+                                      .toString()
+                                      .replaceAll('Exception:', '')
+                                      .trim(),
                                 ),
                                 backgroundColor: Colors.red,
                               ),
@@ -291,231 +359,4 @@ Future<void> showAddDepartmentDialog(BuildContext context) async {
       );
     },
   );
-}
-
-/// Show a dialog to poll Nkwa payment status and create department after successful payment
-Future<void> _showNkwaPaymentDialog(
-  BuildContext context,
-  DatabaseService dbService,
-  String paymentRef,
-  String paymentId,
-  String departmentName,
-  String schoolId,
-  String description,
-  XFile? imageFile,
-  String phoneNumber,
-) {
-  return showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => _NkwaPaymentStatusDialog(
-      dbService: dbService,
-      paymentRef: paymentRef,
-      paymentId: paymentId,
-      departmentName: departmentName,
-      schoolId: schoolId,
-      description: description,
-      imageFile: imageFile,
-      phoneNumber: phoneNumber,
-    ),
-  );
-}
-
-class _NkwaPaymentStatusDialog extends StatefulWidget {
-  final DatabaseService dbService;
-  final String paymentRef;
-  final String paymentId;
-  final String departmentName;
-  final String schoolId;
-  final String description;
-  final XFile? imageFile;
-  final String phoneNumber;
-
-  const _NkwaPaymentStatusDialog({
-    required this.dbService,
-    required this.paymentRef,
-    required this.paymentId,
-    required this.departmentName,
-    required this.schoolId,
-    required this.description,
-    this.imageFile,
-    required this.phoneNumber,
-  });
-
-  @override
-  State<_NkwaPaymentStatusDialog> createState() =>
-      _NkwaPaymentStatusDialogState();
-}
-
-class _NkwaPaymentStatusDialogState extends State<_NkwaPaymentStatusDialog> {
-  String _statusMessage = '';
-  bool _isChecking = true;
-  bool _isSuccess = false;
-  bool _isFailed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _statusMessage = 'Waiting for confirmation on ${widget.phoneNumber}...';
-    _startPolling();
-  }
-
-  void _startPolling() async {
-    int attempts = 0;
-    const maxAttempts = 60; // 2 minutes
-
-    while (attempts < maxAttempts && mounted && _isChecking) {
-      try {
-        final status = await NkwaService.checkPaymentStatus(widget.paymentId);
-
-        if (status == PaymentStatus.success) {
-          if (!mounted) return;
-          setState(() {
-            _isChecking = false;
-            _isSuccess = true;
-            _statusMessage = 'Payment successful! Creating department...';
-          });
-
-          await _createDepartment();
-          return;
-        } else if (status == PaymentStatus.failed ||
-            status == PaymentStatus.cancelled) {
-          if (!mounted) return;
-          setState(() {
-            _isChecking = false;
-            _isFailed = true;
-            _statusMessage = 'Payment failed or cancelled.';
-          });
-          return;
-        }
-
-        attempts++;
-        await Future.delayed(const Duration(seconds: 2));
-      } catch (e) {
-        debugPrint('Error polling payment status: $e');
-        await Future.delayed(const Duration(seconds: 2));
-      }
-    }
-
-    if (_isChecking && mounted) {
-      setState(() {
-        _isChecking = false;
-        _isFailed = true;
-        _statusMessage = 'Payment timeout. Please check SMS or retry.';
-      });
-    }
-  }
-
-  Future<void> _createDepartment() async {
-    try {
-      String? imageUrl;
-      if (widget.imageFile != null) {
-        final imageBytes = await widget.imageFile!.readAsBytes();
-        imageUrl = await widget.dbService.uploadDepartmentImage(
-          imageBytes,
-          widget.departmentName,
-        );
-      }
-
-      final newDepartment = Department(
-        id: '',
-        name: widget.departmentName,
-        schoolId: widget.schoolId,
-        description: widget.description,
-        imageUrl: imageUrl,
-        createdAt: DateTime.now(),
-      );
-
-      final departmentId = await widget.dbService.createDepartment(
-        newDepartment,
-      );
-
-      await widget.dbService.updatePaymentStatus(
-        widget.paymentRef,
-        PaymentStatus.success,
-        departmentId: departmentId,
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Close dialog
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Department "${widget.departmentName}" created successfully!',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DepartmentScreen(
-              departmentName: widget.departmentName,
-              departmentId: departmentId,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isSuccess = false;
-          _isFailed = true;
-          _statusMessage = 'Failed to create department: $e';
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Payment Status'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_isChecking) ...[
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(_statusMessage, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            const Text(
-              'Please check your phone for the authorization prompt.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ] else if (_isSuccess) ...[
-            const Icon(Icons.check_circle, size: 64, color: Colors.green),
-            const SizedBox(height: 16),
-            Text(_statusMessage, textAlign: TextAlign.center),
-          ] else ...[
-            const Icon(Icons.error, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(_statusMessage, textAlign: TextAlign.center),
-          ],
-        ],
-      ),
-      actions: [
-        if (!_isSuccess)
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        if (!_isChecking && !_isSuccess)
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _isChecking = true;
-                _isFailed = false;
-                _statusMessage = 'Checking status...';
-              });
-              _startPolling();
-            },
-            child: const Text('Retry Check'),
-          ),
-      ],
-    );
-  }
 }

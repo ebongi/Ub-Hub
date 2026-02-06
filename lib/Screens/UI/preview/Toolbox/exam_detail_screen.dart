@@ -5,6 +5,7 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/exam_event.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/create_exam_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ExamDetailScreen extends StatelessWidget {
   final ExamEvent exam;
@@ -72,11 +73,14 @@ class ExamDetailScreen extends StatelessWidget {
               const SizedBox(height: 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  exam.imageUrl!,
+                child: CachedNetworkImage(
+                  imageUrl: exam.imageUrl!,
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               ),
             ],

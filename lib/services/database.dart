@@ -124,8 +124,13 @@ class DatabaseService {
   }
 
   // Create a new material record
-  Future<void> addMaterial(CourseMaterial material) async {
-    await _supabase.from('course_materials').insert(material.toSupabase());
+  Future<String> addMaterial(CourseMaterial material) async {
+    final data = await _supabase
+        .from('course_materials')
+        .insert(material.toSupabase())
+        .select()
+        .single();
+    return data['id'] as String;
   }
 
   // Get materials for a specific course
@@ -201,12 +206,14 @@ class DatabaseService {
     String paymentRef,
     PaymentStatus status, {
     String? departmentId,
+    String? materialId,
   }) async {
     await _supabase
         .from('payment_transactions')
         .update({
           'status': status.name,
           if (departmentId != null) 'department_id': departmentId,
+          if (materialId != null) 'material_id': materialId,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('payment_ref', paymentRef);

@@ -18,6 +18,7 @@ import 'package:neo/Screens/UI/preview/Toolbox/document_scanner_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:neo/services/message_provider.dart';
 import 'package:provider/provider.dart';
@@ -131,8 +132,19 @@ class _HomeState extends State<Home> {
                         ),
                       );
                     }
-                    final recentDepartments = departments.take(3).toList();
-                    return DepartmentSection(departments: recentDepartments);
+                    final allowedNames = [
+                      "physics",
+                      "mathematics",
+                      "computer science",
+                    ];
+                    final filteredDepartments = departments
+                        .where(
+                          (d) => allowedNames.contains(
+                            d.name.trim().toLowerCase(),
+                          ),
+                        )
+                        .toList();
+                    return DepartmentSection(departments: filteredDepartments);
                   },
                 ),
                 const ViewSection(title: "Toolbox"),
@@ -378,9 +390,17 @@ class DepartmentSection extends StatelessWidget {
                               department.imageUrl!.isNotEmpty)
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: Image.network(
-                                department.imageUrl!,
+                              child: CachedNetworkImage(
+                                imageUrl: department.imageUrl!,
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  uiData.icon,
+                                  size: 60,
+                                  color: uiData.color.withOpacity(0.5),
+                                ),
                               ),
                             )
                           : Icon(
