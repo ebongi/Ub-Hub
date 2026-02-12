@@ -7,6 +7,10 @@ import 'package:neo/Screens/authentication/authenticate.dart';
 
 import 'package:provider/provider.dart';
 
+import 'package:neo/services/database.dart';
+import 'package:neo/services/profile.dart';
+import 'dart:async';
+
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
@@ -16,6 +20,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   sb.User? _previousUser;
+  StreamSubscription<UserProfile>? _profileSubscription;
 
   @override
   void didChangeDependencies() {
@@ -25,15 +30,40 @@ class _AuthWrapperState extends State<AuthWrapper> {
     // Check if the user state has changed from null to a logged-in user
     if (user != _previousUser) {
       if (user != null) {
-        // User has just logged in or was already logged in on app start.
-        // Update the UserModel with the user's display name.
+        // Cancel existing subscription if any
+        _profileSubscription?.cancel();
+
         final userModel = Provider.of<UserModel>(context, listen: false);
-        // Supabase user metadata holds the name
-        final name = user.userMetadata?['name'] ?? user.email ?? '';
-        userModel.setName(name);
+
+        // Listen to real-time profile updates
+        _profileSubscription = DatabaseService(uid: user.id).userProfile.listen(
+          (profile) {
+            userModel.update(
+              name: profile.name,
+              matricule: profile.matricule,
+              phoneNumber: profile.phoneNumber,
+              avatarUrl: profile.avatarUrl,
+            );
+          },
+        );
+
+        // Set initial name from metadata as fallback
+        if (userModel.name == null || userModel.name!.isEmpty) {
+          final name = user.userMetadata?['name'] ?? user.email ?? '';
+          userModel.setName(name);
+        }
+      } else {
+        _profileSubscription?.cancel();
+        _profileSubscription = null;
       }
       _previousUser = user;
     }
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
   }
 
   @override

@@ -19,7 +19,8 @@ import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:neo/services/database.dart';
+import 'package:neo/services/profile.dart';
 import 'package:neo/services/message_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -48,10 +49,21 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late final SupabaseClient _supabase;
 
+  UserProfile? _userProfile;
+
   @override
   void initState() {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
+
+    final db = DatabaseService(uid: _supabase.auth.currentUser?.id);
+    db.userProfile.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    });
   }
 
   Stream<List<Department>> getDepartmentStream() {
@@ -216,17 +228,18 @@ class _HomeState extends State<Home> {
             },
           ),
           const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "addDeptFAB",
-            tooltip: "Add Department",
-            backgroundColor: theme.colorScheme.primary,
-            onPressed: () => showAddDepartmentDialog(context),
-            child: Icon(
-              Icons.add,
-              color: theme.colorScheme.onPrimary,
-              size: 30,
+          if (_userProfile?.canUpload ?? false)
+            FloatingActionButton(
+              heroTag: "addDeptFAB",
+              tooltip: "Add Department",
+              backgroundColor: theme.colorScheme.primary,
+              onPressed: () => showAddDepartmentDialog(context),
+              child: Icon(
+                Icons.add,
+                color: theme.colorScheme.onPrimary,
+                size: 30,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -384,6 +397,13 @@ class DepartmentSection extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: uiData.color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 5,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child:
                           (department.imageUrl != null &&
@@ -530,26 +550,39 @@ class AppBarUser extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              width: 2,
-            ),
-          ),
-          child: CircleAvatar(
-            radius: 25,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.primary.withOpacity(0.1),
-            child: Icon(
-              Icons.person_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              size: 35,
-            ),
-          ),
+        StreamBuilder<UserProfile>(
+          stream: DatabaseService(
+            uid: Supabase.instance.client.auth.currentUser?.id,
+          ).userProfile,
+          builder: (context, snapshot) {
+            final avatarUrl = snapshot.data?.avatarUrl;
+            return Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 25,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withOpacity(0.1),
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: avatarUrl == null
+                    ? Icon(
+                        Icons.person_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 35,
+                      )
+                    : null,
+              ),
+            );
+          },
         ),
         const SizedBox(width: 16),
         Expanded(

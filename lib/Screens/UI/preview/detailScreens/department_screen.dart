@@ -11,6 +11,7 @@ import 'package:neo/services/course_model.dart';
 import 'package:neo/services/database.dart';
 import 'package:neo/services/nkwa_service.dart';
 import 'package:neo/services/payment_models.dart';
+import 'package:neo/services/profile.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -30,12 +31,21 @@ class DepartmentScreen extends StatefulWidget {
 
 class _DepartmentScreenState extends State<DepartmentScreen> {
   late final DatabaseService _dbService;
+  UserProfile? _userProfile;
 
   @override
   void initState() {
     super.initState();
     final currentUser = Supabase.instance.client.auth.currentUser;
     _dbService = DatabaseService(uid: currentUser?.id);
+
+    _dbService.userProfile.listen((profile) {
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    });
   }
 
   @override
@@ -139,13 +149,15 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _showUploadSelection,
-          icon: const Icon(Icons.add_rounded),
-          label: const Text("Upload"),
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
-        ),
+        floatingActionButton: (_userProfile?.canUpload ?? false)
+            ? FloatingActionButton.extended(
+                onPressed: _showUploadSelection,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text("Upload"),
+                backgroundColor: colorScheme.primaryContainer,
+                foregroundColor: colorScheme.onPrimaryContainer,
+              )
+            : null,
       ),
     );
   }
@@ -605,6 +617,23 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
+    // If user is a contributor or admin, skip payment and download directly
+    if (_userProfile?.role == UserRole.contributor ||
+        _userProfile?.role == UserRole.admin) {
+      final uri = Uri.parse(material.fileUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Could not launch download link")),
+          );
+        }
+      }
+      return;
+    }
+
+    // Otherwise, show payment dialog (existing logic)
     final phoneController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool isProcessing = false;
@@ -853,12 +882,13 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _showUploadSelection,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text("Add New"),
-            ),
+            if (_userProfile?.canUpload ?? false) const SizedBox(height: 24),
+            if (_userProfile?.canUpload ?? false)
+              FilledButton.icon(
+                onPressed: _showUploadSelection,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text("Add New"),
+              ),
           ],
         ),
       ),
@@ -1063,7 +1093,6 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                       value: selectedCategory,
                       style: GoogleFonts.outfit(color: colorScheme.onSurface),
                       decoration: InputDecoration(
-                        labelText: "Category",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

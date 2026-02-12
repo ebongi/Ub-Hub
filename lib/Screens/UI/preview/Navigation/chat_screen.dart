@@ -6,6 +6,7 @@ import 'package:neo/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
@@ -50,11 +51,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final userModel = Provider.of<UserModel>(context, listen: false);
     final senderName = userModel.name ?? 'Anonymous';
+    final avatarUrl = userModel.avatarUrl;
 
     _messageController.clear();
 
     try {
-      await _chatService.sendMessage(text, senderName: senderName);
+      await _chatService.sendMessage(
+        text,
+        senderName: senderName,
+        senderAvatarUrl: avatarUrl,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -185,22 +191,50 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _scrollController,
                     reverse: true, // Newest messages at the bottom
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 16,
+                      horizontal: 16,
+                      vertical: 20,
                     ),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       final isMe = message.senderId == _currentUserId;
 
-                      return FadeInSlide(
-                        duration: const Duration(milliseconds: 400),
-                        beginOffset: 0.1,
-                        child: _MessageBubble(
-                          message: message,
-                          isMe: isMe,
-                          theme: theme,
-                        ),
+                      // Date grouping logic
+                      bool showDateHeader = false;
+                      if (index == messages.length - 1) {
+                        showDateHeader = true;
+                      } else {
+                        final nextMessage = messages[index + 1];
+                        final date = DateTime(
+                          message.createdAt.year,
+                          message.createdAt.month,
+                          message.createdAt.day,
+                        );
+                        final nextDate = DateTime(
+                          nextMessage.createdAt.year,
+                          nextMessage.createdAt.month,
+                          nextMessage.createdAt.day,
+                        );
+                        if (date != nextDate) {
+                          showDateHeader = true;
+                        }
+                      }
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showDateHeader)
+                            _buildDateHeader(message.createdAt),
+                          FadeInSlide(
+                            duration: const Duration(milliseconds: 400),
+                            beginOffset: 0.1,
+                            child: _MessageBubble(
+                              message: message,
+                              isMe: isMe,
+                              theme: theme,
+                            ),
+                          ),
+                        ],
                       );
                     },
                   );
@@ -214,63 +248,123 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildInputArea(ThemeData theme) {
+  Widget _buildDateHeader(DateTime date) {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate = DateTime(date.year, date.month, date.day);
+
+    String dateText;
+    if (messageDate == today) {
+      dateText = "Today";
+    } else if (messageDate == yesterday) {
+      dateText = "Yesterday";
+    } else {
+      dateText = DateFormat('MMM d, yyyy').format(date);
+    }
+
     return Container(
-      padding: EdgeInsets.only(
-        left: 8,
-        right: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 8,
-        top: 8,
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 24),
       child: Row(
         children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.cardTheme.color,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.05))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              dateText,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                letterSpacing: 0.5,
               ),
+            ),
+          ),
+          Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.05))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      decoration: BoxDecoration(
+        color: Colors.transparent, // Maintain background visibility
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: () {
+                // Future attachment logic
+              },
+              icon: Icon(Icons.add_rounded, color: theme.colorScheme.primary),
+            ),
+            Expanded(
               child: TextField(
                 controller: _messageController,
                 textCapitalization: TextCapitalization.sentences,
-                maxLines: null,
-                style: GoogleFonts.outfit(color: theme.colorScheme.onSurface),
+                maxLines: 5,
+                minLines: 1,
+                style: GoogleFonts.outfit(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: "Message",
+                  hintText: "Spread some love...",
                   hintStyle: GoogleFonts.outfit(
                     color: theme.colorScheme.onSurface.withOpacity(0.4),
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
-          ),
-          const SizedBox(width: 5),
-          ScaleButton(
-            onTap: _sendMessage,
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: theme.colorScheme.primary,
-              child: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 24,
+            const SizedBox(width: 8),
+            ScaleButton(
+              onTap: _sendMessage,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -287,96 +381,127 @@ class _MessageBubble extends StatelessWidget {
     required this.theme,
   });
 
+  Widget _buildAvatar() {
+    return CircleAvatar(
+      radius: 12,
+      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+      backgroundImage: message.senderAvatarUrl != null
+          ? CachedNetworkImageProvider(message.senderAvatarUrl!)
+          : null,
+      child: message.senderAvatarUrl == null
+          ? Icon(
+              Icons.person_rounded,
+              size: 16,
+              color: theme.colorScheme.primary,
+            )
+          : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('HH:mm');
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // Theme-based Bubble Colors
-    final Color bubbleColor = isMe
-        ? theme.colorScheme.primary
-        : theme.cardTheme.color ?? Colors.grey[200]!;
-
-    final Color textColor = isMe
-        ? Colors.white
-        : (isDarkMode ? Colors.white : Colors.black87);
-
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: bubbleColor,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                message.senderName ?? 'Anonymous',
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isMe
-                      ? Colors.white.withOpacity(0.9)
-                      : theme.colorScheme.primary,
+            if (!isMe) ...[_buildAvatar(), const SizedBox(width: 8)],
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isMe
+                      ? LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withOpacity(0.85),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isMe ? null : theme.cardTheme.color,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isMe ? 20 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isMe)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          message.senderName ?? 'Anonymous',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    Text(
+                      message.content,
+                      style: GoogleFonts.outfit(
+                        color: isMe
+                            ? Colors.white
+                            : (isDarkMode ? Colors.white : Colors.black87),
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          timeFormat.format(message.createdAt),
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color:
+                                (isMe
+                                        ? Colors.white
+                                        : (isDarkMode
+                                              ? Colors.white
+                                              : Colors.black87))
+                                    .withOpacity(0.5),
+                          ),
+                        ),
+                        if (isMe) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.done_all,
+                            size: 14,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 50, bottom: 4),
-                  child: Text(
-                    message.content,
-                    style: GoogleFonts.outfit(color: textColor, fontSize: 15),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        timeFormat.format(message.createdAt),
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          color: textColor.withOpacity(0.6),
-                        ),
-                      ),
-                      if (isMe) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.done_all,
-                          size: 14,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            if (isMe) ...[const SizedBox(width: 8), _buildAvatar()],
           ],
         ),
       ),

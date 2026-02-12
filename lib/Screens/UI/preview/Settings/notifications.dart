@@ -53,7 +53,11 @@ class _NotificationsState extends State<Notifications> {
     final department = DatabaseService();
     return Scaffold(
       // backgroundColor: ,
-      appBar: AppBar(title: const Text("Notifications"), centerTitle: true),
+      appBar: AppBar(
+        title: const Text("Notifications"),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+      ),
       body: Column(
         children: [
           Container(

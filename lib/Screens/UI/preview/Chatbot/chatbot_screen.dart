@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:neo/services/gemini_service.dart';
 import 'package:neo/Screens/Shared/animations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:provider/provider.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -167,90 +170,173 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildEmptyState(ThemeData theme) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.auto_awesome_rounded,
-            size: 64,
-            color: theme.colorScheme.primary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "How can I help you today?",
-            style: GoogleFonts.outfit(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 64,
+                color: theme.colorScheme.primary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Ask me about your courses, generating ideas,\nor just chat!",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
+            const SizedBox(height: 24),
+            Text(
+              "How can I help you today?",
+              style: GoogleFonts.outfit(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              "Ask me about your courses, generating ideas,\nor just chat!",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            _buildQuickStarters(theme),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildQuickStarters(ThemeData theme) {
+    final starters = [
+      "📈 Help me with calculus",
+      "📝 Write a study plan",
+      "💡 Project ideas",
+      "📚 Summarize notes",
+    ];
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      alignment: WrapAlignment.center,
+      children: starters.map((text) {
+        return ScaleButton(
+          onTap: () {
+            _controller.text = text.substring(2); // Remove emoji
+            _sendMessage();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              text,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildInputArea(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       decoration: BoxDecoration(
-        color: theme.cardTheme.color,
+        color: theme.scaffoldBackgroundColor,
         border: Border(
-          top: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+          top: BorderSide(color: theme.dividerColor.withOpacity(0.05)),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              textCapitalization: TextCapitalization.sentences,
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
-              decoration: InputDecoration(
-                hintText: "Type a message...",
-                hintStyle: GoogleFonts.outfit(
-                  color: theme.colorScheme.onSurface.withOpacity(0.4),
-                ),
-                filled: true,
-                fillColor: theme.scaffoldBackgroundColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-              ),
-              onSubmitted: (_) => _sendMessage(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(width: 8),
-          ScaleButton(
-            onTap: _sendMessage,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 20,
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                textCapitalization: TextCapitalization.sentences,
+                keyboardType: TextInputType.multiline,
+                maxLines: 5,
+                minLines: 1,
+                style: GoogleFonts.outfit(fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: "Ask anything...",
+                  hintStyle: GoogleFonts.outfit(
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            ScaleButton(
+              onTap: _sendMessage,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_upward_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -272,76 +358,169 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final userModel = Provider.of<UserModel>(context);
     final isUser = message.isUser;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth:
-              MediaQuery.of(context).size.width *
-              0.85, // Increased width for code blocks
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isUser ? theme.colorScheme.primary : theme.cardTheme.color,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isUser ? 20 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 20),
-          ),
-          boxShadow: [
-            if (!isUser)
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: isUser
-            ? Text(
-                message.text,
-                style: GoogleFonts.outfit(color: Colors.white, fontSize: 15),
-              )
-            : MarkdownBody(
-                data: message.text,
-                selectable: true,
-                styleSheet: MarkdownStyleSheet(
-                  p: GoogleFonts.outfit(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 15,
-                  ),
-                  code: GoogleFonts.firaCode(
-                    backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
-                    fontSize: 14,
-                  ),
-                  codeblockDecoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  codeblockPadding: const EdgeInsets.all(12),
-                  blockquoteDecoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    border: Border(
-                      left: BorderSide(
-                        color: theme.colorScheme.primary,
-                        width: 4,
-                      ),
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: isUser
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!isUser) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.smart_toy_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 18,
                 ),
               ),
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.75,
+                ),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: isUser
+                      ? LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withOpacity(0.85),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isUser ? null : theme.cardTheme.color,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(24),
+                    topRight: const Radius.circular(24),
+                    bottomLeft: Radius.circular(isUser ? 24 : 4),
+                    bottomRight: Radius.circular(isUser ? 4 : 24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: isUser
+                    ? Text(
+                        message.text,
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      )
+                    : MarkdownBody(
+                        data: message.text,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: GoogleFonts.outfit(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 15,
+                            height: 1.5,
+                          ),
+                          code: GoogleFonts.firaCode(
+                            backgroundColor: theme.colorScheme.surface
+                                .withOpacity(0.5),
+                            fontSize: 13,
+                            color: theme.colorScheme.primary,
+                          ),
+                          codeblockDecoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: theme.dividerColor.withOpacity(0.05),
+                            ),
+                          ),
+                          codeblockPadding: const EdgeInsets.all(16),
+                          blockquotePadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          blockquoteDecoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.05),
+                            border: Border(
+                              left: BorderSide(
+                                color: theme.colorScheme.primary,
+                                width: 3,
+                              ),
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            if (isUser) ...[
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                  backgroundImage: userModel.avatarUrl != null
+                      ? CachedNetworkImageProvider(userModel.avatarUrl!)
+                      : null,
+                  child: userModel.avatarUrl == null
+                      ? Icon(
+                          Icons.person_outline_rounded,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        )
+                      : null,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TypingIndicator extends StatelessWidget {
+class _TypingIndicator extends StatefulWidget {
   const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,8 +528,8 @@ class _TypingIndicator extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: theme.cardTheme.color,
           borderRadius: const BorderRadius.only(
@@ -359,21 +538,38 @@ class _TypingIndicator extends StatelessWidget {
             bottomLeft: Radius.circular(4),
             bottomRight: Radius.circular(20),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  theme.colorScheme.primary.withOpacity(0.5),
-                ),
-              ),
-            ),
-          ],
+          children: List.generate(3, (index) {
+            return AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                final delay = index * 0.2;
+                final value = Curves.easeInOut.transform(
+                  ((_controller.value + delay) % 1.0),
+                );
+                return Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.colorScheme.primary.withOpacity(
+                      0.3 + (value * 0.7),
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
         ),
       ),
     );

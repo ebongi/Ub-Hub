@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neo/Screens/UI/preview/Navigation/profile.dart';
 import 'package:neo/Screens/UI/preview/Settings/accountdetails.dart';
 import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 import 'package:neo/Screens/UI/preview/Settings/about.dart';
@@ -11,6 +12,7 @@ import 'package:neo/services/auth.dart' show Authentication;
 import 'package:neo/theme_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:neo/Screens/UI/preview/Settings/support_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -51,11 +53,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListTile(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const Accountdetails()),
+                MaterialPageRoute(builder: (context) => const Profile()),
               ),
               leading: const Icon(Icons.person),
               title: Text(
-                "Account",
+                "Profile",
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
@@ -75,43 +77,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Card(
             child: ListTile(
-              onTap: () async {
-                await Share.share(
-                  'Check out Ub-Hub! It helps students organize their academic life.',
-                );
-              },
-              leading: const Icon(Icons.person_add),
-              title: Text(
-                "Invite friends",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Card(
-            child: ListTile(
-              onTap: () => showRatingDialog(context),
-              leading: const Icon(Icons.star),
-              title: Text(
-                "Rating",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Card(
-            child: ListTile(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const FeedbackScreen()),
-              ),
-              leading: const Icon(Icons.feedback),
-              title: Text(
-                "Feedback",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Card(
-            child: ListTile(
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -121,6 +86,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: const Icon(Icons.code),
               title: Text(
                 "Developer",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              onTap: () => showSupportDialog(context),
+              leading: const Icon(Icons.favorite, color: Colors.red),
+              title: Text(
+                "Support the developer",
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
             ),
@@ -175,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             children: [
               Text(
-                "Go-Study",
+                "Ub-Studies",
                 style: GoogleFonts.outfit().copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,

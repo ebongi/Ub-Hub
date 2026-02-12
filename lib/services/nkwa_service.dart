@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:neo/services/payment_models.dart';
 import 'package:neo/core/app_config.dart';
+import 'package:neo/services/profile.dart';
 
 /// Service for handling Nkwa Pay integration
 class NkwaService {
@@ -119,18 +120,32 @@ class NkwaService {
   }
 
   /// Get the document download fee amount
-  static double getDocumentDownloadFee() {
-    return 150.0; // 150 XAF
+  static double getDocumentDownloadFee({UserRole? role}) {
+    if (role == UserRole.contributor || role == UserRole.admin) {
+      return 0.0; // Free for contributors
+    }
+    return 150.0; // 150 XAF for viewers
   }
 
   /// Get the past question download fee amount
-  static double getPastQuestionDownloadFee() {
-    return 150.0; // 150 XAF
+  static double getPastQuestionDownloadFee({UserRole? role}) {
+    if (role == UserRole.contributor || role == UserRole.admin) {
+      return 0.0; // Free for contributors
+    }
+    return 150.0; // 150 XAF for viewers
   }
 
   /// Get the past question answer download fee amount
-  static double getAnswerDownloadFee() {
-    return 300.0; // 300 XAF
+  static double getAnswerDownloadFee({UserRole? role}) {
+    if (role == UserRole.contributor || role == UserRole.admin) {
+      return 0.0; // Free for contributors
+    }
+    return 300.0; // 300 XAF for viewers
+  }
+
+  /// Get the contributor upgrade fee
+  static double getContributorUpgradeFee() {
+    return 5000.0; // 5000 XAF
   }
 
   /// Get the currency code

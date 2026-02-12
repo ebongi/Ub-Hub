@@ -33,6 +33,7 @@ class UserModel extends ChangeNotifier {
   final String? _email;
   String? _matricule;
   String? _phonenumber;
+  String? _avatarUrl;
 
   UserModel({
     String? uid,
@@ -40,26 +41,35 @@ class UserModel extends ChangeNotifier {
     String? email,
     String? matricule,
     String? phonenumber,
+    String? avatarUrl,
   }) : _uid = uid,
        _name = name,
        _email = email,
        _matricule = matricule,
-       _phonenumber = phonenumber;
+       _phonenumber = phonenumber,
+       _avatarUrl = avatarUrl;
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
   String? get email => _email;
   String? get matricule => _matricule;
   String? get phoneNumber => _phonenumber;
+  String? get avatarUrl => _avatarUrl;
   void setName(String name) {
     _name = name;
     notifyListeners(); //Notify listeners when the code changes
   }
 
-  void update({String? name, String? matricule, String? phoneNumber}) {
+  void update({
+    String? name,
+    String? matricule,
+    String? phoneNumber,
+    String? avatarUrl,
+  }) {
     if (name != null) _name = name;
     if (matricule != null) _matricule = matricule;
     if (phoneNumber != null) _phonenumber = phoneNumber;
+    if (avatarUrl != null) _avatarUrl = avatarUrl;
     notifyListeners();
   }
 }

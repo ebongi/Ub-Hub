@@ -5,6 +5,7 @@ class ChatMessageModel {
   final String content;
   final String senderId;
   final String? senderName;
+  final String? senderAvatarUrl;
   final DateTime createdAt;
   final String roomId;
 
@@ -13,6 +14,7 @@ class ChatMessageModel {
     required this.content,
     required this.senderId,
     this.senderName,
+    this.senderAvatarUrl,
     required this.createdAt,
     this.roomId = 'global',
   });
@@ -23,6 +25,7 @@ class ChatMessageModel {
       content: json['content'],
       senderId: json['sender_id'],
       senderName: json['sender_name'],
+      senderAvatarUrl: json['sender_avatar_url'],
       createdAt: DateTime.parse(json['created_at']),
       roomId: json['room_id'] ?? 'global',
     );
@@ -33,6 +36,7 @@ class ChatMessageModel {
       'content': content,
       'sender_id': senderId,
       'sender_name': senderName,
+      'sender_avatar_url': senderAvatarUrl,
       'room_id': roomId,
     };
   }
@@ -59,6 +63,7 @@ class ChatService {
   Future<void> sendMessage(
     String content, {
     String? senderName,
+    String? senderAvatarUrl,
     String roomId = 'global',
   }) async {
     final user = _supabase.auth.currentUser;
@@ -68,6 +73,7 @@ class ChatService {
       'content': content,
       'sender_id': user.id,
       'sender_name': senderName,
+      'sender_avatar_url': senderAvatarUrl,
       'room_id': roomId,
     });
   }

@@ -7,6 +7,7 @@ import 'package:neo/services/exam_event.dart' show ExamEvent;
 import 'package:neo/services/payment_models.dart'
     show PaymentTransaction, PaymentStatus;
 import 'package:neo/services/task_model.dart';
+import 'package:neo/services/profile.dart';
 
 class DatabaseService {
   final String? uid;
@@ -29,13 +30,13 @@ class DatabaseService {
     });
   }
 
-  Stream<Map<String, dynamic>> get userData {
+  Stream<UserProfile> get userProfile {
     if (uid == null) return Stream.empty();
     return _supabase
         .from('profiles')
         .stream(primaryKey: ['id'])
         .eq('id', uid!)
-        .map((data) => data.first);
+        .map((data) => UserProfile.fromSupabase(data.first));
   }
 
   // Get departments stream
@@ -274,5 +275,46 @@ class DatabaseService {
   /// Delete a task
   Future<void> deleteTask(String taskId) async {
     await _supabase.from('tasks').delete().eq('id', taskId);
+  }
+
+  /// Upgrade user to contributor role
+  Future<void> upgradeUserToContributor() async {
+    if (uid == null) return;
+    await _supabase
+        .from('profiles')
+        .update({
+          'role': UserRole.contributor.name,
+          'upgraded_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', uid!);
+  }
+
+  /// Upload profile avatar and update profile URL
+  Future<String> uploadAvatar(Uint8List imageData) async {
+    if (uid == null) throw "User not authenticated";
+
+    final fileName = '$uid-${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final path =
+        fileName; // Directly in root of avatars bucket or use subfolder
+
+    await _supabase.storage
+        .from('avatars')
+        .uploadBinary(
+          path,
+          imageData,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    final avatarUrl = _supabase.storage.from('avatars').getPublicUrl(path);
+
+    await _supabase
+        .from('profiles')
+        .update({'avatar_url': avatarUrl})
+        .eq('id', uid!);
+
+    return avatarUrl;
   }
 }
