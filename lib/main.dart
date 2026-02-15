@@ -12,6 +12,8 @@ import 'package:neo/core/app_config.dart';
 import 'package:neo/Screens/UI/preview/Navigation/splash_screen.dart';
 
 import 'package:neo/services/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,10 @@ void main() async {
       anonKey: SupabaseConfig.anonKey,
     ),
     SharedPreferences.getInstance(),
+    Firebase.initializeApp().catchError((e) {
+      debugPrint("Firebase initialization failed: $e");
+      return Firebase.app(); // Return existing app if already initialized, or just fallback
+    }),
   ]);
 
   // Initialize notifications without blocking the first frame

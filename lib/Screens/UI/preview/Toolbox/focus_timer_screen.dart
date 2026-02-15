@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:neo/services/notification_service.dart';
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});
@@ -44,6 +45,11 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
             } else {
               _timer?.cancel();
               _isRunning = false;
+              NotificationService().showAlert(
+                id: 888,
+                title: "Focus Complete!",
+                body: "Great job! Take a short break.",
+              );
             }
           });
         }

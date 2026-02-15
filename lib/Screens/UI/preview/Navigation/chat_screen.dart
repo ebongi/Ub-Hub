@@ -39,6 +39,26 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _chatService = widget.chatService ?? ChatService();
     _currentUserId = widget.currentUserId ?? _getSupabaseId();
+    _setupForegroundNotifications();
+  }
+
+  void _setupForegroundNotifications() {
+    // Listen to messages for notifications
+    _chatService.getMessagesStream(roomId: widget.roomId).listen((messages) {
+      if (messages.isNotEmpty) {
+        final latestMessage = messages.first;
+        // Only notify if it's from someone else and it's new (simple timestamp check)
+        if (latestMessage.senderId != _currentUserId &&
+            latestMessage.createdAt.isAfter(
+              DateTime.now().subtract(const Duration(seconds: 5)),
+            )) {
+          NotificationService().showChatNotification(
+            senderName: latestMessage.senderName ?? "Someone",
+            message: latestMessage.content,
+          );
+        }
+      }
+    });
   }
 
   String? _getSupabaseId() {

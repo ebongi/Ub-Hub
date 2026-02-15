@@ -78,6 +78,40 @@ class NotificationService {
     );
   }
 
+  Future<void> showChatNotification({
+    required String senderName,
+    required String message,
+    String? payload,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'ub_hub_chat',
+          'UB Hub Chat',
+          channelDescription: 'Real-time chat notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          styleInformation: BigTextStyleInformation(''),
+        );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'chat',
+      ),
+    );
+
+    await _notificationsPlugin.show(
+      999, // Static ID for chat to avoid spamming the tray
+      "New message from $senderName",
+      message,
+      platformDetails,
+      payload: payload,
+    );
+  }
+
   Future<void> scheduleNotification({
     required int id,
     required String title,
