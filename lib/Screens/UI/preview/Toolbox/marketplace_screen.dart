@@ -5,6 +5,7 @@ import 'package:neo/services/course_material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:neo/Screens/Shared/shimmer_loading.dart';
+import 'package:neo/Screens/Shared/animations.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -180,39 +181,49 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final material = materials[index];
-            return Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+            return FadeInSlide(
+              delay: index * 0.05,
+              child: ScaleButton(
+                onTap: () {
+                  // Handle tap if needed, or maybe it's just for effect
+                },
+                child: Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: Colors.grey.withOpacity(0.1)),
                   ),
-                  child: const Icon(
-                    Icons.description_rounded,
-                    color: Colors.blue,
-                  ),
-                ),
-                title: Text(
-                  material.title,
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  "Uploaded: ${DateFormat('MMM d, yyyy').format(material.uploadedAt)}",
-                  style: GoogleFonts.outfit(fontSize: 12),
-                ),
-                trailing: Text(
-                  material.materialCategory.replaceAll('_', ' ').toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.description_rounded,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    title: Text(
+                      material.title,
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "Uploaded: ${DateFormat('MMM d, yyyy').format(material.uploadedAt)}",
+                      style: GoogleFonts.outfit(fontSize: 12),
+                    ),
+                    trailing: Text(
+                      material.materialCategory
+                          .replaceAll('_', ' ')
+                          .toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ),
                 ),
               ),

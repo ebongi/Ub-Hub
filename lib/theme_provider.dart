@@ -33,10 +33,12 @@ class ThemeProvider extends ChangeNotifier {
       iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
     ),
     cardTheme: CardThemeData(
-      elevation: 2,
+      elevation: 0,
       color: Colors.white,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -76,10 +78,10 @@ class ThemeProvider extends ChangeNotifier {
       iconTheme: const IconThemeData(color: Colors.white),
     ),
     cardTheme: CardThemeData(
-      color: const Color(0xFF1E293B),
       elevation: 0,
+      color: const Color(0xFF1E293B),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: Colors.white.withOpacity(0.05)),
       ),
     ),

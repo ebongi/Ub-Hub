@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:neo/Screens/Shared/shimmer_loading.dart';
+import 'package:neo/Screens/Shared/animations.dart';
 
 class NewsFeedScreen extends StatefulWidget {
   const NewsFeedScreen({super.key});
@@ -114,7 +115,10 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 itemCount: _allNews!.length,
                 itemBuilder: (context, index) {
                   final item = _allNews![index];
-                  return _buildNewsCard(item, theme);
+                  return FadeInSlide(
+                    delay: index * 0.1,
+                    child: _buildNewsCard(item, theme),
+                  );
                 },
               ),
             ),

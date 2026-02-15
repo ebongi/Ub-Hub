@@ -98,15 +98,18 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     color: colorScheme.onSurface,
                   ),
                 ),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        colorScheme.primaryContainer.withOpacity(0.3),
-                        colorScheme.surface,
-                      ],
+                background: Hero(
+                  tag: 'dept-image-${widget.departmentId}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          colorScheme.primaryContainer.withOpacity(0.3),
+                          colorScheme.surface,
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -286,22 +289,30 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           children: [
             if (level200.isNotEmpty) ...[
               _buildLevelHeader("Level 200"),
-              ...level200.map((c) => _buildCourseTile(c)),
+              ...level200.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (level300.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 300"),
-              ...level300.map((c) => _buildCourseTile(c)),
+              ...level300.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (level400.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 400"),
-              ...level400.map((c) => _buildCourseTile(c)),
+              ...level400.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (others.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Other Courses"),
-              ...others.map((c) => _buildCourseTile(c)),
+              ...others.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
           ],
         );
@@ -324,9 +335,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     );
   }
 
-  Widget _buildCourseTile(Course course) {
+  Widget _buildCourseTile(Course course, {double delay = 0}) {
     final colorScheme = Theme.of(context).colorScheme;
     return FadeInSlide(
+      delay: delay,
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.symmetric(vertical: 6),
@@ -443,7 +455,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: materials.length,
-          itemBuilder: (context, index) => _buildMaterialTile(materials[index]),
+          itemBuilder: (context, index) => FadeInSlide(
+            delay: index * 0.05,
+            child: _buildMaterialTile(materials[index]),
+          ),
         );
       },
     );
@@ -483,97 +498,103 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 )
                 .toList();
 
-            return Card(
-              elevation: 0,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              color: colorScheme.secondaryContainer.withOpacity(0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-              ),
-              child: ExpansionTile(
-                shape: const RoundedRectangleBorder(side: BorderSide.none),
-                collapsedShape: const RoundedRectangleBorder(
-                  side: BorderSide.none,
-                ),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.history_edu_rounded,
-                    color: Colors.orange,
-                    size: 20,
+            return FadeInSlide(
+              delay: index * 0.05,
+              child: Card(
+                elevation: 0,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                color: colorScheme.secondaryContainer.withOpacity(0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
                   ),
                 ),
-                title: Text(
-                  q.title,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                child: ExpansionTile(
+                  shape: const RoundedRectangleBorder(side: BorderSide.none),
+                  collapsedShape: const RoundedRectangleBorder(
+                    side: BorderSide.none,
                   ),
-                ),
-                subtitle: Text(
-                  "Past Question • ${relatedAnswers.length} Answers",
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.history_edu_rounded,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
                   ),
-                ),
-                trailing: IconButton(
-                  icon: Icon(
-                    Icons.download_rounded,
-                    color: colorScheme.primary,
+                  title: Text(
+                    q.title,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
-                  onPressed: () => _handleDownload(q),
-                ),
-                children: [
-                  if (relatedAnswers.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "No answers uploaded yet",
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: colorScheme.outline,
-                        ),
-                      ),
-                    )
-                  else
-                    ...relatedAnswers.map(
-                      (a) => ListTile(
-                        dense: true,
-                        leading: const Icon(
-                          Icons.check_circle_outline_rounded,
-                          color: Colors.green,
-                          size: 18,
-                        ),
-                        title: Text(
-                          a.title,
+                  subtitle: Text(
+                    "Past Question • ${relatedAnswers.length} Answers",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.download_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    onPressed: () => _handleDownload(q),
+                  ),
+                  children: [
+                    if (relatedAnswers.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          "No answers uploaded yet",
                           style: GoogleFonts.outfit(
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                            color: colorScheme.outline,
                           ),
                         ),
-                        subtitle: const Text(
-                          "Verified Answer • 300 XAF",
-                          style: TextStyle(fontSize: 11),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.download_rounded,
+                      )
+                    else
+                      ...relatedAnswers.map(
+                        (a) => ListTile(
+                          dense: true,
+                          leading: const Icon(
+                            Icons.check_circle_outline_rounded,
+                            color: Colors.green,
                             size: 18,
-                            color: colorScheme.primary,
                           ),
-                          onPressed: () => _handleDownload(a),
+                          title: Text(
+                            a.title,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            "Verified Answer • 300 XAF",
+                            style: TextStyle(fontSize: 11),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.download_rounded,
+                              size: 18,
+                              color: colorScheme.primary,
+                            ),
+                            onPressed: () => _handleDownload(a),
+                          ),
+                          onTap: () => _openFile(a),
                         ),
-                        onTap: () => _openFile(a),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             );
           },

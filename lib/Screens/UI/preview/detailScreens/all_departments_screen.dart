@@ -7,6 +7,7 @@ import 'package:neo/services/department.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:neo/Screens/Shared/shimmer_loading.dart';
+import 'package:neo/Screens/Shared/animations.dart';
 
 class AllDepartmentsScreen extends StatefulWidget {
   const AllDepartmentsScreen({super.key});
@@ -111,76 +112,90 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                   final uiData = DepartmentUIData.fromDepartmentName(
                     department.name,
                   );
-                  return GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DepartmentScreen(
-                          departmentName: department.name,
-                          departmentId: department.id,
+                  return FadeInSlide(
+                    delay: index * 0.05,
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DepartmentScreen(
+                            departmentName: department.name,
+                            departmentId: department.id,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Container(
-                            color: uiData.color.withOpacity(0.1),
-                            child:
-                                (department.imageUrl != null &&
-                                    department.imageUrl!.isNotEmpty)
-                                ? CachedNetworkImage(
-                                    imageUrl: department.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    errorWidget: (context, url, error) => Icon(
-                                      uiData.icon,
-                                      size: 40,
-                                      color: uiData.color.withOpacity(0.5),
-                                    ),
-                                  )
-                                : Icon(
-                                    uiData.icon,
-                                    size: 40,
-                                    color: uiData.color.withOpacity(0.5),
-                                  ),
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: theme.dividerColor.withOpacity(0.1),
                           ),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black.withOpacity(0.7),
-                                  Colors.transparent,
-                                ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Container(
+                              color: uiData.color.withOpacity(0.1),
+                              child: Hero(
+                                tag: 'dept-image-${department.id}',
+                                child:
+                                    (department.imageUrl != null &&
+                                        department.imageUrl!.isNotEmpty)
+                                    ? CachedNetworkImage(
+                                        imageUrl: department.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                        errorWidget: (context, url, error) =>
+                                            Icon(
+                                              uiData.icon,
+                                              size: 40,
+                                              color: uiData.color.withOpacity(
+                                                0.5,
+                                              ),
+                                            ),
+                                      )
+                                    : Icon(
+                                        uiData.icon,
+                                        size: 40,
+                                        color: uiData.color.withOpacity(0.5),
+                                      ),
                               ),
                             ),
-                          ),
-                          Positioned(
-                            bottom: 10,
-                            left: 10,
-                            right: 10,
-                            child: Text(
-                              department.name,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withOpacity(0.7),
+                                    Colors.transparent,
+                                  ],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              bottom: 10,
+                              left: 10,
+                              right: 10,
+                              child: Text(
+                                department.name,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

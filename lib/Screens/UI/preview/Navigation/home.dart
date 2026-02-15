@@ -449,29 +449,32 @@ class DepartmentSection extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child:
-                          (department.imageUrl != null &&
-                              department.imageUrl!.isNotEmpty)
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: CachedNetworkImage(
-                                imageUrl: department.imageUrl!,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(
-                                  child: CircularProgressIndicator(),
+                      child: Hero(
+                        tag: 'dept-image-${department.id}',
+                        child:
+                            (department.imageUrl != null &&
+                                department.imageUrl!.isNotEmpty)
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: CachedNetworkImage(
+                                  imageUrl: department.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    uiData.icon,
+                                    size: 60,
+                                    color: uiData.color.withOpacity(0.5),
+                                  ),
                                 ),
-                                errorWidget: (context, url, error) => Icon(
-                                  uiData.icon,
-                                  size: 60,
-                                  color: uiData.color.withOpacity(0.5),
-                                ),
+                              )
+                            : Icon(
+                                uiData.icon,
+                                size: 60,
+                                color: uiData.color.withOpacity(0.5),
                               ),
-                            )
-                          : Icon(
-                              uiData.icon,
-                              size: 60,
-                              color: uiData.color.withOpacity(0.5),
-                            ),
+                      ),
                     ),
                     Container(
                       decoration: BoxDecoration(
