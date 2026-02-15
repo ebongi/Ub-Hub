@@ -6,6 +6,7 @@ import 'package:neo/services/news_scraper_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:neo/Screens/Shared/shimmer_loading.dart';
 
 class NewsFeedScreen extends StatefulWidget {
   const NewsFeedScreen({super.key});
@@ -101,7 +102,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const NewsCardShimmer()
           : _error != null && (_allNews == null || _allNews!.isEmpty)
           ? _buildErrorState()
           : _allNews == null || _allNews!.isEmpty

@@ -4,6 +4,7 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/course_material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:neo/Screens/Shared/shimmer_loading.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -41,23 +42,31 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         ),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildEarningsCard(colorScheme),
-            const SizedBox(height: 30),
-            Text(
-              "Your Contributions",
-              style: GoogleFonts.outfit(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            _dbService = DatabaseService(uid: _currentUser.id);
+          });
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildEarningsCard(colorScheme),
+              const SizedBox(height: 30),
+              Text(
+                "Your Contributions",
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            _buildMaterialsList(),
-          ],
+              const SizedBox(height: 15),
+              _buildMaterialsList(),
+            ],
+          ),
         ),
       ),
     );
@@ -139,7 +148,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       stream: _dbService.getUserUploadedMaterials(_currentUser!.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const MaterialListShimmer();
         }
         final materials = snapshot.data ?? [];
         if (materials.isEmpty) {

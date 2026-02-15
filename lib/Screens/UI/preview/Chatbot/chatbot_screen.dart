@@ -139,6 +139,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              if (_messages.isNotEmpty) {
+                _geminiService.resetChat();
+                setState(() {
+                  _messages.clear();
+                });
+              }
+            },
+            icon: const Icon(Icons.delete_sweep_rounded),
+            tooltip: "Clear Chat",
+          ),
+        ],
       ),
       body: Column(
         children: [

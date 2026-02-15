@@ -16,6 +16,7 @@ import 'package:neo/services/storage_service.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:neo/Screens/Shared/shimmer_loading.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -261,7 +262,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       stream: _dbService.getCoursesForDepartment(widget.departmentId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const CourseListShimmer();
         }
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -425,7 +426,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       stream: _dbService.getDepartmentMaterials(widget.departmentId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const MaterialListShimmer();
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyState("No resources available", () {});
@@ -454,7 +455,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       stream: _dbService.getDepartmentMaterials(widget.departmentId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const MaterialListShimmer();
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyState("No past questions available", () {});

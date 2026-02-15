@@ -8,26 +8,32 @@ class GeminiService {
   static final String _apiKey = AppConfig.geminiApiKey;
   static const String _modelName = 'gemini-2.5-flash-lite';
 
-  final GeminiClient _client;
+  GeminiClient _client;
 
   GeminiService({GeminiClient? client})
-    : _client =
-          client ??
-          GeminiChatSessionClient(
-            GenerativeModel(
-              model: _modelName,
-              apiKey: _apiKey,
-              systemInstruction: Content.system(
-                r"You are a helpful academic assistant. "
-                r"Whenever you provide mathematical expressions, formulas, or equations, "
-                r"you MUST use LaTeX format. "
-                r"Use single dollar signs for inline math (e.g., $E=mc^2$) "
-                r"and double dollar signs for block math (e.g., $$ \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2} $$). "
-                r"Ensure all exponents, subscripts, and special characters like integrals, "
-                r"summations, and Greek letters are correctly formatted in LaTeX.",
-              ),
-            ).startChat(),
-          );
+    : _client = client ?? _createNewClient();
+
+  static GeminiClient _createNewClient() {
+    return GeminiChatSessionClient(
+      GenerativeModel(
+        model: _modelName,
+        apiKey: _apiKey,
+        systemInstruction: Content.system(
+          r"You are a helpful academic assistant. "
+          r"Whenever you provide mathematical expressions, formulas, or equations, "
+          r"you MUST use LaTeX format. "
+          r"Use single dollar signs for inline math (e.g., $E=mc^2$) "
+          r"and double dollar signs for block math (e.g., $$ \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2} $$). "
+          r"Ensure all exponents, subscripts, and special characters like integrals, "
+          r"summations, and Greek letters are correctly formatted in LaTeX.",
+        ),
+      ).startChat(),
+    );
+  }
+
+  void resetChat() {
+    _client = _createNewClient();
+  }
 
   Future<String> sendMessage(String message) async {
     try {
