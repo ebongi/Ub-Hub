@@ -8,6 +8,7 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/nkwa_service.dart';
 import 'package:neo/services/payment_models.dart';
 import 'package:neo/services/profile.dart';
+import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,6 +49,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.forum_rounded),
+            tooltip: "Join Discussion",
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(
+                  roomId: widget.course.id,
+                  title: "${widget.course.code} Discussion",
+                  subtitle: "Course Discussion Room",
+                ),
+              ),
+            ),
+          ),
           if (_userProfile?.canUpload ?? false)
             IconButton(
               icon: const Icon(Icons.add),
@@ -579,6 +594,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             isPastQuestion: selectedCategory == 'past_question',
                             isAnswer: selectedCategory == 'answer',
                             linkedMaterialId: selectedQuestionId,
+                            uploaderId: _dbService.uid,
                           );
 
                           await _dbService.addMaterial(material);

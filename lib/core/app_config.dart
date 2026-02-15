@@ -24,6 +24,8 @@ class AppConfig {
   static String get firebaseStorageBucket =>
       dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '';
 
+  static String get newsApiKey => dotenv.env['NEWS_API_KEY'] ?? '';
+
   static Future<void> init() async {
     await dotenv.load(fileName: ".env");
   }

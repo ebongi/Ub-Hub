@@ -11,7 +11,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
   final String? currentUserId;
-  const ChatScreen({super.key, this.chatService, this.currentUserId});
+  final String roomId;
+  final String title;
+  final String? subtitle;
+
+  const ChatScreen({
+    super.key,
+    this.chatService,
+    this.currentUserId,
+    this.roomId = 'global',
+    this.title = 'Global Chat',
+    this.subtitle,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -60,6 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
         text,
         senderName: senderName,
         senderAvatarUrl: avatarUrl,
+        roomId: widget.roomId,
       );
     } catch (e) {
       if (mounted) {
@@ -95,14 +107,17 @@ class _ChatScreenState extends State<ChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Global Chat",
+                    widget.title,
                     style: theme.appBarTheme.titleTextStyle?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    "Public Community Hub",
+                    widget.subtitle ??
+                        (widget.roomId == 'global'
+                            ? "Public Community Hub"
+                            : "Study Group"),
                     style: GoogleFonts.outfit(
                       fontSize: 12,
                       color: theme.colorScheme.onSurface.withOpacity(0.5),
@@ -151,7 +166,7 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Expanded(
               child: StreamBuilder<List<ChatMessageModel>>(
-                stream: _chatService.getMessagesStream(),
+                stream: _chatService.getMessagesStream(roomId: widget.roomId),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());

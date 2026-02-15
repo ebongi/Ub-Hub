@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown_widget/markdown_widget.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:neo/services/gemini_service.dart';
 import 'package:neo/Screens/Shared/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -428,43 +430,14 @@ class _MessageBubble extends StatelessWidget {
                           height: 1.4,
                         ),
                       )
-                    : MarkdownBody(
+                    : MarkdownWidget(
                         data: message.text,
+                        shrinkWrap: true,
                         selectable: true,
-                        styleSheet: MarkdownStyleSheet(
-                          p: GoogleFonts.outfit(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 15,
-                            height: 1.5,
-                          ),
-                          code: GoogleFonts.firaCode(
-                            backgroundColor: theme.colorScheme.surface
-                                .withOpacity(0.5),
-                            fontSize: 13,
-                            color: theme.colorScheme.primary,
-                          ),
-                          codeblockDecoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: theme.dividerColor.withOpacity(0.05),
-                            ),
-                          ),
-                          codeblockPadding: const EdgeInsets.all(16),
-                          blockquotePadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          blockquoteDecoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.05),
-                            border: Border(
-                              left: BorderSide(
-                                color: theme.colorScheme.primary,
-                                width: 3,
-                              ),
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                        config: MarkdownConfig.defaultConfig,
+                        markdownGenerator: MarkdownGenerator(
+                          generators: [latexGenerator],
+                          inlineSyntaxList: [LatexSyntax()],
                         ),
                       ),
               ),
@@ -573,5 +546,44 @@ class _TypingIndicatorState extends State<_TypingIndicator>
         ),
       ),
     );
+  }
+}
+
+/// A LaTeX generator for [MarkdownWidget]
+final latexGenerator = SpanNodeGeneratorWithTag(
+  tag: 'latex',
+  generator: (e, config, visitor) =>
+      LatexNode(e.attributes['content'] ?? '', config),
+);
+
+class LatexNode extends SpanNode {
+  final String content;
+  final MarkdownConfig config;
+
+  LatexNode(this.content, this.config);
+
+  @override
+  InlineSpan build() {
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Math.tex(
+        content,
+        mathStyle: MathStyle.text,
+        textStyle: config.p.textStyle,
+      ),
+    );
+  }
+}
+
+class LatexSyntax extends md.InlineSyntax {
+  LatexSyntax() : super(r'(\$\$?)([\s\S]+?)\1');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    final content = match.group(2) ?? '';
+    parser.addNode(
+      md.Element.withTag('latex')..attributes['content'] = content,
+    );
+    return true;
   }
 }

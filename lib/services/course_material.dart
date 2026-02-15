@@ -12,6 +12,7 @@ class CourseMaterial {
   final bool isPastQuestion;
   final bool isAnswer;
   final String? linkedMaterialId; // ID of the linked question or answer
+  final String? uploaderId;
 
   CourseMaterial({
     this.id = '',
@@ -27,6 +28,7 @@ class CourseMaterial {
     this.isPastQuestion = false,
     this.isAnswer = false,
     this.linkedMaterialId,
+    this.uploaderId,
   }) : assert(
          courseId != null || departmentId != null,
          'Either courseId or departmentId must be provided',
@@ -49,6 +51,7 @@ class CourseMaterial {
       isPastQuestion: json['is_past_question'] ?? false,
       isAnswer: json['is_answer'] ?? false,
       linkedMaterialId: json['linked_material_id'],
+      uploaderId: json['uploader_id'],
     );
   }
 
@@ -65,6 +68,7 @@ class CourseMaterial {
       'is_past_question': isPastQuestion,
       'is_answer': isAnswer,
       'linked_material_id': linkedMaterialId,
+      'uploader_id': uploaderId,
       if (id.isNotEmpty) 'id': id,
     };
   }

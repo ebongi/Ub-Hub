@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:neo/Screens/UI/preview/Navigation/profile.dart';
-import 'package:neo/Screens/UI/preview/Settings/accountdetails.dart';
 import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 import 'package:neo/Screens/UI/preview/Settings/about.dart';
-import 'package:neo/Screens/UI/preview/Settings/feedback.dart';
 import 'package:neo/Screens/UI/preview/Settings/developer_info.dart';
-import 'package:neo/Screens/UI/preview/Settings/rating.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:neo/services/auth.dart' show Authentication;
 import 'package:neo/theme_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';

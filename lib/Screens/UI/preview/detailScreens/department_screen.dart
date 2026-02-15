@@ -12,6 +12,8 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/nkwa_service.dart';
 import 'package:neo/services/payment_models.dart';
 import 'package:neo/services/profile.dart';
+import 'package:neo/services/storage_service.dart';
+import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,8 +31,10 @@ class DepartmentScreen extends StatefulWidget {
   State<DepartmentScreen> createState() => _DepartmentScreenState();
 }
 
-class _DepartmentScreenState extends State<DepartmentScreen> {
+class _DepartmentScreenState extends State<DepartmentScreen>
+    with SingleTickerProviderStateMixin {
   late final DatabaseService _dbService;
+  late final TabController _tabController;
   UserProfile? _userProfile;
 
   @override
@@ -38,6 +42,11 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     super.initState();
     final currentUser = Supabase.instance.client.auth.currentUser;
     _dbService = DatabaseService(uid: currentUser?.id);
+    _tabController = TabController(length: 5, vsync: this);
+
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
 
     _dbService.userProfile.listen((profile) {
       if (mounted) {
@@ -49,116 +58,131 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                expandedHeight: 120.0,
-                floating: false,
-                pinned: true,
-                stretch: true,
-                backgroundColor: colorScheme.surface,
-                scrolledUnderElevation: 2,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
+    return Scaffold(
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 120.0,
+              floating: false,
+              pinned: true,
+              stretch: true,
+              backgroundColor: colorScheme.surface,
+              scrolledUnderElevation: 2,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: false,
+                titlePadding: const EdgeInsetsDirectional.only(
+                  start: 56,
+                  bottom: 16,
                 ),
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: false,
-                  titlePadding: const EdgeInsetsDirectional.only(
-                    start: 56,
-                    bottom: 16,
+                title: Text(
+                  widget.departmentName,
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
-                  title: Text(
-                    widget.departmentName,
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          colorScheme.primaryContainer.withOpacity(0.3),
-                          colorScheme.surface,
-                        ],
-                      ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.primaryContainer.withOpacity(0.3),
+                        colorScheme.surface,
+                      ],
                     ),
                   ),
                 ),
               ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverAppBarDelegate(
-                  TabBar(
-                    labelColor: colorScheme.primary,
-                    unselectedLabelColor: colorScheme.onSurfaceVariant,
-                    indicatorColor: colorScheme.primary,
-                    indicatorWeight: 3,
-                    indicatorSize: TabBarIndicatorSize.label,
-                    dividerColor: Colors.transparent,
-                    labelStyle: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                    unselectedLabelStyle: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                    tabs: const [
-                      Tab(
-                        text: "About",
-                        icon: Icon(Icons.info_rounded, size: 20),
-                      ),
-                      Tab(
-                        text: "Courses",
-                        icon: Icon(Icons.school_rounded, size: 20),
-                      ),
-                      Tab(
-                        text: "Docs",
-                        icon: Icon(Icons.description_rounded, size: 20),
-                      ),
-                      Tab(
-                        text: "PQ",
-                        icon: Icon(Icons.history_edu_rounded, size: 20),
-                      ),
-                    ],
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: colorScheme.onSurfaceVariant,
+                  indicatorColor: colorScheme.primary,
+                  indicatorWeight: 3,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  dividerColor: Colors.transparent,
+                  labelStyle: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
-                  colorScheme.surface,
+                  unselectedLabelStyle: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                  tabs: const [
+                    Tab(
+                      text: "About",
+                      icon: Icon(Icons.info_rounded, size: 20),
+                    ),
+                    Tab(
+                      text: "Courses",
+                      icon: Icon(Icons.school_rounded, size: 20),
+                    ),
+                    Tab(
+                      text: "Docs",
+                      icon: Icon(Icons.description_rounded, size: 20),
+                    ),
+                    Tab(
+                      text: "PQ",
+                      icon: Icon(Icons.history_edu_rounded, size: 20),
+                    ),
+                    Tab(
+                      text: "Chat",
+                      icon: Icon(Icons.forum_rounded, size: 20),
+                    ),
+                  ],
                 ),
+                colorScheme.surface,
               ),
-            ];
-          },
-          body: TabBarView(
-            children: [
-              _buildAboutTab(),
-              _buildCoursesTab(),
-              _buildResourcesTab(),
-              _buildPastQuestionsTab(),
-            ],
-          ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildAboutTab(),
+            _buildCoursesTab(),
+            _buildResourcesTab(),
+            _buildPastQuestionsTab(),
+            ChatScreen(
+              roomId: widget.departmentId,
+              title: "${widget.departmentName} Group",
+              subtitle: "Departmental Study Group",
+            ),
+          ],
         ),
-        floatingActionButton: (_userProfile?.canUpload ?? false)
-            ? FloatingActionButton.extended(
-                onPressed: _showUploadSelection,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text("Upload"),
-                backgroundColor: colorScheme.primaryContainer,
-                foregroundColor: colorScheme.onPrimaryContainer,
-              )
-            : null,
       ),
+      floatingActionButton:
+          (_userProfile?.canUpload ?? false) && _tabController.index != 4
+          ? FloatingActionButton.extended(
+              onPressed: _showUploadSelection,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text("Upload"),
+              backgroundColor: colorScheme.primaryContainer,
+              foregroundColor: colorScheme.onPrimaryContainer,
+            )
+          : null,
     );
   }
 
@@ -816,6 +840,24 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     );
 
     if (status == PaymentStatus.success) {
+      // Automatic secure download for offline use
+      try {
+        await StorageService().downloadAndEncrypt(
+          material.fileUrl,
+          material.id,
+          material.fileName,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Material secured for offline access! 🔒"),
+            ),
+          );
+        }
+      } catch (e) {
+        print("Offline cache failed: $e");
+      }
+
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -1383,6 +1425,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         isPastQuestion: category == 'past_question',
         isAnswer: category == 'answer',
         linkedMaterialId: linkedId,
+        uploaderId: _dbService.uid,
       );
 
       await _dbService.addMaterial(material);

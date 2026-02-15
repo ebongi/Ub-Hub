@@ -11,12 +11,18 @@ import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
 
 import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:neo/services/department.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/gpa_calculator_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/task_manager_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/document_scanner_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/mock_exam_generator_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/performance_tracker_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/marketplace_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/campus_navigator_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/news_feed_screen.dart';
+import 'package:neo/Screens/UI/preview/Toolbox/offline_library_screen.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:neo/services/database.dart';
@@ -75,10 +81,52 @@ class _HomeState extends State<Home> {
 
   final List<ToolItem> toolboxItems = [
     ToolItem(
-      name: "GPA Calculator",
+      name: "AI Study",
+      icon: Icons.auto_awesome_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const AIStudyPlanScreen(),
+    ),
+    ToolItem(
+      name: "Mock Exam",
+      icon: Icons.quiz_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const MockExamGeneratorScreen(),
+    ),
+    ToolItem(
+      name: "Performance",
       icon: Icons.calculate_rounded,
       backgroundColor: Colors.transparent,
-      widget: const GPACalculatorScreen(),
+      widget: const PerformanceTrackerScreen(),
+    ),
+    ToolItem(
+      name: "Exam Schedule",
+      icon: Icons.calendar_month_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const ExamScheduleScreen(),
+    ),
+    ToolItem(
+      name: "Library",
+      icon: Icons.local_library_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const OfflineLibraryScreen(),
+    ),
+    ToolItem(
+      name: "Navigator",
+      icon: Icons.map_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const CampusNavigatorScreen(),
+    ),
+    ToolItem(
+      name: "News",
+      icon: Icons.newspaper_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const NewsFeedScreen(),
+    ),
+    ToolItem(
+      name: "Marketplace",
+      icon: Icons.storefront_rounded,
+      backgroundColor: Colors.transparent,
+      widget: const MarketplaceScreen(),
     ),
     ToolItem(
       name: "Task Manager",
@@ -99,16 +147,10 @@ class _HomeState extends State<Home> {
       widget: const DocumentScannerScreen(),
     ),
     ToolItem(
-      name: "Resume Builder",
+      name: "Resume/Cards",
       icon: Icons.description_rounded,
       backgroundColor: Colors.transparent,
       widget: const FlashcardsScreen(),
-    ),
-    ToolItem(
-      name: "Exam Schedule",
-      icon: Icons.calendar_month_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const ExamScheduleScreen(),
     ),
   ];
   // int _notificationCount = ;
@@ -161,6 +203,7 @@ class _HomeState extends State<Home> {
                 ),
                 const ViewSection(title: "Toolbox"),
                 ToolboxSection(items: toolboxItems),
+                const SizedBox(height: 100), // Padding for FAB
               ],
             ),
           ),
@@ -253,73 +296,74 @@ class ToolboxSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 380,
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 10,
-          mainAxisExtent: 150,
-          mainAxisSpacing: 10,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final tool = items[index];
-          final theme = Theme.of(context);
-          return FadeInSlide(
-            delay: index * 0.1,
-            child: ScaleButton(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => tool.widget),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        mainAxisExtent: 110, // Compact height
+        mainAxisSpacing: 10,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final tool = items[index];
+        final theme = Theme.of(context);
+        return FadeInSlide(
+          delay: index * 0.05,
+          child: ScaleButton(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => tool.widget),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: theme.cardTheme.color,
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: theme.cardTheme.color,
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withOpacity(0.1),
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: theme.colorScheme.primary.withOpacity(0.1),
-                      ),
-                      child: Hero(
-                        tag: tool.name,
-                        child: Icon(
-                          tool.icon,
-                          size: 40,
-                          color: theme.colorScheme.primary,
-                        ),
+                    child: Hero(
+                      tag: tool.name,
+                      child: Icon(
+                        tool.icon,
+                        size: 28, // Smaller icon
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      tool.name,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tool.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12, // Compact text
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -592,12 +636,21 @@ class AppBarUser extends StatelessWidget {
             children: [
               Consumer<UserModel>(
                 builder: (context, value, child) => Text(
-                  "Hello, ${value.name != null && value.name!.isNotEmpty ? value.name!.toUpperCase() : 'Mate'}",
+                  value.name != null && value.name!.isNotEmpty
+                      ? value.name!.toUpperCase()
+                      : 'Mate',
                   style: GoogleFonts.podkova(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                "Welcome back!",
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],

@@ -8,6 +8,8 @@ import 'package:neo/services/payment_models.dart'
     show PaymentTransaction, PaymentStatus;
 import 'package:neo/services/task_model.dart';
 import 'package:neo/services/profile.dart';
+import 'package:neo/services/grade_model.dart';
+import 'package:neo/services/campus_models.dart';
 
 class DatabaseService {
   final String? uid;
@@ -158,6 +160,17 @@ class DatabaseService {
           (data) =>
               data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
         );
+  }
+
+  /// Get multiple materials by their IDs
+  Future<List<CourseMaterial>> getMaterialsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final List<dynamic> data = await _supabase
+        .from('course_materials')
+        .select()
+        .filter('id', 'in', '(${ids.join(",")})');
+
+    return data.map((json) => CourseMaterial.fromSupabase(json)).toList();
   }
 
   // Get exams for the current user
@@ -316,5 +329,94 @@ class DatabaseService {
         .eq('id', uid!);
 
     return avatarUrl;
+  }
+
+  // ==================== Marketplace / Contributor Methods ====================
+
+  /// Get all materials uploaded by a specific user
+  Stream<List<CourseMaterial>> getUserUploadedMaterials(String userId) {
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .eq('uploader_id', userId)
+        .order('uploaded_at', ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Get total earnings for a specific uploader from successful downloads
+  Stream<double> getEarningsForUploader(String userId) {
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .eq('uploader_id', userId)
+        .asyncMap((materials) async {
+          if (materials.isEmpty) return 0.0;
+          final materialIds = materials.map((m) => m['id']).toList();
+
+          final transactions = await _supabase
+              .from('payment_transactions')
+              .select('amount')
+              .eq('status', 'success')
+              .eq('item_type', 'download')
+              .filter('material_id', 'in', '(${materialIds.join(",")})');
+
+          double total = 0;
+          for (var t in transactions) {
+            total += (t['amount'] as num).toDouble();
+          }
+          return total;
+        });
+  }
+
+  // ==================== Grade Tracking / Predictor Methods ====================
+
+  /// Get all grades for a specific user
+  Stream<List<UserGrade>> getUserGrades(String userId) {
+    return _supabase
+        .from('grades')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data.map((json) => UserGrade.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Save or update a grade
+  Future<void> saveGrade(UserGrade grade) async {
+    await _supabase.from('grades').upsert(grade.toSupabase());
+  }
+
+  /// Delete a grade
+  Future<void> deleteGrade(String gradeId) async {
+    await _supabase.from('grades').delete().eq('id', gradeId);
+  }
+
+  // ==================== Campus Integration Methods ====================
+
+  /// Get all campus locations (halls, amphis, labs)
+  Stream<List<CampusLocation>> getCampusLocations() {
+    return _supabase
+        .from('campus_locations')
+        .stream(primaryKey: ['id'])
+        .order('name')
+        .map(
+          (data) =>
+              data.map((json) => CampusLocation.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Get latest university news
+  Stream<List<NewsArticle>> getUniversityNews() {
+    return _supabase
+        .from('university_news')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
+        );
   }
 }
