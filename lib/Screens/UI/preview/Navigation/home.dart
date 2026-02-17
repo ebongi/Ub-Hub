@@ -141,7 +141,7 @@ class _HomeState extends State<Home> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
                 const IntroWidget(),
                 const ViewSection(title: "Departments"),
                 Consumer<List<Department>?>(
@@ -174,7 +174,7 @@ class _HomeState extends State<Home> {
                 ),
                 const ViewSection(title: "Toolbox"),
                 ToolboxSection(items: toolboxItems),
-                const SizedBox(height: 100), // Padding for FAB
+                const SizedBox(height: 25), // Padding for FAB
               ]),
             ),
           ),
@@ -241,7 +241,7 @@ class _HomeState extends State<Home> {
               );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           if (_userProfile?.canUpload ?? false)
             FloatingActionButton(
               heroTag: "addDeptFAB",
@@ -304,7 +304,7 @@ class ToolboxSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: theme.colorScheme.primary.withOpacity(0.1),
@@ -318,14 +318,14 @@ class ToolboxSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Text(
                     tool.name,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.outfit(
-                      fontSize: 12, // Compact text
+                      fontSize: 13, // Compact text
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -391,7 +391,7 @@ class DepartmentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 220,
-      margin: const EdgeInsets.symmetric(vertical: 16.0),
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -567,7 +567,7 @@ class IntroWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -627,7 +627,7 @@ class ViewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0, left: 4.0),
+      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 4.0),
       child: Text(
         title,
         style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
@@ -732,3 +732,5 @@ class AppBarUser extends StatelessWidget {
     );
   }
 }
+
+///Whats the point of being a programmer in your room (angry face emoji)

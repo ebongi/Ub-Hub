@@ -498,108 +498,155 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 )
                 .toList();
 
-            return FadeInSlide(
-              delay: index * 0.05,
-              child: Card(
-                elevation: 0,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                color: colorScheme.secondaryContainer.withOpacity(0.2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: colorScheme.outlineVariant,
-                    width: 0.5,
-                  ),
-                ),
-                child: ExpansionTile(
-                  shape: const RoundedRectangleBorder(side: BorderSide.none),
-                  collapsedShape: const RoundedRectangleBorder(
-                    side: BorderSide.none,
-                  ),
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+            return StreamBuilder<List<Course>>(
+              stream: _dbService.getCoursesForDepartment(widget.departmentId),
+              builder: (context, courseSnapshot) {
+                final course = courseSnapshot.data
+                    ?.where((c) => c.id == q.courseId)
+                    .firstOrNull;
+                final courseCode = course != null ? " • ${course.code}" : "";
+
+                return FadeInSlide(
+                  delay: index * 0.05,
+                  child: Card(
+                    elevation: 0,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    color: colorScheme.secondaryContainer.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 0.5,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.history_edu_rounded,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    q.title,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "Past Question • ${relatedAnswers.length} Answers",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.download_rounded,
-                      color: colorScheme.primary,
-                    ),
-                    onPressed: () => _handleDownload(q),
-                  ),
-                  children: [
-                    if (relatedAnswers.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          "No answers uploaded yet",
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: colorScheme.outline,
-                          ),
+                    child: ExpansionTile(
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide.none,
+                      ),
+                      collapsedShape: const RoundedRectangleBorder(
+                        side: BorderSide.none,
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                    else
-                      ...relatedAnswers.map(
-                        (a) => ListTile(
-                          dense: true,
-                          leading: const Icon(
-                            Icons.check_circle_outline_rounded,
-                            color: Colors.green,
-                            size: 18,
-                          ),
-                          title: Text(
-                            a.title,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          subtitle: const Text(
-                            "Verified Answer • 300 XAF",
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(
-                              Icons.download_rounded,
-                              size: 18,
-                              color: colorScheme.primary,
-                            ),
-                            onPressed: () => _handleDownload(a),
-                          ),
-                          onTap: () => _openFile(a),
+                        child: const Icon(
+                          Icons.history_edu_rounded,
+                          color: Colors.orange,
+                          size: 20,
                         ),
                       ),
-                  ],
-                ),
-              ),
+                      title: Text(
+                        "${q.title}$courseCode",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Past Question • ${relatedAnswers.length} Answers",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.download_rounded,
+                          color: colorScheme.primary,
+                        ),
+                        onPressed: () => _handleDownload(q),
+                      ),
+                      children: [
+                        if (relatedAnswers.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              "No answers uploaded yet",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontStyle: FontStyle.italic,
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                          )
+                        else
+                          ...relatedAnswers.map(
+                            (a) => ListTile(
+                              dense: true,
+                              leading: const Icon(
+                                Icons.check_circle_outline_rounded,
+                                color: Colors.green,
+                                size: 18,
+                              ),
+                              title: Text(
+                                a.title,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                "Verified Answer • 300 XAF",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  Icons.download_rounded,
+                                  size: 18,
+                                  color: colorScheme.primary,
+                                ),
+                                onPressed: () => _handleDownload(a),
+                              ),
+                              onTap: () => _openFile(a),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         );
       },
+    );
+  }
+
+  Widget _buildCategoryBadge(String category) {
+    Color color;
+    String label;
+    switch (category) {
+      case 'past_question':
+        color = Colors.orange;
+        label = "PQ";
+        break;
+      case 'answer':
+        color = Colors.green;
+        label = "ANS";
+        break;
+      default:
+        color = Colors.blue;
+        label = "DOC";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.outfit(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -621,13 +668,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           size: 18,
         ),
       ),
-      title: Text(
-        material.title,
-        style: GoogleFonts.outfit(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onSurface,
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              material.title,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildCategoryBadge(material.materialCategory),
+        ],
       ),
       subtitle: material.description != null && material.description!.isNotEmpty
           ? Text(
@@ -666,6 +721,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     // If user is a contributor or admin, skip payment and download directly
     if (_userProfile?.role == UserRole.contributor ||
         _userProfile?.role == UserRole.admin) {
+      // Secure for offline use
+      await _secureForOffline(material);
+
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -863,22 +921,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     if (status == PaymentStatus.success) {
       // Automatic secure download for offline use
-      try {
-        await StorageService().downloadAndEncrypt(
-          material.fileUrl,
-          material.id,
-          material.fileName,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Material secured for offline access! 🔒"),
-            ),
-          );
-        }
-      } catch (e) {
-        print("Offline cache failed: $e");
-      }
+      await _secureForOffline(material);
 
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
@@ -888,6 +931,25 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       }
     } else {
       throw "Payment failed or timed out.";
+    }
+  }
+
+  Future<void> _secureForOffline(CourseMaterial material) async {
+    try {
+      await StorageService().downloadAndEncrypt(
+        material.fileUrl,
+        material.id,
+        material.fileName,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Material secured for offline access! 🔒"),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Offline cache failed: $e");
     }
   }
 
@@ -1189,51 +1251,67 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     ),
                     if (selectedCategory == 'answer') ...[
                       const SizedBox(height: 16),
-                      StreamBuilder<List<CourseMaterial>>(
-                        stream: isDepartment
-                            ? _dbService.getDepartmentMaterials(
-                                widget.departmentId,
-                              )
-                            : _dbService.getCourseMaterials(course!.id),
-                        builder: (context, snapshot) {
-                          final questions =
-                              snapshot.data
-                                  ?.where(
-                                    (m) =>
-                                        m.materialCategory == 'past_question',
+                      StreamBuilder<List<Course>>(
+                        stream: _dbService.getCoursesForDepartment(
+                          widget.departmentId,
+                        ),
+                        builder: (context, courseSnapshot) {
+                          final courses = courseSnapshot.data ?? [];
+                          return StreamBuilder<List<CourseMaterial>>(
+                            stream: isDepartment
+                                ? _dbService.getDepartmentMaterials(
+                                    widget.departmentId,
                                   )
-                                  .toList() ??
-                              [];
-                          return DropdownButtonFormField<String>(
-                            value: selectedQuestionId,
-                            style: GoogleFonts.outfit(
-                              color: colorScheme.onSurface,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: "Link to Question",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              prefixIcon: const Icon(Icons.link_rounded),
-                            ),
-                            items: questions
-                                .map(
-                                  (q) => DropdownMenuItem(
+                                : _dbService.getCourseMaterials(course!.id),
+                            builder: (context, snapshot) {
+                              final questions =
+                                  snapshot.data
+                                      ?.where(
+                                        (m) =>
+                                            m.materialCategory ==
+                                            'past_question',
+                                      )
+                                      .toList() ??
+                                  [];
+                              return DropdownButtonFormField<String>(
+                                value: selectedQuestionId,
+                                isExpanded: true,
+                                style: GoogleFonts.outfit(
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: "Link to Question",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  prefixIcon: const Icon(Icons.link_rounded),
+                                ),
+                                items: questions.map((q) {
+                                  final course = courses
+                                      .where((c) => c.id == q.courseId)
+                                      .firstOrNull;
+                                  final courseCode = course != null
+                                      ? "[${course.code}] "
+                                      : "";
+                                  return DropdownMenuItem(
                                     value: q.id,
                                     child: Text(
-                                      q.title,
+                                      "$courseCode${q.title}",
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: isUploading
-                                ? null
-                                : (v) => setState(() => selectedQuestionId = v),
-                            validator: (v) =>
-                                selectedCategory == 'answer' && v == null
-                                ? "Required for answers"
-                                : null,
+                                  );
+                                }).toList(),
+                                onChanged: isUploading
+                                    ? null
+                                    : (v) => setState(
+                                        () => selectedQuestionId = v,
+                                      ),
+                                validator: (v) =>
+                                    selectedCategory == 'answer' && v == null
+                                    ? "Required for answers"
+                                    : null,
+                              );
+                            },
                           );
                         },
                       ),
@@ -1441,7 +1519,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         fileName: file.name,
         fileType: file.extension ?? 'file',
         uploadedAt: DateTime.now(),
-        departmentId: isDept ? widget.departmentId : null,
+        departmentId: widget.departmentId,
         courseId: isDept ? null : course!.id,
         materialCategory: category,
         isPastQuestion: category == 'past_question',

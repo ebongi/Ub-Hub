@@ -53,10 +53,11 @@ class _SigninState extends State<Signin> {
                           width: 2,
                         ),
                       ),
-                      child: Icon(
-                        Icons.lock_open_rounded,
-                        size: 80,
-                        color: theme.colorScheme.primary,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

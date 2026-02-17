@@ -8,6 +8,7 @@ import 'package:neo/services/database.dart';
 import 'package:neo/services/nkwa_service.dart';
 import 'package:neo/services/payment_models.dart';
 import 'package:neo/services/profile.dart';
+import 'package:neo/services/storage_service.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -148,6 +149,41 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  Widget _buildCategoryBadge(String category) {
+    Color color;
+    String label;
+    switch (category) {
+      case 'past_question':
+        color = Colors.orange;
+        label = "PQ";
+        break;
+      case 'answer':
+        color = Colors.green;
+        label = "ANS";
+        break;
+      default:
+        color = Colors.blue;
+        label = "DOC";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.outfit(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0, top: 8.0),
@@ -173,9 +209,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               : Icons.insert_drive_file,
           color: Colors.red,
         ),
-        title: Text(
-          material.title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                material.title,
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildCategoryBadge(material.materialCategory),
+          ],
         ),
         subtitle: material.description != null
             ? Text(
@@ -212,6 +256,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     // If user is a contributor or admin, skip payment and download directly
     if (_userProfile?.role == UserRole.contributor ||
         _userProfile?.role == UserRole.admin) {
+      // Secure for offline use
+      await _secureForOffline(material);
+
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -365,6 +412,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
 
     if (status == PaymentStatus.success) {
+      // Secure for offline use
+      await _secureForOffline(material);
+
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -373,6 +423,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       }
     } else {
       throw "Payment failed or timed out.";
+    }
+  }
+
+  Future<void> _secureForOffline(CourseMaterial material) async {
+    try {
+      await StorageService().downloadAndEncrypt(
+        material.fileUrl,
+        material.id,
+        material.fileName,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Material secured for offline access! 🔒"),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Offline cache failed: $e");
     }
   }
 
@@ -418,11 +487,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 ),
                 title: Text(a.title, style: GoogleFonts.outfit(fontSize: 13)),
                 subtitle: const Text(
-                  "Answer • 300 XAF",
+                  "Verified Answer • 300 XAF",
                   style: TextStyle(fontSize: 11),
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.download, size: 18),
+                  icon: const Icon(Icons.download_rounded, size: 18),
                   onPressed: () => _handleDownload(a),
                 ),
                 onTap: () {
@@ -590,6 +659,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             fileType: file.extension ?? 'file',
                             uploadedAt: DateTime.now(),
                             courseId: widget.course.id,
+                            departmentId: widget.course.departmentId,
                             materialCategory: selectedCategory,
                             isPastQuestion: selectedCategory == 'past_question',
                             isAnswer: selectedCategory == 'answer',

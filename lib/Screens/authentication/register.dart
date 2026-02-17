@@ -56,10 +56,11 @@ class _RegisterState extends State<Register> {
                           width: 2,
                         ),
                       ),
-                      child: Icon(
-                        Icons.person_add_rounded,
-                        size: 80,
-                        color: theme.colorScheme.primary,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

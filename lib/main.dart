@@ -13,7 +13,6 @@ import 'package:neo/Screens/UI/preview/Navigation/splash_screen.dart';
 
 import 'package:neo/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
