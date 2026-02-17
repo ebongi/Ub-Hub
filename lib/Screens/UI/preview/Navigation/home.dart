@@ -13,14 +13,9 @@ import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:neo/services/department.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/task_manager_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/document_scanner_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/flashcards_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/mock_exam_generator_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/performance_tracker_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/marketplace_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/campus_navigator_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:neo/Screens/UI/preview/Toolbox/offline_library_screen.dart';
 import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
@@ -87,18 +82,6 @@ class _HomeState extends State<Home> {
       widget: const AIStudyPlanScreen(),
     ),
     ToolItem(
-      name: "Mock Exam",
-      icon: Icons.quiz_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const MockExamGeneratorScreen(),
-    ),
-    ToolItem(
-      name: "Performance",
-      icon: Icons.calculate_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const PerformanceTrackerScreen(),
-    ),
-    ToolItem(
       name: "Exam Schedule",
       icon: Icons.calendar_month_rounded,
       backgroundColor: Colors.transparent,
@@ -109,12 +92,6 @@ class _HomeState extends State<Home> {
       icon: Icons.local_library_rounded,
       backgroundColor: Colors.transparent,
       widget: const OfflineLibraryScreen(),
-    ),
-    ToolItem(
-      name: "Navigator",
-      icon: Icons.map_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const CampusNavigatorScreen(),
     ),
     ToolItem(
       name: "News",
@@ -140,18 +117,6 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.transparent,
       widget: const FocusTimerScreen(),
     ),
-    ToolItem(
-      name: "Doc Scanner",
-      icon: Icons.document_scanner_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const DocumentScannerScreen(),
-    ),
-    ToolItem(
-      name: "Resume/Cards",
-      icon: Icons.description_rounded,
-      backgroundColor: Colors.transparent,
-      widget: const FlashcardsScreen(),
-    ),
   ];
   // int _notificationCount = ;
 
@@ -161,18 +126,24 @@ class _HomeState extends State<Home> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            toolbarHeight: 90.0,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            centerTitle: false,
+            automaticallyImplyLeading: false,
+            title: const AppBarUser(),
+          ),
+          SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AppBarUser(),
-                const SizedBox(height: 20), // Can be const
-                IntroWidget(),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 10),
+                const IntroWidget(),
                 const ViewSection(title: "Departments"),
-                // DepartmentSection now consumes the stream provided above
                 Consumer<List<Department>?>(
                   builder: (context, departments, child) {
                     if (departments == null) {
@@ -204,10 +175,10 @@ class _HomeState extends State<Home> {
                 const ViewSection(title: "Toolbox"),
                 ToolboxSection(items: toolboxItems),
                 const SizedBox(height: 100), // Padding for FAB
-              ],
+              ]),
             ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -369,33 +340,43 @@ class ToolboxSection extends StatelessWidget {
 }
 
 // Helper to map department names to UI properties
+// Helper to map department names to UI properties
 class DepartmentUIData {
   final IconData icon;
-  final Color color;
+  final Color primaryColor;
+  final Color secondaryColor;
 
-  DepartmentUIData({required this.icon, required this.color});
+  DepartmentUIData({
+    required this.icon,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
 
   static DepartmentUIData fromDepartmentName(String name) {
-    switch (name.toLowerCase()) {
+    switch (name.toLowerCase().trim()) {
       case 'computer science':
         return DepartmentUIData(
           icon: Icons.computer_rounded,
-          color: Colors.blue.shade800,
+          primaryColor: const Color(0xFF2563EB), // Blue 600
+          secondaryColor: const Color(0xFF60A5FA), // Blue 400
         );
       case 'mathematics':
         return DepartmentUIData(
           icon: Icons.functions_rounded,
-          color: Colors.green.shade800,
+          primaryColor: const Color(0xFF059669), // Emerald 600
+          secondaryColor: const Color(0xFF34D399), // Emerald 400
         );
       case 'physics':
         return DepartmentUIData(
           icon: Icons.science_rounded,
-          color: Colors.purple.shade800,
+          primaryColor: const Color(0xFF7C3AED), // Violet 600
+          secondaryColor: const Color(0xFFA78BFA), // Violet 400
         );
       default:
         return DepartmentUIData(
           icon: Icons.account_balance_rounded,
-          color: Colors.blue.shade800,
+          primaryColor: const Color(0xFF475569), // Slate 600
+          secondaryColor: const Color(0xFF94A3B8), // Slate 400
         );
     }
   }
@@ -409,8 +390,8 @@ class DepartmentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 240,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      height: 220,
+      margin: const EdgeInsets.symmetric(vertical: 16.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -420,91 +401,156 @@ class DepartmentSection extends StatelessWidget {
           final uiData = DepartmentUIData.fromDepartmentName(department.name);
           return FadeInSlide(
             delay: index * 0.1,
-            child: ScaleButton(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DepartmentScreen(
-                    departmentName: department.name,
-                    departmentId: department.id,
+            child: Container(
+              width: 280,
+              margin: const EdgeInsets.only(right: 20),
+              child: ScaleButton(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DepartmentScreen(
+                      departmentName: department.name,
+                      departmentId: department.id,
+                    ),
                   ),
                 ),
-              ),
-              child: Container(
-                width: 200,
-                margin: const EdgeInsets.only(right: 16),
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
-                        color: uiData.color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 5,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Hero(
-                        tag: 'dept-image-${department.id}',
-                        child:
-                            (department.imageUrl != null &&
-                                department.imageUrl!.isNotEmpty)
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: CachedNetworkImage(
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 4,
+                  shadowColor: uiData.primaryColor.withOpacity(0.2),
+                  child: Stack(
+                    children: [
+                      // Background Image or Gradient
+                      Positioned.fill(
+                        child: Hero(
+                          tag: 'dept-image-${department.id}',
+                          child:
+                              (department.imageUrl != null &&
+                                  department.imageUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
                                   imageUrl: department.imageUrl!,
                                   fit: BoxFit.cover,
-                                  placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator(),
+                                  placeholder: (context, url) => Container(
+                                    color: uiData.primaryColor.withOpacity(0.1),
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
                                   ),
-                                  errorWidget: (context, url, error) => Icon(
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              uiData.primaryColor,
+                                              uiData.secondaryColor,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          uiData.icon,
+                                          size: 80,
+                                          color: Colors.white.withOpacity(0.2),
+                                        ),
+                                      ),
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        uiData.primaryColor,
+                                        uiData.secondaryColor,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: Icon(
                                     uiData.icon,
-                                    size: 60,
-                                    color: uiData.color.withOpacity(0.5),
+                                    size: 80,
+                                    color: Colors.white.withOpacity(0.2),
                                   ),
                                 ),
-                              )
-                            : Icon(
-                                uiData.icon,
-                                size: 60,
-                                color: uiData.color.withOpacity(0.5),
+                        ),
+                      ),
+                      // Gradient Overlay
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.1),
+                                Colors.black.withOpacity(0.8),
+                              ],
+                              stops: const [0.5, 0.7, 1.0],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Icon Badge
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
                               ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.8),
-                            Colors.transparent,
+                              child: Icon(
+                                uiData.icon,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Department Name
+                            Text(
+                              department.name,
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Action Label
+                            Row(
+                              children: [
+                                Text(
+                                  "Explore Resources",
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 14,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                              ],
+                            ),
                           ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
-                      child: Text(
-                        department.name,
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

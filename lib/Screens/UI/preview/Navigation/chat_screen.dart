@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:neo/services/notification_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;

@@ -125,19 +125,17 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                         ),
                       ),
                       child: Card(
-                        elevation: 0,
+                        elevation: 4,
+                        shadowColor: uiData.primaryColor.withOpacity(0.2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(
-                            color: theme.dividerColor.withOpacity(0.1),
-                          ),
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
                             Container(
-                              color: uiData.color.withOpacity(0.1),
+                              color: uiData.primaryColor.withOpacity(0.1),
                               child: Hero(
                                 tag: 'dept-image-${department.id}',
                                 child:
@@ -147,23 +145,53 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                                         imageUrl: department.imageUrl!,
                                         fit: BoxFit.cover,
                                         placeholder: (context, url) =>
-                                            const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                            Container(
+                                              color: uiData.primaryColor
+                                                  .withOpacity(0.1),
+                                              child: const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              ),
                                             ),
                                         errorWidget: (context, url, error) =>
-                                            Icon(
-                                              uiData.icon,
-                                              size: 40,
-                                              color: uiData.color.withOpacity(
-                                                0.5,
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    uiData.primaryColor,
+                                                    uiData.secondaryColor,
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                uiData.icon,
+                                                size: 40,
+                                                color: Colors.white.withOpacity(
+                                                  0.2,
+                                                ),
                                               ),
                                             ),
                                       )
-                                    : Icon(
-                                        uiData.icon,
-                                        size: 40,
-                                        color: uiData.color.withOpacity(0.5),
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              uiData.primaryColor,
+                                              uiData.secondaryColor,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          uiData.icon,
+                                          size: 40,
+                                          color: Colors.white.withOpacity(0.2),
+                                        ),
                                       ),
                               ),
                             ),
@@ -171,24 +199,35 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withOpacity(0.8),
                                     Colors.transparent,
                                   ],
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
+                                  stops: const [0.0, 0.4],
                                 ),
                               ),
                             ),
                             Positioned(
-                              bottom: 10,
+                              top: 10,
                               left: 10,
-                              right: 10,
+                              child: Icon(
+                                uiData.icon,
+                                size: 20,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 12,
+                              left: 12,
+                              right: 12,
                               child: Text(
                                 department.name,
                                 style: GoogleFonts.outfit(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  height: 1.1,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
