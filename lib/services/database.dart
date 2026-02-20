@@ -22,6 +22,7 @@ class DatabaseService {
     String? name,
     String? matricule,
     String? phoneNumber,
+    String? level,
   }) async {
     if (uid == null) return;
     return await _supabase.from('profiles').upsert({
@@ -29,6 +30,7 @@ class DatabaseService {
       if (name != null) 'name': name,
       if (matricule != null) 'matricule': matricule,
       if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (level != null) 'level': level,
     });
   }
 

@@ -15,6 +15,9 @@ class Authentication {
     required String email,
     required String password,
     String? name,
+    String? matricule,
+    String? phoneNumber,
+    String? level,
   }) async {
     try {
       final response = await _supabase.auth.signUp(
@@ -26,7 +29,12 @@ class Authentication {
       final user = response.user;
       if (user != null) {
         // Also update profiles table if needed (AuthWrapper handles this but good to have)
-        await DatabaseService(uid: user.id).updateUserData(name: name);
+        await DatabaseService(uid: user.id).updateUserData(
+          name: name,
+          matricule: matricule,
+          phoneNumber: phoneNumber,
+          level: level,
+        );
       }
       return user;
     } catch (e) {

@@ -136,64 +136,60 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                           children: [
                             Container(
                               color: uiData.primaryColor.withOpacity(0.1),
-                              child: Hero(
-                                tag: 'dept-image-${department.id}',
-                                child:
-                                    (department.imageUrl != null &&
-                                        department.imageUrl!.isNotEmpty)
-                                    ? CachedNetworkImage(
-                                        imageUrl: department.imageUrl!,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            Container(
-                                              color: uiData.primaryColor
-                                                  .withOpacity(0.1),
-                                              child: const Center(
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              ),
-                                            ),
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    uiData.primaryColor,
-                                                    uiData.secondaryColor,
-                                                  ],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                              ),
-                                              child: Icon(
-                                                uiData.icon,
-                                                size: 40,
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
-                                                ),
-                                              ),
-                                            ),
-                                      )
-                                    : Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              uiData.primaryColor,
-                                              uiData.secondaryColor,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
+                              child:
+                                  (department.imageUrl != null &&
+                                      department.imageUrl!.isNotEmpty)
+                                  ? CachedNetworkImage(
+                                      imageUrl: department.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: uiData.primaryColor.withOpacity(
+                                          0.1,
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
                                           ),
                                         ),
-                                        child: Icon(
-                                          uiData.icon,
-                                          size: 40,
-                                          color: Colors.white.withOpacity(0.2),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  uiData.primaryColor,
+                                                  uiData.secondaryColor,
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              uiData.icon,
+                                              size: 40,
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                            ),
+                                          ),
+                                    )
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            uiData.primaryColor,
+                                            uiData.secondaryColor,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
                                       ),
-                              ),
+                                      child: Icon(
+                                        uiData.icon,
+                                        size: 40,
+                                        color: Colors.white.withOpacity(0.2),
+                                      ),
+                                    ),
                             ),
                             Container(
                               decoration: BoxDecoration(

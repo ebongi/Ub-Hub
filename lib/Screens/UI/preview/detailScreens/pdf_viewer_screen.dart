@@ -118,7 +118,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           widget.title,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: Colors.blue.shade200,
+        backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             onPressed: _isSummarizing ? null : _summarizeDocument,

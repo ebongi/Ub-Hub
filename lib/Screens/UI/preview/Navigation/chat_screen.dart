@@ -106,7 +106,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -176,13 +175,6 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/chat_bg.png'),
-            repeat: ImageRepeat.repeat,
-            opacity: isDarkMode ? 0.1 : 0.25, // Adjusted for clearer visibility
-          ),
-        ),
         child: Column(
           children: [
             Expanded(
@@ -359,7 +351,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 minLines: 1,
                 style: GoogleFonts.outfit(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: "Spread some love...",
+                  hintText: "Send a message",
                   hintStyle: GoogleFonts.outfit(
                     color: theme.colorScheme.onSurface.withOpacity(0.4),
                   ),

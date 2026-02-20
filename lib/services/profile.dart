@@ -23,6 +23,7 @@ class UserProfile {
   final String? name;
   final String? matricule;
   final String? phoneNumber;
+  final String? level;
   final UserRole role;
   final DateTime? upgradedAt;
   final String? avatarUrl;
@@ -32,6 +33,7 @@ class UserProfile {
     this.name,
     this.matricule,
     this.phoneNumber,
+    this.level,
     this.role = UserRole.viewer,
     this.upgradedAt,
     this.avatarUrl,
@@ -43,6 +45,7 @@ class UserProfile {
       name: json['name'],
       matricule: json['matricule'],
       phoneNumber: json['phone_number'],
+      level: json['level'],
       role: UserRole.fromString(json['role']),
       upgradedAt: json['upgraded_at'] != null
           ? DateTime.parse(json['upgraded_at'])
@@ -57,6 +60,7 @@ class UserProfile {
       'name': name,
       'matricule': matricule,
       'phone_number': phoneNumber,
+      'level': level,
       'role': role.name,
       'upgraded_at': upgradedAt?.toIso8601String(),
       'avatar_url': avatarUrl,

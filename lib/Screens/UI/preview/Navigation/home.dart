@@ -309,13 +309,10 @@ class ToolboxSection extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: theme.colorScheme.primary.withOpacity(0.1),
                     ),
-                    child: Hero(
-                      tag: tool.name,
-                      child: Icon(
-                        tool.icon,
-                        size: 28, // Smaller icon
-                        color: theme.colorScheme.primary,
-                      ),
+                    child: Icon(
+                      tool.icon,
+                      size: 28, // Smaller icon
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -422,42 +419,21 @@ class DepartmentSection extends StatelessWidget {
                     children: [
                       // Background Image or Gradient
                       Positioned.fill(
-                        child: Hero(
-                          tag: 'dept-image-${department.id}',
-                          child:
-                              (department.imageUrl != null &&
-                                  department.imageUrl!.isNotEmpty)
-                              ? CachedNetworkImage(
-                                  imageUrl: department.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(
-                                    color: uiData.primaryColor.withOpacity(0.1),
-                                    child: const Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                        child:
+                            (department.imageUrl != null &&
+                                department.imageUrl!.isNotEmpty)
+                            ? CachedNetworkImage(
+                                imageUrl: department.imageUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: uiData.primaryColor.withOpacity(0.1),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              uiData.primaryColor,
-                                              uiData.secondaryColor,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          uiData.icon,
-                                          size: 80,
-                                          color: Colors.white.withOpacity(0.2),
-                                        ),
-                                      ),
-                                )
-                              : Container(
+                                ),
+                                errorWidget: (context, url, error) => Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
@@ -474,7 +450,24 @@ class DepartmentSection extends StatelessWidget {
                                     color: Colors.white.withOpacity(0.2),
                                   ),
                                 ),
-                        ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      uiData.primaryColor,
+                                      uiData.secondaryColor,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: Icon(
+                                  uiData.icon,
+                                  size: 80,
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
                       ),
                       // Gradient Overlay
                       Positioned.fill(
@@ -696,10 +689,11 @@ class AppBarUser extends StatelessWidget {
                 ),
               ),
               Text(
-                "Welcome back!",
+                "Welcome! We're glad you're here",
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
+                  color: Colors.grey,
                 ),
               ),
             ],
@@ -732,5 +726,3 @@ class AppBarUser extends StatelessWidget {
     );
   }
 }
-
-///Whats the point of being a programmer in your room (angry face emoji)

@@ -276,17 +276,18 @@ class AuthHeader extends StatelessWidget {
         Text(
           title,
           style: GoogleFonts.outfit(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+            fontSize: 36,
+            fontWeight: FontWeight.w800,
             color: isDarkMode ? Colors.white : theme.colorScheme.primary,
-            letterSpacing: 1.2,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           subtitle,
           style: GoogleFonts.outfit(
-            fontSize: 16,
+            fontSize: 17,
+            height: 1.5,
             color: isDarkMode ? Colors.white70 : Colors.grey[600],
             fontWeight: FontWeight.w400,
           ),
@@ -321,37 +322,55 @@ class AuthTextField extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode ? theme.cardTheme.color : Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(isDarkMode ? 0.05 : 0),
-        ),
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      validator: validator,
+      keyboardType: keyboardType,
+      style: GoogleFonts.outfit(
+        fontSize: 16,
+        color: isDarkMode ? Colors.white : Colors.black87,
       ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        validator: validator,
-        keyboardType: keyboardType,
-        style: GoogleFonts.outfit(fontSize: 16),
-        decoration: InputDecoration(
-          hintText: hintText,
-          prefixIcon: Icon(
-            prefixIcon,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: GoogleFonts.outfit(
+          color: isDarkMode ? Colors.white38 : Colors.grey[500],
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          size: 22,
+          color: isDarkMode ? Colors.cyanAccent : theme.colorScheme.primary,
+        ),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: isDarkMode
+            ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
+            : (Colors.grey[50] ?? Colors.grey).withOpacity(0.5),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 20,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDarkMode ? Colors.white10 : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
             color: isDarkMode ? Colors.cyanAccent : theme.colorScheme.primary,
+            width: 2,
           ),
-          suffixIcon: suffixIcon,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.transparent,
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 20,
-            horizontal: 16,
-          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
         ),
       ),
     );
@@ -375,9 +394,21 @@ class AuthButton extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDarkMode
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+      ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -388,19 +419,116 @@ class AuthButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: isDarkMode ? 0 : 2,
+          elevation: 0,
         ),
         child: isLoading
-            ? CircularProgressIndicator(
-                color: isDarkMode ? Colors.black : Colors.white,
+            ? SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: isDarkMode ? Colors.black : Colors.white,
+                ),
               )
             : Text(
                 label,
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class AuthDropdown extends StatelessWidget {
+  final String value;
+  final String hintText;
+  final IconData prefixIcon;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+  final String? Function(String?)? validator;
+
+  const AuthDropdown({
+    super.key,
+    required this.value,
+    required this.hintText,
+    required this.prefixIcon,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return DropdownButtonFormField<String>(
+      value: value.isEmpty ? null : value,
+      items: items.map((String item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(
+            item,
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: validator,
+      icon: Icon(
+        Icons.expand_more_rounded,
+        color: isDarkMode ? Colors.white54 : Colors.grey[600],
+      ),
+      dropdownColor: isDarkMode
+          ? theme.colorScheme.surfaceContainerLow
+          : Colors.white,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: GoogleFonts.outfit(
+          color: isDarkMode ? Colors.white38 : Colors.grey[500],
+        ),
+        prefixIcon: Icon(
+          prefixIcon,
+          size: 22,
+          color: isDarkMode ? Colors.cyanAccent : theme.colorScheme.primary,
+        ),
+        filled: true,
+        fillColor: isDarkMode
+            ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
+            : (Colors.grey[50] ?? Colors.grey).withOpacity(0.5),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 20,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDarkMode ? Colors.white10 : Colors.grey[300]!,
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDarkMode ? Colors.cyanAccent : theme.colorScheme.primary,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        ),
       ),
     );
   }

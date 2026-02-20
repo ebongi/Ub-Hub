@@ -148,6 +148,76 @@ class _ProfileState extends State<Profile> {
 
                 const SizedBox(height: 40),
 
+                const SizedBox(height: 32),
+                // Personal Information Card
+                Card(
+                  elevation: 0,
+                  color: theme.colorScheme.surfaceContainerLow,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    side: BorderSide(
+                      color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.badge_rounded,
+                              size: 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Personal Information",
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildInfoRow(
+                          theme,
+                          icon: Icons.email_rounded,
+                          label: "Email Address",
+                          value:
+                              _authentication.currentUser?.email ?? "Not set",
+                        ),
+                        const Divider(height: 32, thickness: 0.5),
+                        _buildInfoRow(
+                          theme,
+                          icon: Icons.tag_rounded,
+                          label: "Matricule",
+                          value: user.matricule ?? "Not provided",
+                        ),
+                        const Divider(height: 32, thickness: 0.5),
+                        _buildInfoRow(
+                          theme,
+                          icon: Icons.phone_rounded,
+                          label: "Phone Number",
+                          value: user.phoneNumber ?? "Not provided",
+                        ),
+                        const Divider(height: 32, thickness: 0.5),
+                        _buildInfoRow(
+                          theme,
+                          icon: Icons.school_rounded,
+                          label: "Current Level",
+                          value: user.level ?? "Not provided",
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
                 // Access Tier Info / Upgrade Card
                 if (user.role == UserRole.viewer)
                   _buildUpgradeCard(context, theme)
@@ -155,17 +225,6 @@ class _ProfileState extends State<Profile> {
                   _buildContributorBadge(theme),
 
                 const SizedBox(height: 32),
-
-                // Actions List
-                _buildActionItem(
-                  theme,
-                  icon: Icons.logout_rounded,
-                  title: "Sign Out",
-                  color: theme.colorScheme.error,
-                  onTap: () async {
-                    await _authentication.signUserOut();
-                  },
-                ),
               ],
             ),
           );
@@ -177,11 +236,11 @@ class _ProfileState extends State<Profile> {
   Color _getRoleColor(UserRole role) {
     switch (role) {
       case UserRole.admin:
-        return Colors.purple;
+        return Colors.indigoAccent;
       case UserRole.contributor:
-        return Colors.blue;
+        return Colors.blueAccent;
       case UserRole.viewer:
-        return Colors.orange;
+        return Colors.green;
     }
   }
 
@@ -321,6 +380,50 @@ class _ProfileState extends State<Profile> {
         Icons.chevron_right_rounded,
         color: color.withOpacity(0.5),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(
+    ThemeData theme, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: theme.hintColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                value,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

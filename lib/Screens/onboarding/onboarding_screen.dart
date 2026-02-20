@@ -45,8 +45,7 @@ class OnboardingScreen extends StatelessWidget {
         ),
         PageViewModel(
           title: "Track Your Progress",
-          body:
-              "Calculate your GPA with ease and stay focused using our advanced 3D study timer.",
+          body: "Stay focused using our advanced 3D study timer.",
           image: _buildImage('2.png'),
           decoration: pageDecoration,
         ),

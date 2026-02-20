@@ -98,18 +98,15 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     color: colorScheme.onSurface,
                   ),
                 ),
-                background: Hero(
-                  tag: 'dept-image-${widget.departmentId}',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          colorScheme.primaryContainer.withOpacity(0.3),
-                          colorScheme.surface,
-                        ],
-                      ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.primaryContainer.withOpacity(0.3),
+                        colorScheme.surface,
+                      ],
                     ),
                   ),
                 ),
