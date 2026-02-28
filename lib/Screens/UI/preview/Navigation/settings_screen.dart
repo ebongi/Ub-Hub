@@ -8,7 +8,6 @@ import 'package:neo/services/auth.dart' show Authentication;
 import 'package:neo/theme_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:neo/Screens/UI/preview/Settings/support_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -86,16 +85,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          Card(
-            child: ListTile(
-              onTap: () => showSupportDialog(context),
-              leading: const Icon(Icons.favorite, color: Colors.red),
-              title: Text(
-                "Support the developer",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
+
+          //  Here lies the code the for surpport
+          // Card(
+          //   child: ListTile(
+          //     onTap: () => showSupportDialog(context),
+          //     leading: const Icon(Icons.favorite, color: Colors.red),
+          //     title: Text(
+          //       "Support the developer",
+          //       style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+          //     ),
+          //   ),
+          // ),
           Card(
             child: ListTile(
               onTap: () => Navigator.push(
@@ -146,16 +147,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             children: [
               Text(
-                "Ub-Studies",
-                style: GoogleFonts.outfit().copyWith(
-                  fontWeight: FontWeight.bold,
+                "UB-Studies",
+                style: GoogleFonts.pacifico().copyWith(
                   fontSize: 20,
-                  letterSpacing: 1.3,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 "Version $_version+$buildnumber",
-                style: GoogleFonts.outfit(),
+                style: GoogleFonts.pacifico(),
               ),
             ],
           ),

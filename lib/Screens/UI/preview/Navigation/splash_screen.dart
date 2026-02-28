@@ -121,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   children: [
                     Text(
-                      "Ub Studies",
+                      "Go Study",
                       style: GoogleFonts.outfit(
                         fontSize: 42,
                         fontWeight: FontWeight.bold,
@@ -131,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Study anywhere",
+                      "Somewhere, something incredible is waiting to be known.",
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         color: Colors.white.withOpacity(0.7),

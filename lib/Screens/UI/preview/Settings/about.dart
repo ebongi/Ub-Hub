@@ -69,9 +69,17 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            // Text(
+            //   "G-SC30L",
+            //   style: GoogleFonts.pacifico().copyWith(
+            //     fontSize: 20,
+            //     fontWeight: FontWeight.bold,
+            //   ),
+            // ),
+            // Text("Version $_version", style: GoogleFonts.pacifico()),
             Text(
-              "Ub Studies",
-              style: GoogleFonts.outfit(
+              "GO-Study",
+              style: GoogleFonts.pacifico(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -90,13 +98,13 @@ class _AboutScreenState extends State<AboutScreen> {
 
             // Features Section
             _buildCategoryHeader(context, "Academic Excellence"),
-            _buildFeatureTile(
-              context,
-              icon: Icons.calculate_rounded,
-              title: "GPA Calculator",
-              description:
-                  "Easily track and project your academic performance.",
-            ),
+            // _buildFeatureTile(
+            //   context,
+            //   icon: Icons.calculate_rounded,
+            //   title: "GPA Calculator",
+            //   description:
+            //       "Easily track and project your academic performance.",
+            // ),
             _buildFeatureTile(
               context,
               icon: Icons.library_books_rounded,
@@ -163,7 +171,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
             const SizedBox(height: 50),
             Text(
-              "Ub Studies is dedicated to empowering students at the University of Buea with modern technical tools for academic success.",
+              "UB-Studies is dedicated to empowering students at the University of Buea with modern technical tools for academic success.",
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 color: Theme.of(
@@ -175,12 +183,13 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const SizedBox(height: 30),
             Text(
-              "© ${DateTime.now().year} Ub-Hub Team",
+              "© ${DateTime.now().year} Jovial Products",
               style: GoogleFonts.outfit(
                 color: Theme.of(
                   context,
                 ).textTheme.bodySmall?.color?.withOpacity(0.5),
                 fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 20),
