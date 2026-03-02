@@ -1,22 +1,23 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
+import 'package:go_study/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
     show showAddCourseDialog;
-import 'package:neo/Screens/UI/preview/detailScreens/course_detail_screen.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
-import 'package:neo/services/course_material.dart';
-import 'package:neo/services/course_model.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/nkwa_service.dart';
-import 'package:neo/services/payment_models.dart';
-import 'package:neo/services/profile.dart';
-import 'package:neo/services/storage_service.dart';
-import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/course_detail_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/course_model.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/payment_models.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/subscription_service.dart';
+import 'package:go_study/services/storage_service.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:neo/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -175,7 +176,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         ),
       ),
       floatingActionButton:
-          (_userProfile?.canUpload ?? false) && _tabController.index != 4
+          (_userProfile?.canUploadMaterial ?? false) &&
+              _tabController.index != 4
           ? FloatingActionButton.extended(
               onPressed: _showUploadSelection,
               icon: const Icon(Icons.add_rounded),
@@ -375,6 +377,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             ),
           ),
           trailing: IconButton(
+            tooltip: "Course Materials",
             icon: Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
@@ -692,6 +695,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               ),
             )
           : null,
+
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -715,11 +719,17 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
-    // If user is a contributor or admin, skip payment and download directly
-    if (_userProfile?.role == UserRole.contributor ||
-        _userProfile?.role == UserRole.admin) {
+    // If user is a contributor or admin, or has a premium subscription, skip payment
+    if (_userProfile != null &&
+        SubscriptionService.canDownloadForFree(_userProfile!)) {
       // Secure for offline use
       await _secureForOffline(material);
+
+      // If Silver user, increment their free download count
+      if (_userProfile!.subscriptionTier == SubscriptionTier.silver &&
+          !_userProfile!.hasUnlimitedDownloads) {
+        await _dbService.incrementFreeDownloadCount();
+      }
 
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
@@ -1005,8 +1015,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            if (_userProfile?.canUpload ?? false) const SizedBox(height: 24),
-            if (_userProfile?.canUpload ?? false)
+            if (_userProfile?.canUploadMaterial ?? false)
+              const SizedBox(height: 24),
+            if (_userProfile?.canUploadMaterial ?? false)
               FilledButton.icon(
                 onPressed: _showUploadSelection,
                 icon: const Icon(Icons.add_rounded),

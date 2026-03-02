@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:neo/services/payment_models.dart';
-import 'package:neo/core/app_config.dart';
-import 'package:neo/services/profile.dart';
+import 'package:go_study/services/payment_models.dart';
+import 'package:go_study/core/app_config.dart';
+import 'package:go_study/services/profile.dart';
 
 /// Service for handling Nkwa Pay integration
 class NkwaService {

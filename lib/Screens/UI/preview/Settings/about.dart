@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -64,7 +65,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(15.0),
-                  child: Image.asset('assets/images/logo.png'),
+                  child: SvgPicture.asset('assets/images/logoicon.svg'),
                 ),
               ),
             ),
@@ -79,7 +80,7 @@ class _AboutScreenState extends State<AboutScreen> {
             // Text("Version $_version", style: GoogleFonts.pacifico()),
             Text(
               "GO-Study",
-              style: GoogleFonts.pacifico(
+              style: GoogleFonts.outfit(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).textTheme.bodyLarge?.color,
@@ -183,7 +184,7 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const SizedBox(height: 30),
             Text(
-              "© ${DateTime.now().year} Jovial Products",
+              "© ${DateTime.now().year} Jovial Studio",
               style: GoogleFonts.outfit(
                 color: Theme.of(
                   context,

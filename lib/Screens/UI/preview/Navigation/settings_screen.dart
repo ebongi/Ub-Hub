@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_study/services/auth.dart';
+import 'package:go_study/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/Navigation/profile.dart';
-import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
-import 'package:neo/Screens/UI/preview/Settings/about.dart';
-import 'package:neo/Screens/UI/preview/Settings/developer_info.dart';
-import 'package:neo/services/auth.dart' show Authentication;
-import 'package:neo/theme_provider.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
+import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/about.dart';
+import 'package:go_study/Screens/UI/preview/Settings/developer_info.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:go_study/services/auth.dart' show Authentication;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
@@ -85,7 +87,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-
+          Card(
+            child: ListTile(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SubscriptionPlansScreen(),
+                ),
+              ),
+              leading: const Icon(Icons.payment),
+              title: Text(
+                "Subscription",
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
           //  Here lies the code the for surpport
           // Card(
           //   child: ListTile(
@@ -147,15 +163,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             children: [
               Text(
-                "UB-Studies",
-                style: GoogleFonts.pacifico().copyWith(
+                "GO-Study",
+                style: GoogleFonts.outfit().copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 "Version $_version+$buildnumber",
-                style: GoogleFonts.pacifico(),
+                style: GoogleFonts.outfit(),
               ),
             ],
           ),

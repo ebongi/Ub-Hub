@@ -2,27 +2,28 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:neo/Screens/Shared/animations.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/ComputerCourses/add_department_dialog.dart'
+import 'package:go_study/Screens/UI/preview/ComputerCourses/add_department_dialog.dart'
     show showAddDepartmentDialog;
-import 'package:neo/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 
-import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
-import 'package:neo/services/department.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/task_manager_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/marketplace_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/news_feed_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/offline_library_screen.dart';
-import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/services/department.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/task_manager_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/marketplace_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/profile.dart';
-import 'package:neo/services/message_provider.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/message_provider.dart';
 import 'package:provider/provider.dart';
 
 class ToolItem {
@@ -142,7 +143,7 @@ class _HomeState extends State<Home> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 5),
-                const IntroWidget(),
+                IntroWidget(userProfile: _userProfile),
                 const ViewSection(title: "Departments"),
                 Consumer<List<Department>?>(
                   builder: (context, departments, child) {
@@ -173,7 +174,7 @@ class _HomeState extends State<Home> {
                   },
                 ),
                 const ViewSection(title: "Toolbox"),
-                ToolboxSection(items: toolboxItems),
+                ToolboxSection(items: toolboxItems, userProfile: _userProfile),
                 const SizedBox(height: 25), // Padding for FAB
               ]),
             ),
@@ -242,7 +243,7 @@ class _HomeState extends State<Home> {
             },
           ),
           const SizedBox(height: 10),
-          if (_userProfile?.canUpload ?? false)
+          if (_userProfile?.canCreateDepartment ?? false)
             FloatingActionButton(
               heroTag: "addDeptFAB",
               tooltip: "Add Department",
@@ -261,9 +262,10 @@ class _HomeState extends State<Home> {
 }
 
 class ToolboxSection extends StatelessWidget {
-  const ToolboxSection({super.key, required this.items});
+  const ToolboxSection({super.key, required this.items, this.userProfile});
 
   final List<ToolItem> items;
+  final UserProfile? userProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -280,13 +282,24 @@ class ToolboxSection extends StatelessWidget {
       itemBuilder: (context, index) {
         final tool = items[index];
         final theme = Theme.of(context);
+        final isRestricted =
+            (tool.name == "AI Study" || tool.name == "Library") &&
+            userProfile?.role == UserRole.viewer &&
+            !(userProfile?.isTrialActive ?? false);
+
         return FadeInSlide(
           delay: index * 0.05,
           child: ScaleButton(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => tool.widget),
-            ),
+            onTap: () {
+              if (isRestricted) {
+                _showUpgradePrompt(context);
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => tool.widget),
+                );
+              }
+            },
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -300,38 +313,89 @@ class ToolboxSection extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.primary.withOpacity(0.1),
-                    ),
-                    child: Icon(
-                      tool.icon,
-                      size: 28, // Smaller icon
-                      color: theme.colorScheme.primary,
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                          ),
+                          child: Icon(
+                            tool.icon,
+                            size: 28,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          tool.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    tool.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13, // Compact text
-                      fontWeight: FontWeight.w600,
+                  if (isRestricted)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Icon(
+                        Icons.lock_rounded,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showUpgradePrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Premium Feature",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "The AI Study Plan is a premium feature. Upgrade to Silver or Gold to unlock it!",
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Maybe Later"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SubscriptionPlansScreen(userProfile: userProfile),
+                ),
+              );
+            },
+            child: const Text("Upgrade Now"),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -555,10 +619,14 @@ class DepartmentSection extends StatelessWidget {
 }
 
 class IntroWidget extends StatelessWidget {
-  const IntroWidget({super.key}); // Can be const
+  final UserProfile? userProfile;
+  const IntroWidget({super.key, this.userProfile});
 
   @override
   Widget build(BuildContext context) {
+    final trialActive = userProfile?.isTrialActive ?? false;
+    final trialTime = userProfile?.trialTimeLeft ?? "";
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -599,6 +667,39 @@ class IntroWidget extends StatelessWidget {
                     color: Colors.white.withOpacity(0.8),
                   ),
                 ),
+                if (trialActive) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.timer_outlined,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Trial: $trialTime",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

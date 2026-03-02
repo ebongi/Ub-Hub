@@ -4,7 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:http/http.dart' as http;
-import 'package:neo/services/gemini_service.dart';
+import 'package:go_study/services/gemini_service.dart';
 
 class PDFViewerScreen extends StatefulWidget {
   final String url;
@@ -124,11 +124,11 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
             onPressed: _isSummarizing ? null : _summarizeDocument,
             icon: _isSummarizing
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 40,
+                    height: 40,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.auto_awesome_rounded),
+                : const Icon(Icons.auto_awesome_rounded, color: Colors.blue),
             tooltip: "Quick Review",
           ),
         ],

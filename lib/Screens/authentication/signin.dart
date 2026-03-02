@@ -1,8 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/services/auth.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/auth.dart';
 
 class Signin extends StatefulWidget {
   final Authentication? authService;

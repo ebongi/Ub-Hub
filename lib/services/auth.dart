@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:neo/services/database.dart';
+import 'package:go_study/services/database.dart';
 
 class Authentication {
   final SupabaseClient _supabase;

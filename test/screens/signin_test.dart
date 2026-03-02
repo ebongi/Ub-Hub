@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:neo/Screens/authentication/signin.dart';
-import 'package:neo/services/auth.dart';
+import 'package:go_study/Screens/authentication/signin.dart';
+import 'package:go_study/services/auth.dart';
 
 class MockAuthentication extends Mock implements Authentication {}
 

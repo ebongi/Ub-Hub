@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:neo/Screens/authentication/register.dart';
-import 'package:neo/Screens/authentication/signin.dart';
+import 'package:go_study/Screens/authentication/register.dart';
+import 'package:go_study/Screens/authentication/signin.dart';
 
 class Authenticate extends StatefulWidget {
   const Authenticate({super.key});
@@ -19,6 +19,8 @@ class _AuthenticateState extends State<Authenticate> {
 
   @override
   Widget build(BuildContext context) {
-    return  istoggle ? Signin(istoggle:changeAuthView) : Register(istoggle: changeAuthView ,);
+    return istoggle
+        ? Signin(istoggle: changeAuthView)
+        : Register(istoggle: changeAuthView);
   }
 }

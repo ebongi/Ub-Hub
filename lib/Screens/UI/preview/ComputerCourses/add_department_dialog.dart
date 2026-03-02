@@ -5,11 +5,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/department.dart';
-import 'package:neo/services/nkwa_service.dart';
-import 'package:neo/services/payment_models.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/department.dart';
+import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> showAddDepartmentDialog(BuildContext context) async {

@@ -1,13 +1,13 @@
-# Neo (Ub Studies) 🎓
+# GO Study 🎓
 
 [![Flutter](https://img.shields.io/badge/Flutter-v3.0+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![Firebase](https://img.shields.io/badge/Notifications-Firebase-FFCA28?logo=firebase&logoColor=white)](https://firebase.google.com)
 [![Gemini](https://img.shields.io/badge/AI-Gemini-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
-**Your comprehensive academic companion for Ub Studies.**
+**Your comprehensive academic companion.**
 
-Neo is a modern, feature-rich Flutter application designed to empower students at Ub with tools for academic success, collaboration, and organization. From AI-driven study assistance to real-time chat and grade tracking, Neo brings everything a student needs into one sleek interface.
+GO Study is a modern, feature-rich Flutter application designed to empower students with tools for academic success, collaboration, and organization. From AI-driven study assistance to real-time chat and grade tracking, GO Study brings everything a student needs into one sleek interface.
 
 ---
 
@@ -22,7 +22,7 @@ Leverage the power of **Google Gemini AI** to get instant answers to your academ
 - **Grade Tracking:** Monitor your performance and stay on top of your academic goals.
 
 ### 💬 Global Student Chat
-Stay connected with your peers! Neo features a **Global Chat** powered by Supabase, enabling real-time communication, collaboration, and community building among students.
+Stay connected with your peers! GO Study features a **Global Chat** powered by Supabase, enabling real-time communication, collaboration, and community building among students.
 
 ### 🔔 Smart Notifications
 Stay informed with real-time alerts for:

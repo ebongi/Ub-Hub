@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:neo/services/gemini_service.dart';
+import 'package:go_study/services/gemini_service.dart';
 import 'quiz_view_screen.dart';
 
 class MockExamGeneratorScreen extends StatefulWidget {

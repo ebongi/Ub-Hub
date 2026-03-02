@@ -51,8 +51,8 @@ class NotificationService {
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'ub_hub_alerts',
-          'UB Hub Alerts',
+          'go_study_alerts',
+          'GO Study Alerts',
           importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
@@ -85,8 +85,8 @@ class NotificationService {
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'ub_hub_chat',
-          'UB Hub Chat',
+          'go_study_chat',
+          'GO Study Chat',
           channelDescription: 'Real-time chat notifications',
           importance: Importance.max,
           priority: Priority.high,
@@ -128,8 +128,8 @@ class NotificationService {
       tz.TZDateTime.from(scheduledDate, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'ub_hub_reminders',
-          'UB Hub Reminders',
+          'go_study_reminders',
+          'GO Study Reminders',
           importance: Importance.max,
           priority: Priority.high,
         ),

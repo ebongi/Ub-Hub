@@ -1,15 +1,16 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
-import 'package:neo/services/course_material.dart';
-import 'package:neo/services/course_model.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/nkwa_service.dart';
-import 'package:neo/services/payment_models.dart';
-import 'package:neo/services/profile.dart';
-import 'package:neo/services/storage_service.dart';
-import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/course_model.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/payment_models.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/subscription_service.dart';
+import 'package:go_study/services/storage_service.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -51,7 +52,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.forum_rounded),
+            icon: const Icon(Icons.forum_rounded, color: Colors.blue),
             tooltip: "Join Discussion",
             onPressed: () => Navigator.push(
               context,
@@ -64,7 +65,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
           ),
-          if (_userProfile?.canUpload ?? false)
+          if (_userProfile?.canUploadMaterial ?? false)
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () => _showUploadSelection(),
@@ -253,9 +254,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
-    // If user is a contributor or admin, skip payment and download directly
-    if (_userProfile?.role == UserRole.contributor ||
-        _userProfile?.role == UserRole.admin) {
+    // Check if user can download for free (Admin, Contributor, Gold, Silver with limit, or Trial)
+    if (_userProfile != null &&
+        SubscriptionService.canDownloadForFree(_userProfile!)) {
       // Secure for offline use
       await _secureForOffline(material);
 
@@ -427,6 +428,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _secureForOffline(CourseMaterial material) async {
+    // Only premium users (Silver, Gold, Contributor) can save to the offline library
+    // Unless they are within their 10-day free trial
+    if (_userProfile?.role == UserRole.viewer &&
+        !(_userProfile?.isTrialActive ?? false)) {
+      return;
+    }
+
     try {
       await StorageService().downloadAndEncrypt(
         material.fileUrl,

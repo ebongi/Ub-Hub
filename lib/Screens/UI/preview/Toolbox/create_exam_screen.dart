@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/exam_event.dart';
-import 'package:neo/services/notification_service.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/exam_event.dart';
+import 'package:go_study/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateExamScreen extends StatefulWidget {

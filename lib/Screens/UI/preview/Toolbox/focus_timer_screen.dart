@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/notification_service.dart';
+import 'package:go_study/services/notification_service.dart';
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});

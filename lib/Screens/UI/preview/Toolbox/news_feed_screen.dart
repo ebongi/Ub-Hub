@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/campus_models.dart';
-import 'package:neo/services/news_scraper_service.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/campus_models.dart';
+import 'package:go_study/services/news_scraper_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:neo/Screens/Shared/shimmer_loading.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 
 class NewsFeedScreen extends StatefulWidget {
   const NewsFeedScreen({super.key});

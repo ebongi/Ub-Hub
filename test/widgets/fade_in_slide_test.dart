@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 
 void main() {
   testWidgets('FadeInSlide should render child', (tester) async {

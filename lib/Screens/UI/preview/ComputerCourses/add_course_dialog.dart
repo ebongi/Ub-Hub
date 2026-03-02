@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/course_model.dart';
-import 'package:neo/services/database.dart';
+import 'package:go_study/services/course_model.dart';
+import 'package:go_study/services/database.dart';
 
 /// Shows a dialog to add a new course to a department.
 Future<void> showAddCourseDialog(

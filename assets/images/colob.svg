@@ -1,0 +1,35 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Glow -->
+  <circle cx="100" cy="100" r="80" fill="#EEF2FF" fill-opacity="0.6"/>
+
+  <!-- Connecting Lines (Network Effect) -->
+  <path d="M60 100C60 100 80 80 100 80C120 80 140 100 140 100" stroke="#6366F1" stroke-width="2" stroke-dasharray="4 4" opacity="0.4"/>
+
+  <!-- Left Student Avatar -->
+  <circle cx="60" cy="110" r="18" fill="#818CF8"/>
+  <path d="M42 145C42 133.954 50.9543 125 60 125C69.0457 125 78 133.954 78 145V150H42V145Z" fill="#6366F1"/>
+
+  <!-- Right Student Avatar -->
+  <circle cx="140" cy="110" r="18" fill="#FB923C"/>
+  <path d="M122 145C122 133.954 130.954 125 140 125C149.046 125 158 133.954 158 145V150H122V145Z" fill="#F97316"/>
+
+  <!-- Shared Document (The Centerpiece) -->
+  <rect x="75" y="60" width="50" height="65" rx="4" fill="white" stroke="#6366F1" stroke-width="2"/>
+  <rect x="85" y="75" width="30" height="3" rx="1.5" fill="#E2E8F0"/>
+  <rect x="85" y="85" width="30" height="3" rx="1.5" fill="#E2E8F0"/>
+  <rect x="85" y="95" width="20" height="3" rx="1.5" fill="#E2E8F0"/>
+
+  <!-- Chat Bubble (Communication) -->
+  <path d="M110 40H130C135.523 40 140 44.4772 140 50V55C140 60.5228 135.523 65 130 65H118L110 72V40Z" fill="#22C55E"/>
+  <circle cx="118" cy="52" r="1.5" fill="white"/>
+  <circle cx="125" cy="52" r="1.5" fill="white"/>
+  <circle cx="132" cy="52" r="1.5" fill="white"/>
+
+  <!-- Real-time Collaboration Cursor -->
+  <path d="M105 105L115 110L110 112L112 118L109 120L107 113L101 115L105 105Z" fill="#F43F5E"/>
+  
+  <!-- "Live" Indicator -->
+  <circle cx="120" cy="65" r="4" fill="#F43F5E">
+    <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite" />
+  </circle>
+</svg>

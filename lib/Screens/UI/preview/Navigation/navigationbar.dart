@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:neo/Screens/UI/preview/Navigation/home.dart';
-import 'package:neo/Screens/UI/preview/Chatbot/chatbot_screen.dart';
-import 'package:neo/Screens/UI/preview/Navigation/settings_screen.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/all_departments_screen.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/department.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/home.dart';
+import 'package:go_study/Screens/UI/preview/Chatbot/chatbot_screen.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/settings_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/department.dart';
 import 'package:provider/provider.dart';
 
 class NavBar extends StatefulWidget {
@@ -81,11 +82,27 @@ class _NavBarState extends State<NavBar> {
                     ? Colors.cyanAccent.withOpacity(0.1)
                     : theme.colorScheme.primary.withOpacity(0.1),
                 color: isDarkMode ? Colors.white38 : Colors.grey[600],
-                tabs: const [
-                  GButton(icon: Icons.home_rounded, text: 'Home'),
-                  GButton(icon: Icons.grid_view_rounded, text: 'Depts'),
-                  GButton(icon: Icons.smart_toy_rounded, text: 'AI Buddy'),
-                  GButton(icon: Icons.settings_rounded, text: 'Settings'),
+                tabs: [
+                  const GButton(icon: Icons.home_rounded, text: 'Home'),
+                  const GButton(icon: Icons.grid_view_rounded, text: 'Depts'),
+                  GButton(
+                    leading: SvgPicture.asset(
+                      'assets/images/icons8-ai.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        _selectedIndex == 2
+                            ? (isDarkMode
+                                  ? Colors.cyanAccent
+                                  : theme.colorScheme.primary)
+                            : (isDarkMode ? Colors.white38 : Colors.grey[600]!),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    icon: Icons.smart_toy_rounded,
+                    text: 'AI',
+                  ),
+                  const GButton(icon: Icons.settings_rounded, text: 'Settings'),
                 ],
                 selectedIndex: _selectedIndex,
                 onTabChange: _onItemTapped,

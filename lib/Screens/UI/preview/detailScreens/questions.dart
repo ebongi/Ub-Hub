@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:html_unescape/html_unescape.dart';
 
 class Questions extends StatefulWidget {
@@ -42,7 +42,7 @@ class _QuestionsState extends State<Questions> {
                   children: [
                     Text("Loading..."),
                     SizedBox(height: 10),
-                    CircularProgressIndicator(color: Colors.blue,),
+                    CircularProgressIndicator(color: Colors.blue),
                   ],
                 ),
               );
@@ -51,17 +51,22 @@ class _QuestionsState extends State<Questions> {
             } else if (!snapshot.hasData || snapshot.data!['results'] == null) {
               return const Center(child: Text('No questions found.'));
             }
-      
+
             final results = snapshot.data!['results'] as List;
-      
+
             return ListView.builder(
               itemCount: results.length,
               itemBuilder: (context, index) {
                 final question = results[index] as Map<String, dynamic>;
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   child: ListTile(
-                    leading: CircleAvatar(child: Text('${index + 1}',style: GoogleFonts.poppins(),)),
+                    leading: CircleAvatar(
+                      child: Text('${index + 1}', style: GoogleFonts.poppins()),
+                    ),
                     title: Text(
                       _unescape.convert(question['question'] as String),
                       style: const TextStyle(fontWeight: FontWeight.bold),

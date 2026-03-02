@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Modern Vibrant Gradient -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" /> <!-- Cyan -->
+      <stop offset="50%" stop-color="#1D4ED8" /> <!-- Deep Blue -->
+      <stop offset="100%" stop-color="#1E3A8A" /> <!-- Indigo -->
+    </linearGradient>
+  </defs>
+
+  <!-- Centering the 210x216 content in 512x512 -->
+  <g transform="translate(151, 148)">
+    <!-- Main Body of the "G" -->
+    <path d="M210 108C210 48.35 161.65 0 102 0C42.35 0 0 48.35 0 108C0 167.65 42.35 216 102 216H165V171H102C76.59 171 56 143.01 56 108C56 72.99 76.59 45 102 45C127.41 45 148 72.99 148 108V118H210V108Z" fill="url(#brandGrad)"/>
+    
+    <!-- The 3D "Folding" shadow element -->
+    <path d="M210 108H148V128L210 128V108Z" fill="black" fill-opacity="0.12"/>
+  </g>
+</svg>

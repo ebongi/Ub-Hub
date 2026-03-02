@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/chat_service.dart';
+import 'package:go_study/services/notification_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/Shared/animations.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:neo/services/notification_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
@@ -158,7 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 builder: (context) => AlertDialog(
                   title: const Text("About Global Chat"),
                   content: const Text(
-                    "This is a real-time chat room for all users of Ub-Hub. "
+                    "This is a real-time chat room for all users of GO-Study Specific for this course. "
                     "Please be respectful and follow community guidelines.",
                   ),
                   actions: [

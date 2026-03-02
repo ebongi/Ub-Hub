@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:neo/services/notification_service.dart';
+import 'package:go_study/services/notification_service.dart';
 
 class MessageProvider with ChangeNotifier {
   int _unreadCount = 0;

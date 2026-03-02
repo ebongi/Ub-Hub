@@ -1,15 +1,15 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:neo/services/course_material.dart';
-import 'package:neo/services/course_model.dart' show Course;
-import 'package:neo/services/department.dart' show Department;
-import 'package:neo/services/exam_event.dart' show ExamEvent;
-import 'package:neo/services/payment_models.dart'
+import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/course_model.dart' show Course;
+import 'package:go_study/services/department.dart' show Department;
+import 'package:go_study/services/exam_event.dart' show ExamEvent;
+import 'package:go_study/services/payment_models.dart'
     show PaymentTransaction, PaymentStatus;
-import 'package:neo/services/task_model.dart';
-import 'package:neo/services/profile.dart';
-import 'package:neo/services/grade_model.dart';
-import 'package:neo/services/campus_models.dart';
+import 'package:go_study/services/task_model.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/grade_model.dart';
+import 'package:go_study/services/campus_models.dart';
 
 class DatabaseService {
   final String? uid;
@@ -301,6 +301,41 @@ class DatabaseService {
           'role': UserRole.contributor.name,
           'upgraded_at': DateTime.now().toIso8601String(),
         })
+        .eq('id', uid!);
+  }
+
+  /// Upgrade user subscription tier
+  Future<void> upgradeSubscription(SubscriptionTier tier) async {
+    if (uid == null) return;
+
+    // Subscriptions last for 30 days
+    final expiry = DateTime.now().add(const Duration(days: 30));
+
+    await _supabase
+        .from('profiles')
+        .update({
+          'subscription_tier': tier.name,
+          'subscription_expiry': expiry.toIso8601String(),
+          'free_download_count': 0, // Reset count on upgrade/renewal
+        })
+        .eq('id', uid!);
+  }
+
+  /// Increment free download count for Silver users
+  Future<void> incrementFreeDownloadCount() async {
+    if (uid == null) return;
+
+    final profile = await _supabase
+        .from('profiles')
+        .select('free_download_count')
+        .eq('id', uid!)
+        .single();
+
+    final currentCount = profile['free_download_count'] as int? ?? 0;
+
+    await _supabase
+        .from('profiles')
+        .update({'free_download_count': currentCount + 1})
         .eq('id', uid!);
   }
 

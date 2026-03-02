@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 
 void main() {
   group('UserModel Tests', () {

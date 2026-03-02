@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/gemini_service.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:neo/services/task_model.dart';
-import 'package:neo/services/exam_event.dart';
+import 'package:go_study/services/task_model.dart';
+import 'package:go_study/services/exam_event.dart';
 
 class AIStudyPlanScreen extends StatefulWidget {
   const AIStudyPlanScreen({super.key});
@@ -128,16 +129,47 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
             style: GoogleFonts.outfit(color: Colors.grey),
           ),
           const SizedBox(height: 40),
-          ElevatedButton.icon(
-            onPressed: _generatePlan,
-            icon: const Icon(Icons.bolt_rounded),
-            label: const Text("GENERATE MY PLAN"),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
+          StreamBuilder<UserProfile>(
+            stream: _dbService.userProfile,
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              final isViewer = user?.role == UserRole.viewer;
+              final isTrialActive = user?.isTrialActive ?? false;
+              final isRestricted = isViewer && !isTrialActive;
+
+              return Column(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: isRestricted ? null : _generatePlan,
+                    icon: const Icon(Icons.bolt_rounded),
+                    label: Text(
+                      isRestricted ? "PREMIUM FEATURE" : "GENERATE MY PLAN",
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                  if (isViewer) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      "Please upgrade to Silver or Gold to use the AI Study Plan.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        color: theme.colorScheme.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
           if (_error != null) ...[
             const SizedBox(height: 20),

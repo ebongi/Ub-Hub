@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:async';
 import 'package:mocktail/mocktail.dart';
-import 'package:neo/services/chat_service.dart';
+import 'package:go_study/services/chat_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}

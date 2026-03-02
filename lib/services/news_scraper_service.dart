@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:neo/services/campus_models.dart';
-import 'package:neo/core/app_config.dart';
+import 'package:go_study/services/campus_models.dart';
+import 'package:go_study/core/app_config.dart';
 
 class NewsScraperService {
   static const String baseUrl = 'https://newsapi.org/v2/everything';

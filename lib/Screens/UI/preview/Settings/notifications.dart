@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/department.dart';
-import 'package:neo/services/course_model.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/department.dart';
+import 'package:go_study/services/course_model.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/streams.dart' show CombineLatestStream;
 import 'package:intl/intl.dart';
@@ -128,7 +128,7 @@ class _NotificationsState extends State<Notifications> {
                         if (item is Department) {
                           icon = Icons.store;
                           title = "New Department Added: ${item.name}";
-                          subtitle = item.description ?? 'No description';
+                          subtitle = item.description;
                           creationDate = item.createdAt;
                         } else if (item is Course) {
                           icon = Icons.book;

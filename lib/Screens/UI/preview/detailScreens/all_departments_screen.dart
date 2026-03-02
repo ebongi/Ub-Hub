@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/Screens/UI/preview/Navigation/home.dart'
+import 'package:go_study/Screens/UI/preview/Navigation/home.dart'
     show DepartmentUIData;
-import 'package:neo/Screens/UI/preview/detailScreens/department_screen.dart';
-import 'package:neo/services/department.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/services/department.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:neo/Screens/Shared/shimmer_loading.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 
 class AllDepartmentsScreen extends StatefulWidget {
   const AllDepartmentsScreen({super.key});

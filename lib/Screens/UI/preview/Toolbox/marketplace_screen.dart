@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/course_material.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/course_material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:neo/Screens/Shared/shimmer_loading.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});

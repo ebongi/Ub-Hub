@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_study/services/subscription_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/auth.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/profile.dart';
-import 'package:neo/services/nkwa_service.dart';
-import 'package:neo/services/payment_models.dart';
+import 'package:go_study/services/auth.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/profile.dart';
+
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Profile extends StatefulWidget {
@@ -123,28 +124,62 @@ class _ProfileState extends State<Profile> {
                 ),
                 const SizedBox(height: 12),
 
-                // Role Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getRoleColor(user.role).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _getRoleColor(user.role).withOpacity(0.5),
-                    ),
-                  ),
-                  child: Text(
-                    user.role.name.toUpperCase(),
-                    style: GoogleFonts.outfit(
+                // Role & Subscription Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildBadge(
+                      label: user.role.name.toUpperCase(),
                       color: _getRoleColor(user.role),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                    ),
+                    if (user.subscriptionTier != SubscriptionTier.free) ...[
+                      const SizedBox(width: 8),
+                      _buildBadge(
+                        label: user.subscriptionTier.name.toUpperCase(),
+                        color: user.subscriptionTier == SubscriptionTier.gold
+                            ? Colors.amber
+                            : Colors.blueGrey,
+                        isPremium: true,
+                      ),
+                    ],
+                  ],
+                ),
+
+                if (user.isTrialActive) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          color: theme.colorScheme.primary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "FREE TRIAL: ${user.trialTimeLeft}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                ],
 
                 const SizedBox(height: 40),
 
@@ -218,11 +253,10 @@ class _ProfileState extends State<Profile> {
 
                 const SizedBox(height: 32),
 
-                // Access Tier Info / Upgrade Card
-                if (user.role == UserRole.viewer)
-                  _buildUpgradeCard(context, theme)
-                else
-                  _buildContributorBadge(theme),
+                // Subscription Section
+                user.role == UserRole.contributor || user.role == UserRole.admin
+                    ? _buildUnlimitedBanner(theme)
+                    : _buildManageSubscriptionCard(context, user, theme),
 
                 const SizedBox(height: 32),
               ],
@@ -244,69 +278,160 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  Widget _buildUpgradeCard(BuildContext context, ThemeData theme) {
+  Widget _buildBadge({
+    required String label,
+    required Color color,
+    bool isPremium = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
+        boxShadow: isPremium
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.outfit(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManageSubscriptionCard(
+    BuildContext context,
+    UserProfile user,
+    ThemeData theme,
+  ) {
+    final isContributor =
+        user.role == UserRole.contributor || user.role == UserRole.admin;
+    final hasSilver = user.subscriptionTier == SubscriptionTier.silver;
+    final hasGold = user.subscriptionTier == SubscriptionTier.gold;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.stars_rounded, color: Colors.white, size: 40),
-          const SizedBox(height: 12),
-          Text(
-            "Upgrade Access",
-            style: GoogleFonts.outfit(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Unlock unlimited downloads and material upload capabilities.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 14,
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.stars_rounded,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Subscription & Access",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => _handleUpgrade(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.primary,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isContributor
+                          ? "Unlimited Creator"
+                          : (hasGold
+                                ? "Gold Member"
+                                : (hasSilver
+                                      ? "Silver Member"
+                                      : "Free Member")),
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (user.subscriptionTier != SubscriptionTier.free &&
+                        user.subscriptionExpiry != null)
+                      Text(
+                        "Expires: ${user.subscriptionExpiry!.day}/${user.subscriptionExpiry!.month}/${user.subscriptionExpiry!.year}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: theme.hintColor,
+                        ),
+                      )
+                    else if (!isContributor)
+                      Text(
+                        "Upgrade to unlock full features",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: theme.hintColor,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              elevation: 0,
-            ),
-            child: Text(
-              "Upgrade for ${NkwaService.getContributorUpgradeFee().toInt()} XAF",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            ),
+              if (!isContributor)
+                TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          SubscriptionPlansScreen(userProfile: user),
+                    ),
+                  ),
+                  child: Text(
+                    user.subscriptionTier == SubscriptionTier.free
+                        ? "Upgrade"
+                        : "Manage",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  ),
+                ),
+            ],
           ),
+          if (hasSilver) ...[
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value:
+                    user.freeDownloadCount /
+                    SubscriptionService.silverMonthlyDownloads,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                minHeight: 8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Downloads: ${user.freeDownloadCount}/${SubscriptionService.silverMonthlyDownloads} this month",
+              style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildContributorBadge(ThemeData theme) {
+  Widget _buildUnlimitedBanner(ThemeData theme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -355,34 +480,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildActionItem(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: color, size: 20),
-      ),
-      title: Text(
-        title,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: color),
-      ),
-      trailing: Icon(
-        Icons.chevron_right_rounded,
-        color: color.withOpacity(0.5),
-      ),
-    );
-  }
-
   Widget _buildInfoRow(
     ThemeData theme, {
     required IconData icon,
@@ -425,101 +522,6 @@ class _ProfileState extends State<Profile> {
         ),
       ],
     );
-  }
-
-  Future<void> _handleUpgrade(BuildContext context) async {
-    // Show confirmation or payment dialog
-    final phoneNumberController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Upgrade to Contributor",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Pay 5000 XAF to upgrade your account. This unlocks unlimited downloads and the ability to upload materials.",
-              style: GoogleFonts.outfit(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneNumberController,
-              decoration: const InputDecoration(
-                labelText: "Momo/OM Number",
-                hintText: "6XXXXXXXX",
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final phone = phoneNumberController.text.trim();
-              if (phone.isEmpty) return;
-
-              Navigator.pop(context);
-              _processUpgradePayment(context, phone);
-            },
-            child: const Text("Pay Now"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _processUpgradePayment(
-    BuildContext context,
-    String phone,
-  ) async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
-
-      final response = await NkwaService.collectPayment(
-        amount: NkwaService.getContributorUpgradeFee(),
-        phoneNumber: NkwaService.formatPhoneNumber(phone),
-        description: "Contributor Role Upgrade",
-      );
-
-      final paymentId = response['paymentId'] ?? response['id'];
-
-      // Wait for status to be success (simple polling or just success check)
-      // In a real app, we'd use a more robust polling or callback mechanism
-      final status = await NkwaService.checkPaymentStatus(paymentId);
-
-      Navigator.pop(context); // Remove progress indicator
-
-      if (status == PaymentStatus.success) {
-        await _db.upgradeUserToContributor();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Account upgraded successfully!")),
-          );
-        }
-      } else {
-        throw Exception("Payment was not successful (Status: $status)");
-      }
-    } catch (e) {
-      if (mounted) {
-        // Navigator.pop(context); // Already popped in success but good for error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Upgrade Failed: ${e.toString()}")),
-        );
-      }
-    }
   }
 
   Future<void> _handleAvatarChange(BuildContext context) async {

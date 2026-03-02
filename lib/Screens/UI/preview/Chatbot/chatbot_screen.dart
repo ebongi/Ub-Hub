@@ -3,11 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:neo/services/gemini_service.dart';
-import 'package:neo/Screens/Shared/animations.dart';
+import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -124,10 +125,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.smart_toy_rounded,
-                color: theme.colorScheme.primary,
-                size: 24,
+              child: SvgPicture.asset(
+                'assets/images/icons8-ai.svg',
+                colorFilter: ColorFilter.mode(
+                  theme.colorScheme.primary,
+                  BlendMode.srcIn,
+                ),
+                height: 24,
+                width: 24,
               ),
             ),
             const SizedBox(width: 12),
@@ -196,10 +201,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.auto_awesome_rounded,
-                size: 64,
-                color: theme.colorScheme.primary,
+              child: SvgPicture.asset(
+                'assets/images/icons8-ai.svg',
+                colorFilter: ColorFilter.mode(
+                  theme.colorScheme.primary,
+                  BlendMode.srcIn,
+                ),
+                height: 64,
+                width: 64,
               ),
             ),
             const SizedBox(height: 24),
@@ -395,10 +404,14 @@ class _MessageBubble extends StatelessWidget {
                   color: theme.colorScheme.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.smart_toy_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 18,
+                child: SvgPicture.asset(
+                  'assets/images/icons8-ai.svg',
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
+                  height: 18,
+                  width: 18,
                 ),
               ),
               const SizedBox(width: 8),
@@ -406,7 +419,8 @@ class _MessageBubble extends StatelessWidget {
             Flexible(
               child: Container(
                 constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  maxWidth:
+                      MediaQuery.of(context).size.width * (isUser ? 0.75 : 1.0),
                 ),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(

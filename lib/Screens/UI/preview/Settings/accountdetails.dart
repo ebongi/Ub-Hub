@@ -2,8 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/services/database.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/database.dart';
 import 'package:provider/provider.dart';
 
 class Accountdetails extends StatefulWidget {

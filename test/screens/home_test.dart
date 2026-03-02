@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter/material.dart';
-import 'package:neo/Screens/UI/preview/Navigation/home.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/services/department.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/home.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/department.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';

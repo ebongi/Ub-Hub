@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neo/services/nkwa_service.dart';
+import 'package:go_study/services/nkwa_service.dart';
 
 void main() {
   group('NkwaService Tests', () {

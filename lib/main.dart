@@ -1,17 +1,17 @@
-import 'package:neo/services/message_provider.dart';
+import 'package:go_study/services/message_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/Screens/authentication/wrap.dart';
-import 'package:neo/theme_provider.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/authentication/wrap.dart';
+import 'package:go_study/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:neo/core/supabase_config.dart';
-import 'package:neo/Screens/onboarding/onboarding_screen.dart';
+import 'package:go_study/core/supabase_config.dart';
+import 'package:go_study/Screens/onboarding/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:neo/core/app_config.dart';
-import 'package:neo/Screens/UI/preview/Navigation/splash_screen.dart';
+import 'package:go_study/core/app_config.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/splash_screen.dart';
 
-import 'package:neo/services/notification_service.dart';
+import 'package:go_study/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: "Ub Studies",
+          title: "GO Study",
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,

@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:neo/services/gemini_service.dart';
-import 'package:neo/services/gemini_client.dart';
+import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/services/gemini_client.dart';
 
 class MockGeminiClient extends Mock implements GeminiClient {}
 

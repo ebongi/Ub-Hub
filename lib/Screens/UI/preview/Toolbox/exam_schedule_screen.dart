@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/exam_event.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/create_exam_screen.dart';
-import 'package:neo/Screens/UI/preview/Toolbox/exam_detail_screen.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/exam_event.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/create_exam_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/exam_detail_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ExamScheduleScreen extends StatelessWidget {

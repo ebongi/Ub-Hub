@@ -1,4 +1,4 @@
-import 'package:neo/core/app_config.dart';
+import 'package:go_study/core/app_config.dart';
 
 class SupabaseConfig {
   static String get url => AppConfig.supabaseUrl;

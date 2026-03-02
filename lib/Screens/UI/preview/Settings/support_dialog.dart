@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/nkwa_service.dart';
-import 'package:neo/services/payment_models.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> showSupportDialog(BuildContext context) async {

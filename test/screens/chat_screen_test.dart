@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/Screens/UI/preview/Navigation/chat_screen.dart';
-import 'package:neo/services/chat_service.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 

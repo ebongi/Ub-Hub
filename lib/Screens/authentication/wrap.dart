@@ -1,14 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 
-import 'package:neo/Screens/Shared/constanst.dart';
-import 'package:neo/Screens/UI/preview/Navigation/navigationbar.dart';
-import 'package:neo/Screens/authentication/authenticate.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
+import 'package:go_study/Screens/authentication/authenticate.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:neo/services/database.dart';
-import 'package:neo/services/profile.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/profile.dart';
 import 'dart:async';
 
 class AuthWrapper extends StatefulWidget {

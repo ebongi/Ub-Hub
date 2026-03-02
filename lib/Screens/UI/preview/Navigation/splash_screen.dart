@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/main.dart';
+import 'package:go_study/main.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -29,14 +29,14 @@ class _SplashScreenState extends State<SplashScreen>
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
+        curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
       ),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.5, 0.8, curve: Curves.easeIn),
+        curve: const Interval(0.5, 0.8, curve: Curves.ease),
       ),
     );
 
@@ -44,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen>
         Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _controller,
-            curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+            curve: const Interval(0.5, 1.0, curve: Curves.easeIn),
           ),
         );
 
@@ -106,9 +106,9 @@ class _SplashScreenState extends State<SplashScreen>
                   ],
                 ),
                 child: SvgPicture.asset(
-                  'assets/images/logo.svg',
-                  height: 120,
-                  width: 120,
+                  'assets/images/logoicon.svg',
+                  height: 150,
+                  width: 150,
                 ),
               ),
             ),
@@ -119,24 +119,16 @@ class _SplashScreenState extends State<SplashScreen>
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      "Go Study",
+                      "GO Study",
                       style: GoogleFonts.outfit(
-                        fontSize: 42,
+                        fontSize: 45,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Somewhere, something incredible is waiting to be known.",
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        color: Colors.white.withOpacity(0.7),
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 2,
                       ),
                     ),
                   ],

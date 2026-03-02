@@ -1,7 +1,7 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/foundation.dart';
-import 'package:neo/core/app_config.dart';
-import 'package:neo/services/gemini_client.dart';
+import 'package:go_study/core/app_config.dart';
+import 'package:go_study/services/gemini_client.dart';
 
 class GeminiService {
   // Read API key from environment

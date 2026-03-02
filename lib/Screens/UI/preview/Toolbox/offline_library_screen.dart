@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:neo/services/storage_service.dart';
-import 'package:neo/services/database.dart';
-import 'package:neo/services/course_material.dart';
-import 'package:neo/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/services/storage_service.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OfflineLibraryScreen extends StatefulWidget {
@@ -71,18 +73,35 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _offlineMaterials.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _offlineMaterials.length,
-              itemBuilder: (context, index) {
-                final material = _offlineMaterials[index];
-                return _buildMaterialCard(material, colorScheme);
-              },
-            ),
+      body: StreamBuilder<UserProfile>(
+        stream: _dbService.userProfile,
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          final isViewer = user?.role == UserRole.viewer;
+          final isTrialActive = user?.isTrialActive ?? false;
+
+          if (isViewer && !isTrialActive) {
+            return _buildLockedState(theme);
+          }
+
+          if (_isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (_offlineMaterials.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: _offlineMaterials.length,
+            itemBuilder: (context, index) {
+              final material = _offlineMaterials[index];
+              return _buildMaterialCard(material, colorScheme);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -206,6 +225,66 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLockedState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.lock_person_rounded,
+                size: 64,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              "Premium Feature",
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Offline Library is available for Silver and Gold members. Upgrade now to save materials and study anywhere!",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(color: Colors.grey, fontSize: 16),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SubscriptionPlansScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 48,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text("UPGRADE NOW"),
+            ),
+          ],
+        ),
       ),
     );
   }
