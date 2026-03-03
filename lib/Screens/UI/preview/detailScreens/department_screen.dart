@@ -725,9 +725,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       // Secure for offline use
       await _secureForOffline(material);
 
-      // If Silver user, increment their free download count
-      if (_userProfile!.subscriptionTier == SubscriptionTier.silver &&
-          !_userProfile!.hasUnlimitedDownloads) {
+      // Increment free download count if not unlimited
+      if (!_userProfile!.hasUnlimitedDownloads) {
         await _dbService.incrementFreeDownloadCount();
       }
 

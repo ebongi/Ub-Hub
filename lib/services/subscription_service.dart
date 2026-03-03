@@ -5,7 +5,7 @@ class SubscriptionService {
   static const double goldPrice = 2500.0;
   static const double contributorPrice = 5000.0;
 
-  static const int silverMonthlyDownloads = 10;
+  static const int freeTierDownloadLimit = 5;
 
   static String getTierName(SubscriptionTier tier) {
     switch (tier) {
@@ -40,13 +40,15 @@ class SubscriptionService {
         ];
       case SubscriptionTier.silver:
         return [
-          "10 Free Downloads / Month",
+          "Unlimited Downloads",
+          "Duration: 2 Weeks",
           "5 AI Study Plans / Week",
           "Priority Support",
         ];
       case SubscriptionTier.free:
         return [
-          "Pay per Item (150-300 XAF)",
+          "5 Free Downloads",
+          "Pay per Item (150-300 XAF) after limit",
           "1 AI Study Plan / Week",
           "Standard Support",
         ];
@@ -56,22 +58,28 @@ class SubscriptionService {
   static bool canDownloadForFree(UserProfile profile) {
     if (profile.hasUnlimitedDownloads || profile.isTrialActive) return true;
     if (profile.subscriptionTier == SubscriptionTier.silver &&
-        profile.isSubscribed &&
-        profile.freeDownloadCount < silverMonthlyDownloads) {
+        profile.isSubscribed) {
+      return true;
+    }
+    // Any user who is not subscribed (Free or expired) gets the 5 free downloads
+    if (profile.freeDownloadCount < freeTierDownloadLimit) {
       return true;
     }
     return false;
   }
 
   static int getRemainingDownloads(UserProfile profile) {
-    if (profile.hasUnlimitedDownloads) return -1; // Unlimited
+    if (profile.hasUnlimitedDownloads || profile.isTrialActive)
+      return -1; // Unlimited
     if (profile.subscriptionTier == SubscriptionTier.silver &&
         profile.isSubscribed) {
-      return (silverMonthlyDownloads - profile.freeDownloadCount).clamp(
-        0,
-        silverMonthlyDownloads,
-      );
+      return -1; // Unlimited
     }
-    return 0;
+
+    // Any user not subscribed gets the 5 free downloads limit
+    return (freeTierDownloadLimit - profile.freeDownloadCount).clamp(
+      0,
+      freeTierDownloadLimit,
+    );
   }
 }

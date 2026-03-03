@@ -254,11 +254,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
-    // Check if user can download for free (Admin, Contributor, Gold, Silver with limit, or Trial)
+    // Check if user can download for free
     if (_userProfile != null &&
         SubscriptionService.canDownloadForFree(_userProfile!)) {
       // Secure for offline use
       await _secureForOffline(material);
+
+      // Increment free download count if not unlimited
+      if (!_userProfile!.hasUnlimitedDownloads) {
+        await _dbService.incrementFreeDownloadCount();
+      }
 
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {

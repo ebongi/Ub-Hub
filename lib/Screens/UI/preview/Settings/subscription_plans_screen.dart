@@ -168,7 +168,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                "/ month",
+                tier == SubscriptionTier.silver ? "/ 2 weeks" : "/ month",
                 style: GoogleFonts.outfit(fontSize: 16, color: theme.hintColor),
               ),
             ],
@@ -335,7 +335,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Enter your Momo/OM number to pay ${amount.toInt()} XAF for 30 days of access.",
+              "Enter your Momo/OM number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.silver ? '14' : '30'} days of access.",
             ),
             const SizedBox(height: 16),
             TextField(

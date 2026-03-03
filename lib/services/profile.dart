@@ -145,6 +145,7 @@ class UserProfile {
       role == UserRole.contributor ||
       role == UserRole.admin ||
       subscriptionTier == SubscriptionTier.gold ||
+      (subscriptionTier == SubscriptionTier.silver && isSubscribed) ||
       isTrialActive;
 
   bool get canCreateDepartment =>

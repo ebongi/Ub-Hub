@@ -308,8 +308,9 @@ class DatabaseService {
   Future<void> upgradeSubscription(SubscriptionTier tier) async {
     if (uid == null) return;
 
-    // Subscriptions last for 30 days
-    final expiry = DateTime.now().add(const Duration(days: 30));
+    // Silver lasts for 14 days, others for 30 days
+    final durationDays = tier == SubscriptionTier.silver ? 14 : 30;
+    final expiry = DateTime.now().add(Duration(days: durationDays));
 
     await _supabase
         .from('profiles')

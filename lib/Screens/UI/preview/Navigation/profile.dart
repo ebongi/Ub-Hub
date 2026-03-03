@@ -408,21 +408,22 @@ class _ProfileState extends State<Profile> {
                 ),
             ],
           ),
-          if (hasSilver) ...[
+          if (user.subscriptionTier == SubscriptionTier.free &&
+              !user.isTrialActive) ...[
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value:
                     user.freeDownloadCount /
-                    SubscriptionService.silverMonthlyDownloads,
+                    SubscriptionService.freeTierDownloadLimit,
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                 minHeight: 8,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              "Downloads: ${user.freeDownloadCount}/${SubscriptionService.silverMonthlyDownloads} this month",
+              "Free Downloads used: ${user.freeDownloadCount}/${SubscriptionService.freeTierDownloadLimit}",
               style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
             ),
           ],
