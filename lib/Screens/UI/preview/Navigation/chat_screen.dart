@@ -40,11 +40,18 @@ class _ChatScreenState extends State<ChatScreen> {
   /// The message the user is currently replying to (null = no active reply).
   ChatMessageModel? _replyingTo;
 
+  /// Stream of messages to avoid resetting on build.
+  late Stream<List<ChatMessageModel>> _messagesStream;
+
+  /// Locally sent messages that haven't appeared in the stream yet.
+  final List<ChatMessageModel> _optimisticMessages = [];
+
   @override
   void initState() {
     super.initState();
     _chatService = widget.chatService ?? ChatService();
     _currentUserId = widget.currentUserId ?? _getSupabaseId();
+    _messagesStream = _chatService.getMessagesStream(roomId: widget.roomId);
 
     // Mark chat as open in global provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -52,6 +59,15 @@ class _ChatScreenState extends State<ChatScreen> {
         Provider.of<MessageProvider>(context, listen: false).setChatOpen(true);
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.roomId != widget.roomId) {
+      _messagesStream = _chatService.getMessagesStream(roomId: widget.roomId);
+      _optimisticMessages.clear();
+    }
   }
 
   String? _getSupabaseId() {
@@ -87,9 +103,25 @@ class _ChatScreenState extends State<ChatScreen> {
     final avatarUrl = userModel.avatarUrl;
 
     final replySnapshot = _replyingTo;
+    final tempId = DateTime.now().toIso8601String();
+    final optimisticMessage = ChatMessageModel(
+      id: tempId,
+      content: text,
+      senderId: _currentUserId ?? 'unknown',
+      senderName: senderName,
+      senderAvatarUrl: avatarUrl,
+      createdAt: DateTime.now(),
+      roomId: widget.roomId,
+      replyToId: replySnapshot?.id,
+      replyToName: replySnapshot?.senderName,
+      replyToContent: replySnapshot?.content,
+    );
 
     _messageController.clear();
-    setState(() => _replyingTo = null);
+    setState(() {
+      _replyingTo = null;
+      _optimisticMessages.insert(0, optimisticMessage);
+    });
 
     try {
       await _chatService.sendMessage(
@@ -101,8 +133,13 @@ class _ChatScreenState extends State<ChatScreen> {
         replyToName: replySnapshot?.senderName,
         replyToContent: replySnapshot?.content,
       );
+      // We don't remove from _optimisticMessages here;
+      // the StreamBuilder will handle the reconciliation.
     } catch (e) {
       if (mounted) {
+        setState(() {
+          _optimisticMessages.removeWhere((m) => m.id == tempId);
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
@@ -214,7 +251,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder<List<ChatMessageModel>>(
-              stream: _chatService.getMessagesStream(roomId: widget.roomId),
+              stream: _messagesStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -224,7 +261,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                final messages = snapshot.data ?? [];
+                final serverMessages = snapshot.data ?? [];
+
+                // Remove optimistic messages that have already arrived from the server
+                if (snapshot.hasData) {
+                  for (final serverMsg in serverMessages) {
+                    _optimisticMessages.removeWhere(
+                      (m) =>
+                          m.content == serverMsg.content &&
+                          m.senderId == serverMsg.senderId,
+                    );
+                  }
+                }
+
+                final messages = [..._optimisticMessages, ...serverMessages];
 
                 if (messages.isEmpty) {
                   return Center(
@@ -298,6 +348,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               message: message,
                               isMe: isMe,
                               theme: theme,
+                              isPending: _optimisticMessages.contains(message),
                             ),
                           ),
                         ),
@@ -624,11 +675,13 @@ class _MessageBubble extends StatelessWidget {
   final ChatMessageModel message;
   final bool isMe;
   final ThemeData theme;
+  final bool isPending;
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
     required this.theme,
+    this.isPending = false,
   });
 
   Widget _buildAvatar() {
@@ -714,7 +767,9 @@ class _MessageBubble extends StatelessWidget {
           children: [
             if (!isMe) ...[const SizedBox(width: 8), _buildAvatar()],
             Flexible(
-              child: IntrinsicWidth(
+              child: Opacity(
+                opacity: isPending ? 0.6 : 1.0,
+                child: IntrinsicWidth(
                 child: Column(
                   crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                   children: [
@@ -799,6 +854,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
             ),
+          ),
             if (isMe) ...[const SizedBox(width: 8), _buildAvatar()],
           ],
         ),
