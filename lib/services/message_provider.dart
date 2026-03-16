@@ -23,30 +23,33 @@ class MessageProvider with ChangeNotifier {
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'messages',
-          callback: (payload) {
-            if (!_isChatOpen) {
-              final newUserId = payload.newRecord['user_id'];
-              final currentUserId = supabase.auth.currentUser?.id;
+      callback: (payload) {
+        final currentUserId = supabase.auth.currentUser?.id;
+        final senderId = payload.newRecord['sender_id'];
 
-              // Only increment if the message is from someone else
-              if (newUserId != currentUserId) {
-                _unreadCount++;
+        // 1. NEVER notify or increment for self-sent messages
+        // If currentUserId is null, we safely assume it might be a self-message 
+        // that hasn't synced auth yet, or just skip to be safe.
+        if (senderId == null || currentUserId == null || senderId == currentUserId) return;
 
-                // Trigger immediate notification alert
-                final senderName =
-                    payload.newRecord['sender_name'] ?? 'Someone';
-                final content = payload.newRecord['content'] ?? 'New message';
+        // 2. Only proceed if the chat UI is not active
+        if (!_isChatOpen) {
+          _unreadCount++;
 
-                NotificationService().showAlert(
-                  id: payload.newRecord['id'].hashCode,
-                  title: senderName,
-                  body: content,
-                );
+          // Trigger immediate notification alert
+          final senderName =
+              payload.newRecord['sender_name'] ?? 'Someone';
+          final content = payload.newRecord['content'] ?? 'New message';
 
-                notifyListeners();
-              }
-            }
-          },
+          NotificationService().showAlert(
+            id: payload.newRecord['id'].hashCode,
+            title: senderName,
+            body: content,
+          );
+
+          notifyListeners();
+        }
+      },
         )
         .subscribe();
   }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_study/services/message_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/chat_service.dart';
-import 'package:go_study/services/notification_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -45,26 +45,11 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _chatService = widget.chatService ?? ChatService();
     _currentUserId = widget.currentUserId ?? _getSupabaseId();
-    _setupForegroundNotifications();
-  }
 
-  void _setupForegroundNotifications() {
-    _chatService.getMessagesStream(roomId: widget.roomId).listen((messages) {
-      if (messages.isNotEmpty) {
-        final latestMessage = messages.first;
-        if (latestMessage.senderId != _currentUserId &&
-            latestMessage.createdAt.isAfter(
-              DateTime.now().subtract(const Duration(seconds: 5)),
-            )) {
-          try {
-            NotificationService().showChatNotification(
-              senderName: latestMessage.senderName ?? "Someone",
-              message: latestMessage.content,
-            );
-          } catch (_) {
-            // Notification service may be unavailable in test environments
-          }
-        }
+    // Mark chat as open in global provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<MessageProvider>(context, listen: false).setChatOpen(true);
       }
     });
   }
@@ -81,6 +66,15 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    // Mark chat as closed in global provider
+    // Using context.read or a delayed callback because context might be invalid here
+    // but MessageProvider is global so we can find it if we have context.
+    // However, it's safer to use the return from Navigator.push in the calling screen
+    // (like I did in DmScreen). For ChatScreen, it might be called from Home.
+    // So I'll try to set it to false here if I can safely access provider.
+    try {
+      Provider.of<MessageProvider>(context, listen: false).setChatOpen(false);
+    } catch (_) {}
     super.dispose();
   }
 

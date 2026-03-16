@@ -1235,156 +1235,154 @@ class _MessageBubbleState extends State<_MessageBubble> {
               ),
             ],
             Flexible(
-              child: IntrinsicWidth(
-                child: Column(
-                  crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * (isUser ? 0.75 : 0.85),
+              child: Column(
+                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * (isUser ? 0.75 : 0.85),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isUser ? 20 : 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isUser
+                          ? (isDark ? const Color(0xFF2F2F2F) : theme.colorScheme.primary)
+                          : (widget.message.isError ? Colors.red.withOpacity(0.05) : Colors.transparent),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(24),
+                        topRight: const Radius.circular(24),
+                        bottomLeft: Radius.circular(isUser ? 24 : 0),
+                        bottomRight: Radius.circular(isUser ? 0 : 24),
                       ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isUser ? 20 : 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isUser
-                            ? (isDark ? const Color(0xFF2F2F2F) : theme.colorScheme.primary)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(24),
-                          topRight: const Radius.circular(24),
-                          bottomLeft: Radius.circular(isUser ? 24 : 0),
-                          bottomRight: Radius.circular(isUser ? 0 : 24),
-                        ),
-                      ),
-                      child: isUser
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                if (widget.message.attachments != null)
-                                  _buildAttachmentDisplay(widget.message.attachments!, true),
-                                Text(
-                                  widget.message.text,
-                                  style: GoogleFonts.outfit(
-                                    color: isUser ? Colors.white : onSurface,
-                                    fontSize: 18,
-                                    height: 1.4,
-                                  ),
+                      border: !isUser && widget.message.isError
+                          ? Border.all(color: Colors.red.withOpacity(0.2), width: 1)
+                          : null,
+                    ),
+                    child: isUser
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (widget.message.attachments != null)
+                                _buildAttachmentDisplay(widget.message.attachments!, true),
+                              Text(
+                                widget.message.text,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  height: 1.4,
                                 ),
-                              ],
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (widget.message.thinking != null) ...[
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _showThinking = !_showThinking;
-                                        widget.message.showThinking = _showThinking;
-                                      });
-                                    },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.auto_awesome_outlined,
-                                          size: 20,
-                                          color: Color(0xFF4285F4),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          "Show Thinking",
-                                          style: GoogleFonts.outfit(
-                                            color: onSurface.withOpacity(0.8),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        Icon(
-                                          _showThinking
-                                              ? Icons.keyboard_arrow_up
-                                              : Icons.keyboard_arrow_down,
-                                          size: 20,
-                                          color: onSurface.withOpacity(0.4),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (_showThinking)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8, bottom: 16),
-                                      child: Text(
-                                        widget.message.thinking!,
+                              ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.message.thinking != null) ...[
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _showThinking = !_showThinking;
+                                      widget.message.showThinking = _showThinking;
+                                    });
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.auto_awesome_outlined,
+                                        size: 20,
+                                        color: Color(0xFF4285F4),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "Show Thinking",
                                         style: GoogleFonts.outfit(
-                                          color: onSurface.withOpacity(0.5),
+                                          color: onSurface.withOpacity(0.8),
                                           fontSize: 14,
-                                          fontStyle: FontStyle.italic,
+                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
-                                    ),
-                                  const SizedBox(height: 12),
-                                ],
-                                if (widget.message.attachments != null)
-                                  _buildAttachmentDisplay(widget.message.attachments!, false),
-                                MarkdownWidget(
-                                  key: ValueKey("markdown_${widget.message.id}"),
-                                  data: widget.message.text,
-                                  shrinkWrap: true,
-                                  selectable: widget.message.text.length > 500 ? false : !widget.isStreaming,
-                                  config: MarkdownConfig.defaultConfig.copy(
-                                    configs: [
-                                      PConfig(
-                                        textStyle: GoogleFonts.outfit(
-                                          color: onSurface,
-                                          fontSize: 18,
-                                          height: 1.6,
-                                        ),
-                                      ),
-                                      TableConfig(
-                                        wrapper: (child) => SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: child,
-                                        ),
-                                      ),
-                                      PreConfig(
-                                        wrapper: (child, code, language) => _CodeBlockWrapper(
-                                          code: code,
-                                          language: language,
-                                          child: child,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: onSurface.withOpacity(0.1)),
-                                        ),
-                                        padding: const EdgeInsets.all(16),
+                                      Icon(
+                                        _showThinking
+                                            ? Icons.keyboard_arrow_up
+                                            : Icons.keyboard_arrow_down,
+                                        size: 20,
+                                        color: onSurface.withOpacity(0.4),
                                       ),
                                     ],
                                   ),
-                                  markdownGenerator: MarkdownGenerator(
-                                    generators: [latexGenerator],
-                                    inlineSyntaxList: [LatexSyntax()],
-                                  ),
                                 ),
+                                if (_showThinking)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                                    child: Text(
+                                      widget.message.thinking!,
+                                      style: GoogleFonts.outfit(
+                                        color: onSurface.withOpacity(0.5),
+                                        fontSize: 14,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 12),
                               ],
-                            ),
-                    ),
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        DateFormat('HH:mm').format(widget.message.createdAt),
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          color: isDark ? Colors.white30 : Colors.grey[400],
-                        ),
+                              if (widget.message.attachments != null)
+                                _buildAttachmentDisplay(widget.message.attachments!, false),
+                              MarkdownBlock(
+                                data: widget.message.text,
+                                config: MarkdownConfig(
+                                  configs: [
+                                    PConfig(
+                                      textStyle: GoogleFonts.outfit(
+                                        color: widget.message.isError ? Colors.red.shade400 : onSurface,
+                                        fontSize: 18,
+                                        height: 1.6,
+                                      ),
+                                    ),
+                                    TableConfig(
+                                      wrapper: (child) => SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: child,
+                                      ),
+                                    ),
+                                    PreConfig(
+                                      wrapper: (child, code, language) => _CodeBlockWrapper(
+                                        code: code,
+                                        language: language,
+                                        child: child,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: onSurface.withOpacity(0.1)),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                    ),
+                                  ],
+                                ),
+                                generator: MarkdownGenerator(
+                                  generators: [latexGenerator],
+                                  inlineSyntaxList: [LatexSyntax()],
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      DateFormat('HH:mm').format(widget.message.createdAt),
+                      style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        color: isDark ? Colors.white30 : Colors.grey[400],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

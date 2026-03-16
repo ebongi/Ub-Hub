@@ -6,6 +6,8 @@ import 'package:go_study/Screens/UI/preview/Navigation/user_search_screen.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:go_study/services/message_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 /// The main Direct Messages tab — shows friends list and pending requests.
@@ -38,6 +40,11 @@ class _DmScreenState extends State<DmScreen> {
   }
 
   void _openChat(FriendProfile friend) {
+    final messageProvider =
+        Provider.of<MessageProvider>(context, listen: false);
+
+    messageProvider.setChatOpen(true);
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -47,7 +54,9 @@ class _DmScreenState extends State<DmScreen> {
           friendsService: _friendsService,
         ),
       ),
-    );
+    ).then((_) {
+      messageProvider.setChatOpen(false);
+    });
   }
 
   @override

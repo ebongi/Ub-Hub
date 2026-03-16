@@ -110,14 +110,16 @@ class ChatService {
         }
       }
 
-      await NotificationService().createNotification(
-        title: 'New message from ${senderName ?? "Someone"}',
-        body: content,
-        type: NotificationType.message,
-        recipientId: recipientId,
-        data: {'roomId': roomId},
-        showLocal: recipientId != null, // Show local alert only for the recipient
-      );
+      if (recipientId != null) {
+        await NotificationService().createNotification(
+          title: 'New message from ${senderName ?? "Someone"}',
+          body: content,
+          type: NotificationType.message,
+          recipientId: recipientId,
+          data: {'roomId': roomId},
+          showLocal: true, // Always show local alert for the recipient
+        );
+      }
     } catch (_) {
       // Silently ignore – notification service unavailable (e.g. in tests)
     }
