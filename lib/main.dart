@@ -38,13 +38,15 @@ void main() async {
 
   final prefs = initResults[1] as SharedPreferences;
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+  final themeModeIndex = prefs.getInt('theme_mode');
+  final initialThemeMode = themeModeIndex != null ? ThemeMode.values[themeModeIndex] : ThemeMode.system;
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => UserModel()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider(initialMode: initialThemeMode)),
         StreamProvider<sb.User?>(
           create: (_) => sb.Supabase.instance.client.auth.onAuthStateChange.map(
             (data) => data.session?.user,

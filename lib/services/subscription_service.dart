@@ -69,8 +69,9 @@ class SubscriptionService {
   }
 
   static int getRemainingDownloads(UserProfile profile) {
-    if (profile.hasUnlimitedDownloads || profile.isTrialActive)
+    if (profile.hasUnlimitedDownloads || profile.isTrialActive) {
       return -1; // Unlimited
+    }
     if (profile.subscriptionTier == SubscriptionTier.silver &&
         profile.isSubscribed) {
       return -1; // Unlimited

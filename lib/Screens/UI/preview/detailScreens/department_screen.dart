@@ -18,6 +18,7 @@ import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -68,6 +69,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
@@ -79,10 +81,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               floating: false,
               pinned: true,
               stretch: true,
-              backgroundColor: colorScheme.surface,
-              scrolledUnderElevation: 2,
+              backgroundColor: theme.scaffoldBackgroundColor,
+              elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -94,22 +96,15 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 title: Text(
                   widget.departmentName,
                   style: GoogleFonts.outfit(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                    color: isDark ? Colors.white : theme.colorScheme.primary,
                   ),
                 ),
                 background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        colorScheme.primaryContainer.withOpacity(0.3),
-                        colorScheme.surface,
-                      ],
-                    ),
-                  ),
+                  color: isDark
+                      ? theme.scaffoldBackgroundColor
+                      : theme.colorScheme.primary.withOpacity(0.02),
                 ),
               ),
             ),
@@ -190,23 +185,40 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildAboutTab() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(16),
+              color: isDark
+                  ? colorScheme.surfaceContainerLow
+                  : colorScheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : colorScheme.primary.withOpacity(0.1),
+              ),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_rounded,
-                  color: colorScheme.onSecondaryContainer,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.info_outline_rounded,
+                    color: isDark ? Colors.white70 : colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -214,20 +226,18 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Department Info",
+                        "About Department",
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: colorScheme.onSecondaryContainer,
+                          color: isDark ? Colors.white : colorScheme.primary,
                         ),
                       ),
                       Text(
                         widget.departmentName,
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: colorScheme.onSecondaryContainer.withOpacity(
-                            0.8,
-                          ),
+                          color: isDark ? Colors.white70 : Colors.black54,
                         ),
                       ),
                     ],
@@ -335,16 +345,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildCourseTile(Course course, {double delay = 0}) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     return FadeInSlide(
       delay: delay,
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        color: colorScheme.surfaceVariant.withOpacity(0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.grey.withOpacity(0.15),
+          ),
         ),
         child: ExpansionTile(
           shape: const RoundedRectangleBorder(side: BorderSide.none),
@@ -353,11 +368,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
-              Icons.school_rounded,
-              color: colorScheme.primary,
+              Icons.school_outlined,
+              color: isDark ? Colors.white70 : colorScheme.primary,
               size: 20,
             ),
           ),
@@ -366,22 +381,22 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: colorScheme.onSurface,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           subtitle: Text(
             course.code,
             style: GoogleFonts.outfit(
-              color: colorScheme.onSurfaceVariant,
+              color: isDark ? Colors.white70 : Colors.black54,
               fontSize: 13,
             ),
           ),
           trailing: IconButton(
             tooltip: "Course Materials",
             icon: Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: colorScheme.primary,
+              Icons.arrow_forward_rounded,
+              size: 18,
+              color: isDark ? Colors.white70 : colorScheme.primary,
             ),
             onPressed: () => Navigator.push(
               context,
@@ -392,7 +407,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           ),
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: _buildCourseMaterials(course),
             ),
           ],
@@ -501,6 +516,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             return StreamBuilder<List<Course>>(
               stream: _dbService.getCoursesForDepartment(widget.departmentId),
               builder: (context, courseSnapshot) {
+                final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
                 final course = courseSnapshot.data
                     ?.where((c) => c.id == q.courseId)
                     .firstOrNull;
@@ -508,15 +525,17 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
                 return FadeInSlide(
                   delay: index * 0.05,
-                  child: Card(
-                    elevation: 0,
+                  child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
-                    color: colorScheme.secondaryContainer.withOpacity(0.2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: 0.5,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: isDark
+                          ? colorScheme.surfaceContainerLow
+                          : Colors.white,
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.grey.withOpacity(0.15),
                       ),
                     ),
                     child: ExpansionTile(
@@ -530,11 +549,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
-                          Icons.history_edu_rounded,
-                          color: Colors.orange,
+                        child: Icon(
+                          Icons.history_edu_outlined,
+                          color: Colors.orange[400],
                           size: 20,
                         ),
                       ),
@@ -543,19 +562,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
                       subtitle: Text(
                         "Past Question • ${relatedAnswers.length} Answers",
                         style: GoogleFonts.outfit(
                           fontSize: 12,
-                          color: colorScheme.onSurfaceVariant,
+                          color: isDark ? Colors.white70 : Colors.black54,
                         ),
                       ),
                       trailing: IconButton(
                         icon: Icon(
                           Icons.download_rounded,
-                          color: colorScheme.primary,
+                          color: isDark ? Colors.white70 : colorScheme.primary,
+                          size: 20,
                         ),
                         onPressed: () => _handleDownload(q),
                       ),
@@ -755,113 +776,144 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       fee = NkwaService.getAnswerDownloadFee();
     }
 
-    await showDialog(
+    await showPremiumGeneralDialog(
       context: context,
-      builder: (context) {
-        final colorScheme = Theme.of(context).colorScheme;
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-            ),
-            title: Text(
-              "Download Material",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            ),
-            content: Form(
-              key: formKey,
-              child: Column(
+      barrierLabel: "Download",
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              surfaceTintColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: colorScheme.primary.withOpacity(0.1),
-                      ),
-                    ),
-                    child: Text(
-                      "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                  const PremiumDialogHeader(
+                    title: "Download Material",
+                    subtitle: "Secure access to study resources",
+                    icon: Icons.download_for_offline_rounded,
                   ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: phoneController,
-                    enabled: !isProcessing,
-                    keyboardType: TextInputType.phone,
-                    style: GoogleFonts.outfit(),
-                    decoration: InputDecoration(
-                      labelText: "Payment Phone",
-                      hintText: "6xxxxxxxx",
-                      prefixIcon: const Icon(Icons.phone_android_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : theme.colorScheme.primary.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.1)
+                                    : theme.colorScheme.primary.withOpacity(
+                                        0.1,
+                                      ),
+                              ),
+                            ),
+                            child: Text(
+                              "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                height: 1.5,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          PremiumTextField(
+                            controller: phoneController,
+                            label: "Payment Phone",
+                            hint: "6xxxxxxxx (MTN/Orange)",
+                            icon: Icons.phone_android_rounded,
+                            keyboardType: TextInputType.phone,
+                            enabled: !isProcessing,
+                            validator: (v) =>
+                                v == null || v.isEmpty ? "Required" : null,
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  onPressed: isProcessing
+                                      ? null
+                                      : () => Navigator.pop(context),
+                                  child: Text(
+                                    "Cancel",
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 2,
+                                child: PremiumSubmitButton(
+                                  label: "Pay & Download",
+                                  isLoading: isProcessing,
+                                  onPressed: () async {
+                                    if (!formKey.currentState!.validate()) {
+                                      return;
+                                    }
+                                    setState(() => isProcessing = true);
+                                    try {
+                                      await _processDownloadPayment(
+                                        material,
+                                        phoneController.text,
+                                      );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+                                    } catch (e) {
+                                      setState(() => isProcessing = false);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Error: $e"),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
                     ),
-                    validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: isProcessing ? null : () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                ),
-              ),
-              FilledButton(
-                onPressed: isProcessing
-                    ? null
-                    : () async {
-                        if (!formKey.currentState!.validate()) return;
-                        setState(() => isProcessing = true);
-                        try {
-                          await _processDownloadPayment(
-                            material,
-                            phoneController.text,
-                          );
-                          if (context.mounted) Navigator.pop(context);
-                        } catch (e) {
-                          setState(() => isProcessing = false);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Error: $e"),
-                                backgroundColor: colorScheme.error,
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: isProcessing
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        "Pay & Download",
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -1029,6 +1081,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   void _showUploadSelection() {
+    if (!(_userProfile?.canUploadMaterial ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only contributors and admins can upload content.')),
+      );
+      return;
+    }
     final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
@@ -1141,29 +1199,103 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     String? category,
     String? linkedId,
   }) {
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Select Course"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: courses.length,
-            itemBuilder: (context, index) => ListTile(
-              title: Text(courses[index].name),
-              onTap: () {
-                Navigator.pop(context);
-                _addMaterial(
-                  isDepartment: false,
-                  course: courses[index],
-                  initialCategory: category,
-                  initialQuestionId: linkedId,
-                );
-              },
+      barrierLabel: "Select Course",
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
             ),
-          ),
-        ),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const PremiumDialogHeader(
+                  title: "Select Course",
+                  subtitle: "Which course is this for?",
+                  icon: Icons.book_rounded,
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.4,
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shrinkWrap: true,
+                    itemCount: courses.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final course = courses[index];
+                      return ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        tileColor: isDark
+                            ? Colors.white.withOpacity(0.03)
+                            : Colors.grey[50],
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.school_rounded,
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        title: Text(
+                          course.name,
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: Text(
+                          "Level ${course.level} • ${course.code}",
+                          style: GoogleFonts.outfit(fontSize: 12),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _addMaterial(
+                            isDepartment: false,
+                            course: course,
+                            initialCategory: category,
+                            initialQuestionId: linkedId,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      "Cancel",
+                      style: GoogleFonts.outfit(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -1174,6 +1306,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     String? initialCategory,
     String? initialQuestionId,
   }) async {
+    if (!(_userProfile?.canUploadMaterial ?? false)) return;
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -1183,317 +1316,349 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     bool isUploading = false;
 
-    await showDialog(
+    await showPremiumGeneralDialog(
       context: context,
-      builder: (context) {
-        final colorScheme = Theme.of(context).colorScheme;
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-            ),
-            title: Text(
-              isDepartment ? "Add Dept Resource" : "Add Course Material",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-            ),
-            content: Form(
-              key: formKey,
-              child: SingleChildScrollView(
+      barrierLabel: "Add Material",
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              surfaceTintColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (course != null)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer.withOpacity(
-                            0.4,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "Course: ${course.name}",
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: colorScheme.onSecondaryContainer,
-                          ),
-                        ),
-                      ),
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      style: GoogleFonts.outfit(color: colorScheme.onSurface),
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.category_rounded),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'regular',
-                          child: Text("General"),
-                        ),
-                        DropdownMenuItem(
-                          value: 'past_question',
-                          child: Text("Past Question"),
-                        ),
-                        DropdownMenuItem(
-                          value: 'answer',
-                          child: Text("Answer"),
-                        ),
-                      ],
-                      onChanged: isUploading
-                          ? null
-                          : (v) {
-                              setState(() {
-                                selectedCategory = v!;
-                                if (selectedCategory != 'answer') {
-                                  selectedQuestionId = null;
-                                }
-                              });
-                            },
+                    PremiumDialogHeader(
+                      title: isDepartment ? "Dept Resource" : "Add Material",
+                      subtitle: isDepartment
+                          ? "Share faculty-wide documents"
+                          : "Add resources for ${course?.name ?? 'Course'}",
+                      icon: isDepartment
+                          ? Icons.folder_shared_rounded
+                          : Icons.note_add_rounded,
                     ),
-                    if (selectedCategory == 'answer') ...[
-                      const SizedBox(height: 16),
-                      StreamBuilder<List<Course>>(
-                        stream: _dbService.getCoursesForDepartment(
-                          widget.departmentId,
-                        ),
-                        builder: (context, courseSnapshot) {
-                          final courses = courseSnapshot.data ?? [];
-                          return StreamBuilder<List<CourseMaterial>>(
-                            stream: isDepartment
-                                ? _dbService.getDepartmentMaterials(
-                                    widget.departmentId,
-                                  )
-                                : _dbService.getCourseMaterials(course!.id),
-                            builder: (context, snapshot) {
-                              final questions =
-                                  snapshot.data
-                                      ?.where(
-                                        (m) =>
-                                            m.materialCategory ==
-                                            'past_question',
-                                      )
-                                      .toList() ??
-                                  [];
-                              return DropdownButtonFormField<String>(
-                                value: selectedQuestionId,
-                                isExpanded: true,
-                                style: GoogleFonts.outfit(
-                                  color: colorScheme.onSurface,
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: "Link to Question",
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  prefixIcon: const Icon(Icons.link_rounded),
-                                ),
-                                items: questions.map((q) {
-                                  final course = courses
-                                      .where((c) => c.id == q.courseId)
-                                      .firstOrNull;
-                                  final courseCode = course != null
-                                      ? "[${course.code}] "
-                                      : "";
-                                  return DropdownMenuItem(
-                                    value: q.id,
-                                    child: Text(
-                                      "$courseCode${q.title}",
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: isUploading
-                                    ? null
-                                    : (v) => setState(
-                                        () => selectedQuestionId = v,
-                                      ),
-                                validator: (v) =>
-                                    selectedCategory == 'answer' && v == null
-                                    ? "Required for answers"
-                                    : null,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: titleController,
-                      enabled: !isUploading,
-                      style: GoogleFonts.outfit(),
-                      decoration: InputDecoration(
-                        labelText: "Title",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.title_rounded),
-                      ),
-                      validator: (v) => v!.isEmpty ? "Required" : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: descriptionController,
-                      enabled: !isUploading,
-                      style: GoogleFonts.outfit(),
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: "Description (Optional)",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.notes_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    InkWell(
-                      onTap: isUploading
-                          ? null
-                          : () async {
-                              final res = await FilePicker.platform.pickFiles(
-                                withData: true,
-                              );
-                              if (res != null) setState(() => result = res);
-                            },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: result == null
-                                ? colorScheme.outline
-                                : colorScheme.primary,
-                            width: result == null ? 1 : 2,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          color: result == null
-                              ? Colors.transparent
-                              : colorScheme.primary.withOpacity(0.05),
-                        ),
-                        child: Row(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Form(
+                        key: formKey,
+                        child: Column(
                           children: [
-                            Icon(
-                              result == null
-                                  ? Icons.upload_file_rounded
-                                  : Icons.check_circle_rounded,
-                              color: result == null
-                                  ? colorScheme.onSurfaceVariant
-                                  : colorScheme.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                result == null
-                                    ? "Select file to upload"
-                                    : result!.files.single.name,
-                                style: GoogleFonts.outfit(
-                                  color: result == null
-                                      ? colorScheme.onSurfaceVariant
-                                      : colorScheme.onSurface,
-                                  fontWeight: result == null
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
+                            if (course != null)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(
+                                    0.05,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary
+                                        .withOpacity(0.1),
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.school_rounded,
+                                      size: 16,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        "Course: ${course.name}",
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            PremiumDropdownField<String>(
+                              value: selectedCategory,
+                              label: "Category",
+                              hint: "Select category",
+                              icon: Icons.category_rounded,
+                              enabled: !isUploading,
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'regular',
+                                  child: Text("General"),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'past_question',
+                                  child: Text("Past Question"),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'answer',
+                                  child: Text("Answer"),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                setState(() {
+                                  selectedCategory = v!;
+                                  if (selectedCategory != 'answer') {
+                                    selectedQuestionId = null;
+                                  }
+                                });
+                              },
+                            ),
+                            if (selectedCategory == 'answer') ...[
+                              const SizedBox(height: 16),
+                              StreamBuilder<List<Course>>(
+                                stream: _dbService.getCoursesForDepartment(
+                                  widget.departmentId,
+                                ),
+                                builder: (context, courseSnapshot) {
+                                  final coursesList = courseSnapshot.data ?? [];
+                                  return StreamBuilder<List<CourseMaterial>>(
+                                    stream: isDepartment
+                                        ? _dbService.getDepartmentMaterials(
+                                            widget.departmentId,
+                                          )
+                                        : _dbService.getCourseMaterials(
+                                            course!.id,
+                                          ),
+                                    builder: (context, snapshot) {
+                                      final questions =
+                                          snapshot.data
+                                              ?.where(
+                                                (m) =>
+                                                    m.materialCategory ==
+                                                    'past_question',
+                                              )
+                                              .toList() ??
+                                          [];
+                                      return PremiumDropdownField<String>(
+                                        value: selectedQuestionId,
+                                        label: "Link to Question",
+                                        hint: "Select the question",
+                                        icon: Icons.link_rounded,
+                                        enabled: !isUploading,
+                                        items: questions.map((q) {
+                                          final c = coursesList
+                                              .where((x) => x.id == q.courseId)
+                                              .firstOrNull;
+                                          final prefix = c != null
+                                              ? "[${c.code}] "
+                                              : "";
+                                          return DropdownMenuItem(
+                                            value: q.id,
+                                            child: Text(
+                                              "$prefix${q.title}",
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (v) => setState(
+                                          () => selectedQuestionId = v,
+                                        ),
+                                        validator: (v) =>
+                                            selectedCategory == 'answer' &&
+                                                v == null
+                                            ? "Required"
+                                            : null,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            PremiumTextField(
+                              controller: titleController,
+                              label: "Title",
+                              hint: "e.g. Exam Prep Notes",
+                              icon: Icons.title_rounded,
+                              enabled: !isUploading,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? "Required" : null,
+                            ),
+                            const SizedBox(height: 16),
+                            PremiumTextField(
+                              controller: descriptionController,
+                              label: "Description (Optional)",
+                              hint: "Brief details about the resource",
+                              icon: Icons.notes_rounded,
+                              enabled: !isUploading,
+                              maxLines: 2,
+                            ),
+                            const SizedBox(height: 24),
+                            // File Selection Zone
+                            GestureDetector(
+                              onTap: isUploading
+                                  ? null
+                                  : () async {
+                                      final res = await FilePicker.platform
+                                          .pickFiles(withData: true);
+                                      if (res != null) {
+                                        setState(() => result = res);
+                                      }
+                                    },
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: result != null
+                                      ? Colors.green.withOpacity(
+                                          isDark ? 0.1 : 0.05,
+                                        )
+                                      : (isDark
+                                            ? Colors.white.withOpacity(0.04)
+                                            : Colors.grey[50]),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: result != null
+                                        ? Colors.green.withOpacity(0.3)
+                                        : (isDark
+                                              ? Colors.white10
+                                              : Colors.black12),
+                                    width: 1.5,
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      result != null
+                                          ? Icons.check_circle_rounded
+                                          : Icons.cloud_upload_outlined,
+                                      size: 32,
+                                      color: result != null
+                                          ? Colors.green
+                                          : theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      result != null
+                                          ? result!.files.single.name
+                                          : "Select Resource File",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      result != null
+                                          ? "Ready for upload"
+                                          : "PDF, DOC, or Images only",
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    onPressed: isUploading
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: PremiumSubmitButton(
+                                    label: isUploading
+                                        ? "Uploading..."
+                                        : "Upload Resource",
+                                    isLoading: isUploading,
+                                    onPressed: (isUploading || result == null)
+                                        ? null
+                                        : () async {
+                                            if (formKey.currentState!
+                                                .validate()) {
+                                              setState(
+                                                () => isUploading = true,
+                                              );
+                                              try {
+                                                await _uploadLogic(
+                                                  title: titleController.text,
+                                                  desc: descriptionController
+                                                      .text,
+                                                  result: result!,
+                                                  isDept: isDepartment,
+                                                  course: course,
+                                                  category: selectedCategory,
+                                                  linkedId: selectedQuestionId,
+                                                );
+                                                if (context.mounted) {
+                                                  Navigator.pop(context);
+                                                }
+                                              } catch (e) {
+                                                setState(
+                                                  () => isUploading = false,
+                                                );
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        "Error: $e",
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          },
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 14,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Uploads are always free!",
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
             ),
-            actionsAlignment: MainAxisAlignment.spaceBetween,
-            actions: [
-              TextButton(
-                onPressed: isUploading ? null : () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: GoogleFonts.outfit(
-                    color: colorScheme.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: (isUploading || result == null)
-                    ? null
-                    : () async {
-                        if (formKey.currentState!.validate()) {
-                          setState(() => isUploading = true);
-                          try {
-                            await _uploadLogic(
-                              title: titleController.text,
-                              desc: descriptionController.text,
-                              result: result!,
-                              isDept: isDepartment,
-                              course: course,
-                              category: selectedCategory,
-                              linkedId: selectedQuestionId,
-                            );
-                            if (context.mounted) Navigator.pop(context);
-                          } catch (e) {
-                            setState(() => isUploading = false);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Error: $e"),
-                                  backgroundColor: colorScheme.error,
-                                ),
-                              );
-                            }
-                          }
-                        }
-                      },
-                icon: isUploading
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.cloud_upload_rounded),
-                label: Text(
-                  isUploading ? "Uploading..." : "Upload",
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -1555,6 +1720,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   void _addCourse() {
+    if (!(_userProfile?.canCreateDepartment ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only contributors and admins can add courses.')),
+      );
+      return;
+    }
     showAddCourseDialog(context, widget.departmentId);
   }
 }

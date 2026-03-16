@@ -34,6 +34,8 @@ class UserModel extends ChangeNotifier {
   String? _matricule;
   String? _phonenumber;
   String? _avatarUrl;
+  String? _institutionId;
+  String? _institutionName;
 
   UserModel({
     String? uid,
@@ -42,12 +44,16 @@ class UserModel extends ChangeNotifier {
     String? matricule,
     String? phonenumber,
     String? avatarUrl,
+    String? institutionId,
+    String? institutionName,
   }) : _uid = uid,
        _name = name,
        _email = email,
        _matricule = matricule,
        _phonenumber = phonenumber,
-       _avatarUrl = avatarUrl;
+       _avatarUrl = avatarUrl,
+       _institutionId = institutionId,
+       _institutionName = institutionName;
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
@@ -55,9 +61,21 @@ class UserModel extends ChangeNotifier {
   String? get matricule => _matricule;
   String? get phoneNumber => _phonenumber;
   String? get avatarUrl => _avatarUrl;
+  String? get institutionId => _institutionId;
+  String? get institutionName => _institutionName;
   void setName(String name) {
     _name = name;
-    notifyListeners(); //Notify listeners when the code changes
+    notifyListeners();
+  }
+
+  void setInstitutionId(String? id) {
+    _institutionId = id;
+    notifyListeners();
+  }
+
+  void setInstitutionName(String? name) {
+    _institutionName = name;
+    notifyListeners();
   }
 
   void update({
@@ -65,11 +83,15 @@ class UserModel extends ChangeNotifier {
     String? matricule,
     String? phoneNumber,
     String? avatarUrl,
+    String? institutionId,
+    String? institutionName,
   }) {
     if (name != null) _name = name;
     if (matricule != null) _matricule = matricule;
     if (phoneNumber != null) _phonenumber = phoneNumber;
     if (avatarUrl != null) _avatarUrl = avatarUrl;
+    if (institutionId != null) _institutionId = institutionId;
+    if (institutionName != null) _institutionName = institutionName;
     notifyListeners();
   }
 }
@@ -345,7 +367,7 @@ class AuthTextField extends StatelessWidget {
         filled: true,
         fillColor: isDarkMode
             ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
-            : (Colors.grey[50] ?? Colors.grey).withOpacity(0.5),
+            : Colors.grey.withOpacity(0.08),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 18,
           horizontal: 20,
@@ -353,7 +375,9 @@ class AuthTextField extends StatelessWidget {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: isDarkMode ? Colors.white10 : Colors.grey[300]!,
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.2),
             width: 1.5,
           ),
         ),
@@ -487,7 +511,7 @@ class AuthDropdown extends StatelessWidget {
         color: isDarkMode ? Colors.white54 : Colors.grey[600],
       ),
       dropdownColor: isDarkMode
-          ? theme.colorScheme.surfaceContainerLow
+          ? theme.colorScheme.surfaceContainerHigh
           : Colors.white,
       decoration: InputDecoration(
         hintText: hintText,
@@ -502,7 +526,7 @@ class AuthDropdown extends StatelessWidget {
         filled: true,
         fillColor: isDarkMode
             ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
-            : (Colors.grey[50] ?? Colors.grey).withOpacity(0.5),
+            : Colors.grey.withOpacity(0.08),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 18,
           horizontal: 20,
@@ -510,7 +534,9 @@ class AuthDropdown extends StatelessWidget {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: isDarkMode ? Colors.white10 : Colors.grey[300]!,
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.2),
             width: 1.5,
           ),
         ),

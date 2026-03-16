@@ -7,6 +7,7 @@ import 'package:go_study/services/profile.dart';
 
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -154,7 +155,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: theme.colorScheme.primary.withOpacity(0.2),
                       ),
@@ -287,7 +288,7 @@ class _ProfileState extends State<Profile> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: color.withOpacity(0.5)),
         boxShadow: isPremium
             ? [
@@ -412,16 +413,16 @@ class _ProfileState extends State<Profile> {
               !user.isTrialActive) ...[
             const SizedBox(height: 16),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value:
                     user.freeDownloadCount /
                     SubscriptionService.freeTierDownloadLimit,
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                minHeight: 8,
+                minHeight: 10,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               "Free Downloads used: ${user.freeDownloadCount}/${SubscriptionService.freeTierDownloadLimit}",
               style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
@@ -529,23 +530,55 @@ class _ProfileState extends State<Profile> {
     final picker = ImagePicker();
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text("Gallery"),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text("Camera"),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                "Change Avatar",
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildSourceOption(
+                context,
+                icon: Icons.photo_library_rounded,
+                color: Colors.blue,
+                title: "Choose from Gallery",
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              const SizedBox(height: 12),
+              _buildSourceOption(
+                context,
+                icon: Icons.camera_alt_rounded,
+                color: Colors.indigo,
+                title: "Take a Photo",
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
     );
 
     if (source == null) return;
@@ -560,10 +593,42 @@ class _ProfileState extends State<Profile> {
     if (pickedFile == null) return;
 
     try {
-      showDialog(
+      showPremiumGeneralDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
+        barrierLabel: "Uploading",
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF0F172A)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 24),
+                Text(
+                  "Updating Profile...",
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 
       final imageBytes = await pickedFile.readAsBytes();
@@ -572,7 +637,10 @@ class _ProfileState extends State<Profile> {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile picture updated!")),
+          const SnackBar(
+            content: Text("Profile picture updated!"),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -583,5 +651,51 @@ class _ProfileState extends State<Profile> {
         ).showSnackBar(SnackBar(content: Text("Upload Failed: $e")));
       }
     }
+  }
+
+  Widget _buildSourceOption(
+    BuildContext context, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black12,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 20),
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
   }
 }

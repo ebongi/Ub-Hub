@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});
@@ -14,6 +16,7 @@ class FocusTimerScreen extends StatefulWidget {
 class _FocusTimerScreenState extends State<FocusTimerScreen>
     with TickerProviderStateMixin {
   int _secondsRemaining = 25 * 60;
+  int _focusDuration = 25; // in minutes
   Timer? _timer;
   bool _isRunning = false;
   late AnimationController _rotationController;
@@ -22,6 +25,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 20),
@@ -31,6 +35,21 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _focusDuration = prefs.getInt('focus_duration') ?? 25;
+      if (!_isRunning) {
+        _secondsRemaining = _focusDuration * 60;
+      }
+    });
+  }
+
+  Future<void> _saveDuration(int minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('focus_duration', minutes);
   }
 
   void _startTimer() {
@@ -61,9 +80,26 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
-      _secondsRemaining = 25 * 60;
+      _secondsRemaining = _focusDuration * 60;
       _isRunning = false;
     });
+  }
+
+  void _showSettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _FocusSettingsSheet(
+        currentDuration: _focusDuration,
+        onChanged: (minutes) {
+          setState(() {
+            _focusDuration = minutes;
+            _resetTimer();
+          });
+          _saveDuration(minutes);
+        },
+      ),
+    );
   }
 
   String _formatTime(int seconds) {
@@ -98,6 +134,14 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
           ),
         ),
         leading: BackButton(color: Theme.of(context).iconTheme.color),
+        actions: [
+          IconButton(
+            onPressed: _showSettings,
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: "Settings",
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Stack(
         children: [
@@ -180,7 +224,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                           width: 250,
                           height: 250,
                           child: CircularProgressIndicator(
-                            value: _secondsRemaining / (25 * 60),
+                            value: _secondsRemaining / (_focusDuration * 60),
                             strokeWidth: 4,
                             backgroundColor:
                                 Theme.of(context).brightness == Brightness.dark
@@ -343,6 +387,185 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusSettingsSheet extends StatefulWidget {
+  final int currentDuration;
+  final ValueChanged<int> onChanged;
+
+  const _FocusSettingsSheet({
+    required this.currentDuration,
+    required this.onChanged,
+  });
+
+  @override
+  State<_FocusSettingsSheet> createState() => _FocusSettingsSheetState();
+}
+
+class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
+  late int _duration;
+
+  @override
+  void initState() {
+    super.initState();
+    _duration = widget.currentDuration;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Customize Timer",
+                style: GoogleFonts.outfit(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.grey.withOpacity(0.1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "QUICK PRESETS",
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildPresetChip(15),
+              _buildPresetChip(25),
+              _buildPresetChip(45),
+              _buildPresetChip(60),
+            ],
+          ),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "CUSTOM DURATION",
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                "$_duration min",
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.cyanAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.cyanAccent,
+              inactiveTrackColor: Colors.cyanAccent.withOpacity(0.1),
+              thumbColor: Colors.cyanAccent,
+              overlayColor: Colors.cyanAccent.withOpacity(0.2),
+              trackHeight: 6,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            ),
+            child: Slider(
+              value: _duration.toDouble(),
+              min: 1,
+              max: 120,
+              onChanged: (value) {
+                setState(() => _duration = value.toInt());
+                widget.onChanged(_duration);
+              },
+            ),
+          ),
+          const SizedBox(height: 40),
+          PremiumSubmitButton(
+            label: "Apply & Close",
+            isLoading: false,
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(int minutes) {
+    final isSelected = _duration == minutes;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _duration = minutes);
+        widget.onChanged(minutes);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.cyanAccent : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? Colors.cyanAccent
+                : Colors.grey.withOpacity(0.3),
+          ),
+        ),
+        child: Text(
+          "$minutes",
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.black : null,
+          ),
         ),
       ),
     );

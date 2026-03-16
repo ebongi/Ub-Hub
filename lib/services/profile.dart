@@ -53,6 +53,7 @@ class UserProfile {
   final DateTime? upgradedAt;
   final DateTime? createdAt;
   final String? avatarUrl;
+  final String? institutionId;
 
   UserProfile({
     required this.id,
@@ -67,6 +68,7 @@ class UserProfile {
     this.upgradedAt,
     this.createdAt,
     this.avatarUrl,
+    this.institutionId,
   });
 
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
@@ -91,6 +93,7 @@ class UserProfile {
           ? DateTime.parse(Supabase.instance.client.auth.currentUser!.createdAt)
           : null,
       avatarUrl: json['avatar_url'],
+      institutionId: json['institution_id'],
     );
   }
 
@@ -108,6 +111,7 @@ class UserProfile {
       'upgraded_at': upgradedAt?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'avatar_url': avatarUrl,
+      'institution_id': institutionId,
     };
   }
 
@@ -152,5 +156,5 @@ class UserProfile {
       role == UserRole.contributor || role == UserRole.admin;
 
   bool get canUploadMaterial =>
-      role == UserRole.contributor || role == UserRole.admin || isTrialActive;
+      role == UserRole.contributor || role == UserRole.admin;
 }

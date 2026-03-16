@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/course_model.dart' show Course;
@@ -10,6 +11,10 @@ import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/grade_model.dart';
 import 'package:go_study/services/campus_models.dart';
+import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/notification_model.dart';
+import 'package:go_study/services/institution.dart';
+import 'package:go_study/services/school.dart';
 
 class DatabaseService {
   final String? uid;
@@ -23,6 +28,7 @@ class DatabaseService {
     String? matricule,
     String? phoneNumber,
     String? level,
+    String? institutionId,
   }) async {
     if (uid == null) return;
     return await _supabase.from('profiles').upsert({
@@ -31,6 +37,7 @@ class DatabaseService {
       if (matricule != null) 'matricule': matricule,
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (level != null) 'level': level,
+      if (institutionId != null) 'institution_id': institutionId,
     });
   }
 
@@ -43,16 +50,71 @@ class DatabaseService {
         .map((data) => UserProfile.fromSupabase(data.first));
   }
 
-  // Get departments stream
-  Stream<List<Department>> get departments {
+  // ==================== Multitenancy Methods ====================
+
+  /// Get all institutions
+  Stream<List<Institution>> get institutions {
+    return _supabase
+        .from('institutions')
+        .stream(primaryKey: ['id'])
+        .order('name')
+        .map((data) => data.map((json) => Institution.fromSupabase(json)).toList());
+  }
+
+  /// Get a single institution by ID
+  Future<Institution?> getInstitution(String id) async {
+    try {
+      final data = await _supabase
+          .from('institutions')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
+      if (data == null) return null;
+      return Institution.fromSupabase(data);
+    } catch (e) {
+      print('Error fetching institution: $e');
+      return null;
+    }
+  }
+
+  /// Get schools for a specific institution
+  Stream<List<School>> getSchoolsForInstitution(String institutionId) {
+    return _supabase
+        .from('schools')
+        .stream(primaryKey: ['id'])
+        .eq('institution_id', institutionId)
+        .order('name')
+        .map((data) => data.map((json) => School.fromSupabase(json)).toList());
+  }
+
+  /// Get departments for a specific school
+  Stream<List<Department>> getDepartmentsForSchool(String schoolId) {
     return _supabase
         .from('departments')
         .stream(primaryKey: ['id'])
+        .eq('school_id', schoolId)
         .order('name')
-        .map(
+        .map((data) => data.map((json) => Department.fromSupabase(json)).toList());
+  }
+
+  // Get departments stream (optionally filtered by institution)
+  Stream<List<Department>> getDepartments({String? institutionId}) {
+    final query = _supabase.from('departments').stream(primaryKey: ['id']);
+    
+    if (institutionId != null) {
+      return query
+          .eq('institution_id', institutionId)
+          .order('name')
+          .map((data) => data.map((json) => Department.fromSupabase(json)).toList());
+    }
+    
+    return query.order('name').map(
           (data) => data.map((json) => Department.fromSupabase(json)).toList(),
         );
   }
+
+  // Legacy getter for backward compatibility
+  Stream<List<Department>> get departments => getDepartments();
 
   // Get courses for a specific department
   Stream<List<Course>> getCoursesForDepartment(String departmentId) {
@@ -79,7 +141,17 @@ class DatabaseService {
         .insert(department.toSupabase())
         .select()
         .single();
-    return data['id'] as String;
+    final id = data['id'] as String;
+
+    // Trigger notification
+    await NotificationService().createNotification(
+      title: 'New Department',
+      body: 'A new department "${department.name}" has been added.',
+      type: NotificationType.department,
+      data: {'departmentId': id},
+    );
+
+    return id;
   }
 
   // Create a new course
@@ -89,7 +161,17 @@ class DatabaseService {
         .insert(course.toSupabase())
         .select()
         .single();
-    return data['id'] as String;
+    final id = data['id'] as String;
+
+    // Trigger notification
+    await NotificationService().createNotification(
+      title: 'New Course',
+      body: 'A new course "${course.name}" (${course.code}) is now available.',
+      type: NotificationType.course,
+      data: {'courseId': id, 'departmentId': course.departmentId},
+    );
+
+    return id;
   }
 
   // Upload an image and get the public URL
@@ -135,7 +217,21 @@ class DatabaseService {
         .insert(material.toSupabase())
         .select()
         .single();
-    return data['id'] as String;
+    final id = data['id'] as String;
+
+    // Trigger notification
+    await NotificationService().createNotification(
+      title: 'New Material Uploaded',
+      body: 'New content "${material.title}" has been uploaded.',
+      type: NotificationType.material,
+      data: {
+        'materialId': id,
+        'courseId': material.courseId,
+        'category': material.materialCategory,
+      },
+    );
+
+    return id;
   }
 
   // Get materials for a specific course
@@ -302,6 +398,13 @@ class DatabaseService {
           'upgraded_at': DateTime.now().toIso8601String(),
         })
         .eq('id', uid!);
+
+    await NotificationService().createNotification(
+      title: 'Welcome Contributor!',
+      body:
+          'You have been successfully upgraded to a contributor. You now have unlimited access to all features.',
+      type: NotificationType.subscription,
+    );
   }
 
   /// Upgrade user subscription tier
@@ -320,6 +423,14 @@ class DatabaseService {
           'free_download_count': 0, // Reset count on upgrade/renewal
         })
         .eq('id', uid!);
+
+    await NotificationService().createNotification(
+      title: 'Subscription Activated',
+      body:
+          'Your ${tier.name.toUpperCase()} subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
+      type: NotificationType.subscription,
+      data: {'tier': tier.name, 'expiry': expiry.toIso8601String()},
+    );
   }
 
   /// Increment free download count for Silver users
@@ -384,8 +495,8 @@ class DatabaseService {
         );
   }
 
-  /// Get total earnings for a specific uploader from successful downloads
-  Stream<double> getEarningsForUploader(String userId) {
+  /// Get gross earnings for a specific uploader from successful downloads
+  Stream<double> getGrossEarningsForUploader(String userId) {
     return _supabase
         .from('course_materials')
         .stream(primaryKey: ['id'])
@@ -407,6 +518,33 @@ class DatabaseService {
           }
           return total;
         });
+  }
+
+  /// Get total withdrawn earnings for a specific user
+  Stream<double> getWithdrawnEarnings(String userId) {
+    return _supabase
+        .from('payment_transactions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .map((data) {
+          double total = 0;
+          for (var t in data) {
+            if (t['item_type'] == 'payout' && t['status'] == 'success') {
+              total += (t['amount'] as num).toDouble();
+            }
+          }
+          return total;
+        });
+  }
+
+  /// Get net earnings (Gross - Withdrawn)
+  Stream<double> getEarningsForUploader(String userId) {
+    // Combine gross and withdrawn streams
+    return getGrossEarningsForUploader(userId).asyncMap((gross) async {
+      final withdrawnStream = getWithdrawnEarnings(userId);
+      final withdrawn = await withdrawnStream.first;
+      return gross - withdrawn;
+    });
   }
 
   // ==================== Grade Tracking / Predictor Methods ====================
@@ -436,24 +574,33 @@ class DatabaseService {
   // ==================== Campus Integration Methods ====================
 
   /// Get all campus locations (halls, amphis, labs)
-  Stream<List<CampusLocation>> getCampusLocations() {
-    return _supabase
-        .from('campus_locations')
-        .stream(primaryKey: ['id'])
-        .order('name')
-        .map(
-          (data) =>
-              data.map((json) => CampusLocation.fromSupabase(json)).toList(),
+  Stream<List<CampusLocation>> getCampusLocations({String? institutionId}) {
+    final query = _supabase.from('campus_locations').stream(primaryKey: ['id']);
+    
+    if (institutionId != null) {
+      return query
+          .eq('institution_id', institutionId)
+          .order('name')
+          .map((data) => data.map((json) => CampusLocation.fromSupabase(json)).toList());
+    }
+    
+    return query.order('name').map(
+          (data) => data.map((json) => CampusLocation.fromSupabase(json)).toList(),
         );
   }
 
   /// Get latest university news
-  Stream<List<NewsArticle>> getUniversityNews() {
-    return _supabase
-        .from('university_news')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
-        .map(
+  Stream<List<NewsArticle>> getUniversityNews({String? institutionId}) {
+    final query = _supabase.from('university_news').stream(primaryKey: ['id']);
+    
+    if (institutionId != null) {
+      return query
+          .eq('institution_id', institutionId)
+          .order('created_at', ascending: false)
+          .map((data) => data.map((json) => NewsArticle.fromSupabase(json)).toList());
+    }
+    
+    return query.order('created_at', ascending: false).map(
           (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
         );
   }

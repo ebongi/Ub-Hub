@@ -6,6 +6,7 @@ import 'package:go_study/services/nkwa_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class SubscriptionPlansScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -21,6 +22,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     uid: Authentication().currentUser?.id,
   );
   bool _isProcessing = false;
+  SubscriptionTier? _processingTier;
+  bool _isProcessingContributor = false;
+  String? _statusMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -223,14 +227,30 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   ? BorderSide(color: theme.colorScheme.primary)
                   : null,
             ),
-            child: _isProcessing
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
+            child: _processingTier == tier
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (_statusMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _statusMessage!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ],
                   )
                 : Text(
                     isCurrent ? "Current Plan" : "Upgrade Now",
@@ -306,15 +326,40 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               ),
               elevation: 0,
             ),
-            child: Text(
-              widget.userProfile?.role == UserRole.contributor
-                  ? "Already a Contributor"
-                  : "One-time Payment 5000 XAF",
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            child: _isProcessingContributor
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (_statusMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _statusMessage!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ],
+                  )
+                : Text(
+                    widget.userProfile?.role == UserRole.contributor
+                        ? "Already a Contributor"
+                        : "One-time Payment 5000 XAF",
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -324,41 +369,74 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   Future<void> _handlePurchase(SubscriptionTier tier, double amount) async {
     final phoneController = TextEditingController();
 
-    final proceed = await showDialog<bool>(
+    final proceed = await showPremiumGeneralDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Subscribe to ${SubscriptionService.getTierName(tier)}",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Enter your Momo/OM number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.silver ? '14' : '30'} days of access.",
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: "Phone Number",
-                hintText: "6XXXXXXXX",
-                border: OutlineInputBorder(),
+      barrierLabel: "Subscribe",
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                   PremiumDialogHeader(
+                    title: "Subscribe to ${SubscriptionService.getTierName(tier)}",
+                    subtitle: "Unlock premium academic tools",
+                    icon: Icons.workspace_premium_rounded,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Enter your Mobile Money number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.silver ? '14' : '30'} days of access.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        PremiumTextField(
+                          controller: phoneController,
+                          label: "Phone Number",
+                          hint: "6XXXXXXXX",
+                          icon: Icons.phone_android_rounded,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: "Pay Now",
+                          isLoading: false,
+                          onPressed: () => Navigator.pop(context, true),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.outfit(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              keyboardType: TextInputType.phone,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Pay Now"),
-          ),
-        ],
+          );
+        },
       ),
     );
 
@@ -372,7 +450,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     double amount,
     String phone,
   ) async {
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _processingTier = tier;
+    });
 
     try {
       final response = await NkwaService.collectPayment(
@@ -382,7 +463,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       );
 
       final paymentId = response['paymentId'] ?? response['id'];
-      final status = await NkwaService.checkPaymentStatus(paymentId);
+
+      setState(() => _statusMessage = "Check your phone to approve...");
+
+      final status = await NkwaService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await _db.upgradeSubscription(tier);
@@ -392,8 +476,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           );
           Navigator.pop(context);
         }
+      } else if (status == PaymentStatus.cancelled) {
+        throw "Payment was cancelled";
       } else {
-        throw "Payment not successful";
+        throw "Payment timed out or failed. Please try again.";
       }
     } catch (e) {
       if (mounted) {
@@ -402,49 +488,87 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _processingTier = null;
+          _statusMessage = null;
+        });
+      }
     }
   }
 
   Future<void> _handleContributorUpgrade() async {
     final phoneController = TextEditingController();
 
-    final proceed = await showDialog<bool>(
+    final proceed = await showPremiumGeneralDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Upgrade to Contributor",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Pay 5000 XAF once to unlock unlimited downloads, uploads, and all premium features forever.",
-              style: GoogleFonts.outfit(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: "Momo/OM Number",
-                hintText: "6XXXXXXXX",
-                border: OutlineInputBorder(),
+      barrierLabel: "Upgrade to Contributor",
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PremiumDialogHeader(
+                    title: "Upgrade to Contributor",
+                    subtitle: "Unlock everything forever",
+                    icon: Icons.stars_rounded,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Pay 5000 XAF once to unlock unlimited downloads, uploads, and all premium features forever.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        PremiumTextField(
+                          controller: phoneController,
+                          label: "Momo/OM Number",
+                          hint: "6XXXXXXXX",
+                          icon: Icons.phone_android_rounded,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: "Pay Now",
+                          isLoading: false,
+                          onPressed: () => Navigator.pop(context, true),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.outfit(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              keyboardType: TextInputType.phone,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Pay Now"),
-          ),
-        ],
+          );
+        },
       ),
     );
 
@@ -454,7 +578,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   }
 
   Future<void> _processContributorPayment(String phone) async {
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _isProcessingContributor = true;
+    });
     try {
       final response = await NkwaService.collectPayment(
         amount: 5000.0,
@@ -463,7 +590,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       );
 
       final paymentId = response['paymentId'] ?? response['id'];
-      final status = await NkwaService.checkPaymentStatus(paymentId);
+
+      setState(() => _statusMessage = "Check your phone to approve...");
+
+      final status = await NkwaService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await _db.upgradeUserToContributor();
@@ -473,8 +603,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           );
           Navigator.pop(context);
         }
+      } else if (status == PaymentStatus.cancelled) {
+        throw "Payment was cancelled";
       } else {
-        throw "Payment not successful";
+        throw "Payment timed out or failed. Please try again.";
       }
     } catch (e) {
       if (mounted) {
@@ -483,7 +615,13 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _isProcessingContributor = false;
+          _statusMessage = null;
+        });
+      }
     }
   }
 }

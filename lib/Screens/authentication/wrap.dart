@@ -43,6 +43,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               matricule: profile.matricule,
               phoneNumber: profile.phoneNumber,
               avatarUrl: profile.avatarUrl,
+              institutionId: profile.institutionId,
             );
           },
         );

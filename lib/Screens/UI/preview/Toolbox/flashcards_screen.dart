@@ -229,7 +229,16 @@ class _ResumeBuilderScreenState extends State<FlashcardsScreen> {
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(_currentStep == 3 ? "Generate PDF" : "Next"),
+                    child: _isGenerating
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(_currentStep == 3 ? "Generate PDF" : "Next"),
                   ),
                   const SizedBox(width: 12),
                   if (_currentStep > 0)

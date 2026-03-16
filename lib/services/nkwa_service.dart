@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/core/app_config.dart';
@@ -41,7 +42,6 @@ class NkwaService {
         final data = jsonDecode(response.body);
         return data as Map<String, dynamic>;
       } else {
-        // Try to decode JSON error, otherwise use raw body
         String errorMessage;
         try {
           final error = jsonDecode(response.body);
@@ -54,6 +54,47 @@ class NkwaService {
       }
     } catch (e) {
       print('Nkwa Payment Error: $e');
+      rethrow;
+    }
+  }
+
+  /// Disburse payment to a phone number
+  static Future<Map<String, dynamic>> disbursePayment({
+    required double amount,
+    required String phoneNumber,
+    String? description,
+  }) async {
+    try {
+      if (_apiKey.isEmpty) {
+        throw Exception('Nkwa API Key is missing. Check .env');
+      }
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/disburse'),
+        headers: {'Content-Type': 'application/json', 'X-API-KEY': _apiKey},
+        body: jsonEncode({
+          'amount': amount.toInt(),
+          'phoneNumber': phoneNumber,
+          if (description != null) 'description': description,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data as Map<String, dynamic>;
+      } else {
+        String errorMessage;
+        try {
+          final error = jsonDecode(response.body);
+          errorMessage = error['message'] ?? response.body;
+        } catch (_) {
+          errorMessage = response.body;
+        }
+
+        throw Exception('API Error (${response.statusCode}): $errorMessage');
+      }
+    } catch (e) {
+      print('Nkwa Payout Error: $e');
       rethrow;
     }
   }
@@ -102,6 +143,33 @@ class NkwaService {
     } catch (e) {
       throw Exception('Failed to check payment status: $e');
     }
+  }
+
+  /// Poll for payment success with a timeout
+  /// This gives the user time to approve the payment on their phone
+  static Future<PaymentStatus> waitForSuccessfulPayment(
+    String paymentId, {
+    Duration timeout = const Duration(minutes: 2),
+    Duration interval = const Duration(seconds: 5),
+  }) async {
+    final startTime = DateTime.now();
+    while (DateTime.now().difference(startTime) < timeout) {
+      try {
+        final status = await checkPaymentStatus(paymentId);
+        if (status == PaymentStatus.success ||
+            status == PaymentStatus.cancelled) {
+          return status;
+        }
+        // If status is failed, we might want to check the actual reason
+      } catch (e) {
+        // Log error but keep polling if it's a network error
+        if (kDebugMode) {
+          print('Polling error: $e');
+        }
+      }
+      await Future.delayed(interval);
+    }
+    return PaymentStatus.pending; // Timed out
   }
 
   /// Generate a unique payment reference

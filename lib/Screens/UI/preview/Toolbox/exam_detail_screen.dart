@@ -6,6 +6,7 @@ import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/create_exam_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class ExamDetailScreen extends StatelessWidget {
   final ExamEvent exam;
@@ -133,36 +134,81 @@ class ExamDetailScreen extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Delete Event",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+      barrierLabel: "Delete Event",
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0F172A)
+            : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        contentPadding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const PremiumDialogHeader(
+              title: "Delete Event",
+              subtitle: "This action cannot be undone",
+              icon: Icons.delete_forever_rounded,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                children: [
+                  Text(
+                    "Are you sure you want to delete this event? All associated data will be permanently removed.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: PremiumSubmitButton(
+                          label: "Delete Now",
+                          isLoading: false,
+                          onPressed: () async {
+                            final user =
+                                Supabase.instance.client.auth.currentUser;
+                            if (user != null) {
+                              await DatabaseService(uid: user.id)
+                                  .deleteExam(exam.id);
+                              if (context.mounted) {
+                                Navigator.pop(context); // Pop dialog
+                                Navigator.pop(context); // Pop detail screen
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        content: Text(
-          "Are you sure you want to delete this event?",
-          style: GoogleFonts.outfit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: GoogleFonts.outfit()),
-          ),
-          TextButton(
-            onPressed: () async {
-              final user = Supabase.instance.client.auth.currentUser;
-              if (user != null) {
-                await DatabaseService(uid: user.id).deleteExam(exam.id);
-                if (context.mounted) {
-                  Navigator.pop(context); // Pop dialog
-                  Navigator.pop(context); // Pop detail screen
-                }
-              }
-            },
-            child: Text("Delete", style: GoogleFonts.outfit(color: Colors.red)),
-          ),
-        ],
       ),
     );
   }

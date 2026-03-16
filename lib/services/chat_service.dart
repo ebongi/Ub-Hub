@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/notification_model.dart';
 
 class ChatMessageModel {
   final String id;
@@ -9,6 +11,11 @@ class ChatMessageModel {
   final DateTime createdAt;
   final String roomId;
 
+  // Reply-to fields
+  final String? replyToId;
+  final String? replyToName;
+  final String? replyToContent;
+
   ChatMessageModel({
     required this.id,
     required this.content,
@@ -17,6 +24,9 @@ class ChatMessageModel {
     this.senderAvatarUrl,
     required this.createdAt,
     this.roomId = 'global',
+    this.replyToId,
+    this.replyToName,
+    this.replyToContent,
   });
 
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +38,9 @@ class ChatMessageModel {
       senderAvatarUrl: json['sender_avatar_url'],
       createdAt: DateTime.parse(json['created_at']),
       roomId: json['room_id'] ?? 'global',
+      replyToId: json['reply_to_id'],
+      replyToName: json['reply_to_name'],
+      replyToContent: json['reply_to_content'],
     );
   }
 
@@ -38,6 +51,9 @@ class ChatMessageModel {
       'sender_name': senderName,
       'sender_avatar_url': senderAvatarUrl,
       'room_id': roomId,
+      if (replyToId != null) 'reply_to_id': replyToId,
+      if (replyToName != null) 'reply_to_name': replyToName,
+      if (replyToContent != null) 'reply_to_content': replyToContent,
     };
   }
 }
@@ -65,6 +81,9 @@ class ChatService {
     String? senderName,
     String? senderAvatarUrl,
     String roomId = 'global',
+    String? replyToId,
+    String? replyToName,
+    String? replyToContent,
   }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -75,6 +94,22 @@ class ChatService {
       'sender_name': senderName,
       'sender_avatar_url': senderAvatarUrl,
       'room_id': roomId,
+      if (replyToId != null) 'reply_to_id': replyToId,
+      if (replyToName != null) 'reply_to_name': replyToName,
+      if (replyToContent != null) 'reply_to_content': replyToContent,
     });
+
+    // Trigger notification (best-effort – may not be available in test env)
+    try {
+      await NotificationService().createNotification(
+        title: 'Message Sent',
+        body: 'Your message has been sent to the group.',
+        type: NotificationType.message,
+        data: {'roomId': roomId},
+        showLocal: false, // Don't show local alert for sent messages
+      );
+    } catch (_) {
+      // Silently ignore – notification service unavailable (e.g. in tests)
+    }
   }
 }

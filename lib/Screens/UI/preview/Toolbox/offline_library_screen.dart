@@ -7,6 +7,7 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class OfflineLibraryScreen extends StatefulWidget {
   const OfflineLibraryScreen({super.key});
@@ -204,27 +205,76 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
   }
 
   void _confirmDelete(CourseMaterial material) {
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Offline Copy?"),
-        content: Text(
-          "This will remove the secured copy of '${material.title}' from your device. You can re-download it later.",
+      barrierLabel: "Delete Offline Copy",
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0F172A)
+            : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        contentPadding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const PremiumDialogHeader(
+              title: "Delete Offline Copy?",
+              subtitle: "Remove from device",
+              icon: Icons.cloud_off_rounded,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                children: [
+                  Text(
+                    "This will remove the secured copy of '${material.title}' from your device. You can re-download it anytime you're online.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: PremiumSubmitButton(
+                          label: "Delete Now",
+                          isLoading: false,
+                          onPressed: () async {
+                            await _storageService.deleteOffline(material.id);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              _loadOfflineMaterials();
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              await _storageService.deleteOffline(material.id);
-              Navigator.pop(context);
-              _loadOfflineMaterials();
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
-          ),
-        ],
       ),
     );
   }

@@ -13,31 +13,43 @@ class GeminiService {
   GeminiService({GeminiClient? client})
     : _client = client ?? _createNewClient();
 
-  static GeminiClient _createNewClient() {
+  static GeminiClient _createNewClient({List<Content>? history}) {
     return GeminiChatSessionClient(
       GenerativeModel(
         model: _modelName,
         apiKey: _apiKey,
         systemInstruction: Content.system(
-          r"You are a helpful academic assistant. "
-          r"Whenever you provide mathematical expressions, formulas, or equations, "
-          r"you MUST use LaTeX format. "
-          r"Use single dollar signs for inline math (e.g., $E=mc^2$) "
-          r"and double dollar signs for block math (e.g., $$ \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2} $$). "
-          r"Ensure all exponents, subscripts, and special characters like integrals, "
-          r"summations, and Greek letters are correctly formatted in LaTeX.",
+          "You are 'Gemini Academic', a world-class academic assistant and tutor. "
+          "Your goal is to provide accurate, comprehensive, and helpful information to students. "
+          "\n\nGUIDELINES:\n"
+          "1. **Professionalism**: Always be polite, encouraging, and professional. Avoid slang or 'funny' informal answers unless specifically asked for humor.\n"
+          "2. **Completeness**: When asked about a topic, provide all necessary details. If a concept is complex, break it down step-by-step.\n"
+          "3. **Mathematics**: Use LaTeX for ALL mathematical expressions. "
+          "Use single dollar signs for inline math (e.g., \$E=mc^2\$) and double dollar signs for block math (e.g., \$\$ \\int_0^\\infty e^{-x^2} dx \$\$).\n"
+          "4. **Formatting**: Use Markdown headers, lists, and bold text to make your answers easy to read.\n"
+          "5. **Context**: If the user provides images or PDFs, analyze them thoroughly before answering.",
         ),
-      ).startChat(),
+      ).startChat(history: history),
     );
+  }
+
+  void updateHistory(List<Content> history) {
+    _client = _createNewClient(history: history);
   }
 
   void resetChat() {
     _client = _createNewClient();
   }
 
-  Future<String> sendMessage(String message) async {
+  Future<String> sendMessage(
+    String message, {
+    List<DataPart>? attachments,
+  }) async {
     try {
-      final responseText = await _client.sendMessage(message);
+      final responseText = await _client.sendMessage(
+        message,
+        attachments: attachments,
+      );
       return responseText ?? "I couldn't generate a response.";
     } catch (e) {
       if (kDebugMode) {
@@ -47,9 +59,12 @@ class GeminiService {
     }
   }
 
-  Stream<String> streamMessage(String message) async* {
+  Stream<String> streamMessage(
+    String message, {
+    List<DataPart>? attachments,
+  }) async* {
     try {
-      yield* _client.sendMessageStream(message);
+      yield* _client.sendMessageStream(message, attachments: attachments);
     } catch (e) {
       if (kDebugMode) {
         print('Gemini Stream Error: $e');

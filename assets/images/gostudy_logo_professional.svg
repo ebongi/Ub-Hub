@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300">
+  <defs>
+    <!-- Gradient from user's icon -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+  </defs>
+  
+  <!-- User's G Icon (scaled and positioned) -->
+  <g transform="translate(30, 30) scale(0.55)">
+    <!-- Main Body of the "G" -->
+    <path d="M210 108C210 48.35 161.65 0 102 0C42.35 0 0 48.35 0 108C0 167.65 42.35 216 102 216H165V171H102C76.59 171 56 143.01 56 108C56 72.99 76.59 45 102 45C127.41 45 148 72.99 148 108V118H210V108Z" fill="url(#brandGrad)"/>
+    
+    <!-- The 3D "Folding" shadow element -->
+    <path d="M210 108H148V128L210 128V108Z" fill="black" fill-opacity="0.12"/>
+  </g>
+  
+  <!-- Text with professional fonts -->
+  <g id="text">
+    <!-- "Go" in bold - Using geometric sans-serif style -->
+    <text x="180" y="165" 
+          font-family="'Montserrat', 'Poppins', 'Inter', 'Helvetica Neue', Arial, sans-serif" 
+          font-size="95" 
+          font-weight="700" 
+          fill="#1E3A8A"
+          letter-spacing="-2">Go</text>
+    
+    <!-- "Study" - Using matching professional font -->
+    <text x="315" y="165" 
+          font-family="'Montserrat', 'Poppins', 'Inter', 'Helvetica Neue', Arial, sans-serif" 
+          font-size="95" 
+          font-weight="400" 
+          fill="#1f2937"
+          letter-spacing="-1">Study</text>
+    
+    <!-- Tagline with elegant spacing -->
+    <text x="182" y="200" 
+          font-family="'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif" 
+          font-size="18" 
+          font-weight="400" 
+          fill="#6b7280"
+          letter-spacing="3">UNITING CAMEROON'S ACADEMIC EXCELLENCE</text>
+  </g>
+  
+  <!-- Subtle decorative element -->
+  <line x1="182" y1="210" x2="550" y2="210" stroke="#38BDF8" stroke-width="2" opacity="0.3"/>
+</svg>

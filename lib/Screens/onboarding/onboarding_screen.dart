@@ -75,17 +75,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           titleWidget: FadeInDown(
             key: ValueKey('title_0_$_currentPage'),
             duration: const Duration(milliseconds: 500),
-            child: Text(
-              "Welcome to GO Study",
-              textAlign: TextAlign.center,
-              style: pageDecoration.titleTextStyle,
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
+              ).createShader(bounds),
+              child: Text(
+                "Welcome to GO Study",
+                textAlign: TextAlign.center,
+                style: pageDecoration.titleTextStyle.copyWith(color: Colors.white),
+              ),
             ),
           ),
           bodyWidget: FadeInUp(
             key: ValueKey('body_0_$_currentPage'),
             duration: const Duration(milliseconds: 500),
             child: Text(
-              "Welcome to Your Campus, Anytime.Everything you need to study smarter, collaborate faster, and achieve more — all in one place.",
+              "Your Campus, Anytime. Everything you need to study smarter, collaborate faster, and achieve more — all in one place.",
               textAlign: TextAlign.center,
               style: pageDecoration.bodyTextStyle,
             ),
@@ -98,28 +103,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           decoration: pageDecoration,
         ),
         PageViewModel(
-          titleWidget: FadeInRight(
-            key: ValueKey('title_2_$_currentPage'),
+          titleWidget: FadeInDown(
+            key: ValueKey('title_tailored_$_currentPage'),
             duration: const Duration(milliseconds: 500),
             child: Text(
-              "Access All Your Materials",
+              "Tailored for You",
               textAlign: TextAlign.center,
               style: pageDecoration.titleTextStyle,
             ),
           ),
-          bodyWidget: FadeInLeft(
-            key: ValueKey('body_2_$_currentPage'),
+          bodyWidget: FadeInUp(
+            key: ValueKey('body_tailored_$_currentPage'),
             duration: const Duration(milliseconds: 500),
             child: Text(
-              "Access department materials, past questions, and important academic updates all in one place.",
+              "Select your university and enjoy a customized experience with your departments, courses, and campus news.",
               textAlign: TextAlign.center,
               style: pageDecoration.bodyTextStyle,
             ),
           ),
-          image: FadeInDown(
-            key: ValueKey('img_2_$_currentPage'),
+          image: ZoomIn(
+            key: ValueKey('img_tailored_$_currentPage'),
             duration: const Duration(milliseconds: 600),
-            child: _buildImage('library.svg', 600),
+            child: Icon(
+              Icons.school_rounded,
+              size: 180,
+              color: colorScheme.primary,
+            ),
+          ),
+          decoration: pageDecoration,
+        ),
+        PageViewModel(
+          titleWidget: FadeInDown(
+            key: ValueKey('title_ai_$_currentPage'),
+            duration: const Duration(milliseconds: 500),
+            child: Text(
+              "Premium AI Assistant",
+              textAlign: TextAlign.center,
+              style: pageDecoration.titleTextStyle,
+            ),
+          ),
+          bodyWidget: FadeInUp(
+            key: ValueKey('body_ai_$_currentPage'),
+            duration: const Duration(milliseconds: 500),
+            child: Text(
+              "Access powerful AI tools to summarize notes, generate study plans, and help you master difficult topics.",
+              textAlign: TextAlign.center,
+              style: pageDecoration.bodyTextStyle,
+            ),
+          ),
+          image: ZoomIn(
+            key: ValueKey('img_ai_$_currentPage'),
+            duration: const Duration(milliseconds: 600),
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
+              ).createShader(bounds),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 180,
+                color: Colors.white,
+              ),
+            ),
           ),
           decoration: pageDecoration,
         ),
@@ -137,7 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             key: ValueKey('body_3_$_currentPage'),
             duration: const Duration(milliseconds: 500),
             child: Text(
-              "Share notes, collaborate on assignments, and chat with coursemates — all within one space. Create or join study groups organized by course, topic, or department..",
+              "Share notes, collaborate on assignments, and chat with coursemates in dedicated study groups.",
               textAlign: TextAlign.center,
               style: pageDecoration.bodyTextStyle,
             ),
@@ -157,33 +201,70 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       nextFlex: 0,
       showBackButton: false,
       back: Icon(Icons.arrow_back, color: colorScheme.primary),
-      skip: Text(
-        'Skip',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: colorScheme.primary,
+      skip: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          'Skip',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.primary,
+          ),
         ),
       ),
-      next: Icon(Icons.arrow_forward, color: colorScheme.primary),
-      done: Text(
-        'Done',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
+      next: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
           color: colorScheme.primary,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+      ),
+      done: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
+          ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4285F4).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          'Get Started',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
       curve: Curves.fastLinearToSlowEaseIn,
-      controlsMargin: const EdgeInsets.all(16),
-      controlsPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+      controlsMargin: const EdgeInsets.all(24),
+      controlsPadding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
       dotsDecorator: DotsDecorator(
-        size: const Size(10.0, 10.0),
+        size: const Size(8.0, 8.0),
         color: theme.brightness == Brightness.dark
             ? Colors.white24
             : Colors.black12,
-        activeSize: const Size(22.0, 10.0),
+        activeSize: const Size(24.0, 8.0),
         activeColor: colorScheme.primary,
-        activeShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+        activeShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25.0),
         ),
       ),
     );

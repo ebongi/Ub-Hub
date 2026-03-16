@@ -48,7 +48,7 @@ void main() {
     );
   }
 
-  testWidgets('ChatScreen should render correctly with background and input', (
+  testWidgets('ChatScreen should render correctly with input area', (
     tester,
   ) async {
     when(
@@ -59,16 +59,7 @@ void main() {
 
     expect(find.text('Global Chat'), findsOneWidget);
     expect(find.text('Public Community Hub'), findsOneWidget);
-    expect(find.text('Message'), findsOneWidget); // Hint text
-
-    // Check for the background image asset
-    final containerFinder = find.byWidgetPredicate(
-      (widget) =>
-          widget is Container &&
-          widget.decoration is BoxDecoration &&
-          (widget.decoration as BoxDecoration).image != null,
-    );
-    expect(containerFinder, findsOneWidget);
+    expect(find.text('Send a message'), findsOneWidget); // Hint text
   });
 
   testWidgets('ChatScreen should show empty state when no messages', (
@@ -110,11 +101,35 @@ void main() {
     await tester.pump(); // Start animations
 
     expect(find.text('Hello from me'), findsOneWidget);
-    expect(
-      find.text('Test User'),
-      findsOneWidget,
-    ); // Now displayed for "me" too
     expect(find.text('Hello from someone else'), findsOneWidget);
     expect(find.text('Alice'), findsOneWidget);
+  });
+
+  testWidgets('Message bubble renders quoted reply block when replyToContent is set',
+      (tester) async {
+    final messages = [
+      ChatMessageModel(
+        id: '3',
+        content: 'This is my reply',
+        senderId: 'other_user',
+        senderName: 'Bob',
+        createdAt: DateTime.now(),
+        replyToId: '1',
+        replyToName: 'Alice',
+        replyToContent: 'Original message content',
+      ),
+    ];
+
+    when(
+      () => mockChatService.getMessagesStream(),
+    ).thenAnswer((_) => Stream.value(messages));
+
+    await tester.pumpWidget(createChatScreen());
+    await tester.pump();
+
+    // The quoted snippet and the original sender name should both appear
+    expect(find.text('Original message content'), findsOneWidget);
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('This is my reply'), findsOneWidget);
   });
 }

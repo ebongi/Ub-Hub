@@ -8,6 +8,10 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:provider/provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class NewsFeedScreen extends StatefulWidget {
   const NewsFeedScreen({super.key});
@@ -32,6 +36,11 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
     _loadNews();
   }
 
+  Future<bool> _isInternetConnected() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+
   Future<void> _loadNews() async {
     setState(() {
       _isLoading = true;
@@ -45,8 +54,11 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
       // 2. Fetch from Supabase with safety
       List<NewsArticle> supabaseNews = [];
       try {
+        final institutionId = context.read<UserModel>().institutionId;
         // Use timeout to prevent hanging if the network is flaky
-        supabaseNews = await _dbService.getUniversityNews().first.timeout(
+        supabaseNews = await _dbService.getUniversityNews(
+          institutionId: institutionId,
+        ).first.timeout(
           const Duration(seconds: 5),
           onTimeout: () => [],
         );
@@ -126,36 +138,62 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
   }
 
   Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 64,
-              color: Colors.red.withOpacity(0.5),
+    return FutureBuilder<bool>(
+      future: _isInternetConnected(),
+      builder: (context, snapshot) {
+        final hasNoInternet =
+            snapshot.connectionState == ConnectionState.done &&
+            snapshot.data == false;
+
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasNoInternet ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
+                  size: 64,
+                  color: Colors.red.withOpacity(0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  hasNoInternet ? "No Connection" : "Couldn't fetch news",
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  hasNoInternet
+                      ? "Check your internet and try again."
+                      : "An unexpected error occurred. Please try again later.",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _loadNews,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text("Retry"),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              "Couldn't fetch latest news",
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Please check your internet connection or try again later.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(onPressed: _loadNews, child: const Text("Retry")),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -271,75 +309,118 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: ListView(
-            controller: controller,
-            padding: const EdgeInsets.all(24),
-            children: [
-              Text(
-                article.title,
-                style: GoogleFonts.outfit(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, controller) => Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "${article.source.toUpperCase()} • ${DateFormat('MMMM d, yyyy').format(article.date)}",
-                style: GoogleFonts.outfit(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
+                Expanded(
+                  child: ListView(
+                    controller: controller,
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          article.source.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        article.title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_rounded,
+                              size: 14, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('MMMM d, yyyy').format(article.date),
+                            style: GoogleFonts.outfit(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      if (article.imageUrl != null) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.network(
+                            article.imageUrl!,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      Text(
+                        article.content,
+                        style: GoogleFonts.outfit(
+                          fontSize: 17,
+                          height: 1.6,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      PremiumSubmitButton(
+                        label: "Read Full Article",
+                        isLoading: false,
+                        onPressed: () async {
+                          final uri = Uri.parse(article.id);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              if (article.imageUrl != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(article.imageUrl!),
-                ),
-                const SizedBox(height: 24),
               ],
-              Text(
-                article.content,
-                style: GoogleFonts.outfit(fontSize: 16, height: 1.6),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final uri = Uri.parse(article.id);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  label: Text(
-                    "Read Full Article",
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

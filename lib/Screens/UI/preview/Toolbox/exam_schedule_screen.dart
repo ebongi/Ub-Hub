@@ -89,7 +89,6 @@ class ExamScheduleScreen extends StatelessWidget {
   }
 
   Widget _buildExamCard(BuildContext context, ExamEvent exam) {
-    final theme = Theme.of(context);
     final startStr = DateFormat('dd-MMM-yyyy HH:mm').format(exam.startTime);
 
     return GestureDetector(

@@ -5,6 +5,7 @@ import 'package:go_study/services/database.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class TaskManagerScreen extends StatefulWidget {
   const TaskManagerScreen({super.key});
@@ -39,165 +40,258 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     String priority = "Medium";
     String category = _categories[1];
 
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+      barrierLabel: "Add Task",
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PremiumDialogHeader(
+                    title: "New Task",
+                    subtitle: "What needs to be done?",
+                    icon: Icons.add_task_rounded,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        PremiumTextField(
+                          controller: nameController,
+                          label: "Task Name",
+                          hint: "e.g. Study Physics",
+                          icon: Icons.title_rounded,
+                        ),
+                        const SizedBox(height: 16),
+                        PremiumTextField(
+                          controller: descController,
+                          label: "Description",
+                          hint: "Brief details...",
+                          icon: Icons.notes_rounded,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateTimePicker(
+                                context,
+                                label: "Deadline",
+                                icon: Icons.calendar_today_rounded,
+                                value: selectedDeadline == null
+                                    ? null
+                                    : DateFormat('MMM d').format(selectedDeadline!),
+                                onTap: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime.now().add(
+                                      const Duration(days: 365),
+                                    ),
+                                  );
+                                  if (date != null) {
+                                    setDialogState(() => selectedDeadline = date);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildDateTimePicker(
+                                context,
+                                label: "Reminder",
+                                icon: Icons.alarm_rounded,
+                                value: selectedReminder == null
+                                    ? null
+                                    : DateFormat('HH:mm').format(selectedReminder!),
+                                onTap: () async {
+                                  final time = await showTimePicker(
+                                    context: context,
+                                    initialTime: TimeOfDay.now(),
+                                  );
+                                  if (time != null) {
+                                    final now = DateTime.now();
+                                    setDialogState(
+                                      () => selectedReminder = DateTime(
+                                        now.year,
+                                        now.month,
+                                        now.day,
+                                        time.hour,
+                                        time.minute,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Progress: ${(progress * 100).toInt()}%",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                              ),
+                            ),
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                trackHeight: 4,
+                                thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 8),
+                                overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 16),
+                              ),
+                              child: Slider(
+                                value: progress,
+                                onChanged: (val) =>
+                                    setDialogState(() => progress = val),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        PremiumDropdownField<String>(
+                          value: priority,
+                          label: "Priority",
+                          hint: "Select priority",
+                          icon: Icons.flag_rounded,
+                          items: ["Low", "Medium", "High"]
+                              .map((p) =>
+                                  DropdownMenuItem(value: p, child: Text(p)))
+                              .toList(),
+                          onChanged: (val) =>
+                              setDialogState(() => priority = val!),
+                        ),
+                        const SizedBox(height: 16),
+                        PremiumDropdownField<String>(
+                          value: category,
+                          label: "Category",
+                          hint: "Select category",
+                          icon: Icons.category_rounded,
+                          items: _categories
+                              .where((c) => c != "All")
+                              .map((c) =>
+                                  DropdownMenuItem(value: c, child: Text(c)))
+                              .toList(),
+                          onChanged: (val) =>
+                              setDialogState(() => category = val!),
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: "Create Task",
+                          isLoading: false,
+                          onPressed: () async {
+                            if (nameController.text.isNotEmpty) {
+                              final user = _supabase.auth.currentUser;
+                              if (user == null) return;
+
+                              final newTask = TodoTask(
+                                userId: user.id,
+                                title: nameController.text,
+                                description: descController.text,
+                                deadline: selectedDeadline,
+                                reminder: selectedReminder,
+                                progress: progress,
+                                priority: priority,
+                                category: category,
+                                isDone: false,
+                              );
+
+                              await _dbService.addTask(newTask);
+
+                              if (selectedReminder != null) {
+                                await NotificationService().scheduleNotification(
+                                  id: newTask.hashCode,
+                                  title: "Task Reminder",
+                                  body: "Don't forget: ${newTask.title}",
+                                  scheduledDate: selectedReminder!,
+                                );
+                              }
+
+                              if (mounted) Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required String? value,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black12,
           ),
-          title: Text(
-            "New To-Do task",
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white38 : Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Task name",
-                    hintText: "Example Task",
+                Icon(icon, size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    value ?? "Set",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: value != null
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : Colors.grey,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: "Description"),
-                ),
-                const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365),
-                            ),
-                          );
-                          if (date != null) {
-                            setDialogState(() => selectedDeadline = date);
-                          }
-                        },
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(
-                          selectedDeadline == null
-                              ? "Deadline"
-                              : DateFormat('MMM d').format(selectedDeadline!),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.now(),
-                          );
-                          if (time != null) {
-                            final now = DateTime.now();
-                            setDialogState(
-                              () => selectedReminder = DateTime(
-                                now.year,
-                                now.month,
-                                now.day,
-                                time.hour,
-                                time.minute,
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.alarm, size: 18),
-                        label: Text(
-                          selectedReminder == null
-                              ? "Reminder"
-                              : DateFormat('HH:mm').format(selectedReminder!),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Text("Progress: ", style: GoogleFonts.outfit(fontSize: 12)),
-                    Expanded(
-                      child: Slider(
-                        value: progress,
-                        onChanged: (val) =>
-                            setDialogState(() => progress = val),
-                      ),
-                    ),
-                    Text(
-                      "${(progress * 100).toInt()}%",
-                      style: GoogleFonts.outfit(fontSize: 12),
-                    ),
-                  ],
-                ),
-                DropdownButtonFormField<String>(
-                  value: priority,
-                  decoration: const InputDecoration(labelText: "Priority"),
-                  items: ["Low", "Medium", "High"]
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
-                  onChanged: (val) => setDialogState(() => priority = val!),
-                ),
-                DropdownButtonFormField<String>(
-                  value: category,
-                  decoration: const InputDecoration(labelText: "Category"),
-                  items: _categories
-                      .where((c) => c != "All")
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (val) => setDialogState(() => category = val!),
-                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("CANCEL"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isNotEmpty) {
-                  final user = _supabase.auth.currentUser;
-                  if (user == null) return;
-
-                  final newTask = TodoTask(
-                    userId: user.id,
-                    title: nameController.text,
-                    description: descController.text,
-                    deadline: selectedDeadline,
-                    reminder: selectedReminder,
-                    progress: progress,
-                    priority: priority,
-                    category: category,
-                    isDone: false,
-                  );
-
-                  await _dbService.addTask(newTask);
-
-                  if (selectedReminder != null) {
-                    await NotificationService().scheduleNotification(
-                      id: newTask.hashCode,
-                      title: "Task Reminder",
-                      body: "Don't forget: ${newTask.title}",
-                      scheduledDate: selectedReminder!,
-                    );
-                  }
-
-                  if (mounted) Navigator.pop(context);
-                }
-              },
-              child: const Text("OKAY"),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -20,6 +21,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
@@ -30,12 +32,14 @@ class ToolItem {
   final String name;
   final IconData icon;
   final Color backgroundColor;
+  final Color brandColor;
   final Widget widget;
 
   ToolItem({
     required this.name,
     required this.icon,
     required this.backgroundColor,
+    required this.brandColor,
     required this.widget,
   });
 }
@@ -59,63 +63,88 @@ class _HomeState extends State<Home> {
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
 
     final db = DatabaseService(uid: _supabase.auth.currentUser?.id);
-    db.userProfile.listen((profile) {
+    db.userProfile.listen((profile) async {
       if (mounted) {
         setState(() {
           _userProfile = profile;
+        });
+
+        // Fetch institution name if available
+        String? institutionName;
+        if (profile.institutionId != null) {
+          final inst = await db.getInstitution(profile.institutionId!);
+          institutionName = inst?.name;
+        }
+        
+        // Sync with global UserModel provider
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final userModel = Provider.of<UserModel>(context, listen: false);
+            userModel.update(
+              name: profile.name,
+              matricule: profile.matricule,
+              phoneNumber: profile.phoneNumber,
+              institutionId: profile.institutionId,
+              institutionName: institutionName,
+            );
+          }
         });
       }
     });
   }
 
-  Stream<List<Department>> getDepartmentStream() {
-    return _supabase
-        .from('departments')
-        .stream(primaryKey: ['id'])
-        .map((data) => data.map((e) => Department.fromSupabase(e)).toList());
-  }
+
+
+  // No longer needed, using Provider instead
 
   final List<ToolItem> toolboxItems = [
     ToolItem(
       name: "AI Study",
       icon: Icons.auto_awesome_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF4285F4), // Google Blue
       widget: const AIStudyPlanScreen(),
     ),
     ToolItem(
       name: "Exam Schedule",
       icon: Icons.calendar_month_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFFEA4335), // Google Red
       widget: const ExamScheduleScreen(),
     ),
     ToolItem(
       name: "Library",
       icon: Icons.local_library_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF34A853), // Google Green
       widget: const OfflineLibraryScreen(),
     ),
     ToolItem(
       name: "News",
       icon: Icons.newspaper_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFFFBBC05), // Google Yellow
       widget: const NewsFeedScreen(),
     ),
     ToolItem(
       name: "Marketplace",
       icon: Icons.storefront_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF9334E6), // Google Purple
       widget: const MarketplaceScreen(),
     ),
     ToolItem(
       name: "Task Manager",
       icon: Icons.checklist_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF24C1E0), // Google Cyan
       widget: const TaskManagerScreen(),
     ),
     ToolItem(
       name: "Focus Timer",
       icon: Icons.timer_rounded,
       backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF3F51B5), // Google Indigo
       widget: const FocusTimerScreen(),
     ),
   ];
@@ -148,16 +177,23 @@ class _HomeState extends State<Home> {
                 Consumer<List<Department>?>(
                   builder: (context, departments, child) {
                     if (departments == null) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
                     }
+
                     if (departments.isEmpty) {
                       return const Center(
                         child: Padding(
-                          padding: EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(32.0),
                           child: Text("No departments available yet."),
                         ),
                       );
                     }
+                    
                     final allowedNames = [
                       "physics",
                       "mathematics",
@@ -173,8 +209,17 @@ class _HomeState extends State<Home> {
                     return DepartmentSection(departments: filteredDepartments);
                   },
                 ),
-                const ViewSection(title: "Toolbox"),
-                ToolboxSection(items: toolboxItems, userProfile: _userProfile),
+                const ViewSection(title: "Other Services"),
+                ToolboxSection(
+                  items: toolboxItems.where((item) {
+                    if (item.name == "Marketplace") {
+                      return _userProfile?.role == UserRole.contributor ||
+                          _userProfile?.role == UserRole.admin;
+                    }
+                    return true;
+                  }).toList(),
+                  userProfile: _userProfile,
+                ),
                 const SizedBox(height: 25), // Padding for FAB
               ]),
             ),
@@ -248,7 +293,10 @@ class _HomeState extends State<Home> {
               heroTag: "addDeptFAB",
               tooltip: "Add Department",
               backgroundColor: theme.colorScheme.primary,
-              onPressed: () => showAddDepartmentDialog(context),
+              onPressed: () => showAddDepartmentDialog(
+                context,
+                defaultSchoolId: _userProfile?.institutionId,
+              ),
               child: Icon(
                 Icons.add,
                 color: theme.colorScheme.onPrimary,
@@ -282,6 +330,7 @@ class ToolboxSection extends StatelessWidget {
       itemBuilder: (context, index) {
         final tool = items[index];
         final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
         final isRestricted =
             (tool.name == "AI Study" || tool.name == "Library") &&
             userProfile?.role == UserRole.viewer &&
@@ -302,16 +351,15 @@ class ToolboxSection extends StatelessWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: theme.cardTheme.color,
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(24),
+                color: isDark
+                    ? theme.colorScheme.surfaceContainerLow
+                    : Colors.white,
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.grey.withOpacity(0.15),
+                ),
               ),
               child: Stack(
                 children: [
@@ -320,26 +368,32 @@ class ToolboxSection extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
+                            color: tool.brandColor.withOpacity(
+                              isDark ? 0.15 : 0.1,
+                            ),
                             shape: BoxShape.circle,
-                            color: theme.colorScheme.primary.withOpacity(0.1),
                           ),
                           child: Icon(
                             tool.icon,
                             size: 28,
-                            color: theme.colorScheme.primary,
+                            color: tool.brandColor,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          tool.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            tool.name,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
                           ),
                         ),
                       ],
@@ -347,12 +401,12 @@ class ToolboxSection extends StatelessWidget {
                   ),
                   if (isRestricted)
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 10,
+                      right: 10,
                       child: Icon(
                         Icons.lock_rounded,
-                        size: 16,
-                        color: theme.colorScheme.primary,
+                        size: 14,
+                        color: Colors.grey.withOpacity(0.6),
                       ),
                     ),
                 ],
@@ -365,36 +419,81 @@ class ToolboxSection extends StatelessWidget {
   }
 
   void _showUpgradePrompt(BuildContext context) {
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          "Premium Feature",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+      barrierLabel: "Premium",
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0F172A)
+            : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        contentPadding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const PremiumDialogHeader(
+              title: "Premium Feature",
+              subtitle: "Expand your academic horizons",
+              icon: Icons.stars_rounded,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                children: [
+                  Text(
+                    "The AI Study Plan is a premium feature. Upgrade to Silver or Gold to unlock it!",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: Text("Later",
+                              style: GoogleFonts.outfit(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: PremiumSubmitButton(
+                          label: "Upgrade Now",
+                          isLoading: false,
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SubscriptionPlansScreen(
+                                    userProfile: userProfile!),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        content: Text(
-          "The AI Study Plan is a premium feature. Upgrade to Silver or Gold to unlock it!",
-          style: GoogleFonts.outfit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Maybe Later"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SubscriptionPlansScreen(userProfile: userProfile),
-                ),
-              );
-            },
-            child: const Text("Upgrade Now"),
-          ),
-        ],
       ),
     );
   }
@@ -450,9 +549,12 @@ class DepartmentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      height: 220,
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      height: 240,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -464,7 +566,7 @@ class DepartmentSection extends StatelessWidget {
             delay: index * 0.1,
             child: Container(
               width: 280,
-              margin: const EdgeInsets.only(right: 20),
+              margin: const EdgeInsets.only(right: 16),
               child: ScaleButton(
                 onTap: () => Navigator.push(
                   context,
@@ -475,13 +577,22 @@ class DepartmentSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                child: Card(
+                child: Container(
                   clipBehavior: Clip.antiAlias,
-                  elevation: 4,
-                  shadowColor: uiData.primaryColor.withOpacity(0.2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    color: isDark
+                        ? theme.colorScheme.surfaceContainerLow
+                        : Colors.white,
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.grey.withOpacity(0.15),
+                    ),
+                  ),
                   child: Stack(
                     children: [
-                      // Background Image or Gradient
+                      // Background Image or subtle placeholder
                       Positioned.fill(
                         child:
                             (department.imageUrl != null &&
@@ -498,42 +609,14 @@ class DepartmentSection extends StatelessWidget {
                                   ),
                                 ),
                                 errorWidget: (context, url, error) => Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        uiData.primaryColor,
-                                        uiData.secondaryColor,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    uiData.icon,
-                                    size: 80,
-                                    color: Colors.white.withOpacity(0.2),
-                                  ),
+                                  color: uiData.primaryColor.withOpacity(0.05),
                                 ),
                               )
                             : Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      uiData.primaryColor,
-                                      uiData.secondaryColor,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                                child: Icon(
-                                  uiData.icon,
-                                  size: 80,
-                                  color: Colors.white.withOpacity(0.2),
-                                ),
+                                color: uiData.primaryColor.withOpacity(0.05),
                               ),
                       ),
-                      // Gradient Overlay
+                      // Gradient Overlay for text readability
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
@@ -542,10 +625,10 @@ class DepartmentSection extends StatelessWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.1),
-                                Colors.black.withOpacity(0.8),
+                                Colors.black.withOpacity(0.05),
+                                Colors.black.withOpacity(0.6),
                               ],
-                              stops: const [0.5, 0.7, 1.0],
+                              stops: const [0.4, 0.6, 1.0],
                             ),
                           ),
                         ),
@@ -558,18 +641,22 @@ class DepartmentSection extends StatelessWidget {
                           children: [
                             // Icon Badge
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: Colors.white.withOpacity(0.2),
                                 ),
                               ),
-                              child: Icon(
-                                uiData.icon,
-                                color: Colors.white,
-                                size: 24,
+                              child: SvgPicture.asset(
+                                'assets/images/department.svg',
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                                width: 24,
+                                height: 24,
                               ),
                             ),
                             const Spacer(),
@@ -578,28 +665,28 @@ class DepartmentSection extends StatelessWidget {
                               department.name,
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 height: 1.1,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             // Action Label
                             Row(
                               children: [
                                 Text(
                                   "Explore Resources",
                                   style: GoogleFonts.outfit(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withOpacity(0.8),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 6),
                                 Icon(
                                   Icons.arrow_forward_rounded,
                                   size: 14,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withOpacity(0.8),
                                 ),
                               ],
                             ),
@@ -624,26 +711,23 @@ class IntroWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final trialActive = userProfile?.isTrialActive ?? false;
     final trialTime = userProfile?.trialTimeLeft ?? "";
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.7),
-          ],
+        color: isDark
+            ? theme.colorScheme.surfaceContainerLow
+            : theme.colorScheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : theme.colorScheme.primary.withOpacity(0.1),
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Row(
         children: [
@@ -652,48 +736,54 @@ class IntroWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "What will you learn today?",
+                  "Advance Your Learning",
                   style: GoogleFonts.outfit(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: isDark ? Colors.white : theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Explore courses, resources,\nWelcome to your digital library.",
+                  "Curated resources and comprehensive study materials at your fingertips.",
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 15,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    height: 1.4,
                   ),
                 ),
                 if (trialActive) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+                      horizontal: 12,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : theme.colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white30),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
-                          color: Colors.white,
+                          color: isDark
+                              ? Colors.white70
+                              : theme.colorScheme.primary,
                           size: 14,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           "Trial: $trialTime",
                           style: GoogleFonts.outfit(
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? Colors.white70
+                                : theme.colorScheme.primary,
                           ),
                         ),
                       ],
@@ -703,10 +793,11 @@ class IntroWidget extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 16),
           Icon(
             Icons.rocket_launch_rounded,
-            size: 80,
-            color: Colors.white.withOpacity(0.5),
+            size: 64,
+            color: theme.colorScheme.primary.withOpacity(isDark ? 0.4 : 0.2),
           ),
         ],
       ),
@@ -781,7 +872,7 @@ class AppBarUser extends StatelessWidget {
                 builder: (context, value, child) => Text(
                   value.name != null && value.name!.isNotEmpty
                       ? value.name!.toUpperCase()
-                      : 'Mate',
+                      : 'Student',
                   style: GoogleFonts.podkova(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -789,12 +880,15 @@ class AppBarUser extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(
-                "Welcome! We're glad you're here",
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey,
+              Consumer<UserModel>(
+                builder: (context, value, child) => Text(
+                  value.institutionName ?? "Unified Academic Portal",
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -824,6 +918,96 @@ class AppBarUser extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class NoInternetWidget extends StatelessWidget {
+  final VoidCallback onRetry;
+  const NoInternetWidget({super.key, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark
+              ? theme.colorScheme.surfaceContainerLow
+              : theme.colorScheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : theme.colorScheme.primary.withOpacity(0.1),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                size: 32,
+                color: Colors.redAccent,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No Connection",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Please check your internet and try again.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black54,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: 140, // Fixed width for smaller button
+              child: ElevatedButton(
+                onPressed: onRetry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.refresh_rounded, size: 18),
+                    const SizedBox(width: 8),
+                    const Text("Retry"),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

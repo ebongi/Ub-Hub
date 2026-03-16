@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode _themeMode;
 
   ThemeMode get themeMode => _themeMode;
 
-  void toggleTheme(bool isDarkMode) {
+  ThemeProvider({ThemeMode? initialMode}) : _themeMode = initialMode ?? ThemeMode.system;
+
+  void toggleTheme(bool isDarkMode) async {
     _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('theme_mode', _themeMode.index);
+  }
+
+  void setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('theme_mode', _themeMode.index);
   }
 
   final lightTheme = ThemeData(

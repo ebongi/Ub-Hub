@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/chat_service.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
@@ -35,6 +37,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  /// The message the user is currently replying to (null = no active reply).
+  ChatMessageModel? _replyingTo;
+
   @override
   void initState() {
     super.initState();
@@ -44,19 +49,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _setupForegroundNotifications() {
-    // Listen to messages for notifications
     _chatService.getMessagesStream(roomId: widget.roomId).listen((messages) {
       if (messages.isNotEmpty) {
         final latestMessage = messages.first;
-        // Only notify if it's from someone else and it's new (simple timestamp check)
         if (latestMessage.senderId != _currentUserId &&
             latestMessage.createdAt.isAfter(
               DateTime.now().subtract(const Duration(seconds: 5)),
             )) {
-          NotificationService().showChatNotification(
-            senderName: latestMessage.senderName ?? "Someone",
-            message: latestMessage.content,
-          );
+          try {
+            NotificationService().showChatNotification(
+              senderName: latestMessage.senderName ?? "Someone",
+              message: latestMessage.content,
+            );
+          } catch (_) {
+            // Notification service may be unavailable in test environments
+          }
         }
       }
     });
@@ -85,7 +92,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final senderName = userModel.name ?? 'Anonymous';
     final avatarUrl = userModel.avatarUrl;
 
+    final replySnapshot = _replyingTo;
+
     _messageController.clear();
+    setState(() => _replyingTo = null);
 
     try {
       await _chatService.sendMessage(
@@ -93,6 +103,9 @@ class _ChatScreenState extends State<ChatScreen> {
         senderName: senderName,
         senderAvatarUrl: avatarUrl,
         roomId: widget.roomId,
+        replyToId: replySnapshot?.id,
+        replyToName: replySnapshot?.senderName,
+        replyToContent: replySnapshot?.content,
       );
     } catch (e) {
       if (mounted) {
@@ -103,48 +116,44 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _setReplyingTo(ChatMessageModel message) {
+    setState(() => _replyingTo = message);
+    // Focus the text field so the keyboard opens immediately
+    FocusScope.of(context).requestFocus(FocusNode());
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) FocusScope.of(context).unfocus();
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) FocusScope.of(context).requestFocus(FocusNode());
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        iconTheme: theme.appBarTheme.iconTheme,
-        title: Row(
+        centerTitle: true,
+        backgroundColor: isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8F9FA),
+        title: Column(
           children: [
-            CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              child: Icon(
-                Icons.groups_rounded,
-                color: theme.colorScheme.primary,
+            Text(
+              widget.title,
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : Colors.black87,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: theme.appBarTheme.titleTextStyle?.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    widget.subtitle ??
-                        (widget.roomId == 'global'
-                            ? "Public Community Hub"
-                            : "Study Group"),
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
+            Text(
+              widget.subtitle ?? "Active Now",
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: isDarkMode ? Colors.white38 : Colors.grey[500],
+                fontWeight: FontWeight.normal,
               ),
             ),
           ],
@@ -153,20 +162,53 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.info_outline_rounded),
             onPressed: () {
-              showDialog(
+              showPremiumGeneralDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text("About Global Chat"),
-                  content: const Text(
-                    "This is a real-time chat room for all users of GO-Study Specific for this course. "
-                    "Please be respectful and follow community guidelines.",
+                barrierLabel: "About Global Chat",
+                child: AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32)),
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF0F172A)
+                          : Colors.white,
+                  surfaceTintColor: Colors.transparent,
+                  contentPadding: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const PremiumDialogHeader(
+                        title: "Global Chat",
+                        subtitle: "Connect with your peers",
+                        icon: Icons.hub_rounded,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Text(
+                              "This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                fontSize: 15,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            PremiumSubmitButton(
+                              label: "Got it",
+                              isLoading: false,
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Got it"),
-                    ),
-                  ],
                 ),
               );
             },
@@ -174,104 +216,118 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
         elevation: 0,
       ),
-      body: Container(
-        child: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder<List<ChatMessageModel>>(
-                stream: _chatService.getMessagesStream(roomId: widget.roomId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<List<ChatMessageModel>>(
+              stream: _chatService.getMessagesStream(roomId: widget.roomId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-                  final messages = snapshot.data ?? [];
+                final messages = snapshot.data ?? [];
 
-                  if (messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 64,
-                            color: theme.colorScheme.primary.withOpacity(0.3),
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/colob.svg',
+                          width: 150,
+                          height: 150,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          "No messages yet. Say hi!",
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "No messages yet. Say hi!",
-                            style: GoogleFonts.outfit(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true, // Newest messages at the bottom
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
+                        ),
+                      ],
                     ),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      final isMe = message.senderId == _currentUserId;
+                  );
+                }
 
-                      // Date grouping logic
-                      bool showDateHeader = false;
-                      if (index == messages.length - 1) {
+                return ListView.builder(
+                  controller: _scrollController,
+                  reverse: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    final isMe = message.senderId == _currentUserId;
+
+                    // Date grouping logic
+                    bool showDateHeader = false;
+                    if (index == messages.length - 1) {
+                      showDateHeader = true;
+                    } else {
+                      final nextMessage = messages[index + 1];
+                      final date = DateTime(
+                        message.createdAt.year,
+                        message.createdAt.month,
+                        message.createdAt.day,
+                      );
+                      final nextDate = DateTime(
+                        nextMessage.createdAt.year,
+                        nextMessage.createdAt.month,
+                        nextMessage.createdAt.day,
+                      );
+                      if (date != nextDate) {
                         showDateHeader = true;
-                      } else {
-                        final nextMessage = messages[index + 1];
-                        final date = DateTime(
-                          message.createdAt.year,
-                          message.createdAt.month,
-                          message.createdAt.day,
-                        );
-                        final nextDate = DateTime(
-                          nextMessage.createdAt.year,
-                          nextMessage.createdAt.month,
-                          nextMessage.createdAt.day,
-                        );
-                        if (date != nextDate) {
-                          showDateHeader = true;
-                        }
                       }
+                    }
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (showDateHeader)
-                            _buildDateHeader(message.createdAt),
-                          FadeInSlide(
-                            duration: const Duration(milliseconds: 400),
-                            beginOffset: 0.1,
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (showDateHeader)
+                          _buildDateHeader(message.createdAt),
+                        FadeInSlide(
+                          duration: const Duration(milliseconds: 400),
+                          beginOffset: 0.1,
+                          child: _SwipeToReply(
+                            isMe: isMe,
+                            onReply: () => _setReplyingTo(message),
                             child: _MessageBubble(
                               message: message,
                               isMe: isMe,
                               theme: theme,
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
-            _buildInputArea(theme),
-          ],
-        ),
+          ),
+          // Reply preview banner
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _replyingTo != null
+                ? _ReplyBanner(
+                    key: ValueKey(_replyingTo!.id),
+                    message: _replyingTo!,
+                    theme: theme,
+                    onCancel: () => setState(() => _replyingTo = null),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          _buildInputArea(theme),
+        ],
       ),
     );
   }
@@ -293,24 +349,17 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 24),
-      child: Row(
-        children: [
-          Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.05))),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              dateText,
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          Expanded(child: Divider(color: theme.dividerColor.withOpacity(0.05))),
-        ],
+      margin: const EdgeInsets.symmetric(vertical: 32),
+      alignment: Alignment.center,
+      child: Text(
+        dateText,
+        style: GoogleFonts.outfit(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: theme.brightness == Brightness.dark
+              ? Colors.white38
+              : Colors.grey[500],
+        ),
       ),
     );
   }
@@ -318,21 +367,17 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildInputArea(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      decoration: BoxDecoration(
-        color: Colors.transparent, // Maintain background visibility
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: theme.cardTheme.color,
+          color: theme.colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          ),
         ),
         child: Row(
           children: [
@@ -387,7 +432,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: const Icon(
                   Icons.send_rounded,
                   color: Colors.white,
-                  size: 20,
+                  size: 22,
                 ),
               ),
             ),
@@ -398,6 +443,189 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Reply Banner – shown above the input area when replying to a message
+// ---------------------------------------------------------------------------
+class _ReplyBanner extends StatelessWidget {
+  final ChatMessageModel message;
+  final ThemeData theme;
+  final VoidCallback onCancel;
+
+  const _ReplyBanner({
+    super.key,
+    required this.message,
+    required this.theme,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = theme.brightness == Brightness.dark;
+    final accentColor = theme.colorScheme.primary;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark
+            ? accentColor.withOpacity(0.12)
+            : accentColor.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border(
+          left: BorderSide(color: accentColor, width: 3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Replying to ${message.senderName ?? 'Anonymous'}',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  message.content,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onCancel,
+            icon: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Swipe-to-Reply wrapper
+// ---------------------------------------------------------------------------
+class _SwipeToReply extends StatefulWidget {
+  final Widget child;
+  final bool isMe;
+  final VoidCallback onReply;
+
+  const _SwipeToReply({
+    required this.child,
+    required this.isMe,
+    required this.onReply,
+  });
+
+  @override
+  State<_SwipeToReply> createState() => _SwipeToReplyState();
+}
+
+class _SwipeToReplyState extends State<_SwipeToReply>
+    with SingleTickerProviderStateMixin {
+  double _dragOffset = 0;
+  bool _triggered = false;
+
+  static const double _triggerThreshold = 60.0;
+  static const double _maxDrag = 80.0;
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    // Allow right-swipe for received messages, left-swipe for own messages
+    final delta = widget.isMe ? -details.delta.dx : details.delta.dx;
+    if (delta < 0) return; // ignore wrong direction
+    setState(() {
+      _dragOffset = (_dragOffset + delta).clamp(0.0, _maxDrag);
+      if (_dragOffset >= _triggerThreshold && !_triggered) {
+        _triggered = true;
+      }
+    });
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails _) {
+    if (_triggered) widget.onReply();
+    setState(() {
+      _dragOffset = 0;
+      _triggered = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final progress = (_dragOffset / _triggerThreshold).clamp(0.0, 1.0);
+    final iconOpacity = progress;
+    final iconScale = 0.6 + 0.4 * progress;
+
+    // The reply icon appears on the opposite side of the bubble
+    final replyIcon = Opacity(
+      opacity: iconOpacity,
+      child: Transform.scale(
+        scale: iconScale,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.reply_all_rounded,
+            color: theme.colorScheme.onPrimaryContainer,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+
+    return GestureDetector(
+      onHorizontalDragUpdate: _onHorizontalDragUpdate,
+      onHorizontalDragEnd: _onHorizontalDragEnd,
+      child: Transform.translate(
+        offset: Offset(widget.isMe ? -_dragOffset : _dragOffset, 0),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            widget.child,
+            // Icon positioned outside the bubble
+            if (widget.isMe)
+              Positioned(
+                left: -36,
+                top: 0,
+                bottom: 0,
+                child: Center(child: replyIcon),
+              )
+            else
+              Positioned(
+                right: -36,
+                top: 0,
+                bottom: 0,
+                child: Center(child: replyIcon),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Message Bubble
+// ---------------------------------------------------------------------------
 class _MessageBubble extends StatelessWidget {
   final ChatMessageModel message;
   final bool isMe;
@@ -426,6 +654,57 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  /// Quoted reply block shown inside the bubble when this message is a reply.
+  Widget _buildReplyQuote() {
+    final isDark = theme.brightness == Brightness.dark;
+    final accentColor = isMe ? Colors.white.withOpacity(0.9) : theme.colorScheme.primary;
+    final bgColor = isMe
+        ? Colors.white.withOpacity(0.15)
+        : (isDark
+            ? theme.colorScheme.primary.withOpacity(0.12)
+            : theme.colorScheme.primary.withOpacity(0.07));
+    final textColor = isMe
+        ? Colors.white.withOpacity(0.85)
+        : theme.colorScheme.onSurface.withOpacity(0.65);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(color: accentColor, width: 3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message.replyToName ?? 'Anonymous',
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: accentColor,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            message.replyToContent ?? '',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              color: textColor,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('HH:mm');
@@ -434,93 +713,90 @@ class _MessageBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: 24),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (!isMe) ...[_buildAvatar(), const SizedBox(width: 8)],
+            if (!isMe) ...[const SizedBox(width: 8), _buildAvatar()],
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  gradient: isMe
-                      ? LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.85),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  color: isMe ? null : theme.cardTheme.color,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(20),
-                    topRight: const Radius.circular(20),
-                    bottomLeft: Radius.circular(isMe ? 20 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
+              child: IntrinsicWidth(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                   children: [
-                    if (!isMe)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(
-                          message.senderName ?? 'Anonymous',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
                       ),
-                    Text(
-                      message.content,
-                      style: GoogleFonts.outfit(
-                        color: isMe
-                            ? Colors.white
-                            : (isDarkMode ? Colors.white : Colors.black87),
-                        fontSize: 15,
-                        height: 1.4,
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? (isDarkMode ? const Color(0xFF1E293B) : theme.colorScheme.primary)
+                      : (isDarkMode ? const Color(0xFF334155) : Colors.white),
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(24),
+                    topRight: const Radius.circular(24),
+                    bottomLeft: Radius.circular(isMe ? 24 : 0),
+                    bottomRight: Radius.circular(isMe ? 0 : 24),
+                  ),
+                  border: isDarkMode || isMe
+                      ? null
+                      : Border.all(
+                          color: Colors.grey[200]!,
+                          width: 1,
+                        ),
+                ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                message.senderName ?? 'Anonymous',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          if (message.replyToContent != null) _buildReplyQuote(),
+                          Text(
+                            message.content,
+                            style: GoogleFonts.outfit(
+                              color: isMe
+                                  ? Colors.white
+                                  : (isDarkMode ? Colors.white : Colors.black87),
+                              fontSize: 15,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          timeFormat.format(message.createdAt),
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            color:
-                                (isMe
-                                        ? Colors.white
-                                        : (isDarkMode
-                                              ? Colors.white
-                                              : Colors.black87))
-                                    .withOpacity(0.5),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            timeFormat.format(message.createdAt),
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              color: isDarkMode ? Colors.white30 : Colors.grey[400],
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                         if (isMe) ...[
                           const SizedBox(width: 4),
                           Icon(
-                            Icons.done_all,
+                            Icons.done_all_rounded,
                             size: 14,
-                            color: Colors.white.withOpacity(0.7),
+                            color: isDarkMode ? Colors.white30 : theme.colorScheme.primary.withOpacity(0.7),
                           ),
                         ],
                       ],

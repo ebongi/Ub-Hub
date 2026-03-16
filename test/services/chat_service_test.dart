@@ -84,5 +84,62 @@ void main() {
       verify(() => mockSupabase.from('messages')).called(1);
       verify(() => mockQueryBuilder.insert(any())).called(1);
     });
+
+    // ---------- Reply-to field tests ----------
+
+    test('sendMessage includes reply fields in insert payload when provided',
+        () async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user_123');
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+
+      final mockQueryBuilder = MockSupabaseQueryBuilder();
+      final fakeFilterBuilder = FakePostgrestFilterBuilder();
+
+      when(() => mockSupabase.from('messages'))
+          .thenAnswer((_) => mockQueryBuilder);
+      when(() => mockQueryBuilder.insert(any()))
+          .thenAnswer((_) => fakeFilterBuilder);
+
+      await chatService.sendMessage(
+        'I agree!',
+        senderName: 'Bob',
+        replyToId: 'msg_1',
+        replyToName: 'Alice',
+        replyToContent: 'Hello World',
+      );
+
+      final captured =
+          verify(() => mockQueryBuilder.insert(captureAny())).captured;
+      final payload = captured.first as Map<String, dynamic>;
+
+      expect(payload['reply_to_id'], 'msg_1');
+      expect(payload['reply_to_name'], 'Alice');
+      expect(payload['reply_to_content'], 'Hello World');
+    });
+
+    test('sendMessage omits reply fields when not provided', () async {
+      final mockUser = MockUser();
+      when(() => mockUser.id).thenReturn('user_123');
+      when(() => mockAuth.currentUser).thenReturn(mockUser);
+
+      final mockQueryBuilder = MockSupabaseQueryBuilder();
+      final fakeFilterBuilder = FakePostgrestFilterBuilder();
+
+      when(() => mockSupabase.from('messages'))
+          .thenAnswer((_) => mockQueryBuilder);
+      when(() => mockQueryBuilder.insert(any()))
+          .thenAnswer((_) => fakeFilterBuilder);
+
+      await chatService.sendMessage('Plain message', senderName: 'Carol');
+
+      final captured =
+          verify(() => mockQueryBuilder.insert(captureAny())).captured;
+      final payload = captured.first as Map<String, dynamic>;
+
+      expect(payload.containsKey('reply_to_id'), isFalse);
+      expect(payload.containsKey('reply_to_name'), isFalse);
+      expect(payload.containsKey('reply_to_content'), isFalse);
+    });
   });
 }

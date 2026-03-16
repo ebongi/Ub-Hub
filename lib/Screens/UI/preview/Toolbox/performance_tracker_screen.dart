@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/grade_model.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class PerformanceTrackerScreen extends StatefulWidget {
   const PerformanceTrackerScreen({super.key});
@@ -388,83 +389,104 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
     String grade = 'A';
     String semester = 'First Semester';
 
-    showDialog(
+    showPremiumGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(
-            "Add Course Result",
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Course Name",
-                    hintText: "e.g. CSC 201",
+      barrierLabel: "Add Result",
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PremiumDialogHeader(
+                    title: "Add Result",
+                    subtitle: "Record your academic success",
+                    icon: Icons.grade_rounded,
                   ),
-                ),
-                const SizedBox(height: 15),
-                DropdownButtonFormField<int>(
-                  value: credits,
-                  decoration: const InputDecoration(labelText: "Credits"),
-                  items: [1, 2, 3, 4, 6]
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e.toString()),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        PremiumTextField(
+                          controller: nameController,
+                          label: "Course Name",
+                          hint: "e.g. CSC 201",
+                          icon: Icons.book_rounded,
                         ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setDialogState(() => credits = v!),
-                ),
-                const SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: grade,
-                  decoration: const InputDecoration(labelText: "Grade"),
-                  items: _gradePoints.keys
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setDialogState(() => grade = v!),
-                ),
-                const SizedBox(height: 15),
-                DropdownButtonFormField<String>(
-                  value: semester,
-                  decoration: const InputDecoration(labelText: "Semester"),
-                  items: ["First Semester", "Second Semester", "Resit"]
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => setDialogState(() => semester = v!),
-                ),
-              ],
+                        const SizedBox(height: 16),
+                        PremiumDropdownField<int>(
+                          value: credits,
+                          label: "Credits",
+                          hint: "Select credits",
+                          icon: Icons.numbers_rounded,
+                          items: [1, 2, 3, 4, 6]
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e.toString()),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) => setDialogState(() => credits = v!),
+                        ),
+                        const SizedBox(height: 16),
+                        PremiumDropdownField<String>(
+                          value: grade,
+                          label: "Grade",
+                          hint: "Select grade",
+                          icon: Icons.star_rounded,
+                          items: _gradePoints.keys
+                              .map((e) =>
+                                  DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (v) => setDialogState(() => grade = v!),
+                        ),
+                        const SizedBox(height: 16),
+                        PremiumDropdownField<String>(
+                          value: semester,
+                          label: "Semester",
+                          hint: "Select semester",
+                          icon: Icons.calendar_today_rounded,
+                          items: ["First Semester", "Second Semester", "Resit"]
+                              .map((e) =>
+                                  DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (v) => setDialogState(() => semester = v!),
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: "Save Result",
+                          isLoading: false,
+                          onPressed: () async {
+                            if (nameController.text.isEmpty) return;
+                            final newGrade = UserGrade(
+                              userId: _currentUser!.id,
+                              courseName: nameController.text,
+                              credits: credits,
+                              grade: grade,
+                              semester: semester,
+                              createdAt: DateTime.now(),
+                            );
+                            await _dbService.saveGrade(newGrade);
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty) return;
-                final newGrade = UserGrade(
-                  userId: _currentUser!.id,
-                  courseName: nameController.text,
-                  credits: credits,
-                  grade: grade,
-                  semester: semester,
-                  createdAt: DateTime.now(),
-                );
-                await _dbService.saveGrade(newGrade);
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text("Save Result"),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

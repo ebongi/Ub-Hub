@@ -13,6 +13,7 @@ import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final Course course;
@@ -44,15 +45,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           widget.course.name,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: isDark ? Colors.white : theme.colorScheme.primary,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.forum_rounded, color: Colors.blue),
+            icon: Icon(Icons.forum_outlined, color: theme.colorScheme.primary),
             tooltip: "Join Discussion",
             onPressed: () => Navigator.push(
               context,
@@ -67,7 +83,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
           if (_userProfile?.canUploadMaterial ?? false)
             IconButton(
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
               onPressed: () => _showUploadSelection(),
             ),
         ],
@@ -186,52 +202,86 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Widget _buildHeader(String title) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0, top: 8.0),
+      padding: const EdgeInsets.only(bottom: 12.0, top: 16.0),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: GoogleFonts.outfit(
-          fontSize: 18,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Colors.blueAccent,
+          letterSpacing: 1.2,
+          color: isDark ? Colors.white70 : theme.colorScheme.primary,
         ),
       ),
     );
   }
 
   Widget _buildMaterialTile(CourseMaterial material) {
-    return Card(
-      elevation: 2,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isPdf = material.fileType.toLowerCase() == 'pdf';
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: isDark ? theme.colorScheme.surfaceContainerLow : Colors.white,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.grey.withOpacity(0.15),
+        ),
+      ),
       child: ListTile(
-        leading: Icon(
-          material.fileType == 'pdf'
-              ? Icons.picture_as_pdf
-              : Icons.insert_drive_file,
-          color: Colors.red,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isPdf ? Icons.picture_as_pdf_outlined : Icons.description_outlined,
+            color: isPdf ? Colors.red[400] : Colors.blue[400],
+            size: 24,
+          ),
         ),
         title: Row(
           children: [
             Expanded(
               child: Text(
                 material.title,
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
             ),
             const SizedBox(width: 8),
             _buildCategoryBadge(material.materialCategory),
           ],
         ),
-        subtitle: material.description != null
+        subtitle:
+            material.description != null && material.description!.isNotEmpty
             ? Text(
                 material.description!,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.outfit(fontSize: 12),
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
               )
             : null,
         trailing: IconButton(
-          icon: const Icon(Icons.download),
+          icon: Icon(
+            Icons.download_rounded,
+            color: isDark ? Colors.white70 : theme.colorScheme.primary,
+            size: 20,
+          ),
           onPressed: () => _handleDownload(material),
         ),
         onTap: () {
@@ -289,72 +339,130 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       fee = NkwaService.getAnswerDownloadFee();
     }
 
-    await showDialog(
+    await showPremiumGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text("Download Material"),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: phoneController,
-                  enabled: !isProcessing,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: "Payment Phone",
-                    hintText: "6xxxxxxxx",
+      barrierLabel: "Download",
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              surfaceTintColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PremiumDialogHeader(
+                    title: "Download Material",
+                    subtitle: "Secure access to your study resources",
+                    icon: Icons.download_for_offline_rounded,
                   ),
-                  validator: (v) => v!.isEmpty ? "Required" : null,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: isProcessing ? null : () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: isProcessing
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-                      setState(() => isProcessing = true);
-                      try {
-                        await _processDownloadPayment(
-                          material,
-                          phoneController.text,
-                        );
-                        if (context.mounted) Navigator.pop(context);
-                      } catch (e) {
-                        setState(() => isProcessing = false);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Error: $e"),
-                              backgroundColor: Colors.red,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : theme.colorScheme.primary.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.1)
+                                    : theme.colorScheme.primary.withOpacity(0.1),
+                              ),
                             ),
-                          );
-                        }
-                      }
-                    },
-              child: isProcessing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text("Pay & Download"),
+                            child: Text(
+                              "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                height: 1.5,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          PremiumTextField(
+                            controller: phoneController,
+                            label: "Payment Phone",
+                            hint: "6xxxxxxxx (MTN/Orange)",
+                            icon: Icons.phone_android_rounded,
+                            keyboardType: TextInputType.phone,
+                            enabled: !isProcessing,
+                            validator: (v) =>
+                                v == null || v.isEmpty ? "Required" : null,
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  onPressed: isProcessing
+                                      ? null
+                                      : () => Navigator.pop(context),
+                                  child: Text("Cancel",
+                                      style: GoogleFonts.outfit(
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 2,
+                                child: PremiumSubmitButton(
+                                  label: "Pay & Download",
+                                  isLoading: isProcessing,
+                                  onPressed: () async {
+                                    if (!formKey.currentState!.validate()) return;
+                                    setState(() => isProcessing = true);
+                                    try {
+                                      await _processDownloadPayment(
+                                        material,
+                                        phoneController.text,
+                                      );
+                                      if (context.mounted) Navigator.pop(context);
+                                    } catch (e) {
+                                      setState(() => isProcessing = false);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Error: $e"),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -462,66 +570,129 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     CourseMaterial question,
     List<CourseMaterial> relatedAnswers,
   ) {
-    return Card(
-      elevation: 2,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.grey.withOpacity(0.15),
+        ),
+      ),
       child: ExpansionTile(
-        leading: const Icon(Icons.help_outline, color: Colors.orange),
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
+        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.help_outline_rounded,
+            color: Colors.orange[400],
+            size: 20,
+          ),
+        ),
         title: Text(
           question.title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         subtitle: Text(
           "Past Question • ${relatedAnswers.length} Answers",
-          style: GoogleFonts.outfit(fontSize: 12),
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.download),
+          icon: Icon(
+            Icons.download_rounded,
+            color: isDark ? Colors.white70 : colorScheme.primary,
+            size: 20,
+          ),
           onPressed: () => _handleDownload(question),
         ),
         children: [
-          if (relatedAnswers.isEmpty)
-            const ListTile(
-              dense: true,
-              title: Text(
-                "No answers uploaded yet",
-                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
-              ),
-            )
-          else
-            ...relatedAnswers.map(
-              (a) => ListTile(
-                dense: true,
-                leading: const Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green,
-                  size: 18,
-                ),
-                title: Text(a.title, style: GoogleFonts.outfit(fontSize: 13)),
-                subtitle: const Text(
-                  "Verified Answer • 300 XAF",
-                  style: TextStyle(fontSize: 11),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.download_rounded, size: 18),
-                  onPressed: () => _handleDownload(a),
-                ),
-                onTap: () {
-                  if (a.fileType.toLowerCase() == 'pdf') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PDFViewerScreen(url: a.fileUrl, title: a.title),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              children: [
+                if (relatedAnswers.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "No answers uploaded yet",
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: isDark ? Colors.white54 : Colors.grey,
                       ),
-                    );
-                  } else {
-                    _handleDownload(a);
-                  }
-                },
-              ),
+                    ),
+                  )
+                else
+                  ...relatedAnswers.map(
+                    (a) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: Colors.green[400],
+                        size: 20,
+                      ),
+                      title: Text(
+                        a.title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "Verified Answer • 300 XAF",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.download_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white70 : colorScheme.primary,
+                        ),
+                        onPressed: () => _handleDownload(a),
+                      ),
+                      onTap: () {
+                        if (a.fileType.toLowerCase() == 'pdf') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PDFViewerScreen(
+                                url: a.fileUrl,
+                                title: a.title,
+                              ),
+                            ),
+                          );
+                        } else {
+                          _handleDownload(a);
+                        }
+                      },
+                    ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -531,6 +702,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     String? initialCategory,
     String? initialQuestionId,
   }) async {
+    if (!(_userProfile?.canUploadMaterial ?? false)) return;
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -539,204 +711,410 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     String selectedCategory = initialCategory ?? 'regular';
     String? selectedQuestionId = initialQuestionId;
 
-    await showDialog(
+    await showPremiumGeneralDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text("Add Course Material"),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedCategory,
-                    decoration: const InputDecoration(labelText: "Category"),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'regular',
-                        child: Text("General"),
-                      ),
-                      DropdownMenuItem(
-                        value: 'past_question',
-                        child: Text("Past Question"),
-                      ),
-                      DropdownMenuItem(value: 'answer', child: Text("Answer")),
-                    ],
-                    onChanged: (v) {
-                      setState(() {
-                        selectedCategory = v!;
-                        if (selectedCategory != 'answer') {
-                          selectedQuestionId = null;
-                        }
-                      });
-                    },
-                  ),
-                  if (selectedCategory == 'answer') ...[
-                    const SizedBox(height: 10),
-                    StreamBuilder<List<CourseMaterial>>(
-                      stream: _dbService.getCourseMaterials(widget.course.id),
-                      builder: (context, snapshot) {
-                        final questions =
-                            snapshot.data
-                                ?.where(
-                                  (m) => m.materialCategory == 'past_question',
-                                )
-                                .toList() ??
-                            [];
-                        return DropdownButtonFormField<String>(
-                          value: selectedQuestionId,
-                          decoration: const InputDecoration(
-                            labelText: "Link to Question",
-                            hintText: "Select the question this answer is for",
-                          ),
-                          items: questions
-                              .map(
-                                (q) => DropdownMenuItem(
-                                  value: q.id,
-                                  child: Text(
-                                    q.title,
-                                    overflow: TextOverflow.ellipsis,
+      barrierLabel: "Add Material",
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              surfaceTintColor: Colors.transparent,
+              contentPadding: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const PremiumDialogHeader(
+                      title: "Add Material",
+                      subtitle: "Share resources with your peers",
+                      icon: Icons.note_add_rounded,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            PremiumDropdownField<String>(
+                              value: selectedCategory,
+                              label: "Category",
+                              hint: "Select category",
+                              icon: Icons.category_rounded,
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'regular',
+                                  child: Text("General Material"),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'past_question',
+                                  child: Text("Past Question"),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'answer',
+                                  child: Text("Answer"),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                setState(() {
+                                  selectedCategory = v!;
+                                  if (selectedCategory != 'answer') {
+                                    selectedQuestionId = null;
+                                  }
+                                });
+                              },
+                            ),
+                            if (selectedCategory == 'answer') ...[
+                              const SizedBox(height: 16),
+                              StreamBuilder<List<CourseMaterial>>(
+                                stream: _dbService.getCourseMaterials(widget.course.id),
+                                builder: (context, snapshot) {
+                                  final questions = snapshot.data
+                                          ?.where((m) =>
+                                              m.materialCategory == 'past_question')
+                                          .toList() ??
+                                      [];
+                                  return PremiumDropdownField<String>(
+                                    value: selectedQuestionId,
+                                    label: "Link to Question",
+                                    hint: "Select the question",
+                                    icon: Icons.link_rounded,
+                                    items: questions
+                                        .map((q) => DropdownMenuItem(
+                                              value: q.id,
+                                              child: Text(q.title,
+                                                  overflow: TextOverflow.ellipsis),
+                                            ))
+                                        .toList(),
+                                    onChanged: (v) =>
+                                        setState(() => selectedQuestionId = v),
+                                    validator: (v) => selectedCategory == 'answer' &&
+                                            v == null
+                                        ? "Required"
+                                        : null,
+                                  );
+                                },
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            PremiumTextField(
+                              controller: titleController,
+                              label: "Title",
+                              hint: "e.g. Intro to Java Notes",
+                              icon: Icons.title_rounded,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? "Required" : null,
+                            ),
+                            const SizedBox(height: 16),
+                            PremiumTextField(
+                              controller: descriptionController,
+                              label: "Description (Optional)",
+                              hint: "Briefly describe the content",
+                              icon: Icons.description_rounded,
+                              maxLines: 2,
+                            ),
+                            const SizedBox(height: 24),
+                            // Premium File Selection Zone
+                            GestureDetector(
+                              onTap: () async {
+                                final res = await FilePicker.platform.pickFiles(
+                                  withData: true,
+                                );
+                                if (res != null) setState(() => result = res);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: result != null
+                                      ? Colors.green.withOpacity(isDark ? 0.1 : 0.05)
+                                      : (isDark
+                                          ? Colors.white.withOpacity(0.04)
+                                          : Colors.grey[50]),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: result != null
+                                        ? Colors.green.withOpacity(0.3)
+                                        : (isDark ? Colors.white10 : Colors.black12),
+                                    width: 1.5,
+                                    style: BorderStyle.solid,
                                   ),
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (v) =>
-                              setState(() => selectedQuestionId = v),
-                          validator: (v) =>
-                              selectedCategory == 'answer' && v == null
-                              ? "Required for answers"
-                              : null,
-                        );
-                      },
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      result != null
+                                          ? Icons.check_circle_rounded
+                                          : Icons.cloud_upload_outlined,
+                                      size: 32,
+                                      color: result != null
+                                          ? Colors.green
+                                          : theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      result != null
+                                          ? result!.files.single.name
+                                          : "Select Material File",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      result != null
+                                          ? "File selected successfully"
+                                          : (selectedCategory == 'past_question'
+                                              ? "Upload PDF or Word"
+                                              : "Supports PDF, DOC, Images"),
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white38 : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding:
+                                          const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                    child: Text("Cancel",
+                                        style: GoogleFonts.outfit(
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: PremiumSubmitButton(
+                                    label: "Upload Material",
+                                    isLoading: isLoading,
+                                    onPressed: () async {
+                                      if (formKey.currentState!.validate() &&
+                                          result != null) {
+                                        setState(() => isLoading = true);
+                                        try {
+                                          final file = result!.files.single;
+                                          final url =
+                                              await _dbService.uploadMaterialFile(
+                                            file.bytes!,
+                                            widget.course.code,
+                                            file.name,
+                                            false,
+                                          );
+
+                                          final material = CourseMaterial(
+                                            title: titleController.text,
+                                            description: descriptionController.text,
+                                            fileUrl: url,
+                                            fileName: file.name,
+                                            fileType: file.extension ?? 'file',
+                                            uploadedAt: DateTime.now(),
+                                            courseId: widget.course.id,
+                                            departmentId: widget.course.departmentId,
+                                            materialCategory: selectedCategory,
+                                            isPastQuestion:
+                                                selectedCategory == 'past_question',
+                                            isAnswer: selectedCategory == 'answer',
+                                            linkedMaterialId: selectedQuestionId,
+                                            uploaderId: _dbService.uid,
+                                          );
+
+                                          await _dbService.addMaterial(material);
+                                          if (context.mounted) Navigator.pop(context);
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text("Error: $e")),
+                                            );
+                                          }
+                                        } finally {
+                                          if (mounted) setState(() => isLoading = false);
+                                        }
+                                      } else if (result == null) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                              content: Text("Please select a file")),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
-                  TextFormField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: "Title"),
-                    validator: (v) => v!.isEmpty ? "Required" : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                  ),
-                  const SizedBox(height: 20),
-                  result == null
-                      ? ElevatedButton.icon(
-                          onPressed: () async {
-                            final res = await FilePicker.platform.pickFiles(
-                              withData: true,
-                            );
-                            if (res != null) setState(() => result = res);
-                          },
-                          icon: const Icon(Icons.attach_file),
-                          label: const Text("Select File"),
-                        )
-                      : Text("Selected: ${result!.files.single.name}"),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Note: Uploads are now free!",
-                    style: TextStyle(fontSize: 12, color: Colors.green),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
-            ),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                      if (formKey.currentState!.validate() && result != null) {
-                        setState(() => isLoading = true);
-                        try {
-                          final file = result!.files.single;
-                          final url = await _dbService.uploadMaterialFile(
-                            file.bytes!,
-                            widget.course.code,
-                            file.name,
-                            false,
-                          );
-
-                          final material = CourseMaterial(
-                            title: titleController.text,
-                            description: descriptionController.text,
-                            fileUrl: url,
-                            fileName: file.name,
-                            fileType: file.extension ?? 'file',
-                            uploadedAt: DateTime.now(),
-                            courseId: widget.course.id,
-                            departmentId: widget.course.departmentId,
-                            materialCategory: selectedCategory,
-                            isPastQuestion: selectedCategory == 'past_question',
-                            isAnswer: selectedCategory == 'answer',
-                            linkedMaterialId: selectedQuestionId,
-                            uploaderId: _dbService.uid,
-                          );
-
-                          await _dbService.addMaterial(material);
-                          Navigator.pop(context);
-                        } catch (e) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text("Error: $e")));
-                        } finally {
-                          setState(() => isLoading = false);
-                        }
-                      }
-                    },
-              child: isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text("Upload"),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
   void _showUploadSelection() {
+    if (!(_userProfile?.canUploadMaterial ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only contributors and admins can upload content.')),
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                "Upload Material",
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Select the type of material you want to share",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildUploadOption(
+                icon: Icons.note_add_rounded,
+                color: Colors.blue,
+                title: "General Resources",
+                subtitle: "Lecture notes, summaries, textbooks",
+                onTap: () {
+                  Navigator.pop(context);
+                  _addMaterial(initialCategory: 'regular');
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildUploadOption(
+                icon: Icons.history_edu_rounded,
+                color: Colors.orange,
+                title: "Past Question",
+                subtitle: "Previous exam or test papers",
+                onTap: () {
+                  Navigator.pop(context);
+                  _addMaterial(initialCategory: 'past_question');
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildUploadOption(
+                icon: Icons.check_circle_rounded,
+                color: Colors.green,
+                title: "Verified Answer",
+                subtitle: "Solutions to past questions",
+                onTap: () {
+                  Navigator.pop(context);
+                  _addMaterial(initialCategory: 'answer');
+                },
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildUploadOption({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black12,
+          ),
+        ),
+        child: Row(
           children: [
-            ListTile(
-              leading: const Icon(Icons.note_add),
-              title: const Text("Upload General Material"),
-              onTap: () {
-                Navigator.pop(context);
-                _addMaterial(initialCategory: 'regular');
-              },
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.history_edu, color: Colors.orange),
-              title: const Text("Upload Past Question"),
-              onTap: () {
-                Navigator.pop(context);
-                _addMaterial(initialCategory: 'past_question');
-              },
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.check_circle, color: Colors.green),
-              title: const Text("Upload Answer"),
-              onTap: () {
-                Navigator.pop(context);
-                _addMaterial(initialCategory: 'answer');
-              },
-            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Colors.grey),
           ],
         ),
       ),
