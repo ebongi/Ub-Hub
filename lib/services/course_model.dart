@@ -43,7 +43,7 @@ class Course {
       'department_id': departmentId,
       if (semester != null) 'semester': semester,
       if (level != null) 'level': level,
-      if (id.isNotEmpty) 'id': id,
+      if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }
 }

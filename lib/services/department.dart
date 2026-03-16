@@ -39,7 +39,7 @@ class Department {
       'school_id': schoolId,
       'description': description,
       'image_url': imageUrl,
-      if (id.isNotEmpty) 'id': id,
+      if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }
 }

@@ -69,7 +69,7 @@ class CourseMaterial {
       'is_answer': isAnswer,
       'linked_material_id': linkedMaterialId,
       'uploader_id': uploaderId,
-      if (id.isNotEmpty) 'id': id,
+      if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }
 }
