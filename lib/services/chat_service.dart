@@ -101,12 +101,22 @@ class ChatService {
 
     // Trigger notification (best-effort – may not be available in test env)
     try {
+      String? recipientId;
+      if (roomId.startsWith('dm_')) {
+        // Extract recipient from dm_uid1_uid2
+        final parts = roomId.split('_');
+        if (parts.length == 3) {
+          recipientId = parts[1] == user.id ? parts[2] : parts[1];
+        }
+      }
+
       await NotificationService().createNotification(
-        title: 'Message Sent',
-        body: 'Your message has been sent to the group.',
+        title: 'New message from ${senderName ?? "Someone"}',
+        body: content,
         type: NotificationType.message,
+        recipientId: recipientId,
         data: {'roomId': roomId},
-        showLocal: false, // Don't show local alert for sent messages
+        showLocal: recipientId != null, // Show local alert only for the recipient
       );
     } catch (_) {
       // Silently ignore – notification service unavailable (e.g. in tests)
