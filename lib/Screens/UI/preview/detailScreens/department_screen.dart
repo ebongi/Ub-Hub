@@ -40,12 +40,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   late final TabController _tabController;
   UserProfile? _userProfile;
 
+  late final Stream<List<Course>> _courseStream;
+  late final Stream<List<CourseMaterial>> _materialStream;
+  final List<Course> _optimisticCourses = [];
+  final List<CourseMaterial> _optimisticMaterials = [];
+
   @override
   void initState() {
     super.initState();
     final currentUser = Supabase.instance.client.auth.currentUser;
     _dbService = DatabaseService(uid: currentUser?.id);
     _tabController = TabController(length: 5, vsync: this);
+
+    _courseStream = _dbService.getCoursesForDepartment(widget.departmentId);
+    _materialStream = _dbService.getDepartmentMaterials(widget.departmentId);
 
     _tabController.addListener(() {
       if (mounted) setState(() {});
@@ -172,15 +180,15 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       ),
       floatingActionButton:
           (_userProfile?.canUploadMaterial ?? false) &&
-              _tabController.index != 4
-          ? FloatingActionButton.extended(
-              onPressed: _showUploadSelection,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text("Upload"),
-              backgroundColor: colorScheme.primaryContainer,
-              foregroundColor: colorScheme.onPrimaryContainer,
-            )
-          : null,
+                  _tabController.index != 4
+              ? FloatingActionButton.extended(
+                  onPressed: _showUploadSelection,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text("Upload"),
+                  backgroundColor: colorScheme.primaryContainer,
+                  foregroundColor: colorScheme.onPrimaryContainer,
+                )
+              : null,
     );
   }
 
@@ -271,25 +279,30 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   Widget _buildCoursesTab() {
     return StreamBuilder<List<Course>>(
-      stream: _dbService.getCoursesForDepartment(widget.departmentId),
+      stream: _courseStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _optimisticCourses.isEmpty) {
           return const CourseListShimmer();
         }
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+
+        final serverCourses = snapshot.data ?? [];
+        _optimisticCourses.removeWhere((optimistic) =>
+            serverCourses.any((server) => server.name == optimistic.name));
+
+        final allCourses = [..._optimisticCourses, ...serverCourses];
+
+        if (allCourses.isEmpty) {
           return _buildEmptyState("No courses found!", _addCourse);
         }
 
-        final courses = snapshot.data!;
-
-        // Group courses by level
-        final level200 = courses.where((c) => c.level == '200').toList();
-        final level300 = courses.where((c) => c.level == '300').toList();
-        final level400 = courses.where((c) => c.level == '400').toList();
-        final others = courses
+        final level200 = allCourses.where((c) => c.level == '200').toList();
+        final level300 = allCourses.where((c) => c.level == '300').toList();
+        final level400 = allCourses.where((c) => c.level == '400').toList();
+        final others = allCourses
             .where((c) => !['200', '300', '400'].contains(c.level))
             .toList();
 
@@ -298,30 +311,34 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           children: [
             if (level200.isNotEmpty) ...[
               _buildLevelHeader("Level 200"),
-              ...level200.asMap().entries.map(
-                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
-              ),
+              ...level200
+                  .asMap()
+                  .entries
+                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
             ],
             if (level300.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 300"),
-              ...level300.asMap().entries.map(
-                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
-              ),
+              ...level300
+                  .asMap()
+                  .entries
+                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
             ],
             if (level400.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 400"),
-              ...level400.asMap().entries.map(
-                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
-              ),
+              ...level400
+                  .asMap()
+                  .entries
+                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
             ],
             if (others.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Other Courses"),
-              ...others.asMap().entries.map(
-                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
-              ),
+              ...others
+                  .asMap()
+                  .entries
+                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
             ],
           ],
         );
@@ -348,69 +365,89 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
+    final isPending = course.id.startsWith('temp_');
+
     return FadeInSlide(
       delay: delay,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.15),
-          ),
-        ),
-        child: ExpansionTile(
-          shape: const RoundedRectangleBorder(side: BorderSide.none),
-          collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              Icons.school_outlined,
-              color: isDark ? Colors.white70 : colorScheme.primary,
-              size: 20,
+      child: Opacity(
+        opacity: isPending ? 0.6 : 1.0,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.grey.withOpacity(0.15),
             ),
           ),
-          title: Text(
-            course.name,
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          subtitle: Text(
-            course.code,
-            style: GoogleFonts.outfit(
-              color: isDark ? Colors.white70 : Colors.black54,
-              fontSize: 13,
-            ),
-          ),
-          trailing: IconButton(
-            tooltip: "Course Materials",
-            icon: Icon(
-              Icons.arrow_forward_rounded,
-              size: 18,
-              color: isDark ? Colors.white70 : colorScheme.primary,
-            ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CourseDetailScreen(course: course),
+          child: ExpansionTile(
+            shape: const RoundedRectangleBorder(side: BorderSide.none),
+            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Icons.school_outlined,
+                color: isDark ? Colors.white70 : colorScheme.primary,
+                size: 20,
               ),
             ),
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: _buildCourseMaterials(course),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    course.name,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (isPending)
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 1.5),
+                  ),
+              ],
             ),
-          ],
+            subtitle: Text(
+              course.code,
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 13,
+              ),
+            ),
+            trailing: IconButton(
+              tooltip: "Course Materials",
+              icon: Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: isDark ? Colors.white70 : colorScheme.primary,
+              ),
+              onPressed: isPending
+                  ? null
+                  : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CourseDetailScreen(course: course),
+                        ),
+                      ),
+            ),
+            children: [
+              if (!isPending)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: _buildCourseMaterials(course),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -439,10 +476,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
         final materials = snapshot.data!;
         return Column(
-          children: materials.asMap().entries.map((entry) {
-            final m = entry.value;
-            return _buildMaterialTile(m);
-          }).toList(),
+          children: materials.map((m) => _buildMaterialTile(m)).toList(),
         );
       },
     );
@@ -450,18 +484,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   Widget _buildResourcesTab() {
     return StreamBuilder<List<CourseMaterial>>(
-      stream: _dbService.getDepartmentMaterials(widget.departmentId),
+      stream: _materialStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _optimisticMaterials.isEmpty) {
           return const MaterialListShimmer();
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState("No resources available", () {});
-        }
 
-        final materials = snapshot.data!
-            .where((m) => m.materialCategory == 'regular')
-            .toList();
+        final serverMaterials = snapshot.data ?? [];
+        _optimisticMaterials.removeWhere((optimistic) => serverMaterials
+            .any((server) => server.title == optimistic.title));
+
+        final allMaterials = [..._optimisticMaterials, ...serverMaterials];
+        final materials =
+            allMaterials.where((m) => m.materialCategory == 'regular').toList();
 
         if (materials.isEmpty) {
           return _buildEmptyState("No resources available", () {});
@@ -482,17 +518,19 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   Widget _buildPastQuestionsTab() {
     final colorScheme = Theme.of(context).colorScheme;
     return StreamBuilder<List<CourseMaterial>>(
-      stream: _dbService.getDepartmentMaterials(widget.departmentId),
+      stream: _materialStream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _optimisticMaterials.isEmpty) {
           return const MaterialListShimmer();
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState("No past questions available", () {});
-        }
 
-        final materials = snapshot.data!;
-        final questions = materials
+        final serverMaterials = snapshot.data ?? [];
+        _optimisticMaterials.removeWhere((optimistic) => serverMaterials
+            .any((server) => server.title == optimistic.title));
+
+        final allMaterials = [..._optimisticMaterials, ...serverMaterials];
+        final questions = allMaterials
             .where((m) => m.materialCategory == 'past_question')
             .toList();
 
@@ -505,16 +543,14 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           itemCount: questions.length,
           itemBuilder: (context, index) {
             final q = questions[index];
-            final relatedAnswers = materials
-                .where(
-                  (m) =>
-                      m.materialCategory == 'answer' &&
-                      m.linkedMaterialId == q.id,
-                )
+            final relatedAnswers = allMaterials
+                .where((m) =>
+                    m.materialCategory == 'answer' &&
+                    m.linkedMaterialId == q.id)
                 .toList();
 
             return StreamBuilder<List<Course>>(
-              stream: _dbService.getCoursesForDepartment(widget.departmentId),
+              stream: _courseStream,
               builder: (context, courseSnapshot) {
                 final theme = Theme.of(context);
                 final isDark = theme.brightness == Brightness.dark;
@@ -539,12 +575,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                       ),
                     ),
                     child: ExpansionTile(
-                      shape: const RoundedRectangleBorder(
-                        side: BorderSide.none,
-                      ),
-                      collapsedShape: const RoundedRectangleBorder(
-                        side: BorderSide.none,
-                      ),
+                      shape:
+                          const RoundedRectangleBorder(side: BorderSide.none),
+                      collapsedShape:
+                          const RoundedRectangleBorder(side: BorderSide.none),
                       leading: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -594,36 +628,34 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             ),
                           )
                         else
-                          ...relatedAnswers.map(
-                            (a) => ListTile(
-                              dense: true,
-                              leading: const Icon(
-                                Icons.check_circle_outline_rounded,
-                                color: Colors.green,
-                                size: 18,
-                              ),
-                              title: Text(
-                                a.title,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: const Text(
-                                "Verified Answer • 300 XAF",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  Icons.download_rounded,
+                          ...relatedAnswers.map((a) => ListTile(
+                                dense: true,
+                                leading: const Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  color: Colors.green,
                                   size: 18,
-                                  color: colorScheme.primary,
                                 ),
-                                onPressed: () => _handleDownload(a),
-                              ),
-                              onTap: () => _openFile(a),
-                            ),
-                          ),
+                                title: Text(
+                                  a.title,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: const Text(
+                                  "Verified Answer • 300 XAF",
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(
+                                    Icons.download_rounded,
+                                    size: 18,
+                                    color: colorScheme.primary,
+                                  ),
+                                  onPressed: () => _handleDownload(a),
+                                ),
+                                onTap: () => _openFile(a),
+                              )),
                       ],
                     ),
                   ),
@@ -674,83 +706,89 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   Widget _buildMaterialTile(CourseMaterial material) {
     final colorScheme = Theme.of(context).colorScheme;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
+    final isPending = material.id.isEmpty || material.id.startsWith('temp_');
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+    return Opacity(
+      opacity: isPending ? 0.6 : 1.0,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
+            color: isPdf ? Colors.red[400] : Colors.blue[400],
+            size: 18,
+          ),
         ),
-        child: Icon(
-          isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-          color: isPdf ? Colors.red[400] : Colors.blue[400],
-          size: 18,
-        ),
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              material.title,
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                material.title,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          _buildCategoryBadge(material.materialCategory),
-        ],
-      ),
-      subtitle: material.description != null && material.description!.isNotEmpty
-          ? Text(
-              material.description!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                color: colorScheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            if (isPending)
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 1.5),
               ),
-            )
-          : null,
-
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: Icon(
-              Icons.download_rounded,
+            const SizedBox(width: 8),
+            _buildCategoryBadge(material.materialCategory),
+          ],
+        ),
+        subtitle:
+            material.description != null && material.description!.isNotEmpty
+                ? Text(
+                    material.description!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(
+                Icons.download_rounded,
+                size: 20,
+                color: isPending ? Colors.grey : colorScheme.primary,
+              ),
+              onPressed: isPending ? null : () => _handleDownload(material),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
               size: 20,
-              color: colorScheme.primary,
+              color: colorScheme.outline,
             ),
-            onPressed: () => _handleDownload(material),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: colorScheme.outline,
-          ),
-        ],
+          ],
+        ),
+        onTap: isPending ? null : () => _openFile(material),
       ),
-      onTap: () => _openFile(material),
     );
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
-    // If user is a contributor or admin, or has a premium subscription, skip payment
     if (_userProfile != null &&
         SubscriptionService.canDownloadForFree(_userProfile!)) {
-      // Secure for offline use
       await _secureForOffline(material);
-
-      // Increment free download count if not unlimited
       if (!_userProfile!.hasUnlimitedDownloads) {
         await _dbService.incrementFreeDownloadCount();
       }
-
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -764,7 +802,6 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       return;
     }
 
-    // Otherwise, show payment dialog (existing logic)
     final phoneController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool isProcessing = false;
@@ -889,9 +926,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     } catch (e) {
                                       setState(() => isProcessing = false);
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
                                             content: Text("Error: $e"),
                                             backgroundColor: Colors.red,
@@ -918,9 +954,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Future<void> _processDownloadPayment(
-    CourseMaterial material,
-    String phoneNumber,
-  ) async {
+      CourseMaterial material, String phoneNumber) async {
     final userId = _dbService.uid;
     if (userId == null) throw "User not authenticated";
 
@@ -933,7 +967,6 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     }
     final formattedPhone = NkwaService.formatPhoneNumber(phoneNumber);
 
-    // 1. Create pending transaction
     final transaction = PaymentTransaction(
       id: '',
       userId: userId,
@@ -949,7 +982,6 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     await _dbService.createPaymentTransaction(transaction);
 
-    // 2. Initiate Payment
     final collectResponse = await NkwaService.collectPayment(
       amount: amount,
       phoneNumber: formattedPhone,
@@ -959,28 +991,19 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final nkwaPaymentId = collectResponse['id'] ?? collectResponse['paymentId'];
     if (nkwaPaymentId == null) throw "Failed to initiate payment";
 
-    // 3. Poll
     PaymentStatus status = PaymentStatus.pending;
     int attempts = 0;
     while (status == PaymentStatus.pending && attempts < 60) {
-      // 3 minutes total
-      print('Polling attempt ${attempts + 1}/60 for download...');
       await Future.delayed(const Duration(seconds: 3));
       status = await NkwaService.checkPaymentStatus(nkwaPaymentId.toString());
       attempts++;
     }
 
-    // 4. Update status
-    await _dbService.updatePaymentStatus(
-      paymentRef,
-      status,
-      materialId: material.id,
-    );
+    await _dbService.updatePaymentStatus(paymentRef, status,
+        materialId: material.id);
 
     if (status == PaymentStatus.success) {
-      // Automatic secure download for offline use
       await _secureForOffline(material);
-
       final uri = Uri.parse(material.fileUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -1002,8 +1025,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Material secured for offline access! 🔒"),
-          ),
+              content: Text("Material secured for offline access! \u{1F512}")),
         );
       }
     } catch (e) {
@@ -1022,8 +1044,6 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       );
       return;
     }
-
-    // For other files, treat as download (which currently requires payment)
     _handleDownload(material);
   }
 
@@ -1083,7 +1103,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   void _showUploadSelection() {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only contributors and admins can upload content.')),
+        const SnackBar(
+            content: Text('Only contributors and admins can upload content.')),
       );
       return;
     }
@@ -1124,7 +1145,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               title: const Text("Upload Department Resource"),
               onTap: () {
                 Navigator.pop(context);
-                _addMaterial(isDepartment: true);
+                _showAddMaterialDialog(isDepartment: true);
               },
             ),
             ListTile(
@@ -1157,7 +1178,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     .getCoursesForDepartment(widget.departmentId)
                     .first;
                 if (courses.isEmpty) {
-                  _addMaterial(
+                  _showAddMaterialDialog(
                     isDepartment: true,
                     initialCategory: 'past_question',
                   );
@@ -1181,7 +1202,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     .getCoursesForDepartment(widget.departmentId)
                     .first;
                 if (courses.isEmpty) {
-                  _addMaterial(isDepartment: true, initialCategory: 'answer');
+                  _showAddMaterialDialog(
+                      isDepartment: true, initialCategory: 'answer');
                 } else {
                   _showCourseSelectionForUpload(courses, category: 'answer');
                 }
@@ -1268,7 +1290,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         ),
                         onTap: () {
                           Navigator.pop(context);
-                          _addMaterial(
+                          _showAddMaterialDialog(
                             isDepartment: false,
                             course: course,
                             initialCategory: category,
@@ -1300,23 +1322,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     );
   }
 
-  Future<void> _addMaterial({
+  void _showAddMaterialDialog({
     required bool isDepartment,
     Course? course,
     String? initialCategory,
     String? initialQuestionId,
-  }) async {
+  }) {
     if (!(_userProfile?.canUploadMaterial ?? false)) return;
+    final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    FilePickerResult? result;
     String selectedCategory = initialCategory ?? 'regular';
     String? selectedQuestionId = initialQuestionId;
+    FilePickerResult? result;
 
-    bool isUploading = false;
-
-    await showPremiumGeneralDialog(
+    showPremiumGeneralDialog(
       context: context,
       barrierLabel: "Add Material",
       child: Builder(
@@ -1357,9 +1377,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 padding: const EdgeInsets.all(12),
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withOpacity(
-                                    0.05,
-                                  ),
+                                  color: theme.colorScheme.primary
+                                      .withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: theme.colorScheme.primary
@@ -1392,7 +1411,6 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               label: "Category",
                               hint: "Select category",
                               icon: Icons.category_rounded,
-                              enabled: !isUploading,
                               items: const [
                                 DropdownMenuItem(
                                   value: 'regular',
@@ -1420,26 +1438,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               const SizedBox(height: 16),
                               StreamBuilder<List<Course>>(
                                 stream: _dbService.getCoursesForDepartment(
-                                  widget.departmentId,
-                                ),
+                                    widget.departmentId),
                                 builder: (context, courseSnapshot) {
                                   final coursesList = courseSnapshot.data ?? [];
                                   return StreamBuilder<List<CourseMaterial>>(
                                     stream: isDepartment
                                         ? _dbService.getDepartmentMaterials(
-                                            widget.departmentId,
-                                          )
-                                        : _dbService.getCourseMaterials(
-                                            course!.id,
-                                          ),
+                                            widget.departmentId)
+                                        : _dbService
+                                            .getCourseMaterials(course!.id),
                                     builder: (context, snapshot) {
-                                      final questions =
-                                          snapshot.data
-                                              ?.where(
-                                                (m) =>
-                                                    m.materialCategory ==
-                                                    'past_question',
-                                              )
+                                      final questions = snapshot.data
+                                              ?.where((m) =>
+                                                  m.materialCategory ==
+                                                  'past_question')
                                               .toList() ??
                                           [];
                                       return PremiumDropdownField<String>(
@@ -1447,14 +1459,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                         label: "Link to Question",
                                         hint: "Select the question",
                                         icon: Icons.link_rounded,
-                                        enabled: !isUploading,
                                         items: questions.map((q) {
                                           final c = coursesList
                                               .where((x) => x.id == q.courseId)
                                               .firstOrNull;
-                                          final prefix = c != null
-                                              ? "[${c.code}] "
-                                              : "";
+                                          final prefix =
+                                              c != null ? "[${c.code}] " : "";
                                           return DropdownMenuItem(
                                             value: q.id,
                                             child: Text(
@@ -1464,13 +1474,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                           );
                                         }).toList(),
                                         onChanged: (v) => setState(
-                                          () => selectedQuestionId = v,
-                                        ),
+                                            () => selectedQuestionId = v),
                                         validator: (v) =>
                                             selectedCategory == 'answer' &&
-                                                v == null
-                                            ? "Required"
-                                            : null,
+                                                    v == null
+                                                ? "Required"
+                                                : null,
                                       );
                                     },
                                   );
@@ -1483,9 +1492,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               label: "Title",
                               hint: "e.g. Exam Prep Notes",
                               icon: Icons.title_rounded,
-                              enabled: !isUploading,
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? "Required" : null,
+                              validator: (v) => v == null || v.isEmpty
+                                  ? "Required"
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             PremiumTextField(
@@ -1493,40 +1502,34 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               label: "Description (Optional)",
                               hint: "Brief details about the resource",
                               icon: Icons.notes_rounded,
-                              enabled: !isUploading,
                               maxLines: 2,
                             ),
                             const SizedBox(height: 24),
-                            // File Selection Zone
                             GestureDetector(
-                              onTap: isUploading
-                                  ? null
-                                  : () async {
-                                      final res = await FilePicker.platform
-                                          .pickFiles(withData: true);
-                                      if (res != null) {
-                                        setState(() => result = res);
-                                      }
-                                    },
+                              onTap: () async {
+                                final res = await FilePicker.platform
+                                    .pickFiles(withData: true);
+                                if (res != null) {
+                                  setState(() => result = res);
+                                }
+                              },
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: result != null
                                       ? Colors.green.withOpacity(
-                                          isDark ? 0.1 : 0.05,
-                                        )
+                                          isDark ? 0.1 : 0.05)
                                       : (isDark
-                                            ? Colors.white.withOpacity(0.04)
-                                            : Colors.grey[50]),
+                                          ? Colors.white.withOpacity(0.04)
+                                          : Colors.grey[50]),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: result != null
                                         ? Colors.green.withOpacity(0.3)
                                         : (isDark
-                                              ? Colors.white10
-                                              : Colors.black12),
+                                            ? Colors.white10
+                                            : Colors.black12),
                                     width: 1.5,
-                                    style: BorderStyle.solid,
                                   ),
                                 ),
                                 child: Column(
@@ -1576,21 +1579,17 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                   child: TextButton(
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
+                                          vertical: 16),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
+                                          borderRadius:
+                                              BorderRadius.circular(14)),
                                     ),
-                                    onPressed: isUploading
-                                        ? null
-                                        : () => Navigator.pop(context),
+                                    onPressed: () => Navigator.pop(context),
                                     child: Text(
                                       "Cancel",
                                       style: GoogleFonts.outfit(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
@@ -1598,50 +1597,60 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 Expanded(
                                   flex: 2,
                                   child: PremiumSubmitButton(
-                                    label: isUploading
-                                        ? "Uploading..."
-                                        : "Upload Resource",
-                                    isLoading: isUploading,
-                                    onPressed: (isUploading || result == null)
+                                    label: "Upload Resource",
+                                    isLoading: false,
+                                    onPressed: result == null
                                         ? null
-                                        : () async {
+                                        : () {
                                             if (formKey.currentState!
                                                 .validate()) {
-                                              setState(
-                                                () => isUploading = true,
+                                              final tempMaterial =
+                                                  CourseMaterial(
+                                                id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                                                title: titleController.text,
+                                                description:
+                                                    descriptionController.text,
+                                                fileUrl: '',
+                                                fileName:
+                                                    result!.files.single.name,
+                                                fileType:
+                                                    result!.files.single
+                                                            .extension ??
+                                                        'file',
+                                                uploadedAt: DateTime.now(),
+                                                departmentId:
+                                                    widget.departmentId,
+                                                courseId: isDepartment
+                                                    ? null
+                                                    : course!.id,
+                                                materialCategory:
+                                                    selectedCategory,
+                                                isPastQuestion:
+                                                    selectedCategory ==
+                                                        'past_question',
+                                                isAnswer: selectedCategory ==
+                                                    'answer',
+                                                linkedMaterialId:
+                                                    selectedQuestionId,
+                                                uploaderId: _dbService.uid,
                                               );
-                                              try {
-                                                await _uploadLogic(
-                                                  title: titleController.text,
-                                                  desc: descriptionController
-                                                      .text,
-                                                  result: result!,
-                                                  isDept: isDepartment,
-                                                  course: course,
-                                                  category: selectedCategory,
-                                                  linkedId: selectedQuestionId,
-                                                );
-                                                if (context.mounted) {
-                                                  Navigator.pop(context);
-                                                }
-                                              } catch (e) {
-                                                setState(
-                                                  () => isUploading = false,
-                                                );
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        "Error: $e",
-                                                      ),
-                                                      backgroundColor:
-                                                          Colors.red,
-                                                    ),
-                                                  );
-                                                }
-                                              }
+
+                                              setState(() {
+                                                _optimisticMaterials
+                                                    .add(tempMaterial);
+                                              });
+                                              Navigator.pop(context);
+
+                                              _uploadLogic(
+                                                title: titleController.text,
+                                                desc:
+                                                    descriptionController.text,
+                                                result: result!,
+                                                isDept: isDepartment,
+                                                course: course,
+                                                category: selectedCategory,
+                                                linkedId: selectedQuestionId,
+                                              );
                                             }
                                           },
                                   ),
@@ -1722,11 +1731,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   void _addCourse() {
     if (!(_userProfile?.canCreateDepartment ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only contributors and admins can add courses.')),
+        const SnackBar(
+            content: Text('Only contributors and admins can add courses.')),
       );
       return;
     }
-    showAddCourseDialog(context, widget.departmentId);
+    showAddCourseDialog(
+      context,
+      widget.departmentId,
+      onOptimisticCreate: (course) {
+        setState(() {
+          _optimisticCourses.add(course);
+        });
+      },
+    );
   }
 }
 
@@ -1743,10 +1761,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(color: backgroundColor, child: _tabBar);
   }
 

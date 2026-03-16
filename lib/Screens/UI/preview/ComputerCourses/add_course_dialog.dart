@@ -7,14 +7,14 @@ import 'package:go_study/Screens/Shared/premium_dialog.dart';
 /// Shows a dialog to add a new course to a department.
 Future<void> showAddCourseDialog(
   BuildContext context,
-  String departmentId,
-) async {
+  String departmentId, {
+  void Function(Course)? onOptimisticCreate,
+}) async {
   final dbService = DatabaseService();
   final courseNameController = TextEditingController();
   final courseCodeController = TextEditingController();
   final addCourseKey = GlobalKey<FormState>();
   String? selectedLevel;
-  bool isLoading = false;
 
   return showPremiumGeneralDialog(
     context: context,
@@ -53,7 +53,7 @@ Future<void> showAddCourseDialog(
                           label: "Course Name",
                           hint: "e.g. Data Structures",
                           icon: Icons.title_rounded,
-                          enabled: !isLoading,
+                          enabled: true,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Please enter a course name'
                               : null,
@@ -64,7 +64,7 @@ Future<void> showAddCourseDialog(
                           label: "Course Code",
                           hint: "e.g. CS201",
                           icon: Icons.code_rounded,
-                          enabled: !isLoading,
+                          enabled: true,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Please enter a course code'
                               : null,
@@ -75,7 +75,7 @@ Future<void> showAddCourseDialog(
                           label: "Level",
                           hint: "Select academic level",
                           icon: Icons.layers_rounded,
-                          enabled: !isLoading,
+                          enabled: true,
                           items: const [
                             DropdownMenuItem(value: "200", child: Text("Level 200")),
                             DropdownMenuItem(value: "300", child: Text("Level 300")),
@@ -101,7 +101,7 @@ Future<void> showAddCourseDialog(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ),
-                        onPressed: isLoading ? null : () => Navigator.pop(context),
+                        onPressed: () => Navigator.pop(context),
                         child: Text("Cancel",
                             style: GoogleFonts.outfit(
                                 color: Colors.redAccent,
@@ -113,36 +113,35 @@ Future<void> showAddCourseDialog(
                       flex: 2,
                       child: PremiumSubmitButton(
                         label: "Add Course",
-                        isLoading: isLoading,
+                        isLoading: false,
                         onPressed: () async {
                           if (addCourseKey.currentState!.validate()) {
-                            setDialogState(() => isLoading = true);
                             final newCourse = Course(
+                              id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
                               name: courseNameController.text,
                               code: courseCodeController.text,
                               departmentId: departmentId,
                               level: selectedLevel,
                               createdAt: DateTime.now(),
                             );
+
+                            // Optimistic Update
+                            onOptimisticCreate?.call(newCourse);
+                            Navigator.pop(context);
+
                             try {
                               await dbService.createCourse(newCourse);
-                              if (!context.mounted) return;
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: Colors.green,
-                                  content: Text('Course "${newCourse.name}" added!'),
-                                ),
-                              );
+                              // The real data will arrive via the stream
                             } catch (e) {
-                              setDialogState(() => isLoading = false);
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: Colors.red,
-                                  content: Text('Failed to add course: $e'),
-                                ),
-                              );
+                              // On error, the caller should handle removing the optimistic item
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: Colors.red,
+                                    content: Text('Failed to add course: $e'),
+                                  ),
+                                );
+                              }
                             }
                           }
                         },

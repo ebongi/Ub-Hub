@@ -28,11 +28,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   late final DatabaseService _dbService;
   UserProfile? _userProfile;
 
+  late final Stream<List<CourseMaterial>> _materialStream;
+  final List<CourseMaterial> _optimisticMaterials = [];
+
   @override
   void initState() {
     super.initState();
     final currentUser = Supabase.instance.client.auth.currentUser;
     _dbService = DatabaseService(uid: currentUser?.id);
+
+    _materialStream = _dbService.getCourseMaterials(widget.course.id);
 
     _dbService.userProfile.listen((profile) {
       if (mounted) {
@@ -89,15 +94,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ],
       ),
       body: StreamBuilder<List<CourseMaterial>>(
-        stream: _dbService.getCourseMaterials(widget.course.id),
+        stream: _materialStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              _optimisticMaterials.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+
+          final serverMaterials = snapshot.data ?? [];
+          
+          // Reconciliation
+          _optimisticMaterials.removeWhere((optimistic) =>
+              serverMaterials.any((server) => server.title == optimistic.title));
+          
+          final allMaterials = [..._optimisticMaterials, ...serverMaterials];
+
+          if (allMaterials.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -113,14 +128,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             );
           }
 
-          final materials = snapshot.data!;
-          final regularMaterials = materials
+          final regularMaterials = allMaterials
               .where((m) => m.materialCategory == 'regular')
               .toList();
-          final questions = materials
+          final questions = allMaterials
               .where((m) => m.materialCategory == 'past_question')
               .toList();
-          final answers = materials
+          final answers = allMaterials
               .where((m) => m.materialCategory == 'answer')
               .toList();
 
@@ -141,24 +155,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   return _buildPastQuestionTile(q, relatedAnswers);
                 }),
               ],
-              if (regularMaterials.isEmpty && questions.isEmpty)
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.folder_open,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No materials for this course yet.",
-                        style: GoogleFonts.outfit(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           );
         },
@@ -222,83 +218,101 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
+    final isPending = material.id.isEmpty || material.id.startsWith('temp_');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: isDark ? theme.colorScheme.surfaceContainerLow : Colors.white,
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.grey.withOpacity(0.15),
-        ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isPdf ? Icons.picture_as_pdf_outlined : Icons.description_outlined,
-            color: isPdf ? Colors.red[400] : Colors.blue[400],
-            size: 24,
+    return Opacity(
+      opacity: isPending ? 0.6 : 1.0,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isDark ? theme.colorScheme.surfaceContainerLow : Colors.white,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.grey.withOpacity(0.15),
           ),
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                material.title,
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 8),
-            _buildCategoryBadge(material.materialCategory),
-          ],
-        ),
-        subtitle:
-            material.description != null && material.description!.isNotEmpty
-            ? Text(
-                material.description!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-              )
-            : null,
-        trailing: IconButton(
-          icon: Icon(
-            Icons.download_rounded,
-            color: isDark ? Colors.white70 : theme.colorScheme.primary,
-            size: 20,
+            child: Icon(
+              isPdf
+                  ? Icons.picture_as_pdf_outlined
+                  : Icons.description_outlined,
+              color: isPdf ? Colors.red[400] : Colors.blue[400],
+              size: 24,
+            ),
           ),
-          onPressed: () => _handleDownload(material),
-        ),
-        onTap: () {
-          if (material.fileType.toLowerCase() == 'pdf') {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PDFViewerScreen(
-                  url: material.fileUrl,
-                  title: material.title,
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  material.title,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
               ),
-            );
-          } else {
-            _handleDownload(material);
-          }
-        },
+              const SizedBox(width: 8),
+              if (isPending)
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 1.5),
+                ),
+              const SizedBox(width: 8),
+              _buildCategoryBadge(material.materialCategory),
+            ],
+          ),
+          subtitle:
+              material.description != null && material.description!.isNotEmpty
+                  ? Text(
+                      material.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                    )
+                  : null,
+          trailing: IconButton(
+            icon: Icon(
+              Icons.download_rounded,
+              color: isPending
+                  ? Colors.grey
+                  : (isDark ? Colors.white70 : theme.colorScheme.primary),
+              size: 20,
+            ),
+            onPressed: isPending ? null : () => _handleDownload(material),
+          ),
+          onTap: isPending
+              ? null
+              : () {
+                  if (material.fileType.toLowerCase() == 'pdf') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PDFViewerScreen(
+                          url: material.fileUrl,
+                          title: material.title,
+                        ),
+                      ),
+                    );
+                  } else {
+                    _handleDownload(material);
+                  }
+                },
+        ),
       ),
     );
   }
@@ -707,7 +721,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     FilePickerResult? result;
-    bool isLoading = false;
     String selectedCategory = initialCategory ?? 'regular';
     String? selectedQuestionId = initialQuestionId;
 
@@ -719,7 +732,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           final theme = Theme.of(context);
           final isDark = theme.brightness == Brightness.dark;
           return StatefulBuilder(
-            builder: (context, setState) => AlertDialog(
+            builder: (context, setDialogState) => AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
@@ -762,7 +775,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 ),
                               ],
                               onChanged: (v) {
-                                setState(() {
+                                setDialogState(() {
                                   selectedCategory = v!;
                                   if (selectedCategory != 'answer') {
                                     selectedQuestionId = null;
@@ -773,11 +786,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             if (selectedCategory == 'answer') ...[
                               const SizedBox(height: 16),
                               StreamBuilder<List<CourseMaterial>>(
-                                stream: _dbService.getCourseMaterials(widget.course.id),
+                                stream: _materialStream,
                                 builder: (context, snapshot) {
                                   final questions = snapshot.data
                                           ?.where((m) =>
-                                              m.materialCategory == 'past_question')
+                                              m.materialCategory ==
+                                              'past_question')
                                           .toList() ??
                                       [];
                                   return PremiumDropdownField<String>(
@@ -789,15 +803,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                         .map((q) => DropdownMenuItem(
                                               value: q.id,
                                               child: Text(q.title,
-                                                  overflow: TextOverflow.ellipsis),
+                                                  overflow:
+                                                      TextOverflow.ellipsis),
                                             ))
                                         .toList(),
-                                    onChanged: (v) =>
-                                        setState(() => selectedQuestionId = v),
-                                    validator: (v) => selectedCategory == 'answer' &&
-                                            v == null
-                                        ? "Required"
-                                        : null,
+                                    onChanged: (v) => setDialogState(
+                                        () => selectedQuestionId = v),
+                                    validator: (v) =>
+                                        selectedCategory == 'answer' &&
+                                                v == null
+                                            ? "Required"
+                                            : null,
                                   );
                                 },
                               ),
@@ -826,13 +842,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 final res = await FilePicker.platform.pickFiles(
                                   withData: true,
                                 );
-                                if (res != null) setState(() => result = res);
+                                if (res != null) {
+                                  setDialogState(() => result = res);
+                                }
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: result != null
-                                      ? Colors.green.withOpacity(isDark ? 0.1 : 0.05)
+                                      ? Colors.green
+                                          .withOpacity(isDark ? 0.1 : 0.05)
                                       : (isDark
                                           ? Colors.white.withOpacity(0.04)
                                           : Colors.grey[50]),
@@ -840,7 +859,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   border: Border.all(
                                     color: result != null
                                         ? Colors.green.withOpacity(0.3)
-                                        : (isDark ? Colors.white10 : Colors.black12),
+                                        : (isDark
+                                            ? Colors.white10
+                                            : Colors.black12),
                                     width: 1.5,
                                     style: BorderStyle.solid,
                                   ),
@@ -865,7 +886,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       style: GoogleFonts.outfit(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
-                                        color: isDark ? Colors.white : Colors.black87,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                       ),
                                     ),
                                     Text(
@@ -876,7 +899,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                               : "Supports PDF, DOC, Images"),
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
-                                        color: isDark ? Colors.white38 : Colors.grey,
+                                        color:
+                                            isDark ? Colors.white38 : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -889,14 +913,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 Expanded(
                                   child: TextButton(
                                     style: TextButton.styleFrom(
-                                      padding:
-                                          const EdgeInsets.symmetric(vertical: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
                                       shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(14)),
+                                          borderRadius:
+                                              BorderRadius.circular(14)),
                                     ),
-                                    onPressed: isLoading
-                                        ? null
-                                        : () => Navigator.pop(context),
+                                    onPressed: () => Navigator.pop(context),
                                     child: Text("Cancel",
                                         style: GoogleFonts.outfit(
                                             color: Colors.grey,
@@ -908,53 +931,53 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   flex: 2,
                                   child: PremiumSubmitButton(
                                     label: "Upload Material",
-                                    isLoading: isLoading,
-                                    onPressed: () async {
+                                    isLoading: false,
+                                    onPressed: () {
                                       if (formKey.currentState!.validate() &&
                                           result != null) {
-                                        setState(() => isLoading = true);
-                                        try {
-                                          final file = result!.files.single;
-                                          final url =
-                                              await _dbService.uploadMaterialFile(
-                                            file.bytes!,
-                                            widget.course.code,
-                                            file.name,
-                                            false,
-                                          );
+                                        final tempMaterial = CourseMaterial(
+                                          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                                          title: titleController.text,
+                                          description:
+                                              descriptionController.text,
+                                          fileUrl: '',
+                                          fileName: result!.files.single.name,
+                                          fileType:
+                                              result!.files.single.extension ??
+                                                  'file',
+                                          uploadedAt: DateTime.now(),
+                                          courseId: widget.course.id,
+                                          departmentId:
+                                              widget.course.departmentId,
+                                          materialCategory: selectedCategory,
+                                          isPastQuestion: selectedCategory ==
+                                              'past_question',
+                                          isAnswer:
+                                              selectedCategory == 'answer',
+                                          linkedMaterialId: selectedQuestionId,
+                                          uploaderId: _dbService.uid,
+                                        );
 
-                                          final material = CourseMaterial(
-                                            title: titleController.text,
-                                            description: descriptionController.text,
-                                            fileUrl: url,
-                                            fileName: file.name,
-                                            fileType: file.extension ?? 'file',
-                                            uploadedAt: DateTime.now(),
-                                            courseId: widget.course.id,
-                                            departmentId: widget.course.departmentId,
-                                            materialCategory: selectedCategory,
-                                            isPastQuestion:
-                                                selectedCategory == 'past_question',
-                                            isAnswer: selectedCategory == 'answer',
-                                            linkedMaterialId: selectedQuestionId,
-                                            uploaderId: _dbService.uid,
-                                          );
+                                        setState(() {
+                                          _optimisticMaterials
+                                              .add(tempMaterial);
+                                        });
 
-                                          await _dbService.addMaterial(material);
-                                          if (context.mounted) Navigator.pop(context);
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text("Error: $e")),
-                                            );
-                                          }
-                                        } finally {
-                                          if (mounted) setState(() => isLoading = false);
-                                        }
+                                        Navigator.pop(context);
+
+                                        _uploadLogic(
+                                          title: titleController.text,
+                                          desc: descriptionController.text,
+                                          result: result!,
+                                          category: selectedCategory,
+                                          linkedId: selectedQuestionId,
+                                        );
                                       } else if (result == null) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           const SnackBar(
-                                              content: Text("Please select a file")),
+                                              content:
+                                                  Text("Please select a file")),
                                         );
                                       }
                                     },
@@ -976,10 +999,66 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  Future<void> _uploadLogic({
+    required String title,
+    required String desc,
+    required FilePickerResult result,
+    String category = 'regular',
+    String? linkedId,
+  }) async {
+    try {
+      final file = result.files.single;
+      final bytes = file.bytes;
+      if (bytes == null) throw "Could not read file";
+
+      final url = await _dbService.uploadMaterialFile(
+        bytes,
+        widget.course.code,
+        file.name,
+        false,
+      );
+
+      final material = CourseMaterial(
+        title: title,
+        description: desc,
+        fileUrl: url,
+        fileName: file.name,
+        fileType: file.extension ?? 'file',
+        uploadedAt: DateTime.now(),
+        courseId: widget.course.id,
+        departmentId: widget.course.departmentId,
+        materialCategory: category,
+        isPastQuestion: category == 'past_question',
+        isAnswer: category == 'answer',
+        linkedMaterialId: linkedId,
+        uploaderId: _dbService.uid,
+      );
+
+      await _dbService.addMaterial(material);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Upload successful!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Error: $e"), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
   void _showUploadSelection() {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only contributors and admins can upload content.')),
+        const SnackBar(
+            content: Text('Only contributors and admins can upload content.')),
       );
       return;
     }

@@ -16,7 +16,6 @@ class Accountdetails extends StatefulWidget {
 class _AccountdetailsState extends State<Accountdetails> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
-  bool _isLoading = false;
 
   late TextEditingController _nameController;
   late TextEditingController _matriculeController;
@@ -49,54 +48,98 @@ class _AccountdetailsState extends State<Accountdetails> {
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-
       final user = Provider.of<sb.User?>(context, listen: false);
       final userModel = Provider.of<UserModel>(context, listen: false);
-      final dbService = DatabaseService(uid: user!.id);
 
-      try {
-        // Update user metadata in Supabase Auth
-        await sb.Supabase.instance.client.auth.updateUser(
-          sb.UserAttributes(data: {'name': _nameController.text}),
-        );
+      if (user == null) return;
 
-        // Update custom data in Supabase profiles table
-        await dbService.updateUserData(
-          name: _nameController.text,
-          matricule: _matriculeController.text,
-          phoneNumber: _phoneController.text,
-        );
+      // Store current state for rollback
+      final oldName = userModel.name;
+      final oldMatricule = userModel.matricule;
+      final oldPhone = userModel.phoneNumber;
 
-        // Update local UserModel
+      final newName = _nameController.text;
+      final newMatricule = _matriculeController.text;
+      final newPhone = _phoneController.text;
+
+      // Optimistic Update
+      setState(() {
+        _isEditing = false;
         userModel.update(
-          name: _nameController.text,
-          matricule: _matriculeController.text,
-          phoneNumber: _phoneController.text,
+          name: newName,
+          matricule: newMatricule,
+          phoneNumber: newPhone,
         );
+      });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: Colors.green,
-            ),
+      // Background Sync
+      _performBackgroundSync(
+        userId: user.id,
+        userModel: userModel,
+        newName: newName,
+        newMatricule: newMatricule,
+        newPhone: newPhone,
+        oldName: oldName ?? '',
+        oldMatricule: oldMatricule,
+        oldPhone: oldPhone,
+      );
+    }
+  }
+
+  Future<void> _performBackgroundSync({
+    required String userId,
+    required UserModel userModel,
+    required String newName,
+    required String newMatricule,
+    required String newPhone,
+    required String oldName,
+    String? oldMatricule,
+    String? oldPhone,
+  }) async {
+    try {
+      final dbService = DatabaseService(uid: userId);
+
+      // 1. Update Supabase Auth metadata
+      await sb.Supabase.instance.client.auth.updateUser(
+        sb.UserAttributes(data: {'name': newName}),
+      );
+
+      // 2. Update profiles table
+      await dbService.updateUserData(
+        name: newName,
+        matricule: newMatricule,
+        phoneNumber: newPhone,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // Rollback on error
+        setState(() {
+          userModel.update(
+            name: oldName,
+            matricule: oldMatricule,
+            phoneNumber: oldPhone,
           );
-          setState(() => _isEditing = false);
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to update profile: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+          // Sync controllers back to old state if they are still editing or just switched
+          _nameController.text = oldName;
+          _matriculeController.text = oldMatricule ?? 'N/A';
+          _phoneController.text = oldPhone ?? 'N/A';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile: $e. Changes rolled back.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -114,16 +157,6 @@ class _AccountdetailsState extends State<Accountdetails> {
         title: const Text("Account Info"),
         centerTitle: true,
         actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
             IconButton(
               icon: Icon(
                 _isEditing ? Icons.save : Icons.edit,
