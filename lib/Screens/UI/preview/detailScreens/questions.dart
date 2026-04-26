@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+
 import 'package:html_unescape/html_unescape.dart';
 
 class Questions extends StatefulWidget {
@@ -47,8 +49,35 @@ class _QuestionsState extends State<Questions> {
                 ),
               );
             } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          color: Colors.redAccent, size: 48),
+                      const SizedBox(height: 16),
+                      Text(
+                        ErrorHandler.getFriendlyMessage(snapshot.error),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _loadQuestions,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text("Try Again"),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             } else if (!snapshot.hasData || snapshot.data!['results'] == null) {
+
               return const Center(child: Text('No questions found.'));
             }
 

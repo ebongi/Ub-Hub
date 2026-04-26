@@ -9,6 +9,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/ComputerCourses/add_department_dialog.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/profile.dart';
 
 class AllDepartmentsScreen extends StatefulWidget {
   const AllDepartmentsScreen({super.key});
@@ -23,8 +25,10 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
   final List<Department> _optimisticDepartments = [];
 
   void _addDepartment() {
+    final userModel = Provider.of<UserModel>(context, listen: false);
     showAddDepartmentDialog(
       context,
+      defaultSchoolId: userModel.institutionId,
       onOptimisticCreate: (dept) {
         setState(() {
           _optimisticDepartments.add(dept);
@@ -55,6 +59,8 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final departments = Provider.of<List<Department>?>(context);
+    final userModel = Provider.of<UserModel>(context);
+    final canCreate = userModel.role == UserRole.contributor || userModel.role == UserRole.admin;
 
     if (departments == null) {
       return const Scaffold(body: GridShimmer());
@@ -62,9 +68,10 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
 
     final serverDepartments = departments;
     
-    // Reconciliation
+    // Reconciliation: Remove optimistic depts only if they are confirmed locally or exist in server data
     _optimisticDepartments.removeWhere((optimistic) =>
-        serverDepartments.any((server) => server.name == optimistic.name));
+        serverDepartments.any((server) => 
+          server.name == optimistic.name && server.schoolId == optimistic.schoolId));
 
     final allDepartments = [..._optimisticDepartments, ...serverDepartments];
 
@@ -265,13 +272,15 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addDepartment,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text("New Dept"),
-        backgroundColor: theme.colorScheme.primaryContainer,
-        foregroundColor: theme.colorScheme.onPrimaryContainer,
-      ),
+      floatingActionButton: canCreate 
+          ? FloatingActionButton.extended(
+              onPressed: _addDepartment,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text("New Dept"),
+              backgroundColor: theme.colorScheme.primaryContainer,
+              foregroundColor: theme.colorScheme.onPrimaryContainer,
+            )
+          : null,
     );
   }
 }

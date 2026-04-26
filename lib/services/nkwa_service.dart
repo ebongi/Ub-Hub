@@ -178,7 +178,8 @@ class NkwaService {
   }
 
   /// Get the department creation fee amount
-  static double getDepartmentCreationFee() {
+  static double getDepartmentCreationFee({UserRole? role}) {
+    if (role == UserRole.admin) return 0.0;
     return 1000.0; // 1000 XAF
   }
 
@@ -192,7 +193,7 @@ class NkwaService {
     if (role == UserRole.contributor || role == UserRole.admin) {
       return 0.0; // Free for contributors
     }
-    return 150.0; // 150 XAF for viewers
+    return 100.0; // 100 XAF for viewers
   }
 
   /// Get the past question download fee amount
@@ -200,7 +201,7 @@ class NkwaService {
     if (role == UserRole.contributor || role == UserRole.admin) {
       return 0.0; // Free for contributors
     }
-    return 150.0; // 150 XAF for viewers
+    return 100.0; // 100 XAF for viewers
   }
 
   /// Get the past question answer download fee amount

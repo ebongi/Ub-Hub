@@ -6,9 +6,12 @@ import 'package:go_study/Screens/UI/preview/ComputerCourses/add_course_dialog.da
     show showAddCourseDialog;
 import 'package:go_study/Screens/UI/preview/detailScreens/course_detail_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/course_material.dart';
+
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
+import 'package:go_study/services/department.dart';
 import 'package:go_study/services/nkwa_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/profile.dart';
@@ -19,6 +22,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/services/recent_activity_service.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -39,6 +43,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   late final DatabaseService _dbService;
   late final TabController _tabController;
   UserProfile? _userProfile;
+  Department? _department;
 
   late final Stream<List<Course>> _courseStream;
   late final Stream<List<CourseMaterial>> _materialStream;
@@ -54,6 +59,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     _courseStream = _dbService.getCoursesForDepartment(widget.departmentId);
     _materialStream = _dbService.getDepartmentMaterials(widget.departmentId);
+    _loadDepartment();
 
     _tabController.addListener(() {
       if (mounted) setState(() {});
@@ -66,12 +72,27 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         });
       }
     });
+
+    // Track recent activity
+    RecentActivityService().saveRecentDepartment(
+      id: widget.departmentId,
+      name: widget.departmentName,
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDepartment() async {
+    final dept = await _dbService.getDepartment(widget.departmentId);
+    if (mounted) {
+      setState(() {
+        _department = dept;
+      });
+    }
   }
 
   @override
@@ -95,6 +116,68 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => Navigator.of(context).pop(),
               ),
+              actions: [
+                if (_department?.adminId ==
+                    Supabase.instance.client.auth.currentUser?.id)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded),
+                    onSelected: (value) async {
+                      if (value == 'delete') {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Delete Department?"),
+                            content: Text(
+                              "Are you sure you want to delete ${widget.departmentName}? This will delete all courses and materials within it. This action cannot be undone.",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  "Delete",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await _dbService.deleteDepartment(
+                            widget.departmentId,
+                          );
+                          if (mounted) {
+                            Navigator.pop(context, true);
+                            ErrorHandler.showSuccessSnackBar(context, "Department deleted");
+                          }
+
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              "Delete Department",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 centerTitle: false,
                 titlePadding: const EdgeInsetsDirectional.only(
@@ -180,15 +263,15 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       ),
       floatingActionButton:
           (_userProfile?.canUploadMaterial ?? false) &&
-                  _tabController.index != 4
-              ? FloatingActionButton.extended(
-                  onPressed: _showUploadSelection,
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text("Upload"),
-                  backgroundColor: colorScheme.primaryContainer,
-                  foregroundColor: colorScheme.onPrimaryContainer,
-                )
-              : null,
+              _tabController.index != 4
+          ? FloatingActionButton.extended(
+              onPressed: _showUploadSelection,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text("Upload"),
+              backgroundColor: colorScheme.primaryContainer,
+              foregroundColor: colorScheme.onPrimaryContainer,
+            )
+          : null,
     );
   }
 
@@ -290,8 +373,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         }
 
         final serverCourses = snapshot.data ?? [];
-        _optimisticCourses.removeWhere((optimistic) =>
-            serverCourses.any((server) => server.name == optimistic.name));
+        _optimisticCourses.removeWhere(
+          (optimistic) =>
+              serverCourses.any((server) => server.name == optimistic.name),
+        );
 
         final allCourses = [..._optimisticCourses, ...serverCourses];
 
@@ -311,34 +396,30 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           children: [
             if (level200.isNotEmpty) ...[
               _buildLevelHeader("Level 200"),
-              ...level200
-                  .asMap()
-                  .entries
-                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
+              ...level200.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (level300.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 300"),
-              ...level300
-                  .asMap()
-                  .entries
-                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
+              ...level300.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (level400.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Level 400"),
-              ...level400
-                  .asMap()
-                  .entries
-                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
+              ...level400.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
             if (others.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildLevelHeader("Other Courses"),
-              ...others
-                  .asMap()
-                  .entries
-                  .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
+              ...others.asMap().entries.map(
+                (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
+              ),
             ],
           ],
         );
@@ -424,22 +505,86 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 fontSize: 13,
               ),
             ),
-            trailing: IconButton(
-              tooltip: "Course Materials",
-              icon: Icon(
-                Icons.arrow_forward_rounded,
-                size: 18,
-                color: isDark ? Colors.white70 : colorScheme.primary,
-              ),
-              onPressed: isPending
-                  ? null
-                  : () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CourseDetailScreen(course: course),
+            trailing:
+                _department?.adminId ==
+                    Supabase.instance.client.auth.currentUser?.id
+                ? PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_vert_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white70 : colorScheme.primary,
+                    ),
+                    onSelected: (value) async {
+                      if (value == 'delete') {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Delete Course?"),
+                            content: Text(
+                              "Are you sure you want to delete ${course.name}? This cannot be undone.",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  "Delete",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await _dbService.deleteCourse(course.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Course deleted")),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              "Delete Course",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
                         ),
                       ),
-            ),
+                    ],
+                  )
+                : IconButton(
+                    tooltip: "Course Materials",
+                    icon: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
+                      color: isDark ? Colors.white70 : colorScheme.primary,
+                    ),
+                    onPressed: isPending
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: course),
+                            ),
+                          ),
+                  ),
             children: [
               if (!isPending)
                 Padding(
@@ -492,12 +637,15 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         }
 
         final serverMaterials = snapshot.data ?? [];
-        _optimisticMaterials.removeWhere((optimistic) => serverMaterials
-            .any((server) => server.title == optimistic.title));
+        _optimisticMaterials.removeWhere(
+          (optimistic) =>
+              serverMaterials.any((server) => server.title == optimistic.title),
+        );
 
         final allMaterials = [..._optimisticMaterials, ...serverMaterials];
-        final materials =
-            allMaterials.where((m) => m.materialCategory == 'regular').toList();
+        final materials = allMaterials
+            .where((m) => m.materialCategory == 'regular')
+            .toList();
 
         if (materials.isEmpty) {
           return _buildEmptyState("No resources available", () {});
@@ -526,8 +674,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         }
 
         final serverMaterials = snapshot.data ?? [];
-        _optimisticMaterials.removeWhere((optimistic) => serverMaterials
-            .any((server) => server.title == optimistic.title));
+        _optimisticMaterials.removeWhere(
+          (optimistic) =>
+              serverMaterials.any((server) => server.title == optimistic.title),
+        );
 
         final allMaterials = [..._optimisticMaterials, ...serverMaterials];
         final questions = allMaterials
@@ -544,9 +694,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           itemBuilder: (context, index) {
             final q = questions[index];
             final relatedAnswers = allMaterials
-                .where((m) =>
-                    m.materialCategory == 'answer' &&
-                    m.linkedMaterialId == q.id)
+                .where(
+                  (m) =>
+                      m.materialCategory == 'answer' &&
+                      m.linkedMaterialId == q.id,
+                )
                 .toList();
 
             return StreamBuilder<List<Course>>(
@@ -575,10 +727,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                       ),
                     ),
                     child: ExpansionTile(
-                      shape:
-                          const RoundedRectangleBorder(side: BorderSide.none),
-                      collapsedShape:
-                          const RoundedRectangleBorder(side: BorderSide.none),
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide.none,
+                      ),
+                      collapsedShape: const RoundedRectangleBorder(
+                        side: BorderSide.none,
+                      ),
                       leading: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -628,34 +782,36 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             ),
                           )
                         else
-                          ...relatedAnswers.map((a) => ListTile(
-                                dense: true,
-                                leading: const Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  color: Colors.green,
+                          ...relatedAnswers.map(
+                            (a) => ListTile(
+                              dense: true,
+                              leading: const Icon(
+                                Icons.check_circle_outline_rounded,
+                                color: Colors.green,
+                                size: 18,
+                              ),
+                              title: Text(
+                                a.title,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Text(
+                                "Verified Answer • ${NkwaService.getAnswerDownloadFee().toInt()} XAF",
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  Icons.download_rounded,
                                   size: 18,
+                                  color: colorScheme.primary,
                                 ),
-                                title: Text(
-                                  a.title,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                subtitle: const Text(
-                                  "Verified Answer • 300 XAF",
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                    Icons.download_rounded,
-                                    size: 18,
-                                    color: colorScheme.primary,
-                                  ),
-                                  onPressed: () => _handleDownload(a),
-                                ),
-                                onTap: () => _openFile(a),
-                              )),
+                                onPressed: () => _handleDownload(a),
+                              ),
+                              onTap: () => _openFile(a),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -749,34 +905,108 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         ),
         subtitle:
             material.description != null && material.description!.isNotEmpty
-                ? Text(
-                    material.description!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
+            ? Text(
+                material.description!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            : null,
+        trailing:
+            (material.uploaderId == _dbService.uid ||
+                _department?.adminId == _dbService.uid)
+            ? PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
+                onSelected: (value) async {
+                  if (value == 'delete') {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Material?"),
+                        content: Text(
+                          "Are you sure you want to delete ${material.title}? This cannot be undone.",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await _dbService.deleteMaterial(material.id);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Material deleted")),
+                        );
+                      }
+                    }
+                  } else if (value == 'download') {
+                    _handleDownload(material);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'download',
+                    child: Row(
+                      children: [
+                        Icon(Icons.download_rounded, size: 20),
+                        SizedBox(width: 8),
+                        Text("Download"),
+                      ],
                     ),
-                  )
-                : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(
-                Icons.download_rounded,
-                size: 20,
-                color: isPending ? Colors.grey : colorScheme.primary,
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text("Delete", style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.download_rounded,
+                      size: 20,
+                      color: isPending ? Colors.grey : colorScheme.primary,
+                    ),
+                    onPressed: isPending
+                        ? null
+                        : () => _handleDownload(material),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colorScheme.outline,
+                  ),
+                ],
               ),
-              onPressed: isPending ? null : () => _handleDownload(material),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: colorScheme.outline,
-            ),
-          ],
-        ),
         onTap: isPending ? null : () => _openFile(material),
       ),
     );
@@ -926,15 +1156,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     } catch (e) {
                                       setState(() => isProcessing = false);
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text("Error: $e"),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
+                                        ErrorHandler.showErrorSnackBar(context, e);
                                       }
                                     }
+
                                   },
                                 ),
                               ),
@@ -954,7 +1179,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Future<void> _processDownloadPayment(
-      CourseMaterial material, String phoneNumber) async {
+    CourseMaterial material,
+    String phoneNumber,
+  ) async {
     final userId = _dbService.uid;
     if (userId == null) throw "User not authenticated";
 
@@ -999,8 +1226,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       attempts++;
     }
 
-    await _dbService.updatePaymentStatus(paymentRef, status,
-        materialId: material.id);
+    await _dbService.updatePaymentStatus(
+      paymentRef,
+      status,
+      materialId: material.id,
+    );
 
     if (status == PaymentStatus.success) {
       await _secureForOffline(material);
@@ -1023,11 +1253,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         material.fileName,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("Material secured for offline access! \u{1F512}")),
-        );
+        ErrorHandler.showSuccessSnackBar(
+            context, "Material secured for offline access! \u{1F512}");
       }
+
     } catch (e) {
       print("Offline cache failed: $e");
     }
@@ -1050,10 +1279,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   Widget _buildEmptyState(String message, VoidCallback onAction) {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+
           children: [
             Container(
               padding: const EdgeInsets.all(24),
@@ -1102,12 +1332,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   void _showUploadSelection() {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Only contributors and admins can upload content.')),
-      );
+      ErrorHandler.showErrorSnackBar(
+          context, 'Only contributors and admins can upload content.');
       return;
     }
+
     final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
@@ -1203,7 +1432,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     .first;
                 if (courses.isEmpty) {
                   _showAddMaterialDialog(
-                      isDepartment: true, initialCategory: 'answer');
+                    isDepartment: true,
+                    initialCategory: 'answer',
+                  );
                 } else {
                   _showCourseSelectionForUpload(courses, category: 'answer');
                 }
@@ -1236,85 +1467,86 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             surfaceTintColor: Colors.transparent,
             contentPadding: EdgeInsets.zero,
             clipBehavior: Clip.antiAlias,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const PremiumDialogHeader(
-                  title: "Select Course",
-                  subtitle: "Which course is this for?",
-                  icon: Icons.book_rounded,
-                ),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.4,
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PremiumDialogHeader(
+                    title: "Select Course",
+                    subtitle: "Which course is this for?",
+                    icon: Icons.book_rounded,
                   ),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shrinkWrap: true,
+
+                      itemCount: courses.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final course = courses[index];
+                        return ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          tileColor: isDark
+                              ? Colors.white.withOpacity(0.03)
+                              : Colors.grey[50],
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.school_rounded,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          title: Text(
+                            course.name,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: Text(
+                            "Level ${course.level} • ${course.code}",
+                            style: GoogleFonts.outfit(fontSize: 12),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showAddMaterialDialog(
+                              isDepartment: false,
+                              course: course,
+                              initialCategory: category,
+                              initialQuestionId: linkedId,
+                            );
+                          },
+                        );
+                      },
                     ),
-                    shrinkWrap: true,
-                    itemCount: courses.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final course = courses[index];
-                      return ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        tileColor: isDark
-                            ? Colors.white.withOpacity(0.03)
-                            : Colors.grey[50],
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.school_rounded,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        title: Text(
-                          course.name,
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "Level ${course.level} • ${course.code}",
-                          style: GoogleFonts.outfit(fontSize: 12),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _showAddMaterialDialog(
-                            isDepartment: false,
-                            course: course,
-                            initialCategory: category,
-                            initialQuestionId: linkedId,
-                          );
-                        },
-                      );
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      "Cancel",
-                      style: GoogleFonts.outfit(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        "Cancel",
+                        style: GoogleFonts.outfit(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -1377,8 +1609,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 padding: const EdgeInsets.all(12),
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary
-                                      .withOpacity(0.05),
+                                  color: theme.colorScheme.primary.withOpacity(
+                                    0.05,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: theme.colorScheme.primary
@@ -1438,20 +1671,26 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               const SizedBox(height: 16),
                               StreamBuilder<List<Course>>(
                                 stream: _dbService.getCoursesForDepartment(
-                                    widget.departmentId),
+                                  widget.departmentId,
+                                ),
                                 builder: (context, courseSnapshot) {
                                   final coursesList = courseSnapshot.data ?? [];
                                   return StreamBuilder<List<CourseMaterial>>(
                                     stream: isDepartment
                                         ? _dbService.getDepartmentMaterials(
-                                            widget.departmentId)
-                                        : _dbService
-                                            .getCourseMaterials(course!.id),
+                                            widget.departmentId,
+                                          )
+                                        : _dbService.getCourseMaterials(
+                                            course!.id,
+                                          ),
                                     builder: (context, snapshot) {
-                                      final questions = snapshot.data
-                                              ?.where((m) =>
-                                                  m.materialCategory ==
-                                                  'past_question')
+                                      final questions =
+                                          snapshot.data
+                                              ?.where(
+                                                (m) =>
+                                                    m.materialCategory ==
+                                                    'past_question',
+                                              )
                                               .toList() ??
                                           [];
                                       return PremiumDropdownField<String>(
@@ -1463,8 +1702,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                           final c = coursesList
                                               .where((x) => x.id == q.courseId)
                                               .firstOrNull;
-                                          final prefix =
-                                              c != null ? "[${c.code}] " : "";
+                                          final prefix = c != null
+                                              ? "[${c.code}] "
+                                              : "";
                                           return DropdownMenuItem(
                                             value: q.id,
                                             child: Text(
@@ -1474,12 +1714,13 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                           );
                                         }).toList(),
                                         onChanged: (v) => setState(
-                                            () => selectedQuestionId = v),
+                                          () => selectedQuestionId = v,
+                                        ),
                                         validator: (v) =>
                                             selectedCategory == 'answer' &&
-                                                    v == null
-                                                ? "Required"
-                                                : null,
+                                                v == null
+                                            ? "Required"
+                                            : null,
                                       );
                                     },
                                   );
@@ -1492,9 +1733,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               label: "Title",
                               hint: "e.g. Exam Prep Notes",
                               icon: Icons.title_rounded,
-                              validator: (v) => v == null || v.isEmpty
-                                  ? "Required"
-                                  : null,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? "Required" : null,
                             ),
                             const SizedBox(height: 16),
                             PremiumTextField(
@@ -1507,8 +1747,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             const SizedBox(height: 24),
                             GestureDetector(
                               onTap: () async {
-                                final res = await FilePicker.platform
-                                    .pickFiles(withData: true);
+                                final res = await FilePicker.platform.pickFiles(
+                                  withData: true,
+                                );
                                 if (res != null) {
                                   setState(() => result = res);
                                 }
@@ -1518,17 +1759,18 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 decoration: BoxDecoration(
                                   color: result != null
                                       ? Colors.green.withOpacity(
-                                          isDark ? 0.1 : 0.05)
+                                          isDark ? 0.1 : 0.05,
+                                        )
                                       : (isDark
-                                          ? Colors.white.withOpacity(0.04)
-                                          : Colors.grey[50]),
+                                            ? Colors.white.withOpacity(0.04)
+                                            : Colors.grey[50]),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: result != null
                                         ? Colors.green.withOpacity(0.3)
                                         : (isDark
-                                            ? Colors.white10
-                                            : Colors.black12),
+                                              ? Colors.white10
+                                              : Colors.black12),
                                     width: 1.5,
                                   ),
                                 ),
@@ -1579,17 +1821,19 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                   child: TextButton(
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
+                                        vertical: 16,
+                                      ),
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
                                     ),
                                     onPressed: () => Navigator.pop(context),
                                     child: Text(
                                       "Cancel",
                                       style: GoogleFonts.outfit(
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.bold),
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1604,8 +1848,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                         : () {
                                             if (formKey.currentState!
                                                 .validate()) {
-                                              final tempMaterial =
-                                                  CourseMaterial(
+                                              final tempMaterial = CourseMaterial(
                                                 id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
                                                 title: titleController.text,
                                                 description:
@@ -1614,9 +1857,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                                 fileName:
                                                     result!.files.single.name,
                                                 fileType:
-                                                    result!.files.single
-                                                            .extension ??
-                                                        'file',
+                                                    result!
+                                                        .files
+                                                        .single
+                                                        .extension ??
+                                                    'file',
                                                 uploadedAt: DateTime.now(),
                                                 departmentId:
                                                     widget.departmentId,
@@ -1627,8 +1872,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                                     selectedCategory,
                                                 isPastQuestion:
                                                     selectedCategory ==
-                                                        'past_question',
-                                                isAnswer: selectedCategory ==
+                                                    'past_question',
+                                                isAnswer:
+                                                    selectedCategory ==
                                                     'answer',
                                                 linkedMaterialId:
                                                     selectedQuestionId,
@@ -1636,8 +1882,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                               );
 
                                               setState(() {
-                                                _optimisticMaterials
-                                                    .add(tempMaterial);
+                                                _optimisticMaterials.add(
+                                                  tempMaterial,
+                                                );
                                               });
                                               Navigator.pop(context);
 
@@ -1712,30 +1959,24 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Upload successful!"),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ErrorHandler.showSuccessSnackBar(context, "Upload successful!");
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-        );
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
+
   }
 
   void _addCourse() {
     if (!(_userProfile?.canCreateDepartment ?? false)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Only contributors and admins can add courses.')),
-      );
+      ErrorHandler.showErrorSnackBar(
+          context, 'Only contributors and admins can add courses.');
       return;
     }
+
+
     showAddCourseDialog(
       context,
       widget.departmentId,
@@ -1761,7 +2002,10 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(color: backgroundColor, child: _tabBar);
   }
 

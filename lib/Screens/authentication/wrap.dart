@@ -35,24 +35,41 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         final userModel = Provider.of<UserModel>(context, listen: false);
 
+        // Initialize with basic data immediately to avoid full-screen loaders
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          userModel.update(
+            uid: user.id,
+            name: user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'User',
+            email: user.email,
+          );
+        });
+
         // Listen to real-time profile updates
         _profileSubscription = DatabaseService(uid: user.id).userProfile.listen(
           (profile) {
-            userModel.update(
-              name: profile.name,
-              matricule: profile.matricule,
-              phoneNumber: profile.phoneNumber,
-              avatarUrl: profile.avatarUrl,
-              institutionId: profile.institutionId,
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              userModel.update(
+                uid: user.id,
+                email: user.email,
+                name: profile.name,
+                matricule: profile.matricule,
+                phoneNumber: profile.phoneNumber,
+                avatarUrl: profile.avatarUrl,
+                institutionId: profile.institutionId,
+                bio: profile.bio,
+                department: profile.department,
+                level: profile.level,
+                role: profile.role,
+                subscriptionTier: profile.subscriptionTier,
+                subscriptionExpiry: profile.subscriptionExpiry,
+                freeDownloadCount: profile.freeDownloadCount,
+                createdAt: profile.createdAt,
+              );
+            });
           },
         );
 
-        // Set initial name from metadata as fallback
-        if (userModel.name == null || userModel.name!.isEmpty) {
-          final name = user.userMetadata?['name'] ?? user.email ?? '';
-          userModel.setName(name);
-        }
+
       } else {
         _profileSubscription?.cancel();
         _profileSubscription = null;

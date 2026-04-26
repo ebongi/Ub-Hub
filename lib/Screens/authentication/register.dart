@@ -1,12 +1,17 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/error_handler.dart';
+
 import 'package:go_study/Screens/Shared/constanst.dart';
+
 import 'package:go_study/services/auth.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/institution.dart';
+import 'package:go_study/services/department.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Design tokens (shared with splash/signin) ────────────────────────────────
 const Color _deepNavy = Color(0xFF080E1E);
@@ -34,6 +39,8 @@ class _RegisterState extends State<Register>
   String _selectedLevel = "";
   final List<String> _levels = ["200", "300", "400", "Resit"];
   String? _selectedInstitutionId;
+  String? _selectedDepartmentName;
+  final _bioController = TextEditingController();
   final _formkey = GlobalKey<FormState>();
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
@@ -45,7 +52,7 @@ class _RegisterState extends State<Register>
 
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  final int _totalSteps = 3;
+  final int _totalSteps = 4;
 
   late AnimationController _entryController;
   late Animation<double> _headerFade;
@@ -99,6 +106,14 @@ class _RegisterState extends State<Register>
     );
 
     _entryController.forward();
+    _loadOnboardingData();
+  }
+
+  Future<void> _loadOnboardingData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedDepartmentName = prefs.getString('onboarding_department');
+    });
   }
 
   @override
@@ -110,6 +125,7 @@ class _RegisterState extends State<Register>
     _confirmPasswordController.dispose();
     _phoneNumberController.dispose();
     _matriculeController.dispose();
+    _bioController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -175,9 +191,11 @@ class _RegisterState extends State<Register>
           password: _passwordcontroller.text.trim(),
           name: _usernamecontroller.text.trim(),
           matricule: _matriculeController.text.trim(),
-          phoneNumber: _phoneNumberController.text.trim(),
+           phoneNumber: _phoneNumberController.text.trim(),
           level: _selectedLevel.trim(),
           institutionId: _selectedInstitutionId,
+          department: _selectedDepartmentName,
+          bio: _bioController.text.trim(),
         );
 
         if (user != null && mounted) {
@@ -188,50 +206,26 @@ class _RegisterState extends State<Register>
           Navigator.of(context).pop();
         }
       } on sb.AuthException catch (e) {
-        if (mounted) _showError(e.message);
-      } catch (_) {
-        if (mounted) _showError('An unexpected error occurred');
+        if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+      } catch (e) {
+        if (mounted) ErrorHandler.showErrorSnackBar(context, e);
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
+
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.outfit(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF991B1B),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+
 
   String _getStepSubtitle() {
     switch (_currentStep) {
       case 0:
         return "Let's start with your email and password.";
-      case 1:
-        return "Tell us more about yourself.";
       case 2:
-        return "Finally, enter your university details.";
+        return "Enter your university details.";
+      case 3:
+        return "Complete your profile with a bio and department.";
       default:
         return "Sign up to get started.";
     }
@@ -337,6 +331,7 @@ class _RegisterState extends State<Register>
                                       _buildStep1(),
                                       _buildStep2(),
                                       _buildStep3(),
+                                      _buildStep4(),
                                     ],
                                   ),
                                 ),
@@ -685,6 +680,92 @@ class _RegisterState extends State<Register>
       ],
     );
   }
+
+  Widget _buildStep4() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _FieldLabel(label: 'Tell us about yourself (Bio)'),
+        const SizedBox(height: 8),
+        _GoTextField(
+          controller: _bioController,
+          hint: 'Enter a short bio...',
+          icon: Icons.edit_note_rounded,
+          maxLines: 3,
+        ),
+        const SizedBox(height: 22),
+        const _FieldLabel(label: 'Confirm your Department'),
+        const SizedBox(height: 8),
+        if (_selectedInstitutionId == null || _selectedInstitutionId!.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              "Please select an institution in the previous step first.",
+              style: GoogleFonts.outfit(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          )
+        else
+          StreamBuilder<List<Department>>(
+            stream: DatabaseService().getDepartments(
+              institutionId: _selectedInstitutionId,
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final departments = snapshot.data ?? [];
+              if (departments.isEmpty) {
+                return Text(
+                  "No departments found for this institution.",
+                  style: GoogleFonts.outfit(color: Colors.redAccent),
+                );
+              }
+
+              return _GoDropdown<String>(
+                value: _selectedDepartmentName ?? "",
+                hint: 'Select Department',
+                icon: Icons.category_outlined,
+                items: departments
+                    .map(
+                      (d) => DropdownMenuItem<String>(
+                        value: d.name,
+                        child: Text(
+                          d.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            color:
+                                (isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A))
+                                    .withOpacity(0.9),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedDepartmentName = val);
+                  }
+                },
+                validator: (val) => val == null || val.isEmpty
+                    ? 'Please select your department'
+                    : null,
+              );
+            },
+          ),
+      ],
+    );
+  }
 }
 
 // ── Background (orbs + dot grid) ─────────────────────────────────────────────
@@ -858,6 +939,7 @@ class _GoTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
+  final int maxLines;
 
   const _GoTextField({
     required this.controller,
@@ -868,6 +950,7 @@ class _GoTextField extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.onChanged,
+    this.maxLines = 1,
   });
 
   @override
@@ -879,6 +962,7 @@ class _GoTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      maxLines: maxLines,
       style: GoogleFonts.outfit(
         color: textColor.withOpacity(0.9),
         fontSize: 15,

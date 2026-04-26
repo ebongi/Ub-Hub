@@ -9,9 +9,12 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/services/ai_service.dart';
+
+import 'package:go_study/services/deepseek_service.dart';
+// import 'package:go_study/services/gemini_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
 class PDFViewerScreen extends StatefulWidget {
@@ -31,7 +34,7 @@ class PDFViewerScreen extends StatefulWidget {
 }
 
 class _PDFViewerScreenState extends State<PDFViewerScreen> {
-  final GeminiService _geminiService = GeminiService();
+  final AIService _aiService = DeepSeekService();
   final PdfViewerController _pdfViewerController = PdfViewerController();
   final TextEditingController _searchController = TextEditingController();
   PdfTextSearchResult _searchResult = PdfTextSearchResult();
@@ -50,7 +53,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       final response = await http.get(Uri.parse(widget.url));
       if (response.statusCode == 200) {
         // 2. Generate summary
-        final summary = await _geminiService.summarizePdf(response.bodyBytes);
+        final summary = await _aiService.summarizePdf(response.bodyBytes);
 
         if (mounted) {
           _showSummarySheet(summary);
@@ -62,10 +65,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error summarizing document: $e")),
-        );
+        ErrorHandler.showErrorSnackBar(context, e);
       }
+
     } finally {
       if (mounted) {
         setState(() => _isSummarizing = false);
@@ -159,10 +161,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch download URL")),
-        );
+        ErrorHandler.showErrorSnackBar(context, "Could not launch download URL");
       }
+
     }
   }
 
@@ -171,7 +172,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            PDFChatScreen(pdfUrl: widget.url, geminiService: _geminiService),
+            PDFChatScreen(pdfUrl: widget.url, aiService: _aiService),
       ),
     );
   }
@@ -474,12 +475,12 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
 class PDFChatScreen extends StatefulWidget {
   final String pdfUrl;
-  final GeminiService geminiService;
+  final AIService aiService;
 
   const PDFChatScreen({
     super.key,
     required this.pdfUrl,
-    required this.geminiService,
+    required this.aiService,
   });
 
   @override
@@ -520,9 +521,9 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
     _messageController.clear();
 
     try {
-      final response = await widget.geminiService.sendMessage(
+      final response = await widget.aiService.sendMessage(
         "Context: The user is asking about the attached PDF document. \n\nUser Question: $text",
-        attachments: [DataPart('application/pdf', _pdfBytes!)],
+        attachments: [AIAttachment('application/pdf', _pdfBytes!)],
       );
 
       if (mounted) {
@@ -535,10 +536,11 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
         setState(() {
           _messages.add({
             "role": "ai",
-            "content": "Error: I couldn't process that question. ($e)",
+            "content": "Error: ${ErrorHandler.getFriendlyMessage(e)}",
           });
         });
       }
+
     } finally {
       if (mounted) {
         setState(() => _isSending = false);

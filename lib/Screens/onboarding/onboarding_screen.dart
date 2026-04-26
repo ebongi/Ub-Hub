@@ -40,16 +40,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       titleTextStyle: GoogleFonts.outfit(
         fontSize: 28.0,
         fontWeight: FontWeight.w700,
-        color:
-            textTheme.headlineMedium?.color ??
-            (theme.brightness == Brightness.dark
-                ? Colors.white
-                : Colors.black87),
+        color: textTheme.headlineMedium?.color ??
+            (theme.brightness == Brightness.dark ? Colors.white : Colors.black87),
       ),
       bodyTextStyle: GoogleFonts.outfit(
         fontSize: 18.0,
-        color:
-            textTheme.bodyLarge?.color?.withOpacity(0.7) ??
+        color: textTheme.bodyLarge?.color?.withOpacity(0.7) ??
             (theme.brightness == Brightness.dark
                 ? Colors.white70
                 : Colors.black54),
@@ -82,7 +78,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Text(
                 "Welcome to GO Study",
                 textAlign: TextAlign.center,
-                style: pageDecoration.titleTextStyle.copyWith(color: Colors.white),
+                style:
+                    pageDecoration.titleTextStyle.copyWith(color: Colors.white),
               ),
             ),
           ),

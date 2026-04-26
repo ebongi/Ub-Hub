@@ -19,6 +19,8 @@ class Authentication {
     String? phoneNumber,
     String? level,
     String? institutionId,
+    String? department,
+    String? bio,
   }) async {
     try {
       final response = await _supabase.auth.signUp(
@@ -36,6 +38,8 @@ class Authentication {
           phoneNumber: phoneNumber,
           level: level,
           institutionId: institutionId,
+          department: department,
+          bio: bio,
         );
       }
       return user;

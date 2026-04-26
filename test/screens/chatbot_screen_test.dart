@@ -3,34 +3,49 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/chatbot_screen.dart';
 import 'package:go_study/services/ai_sync_service.dart';
-import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+
+import 'package:go_study/services/ai_service.dart';
 
 class MockAISyncService extends Mock implements AISyncService {}
 
-class MockGeminiService extends Mock implements GeminiService {}
+class MockAIService extends Mock implements AIService {}
 
 class MockSupabaseClient extends Mock implements sb.SupabaseClient {}
 
 void main() {
   late MockAISyncService mockSyncService;
-  late MockGeminiService mockGeminiService;
+  late MockAIService mockAIService;
 
   setUp(() {
     mockSyncService = MockAISyncService();
-    mockGeminiService = MockGeminiService();
+    mockAIService = MockAIService();
 
     registerFallbackValue([]); // For any() with history list
+    registerFallbackValue(AIChatMessage(text: '', isUser: true));
+    registerFallbackValue(<AIChatMessage>[]);
+    registerFallbackValue(AIAttachment('', null));
+    registerFallbackValue(ChatMessage(
+      text: '',
+      isUser: true,
+      createdAt: DateTime.now(),
+    ));
+    registerFallbackValue(ChatSession(
+      id: '',
+      title: '',
+      messages: [],
+      createdAt: DateTime.now(),
+    ));
 
     when(() => mockSyncService.loadSessions()).thenAnswer((_) async => []);
-    when(() => mockGeminiService.resetChat()).thenReturn(null);
-    when(() => mockGeminiService.updateHistory(any())).thenReturn(null);
+    when(() => mockAIService.resetChat()).thenReturn(null);
+    when(() => mockAIService.updateHistory(any())).thenReturn(null);
   });
 
   Widget createChatbotScreen() {
     return MaterialApp(
       home: ChatbotScreen(
-        geminiService: mockGeminiService,
+        aiService: mockAIService,
         syncService: mockSyncService,
       ),
     );
@@ -50,7 +65,7 @@ void main() {
       () => mockSyncService.saveMessage(any(), any()),
     ).thenAnswer((_) async {});
     when(
-      () => mockGeminiService.streamMessage(
+      () => mockAIService.streamMessage(
         any(),
         attachments: any(named: 'attachments'),
       ),

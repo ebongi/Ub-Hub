@@ -4,10 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode;
+  Color _accentColor;
 
   ThemeMode get themeMode => _themeMode;
+  Color get accentColor => _accentColor;
 
-  ThemeProvider({ThemeMode? initialMode}) : _themeMode = initialMode ?? ThemeMode.system;
+  ThemeProvider({ThemeMode? initialMode, Color? initialColor})
+      : _themeMode = initialMode ?? ThemeMode.system,
+        _accentColor = initialColor ?? Colors.blue;
 
   void toggleTheme(bool isDarkMode) async {
     _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
@@ -23,92 +27,99 @@ class ThemeProvider extends ChangeNotifier {
     await prefs.setInt('theme_mode', _themeMode.index);
   }
 
-  final lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blue,
-      primary: Colors.blue,
-      surface: const Color(0xFFF8FAFC),
-    ),
-    scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-    textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFFF8FAFC),
-      centerTitle: false,
-      elevation: 0,
-      titleTextStyle: GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF0F172A),
-      ),
-      iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
-    ),
-    cardTheme: CardThemeData(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-    ),
-  );
+  void setAccentColor(Color color) async {
+    _accentColor = color;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('accent_color', color.value);
+  }
 
-  final darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueGrey,
-      brightness: Brightness.dark,
-      primary: Colors.blueGrey,
-      surface: const Color(0xFF1E293B),
-      background: const Color(0xFF0F172A),
-    ),
-    scaffoldBackgroundColor: const Color(0xFF0F172A),
-    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFF0F172A),
-      elevation: 0,
-      centerTitle: false,
-      titleTextStyle: GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-      iconTheme: const IconThemeData(color: Colors.white),
-    ),
-    cardTheme: CardThemeData(
-      elevation: 0,
-      color: const Color(0xFF1E293B),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withOpacity(0.05)),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: const Color(0xFF1E293B),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      hintStyle: const TextStyle(color: Colors.white38),
-    ),
-    dialogTheme: DialogThemeData(
-      backgroundColor: const Color(0xFF0F172A),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    ),
-  );
+  ThemeData get lightTheme => ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentColor,
+          primary: _accentColor,
+          surface: const Color(0xFFF8FAFC),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFFF8FAFC),
+          centerTitle: false,
+          elevation: 0,
+          titleTextStyle: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF0F172A),
+          ),
+          iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade200),
+          ),
+        ),
+      );
+
+  ThemeData get darkTheme => ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _accentColor,
+          brightness: Brightness.dark,
+          primary: _accentColor,
+          surface: const Color(0xFF1E293B),
+          background: const Color(0xFF0F172A),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFF0F172A),
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          color: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.white.withOpacity(0.05)),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF1E293B),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          hintStyle: const TextStyle(color: Colors.white38),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: const Color(0xFF0F172A),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+      );
 }

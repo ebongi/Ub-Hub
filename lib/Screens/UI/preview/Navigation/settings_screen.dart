@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:go_study/Screens/UI/preview/Settings/about.dart';
-import 'package:go_study/Screens/UI/preview/Settings/developer_info.dart';
+
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
-import 'package:go_study/Screens/UI/preview/Settings/support_dialog.dart';
+
 import 'package:go_study/services/auth.dart' show Authentication;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';

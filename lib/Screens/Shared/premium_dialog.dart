@@ -55,9 +55,22 @@ class PremiumDialogHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : theme.colorScheme.primary).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: isDark ? Colors.white70 : theme.colorScheme.primary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             title,
-
+            textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.w800,
               fontSize: 22,
@@ -65,13 +78,18 @@ class PremiumDialogHeader extends StatelessWidget {
             ),
           ),
           if (subtitle != null)
-            Text(
-              subtitle!,
-              style: GoogleFonts.outfit(
-                fontSize: 13,
-                color: isDark ? Colors.white54 : Colors.grey[600],
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: isDark ? Colors.white54 : Colors.grey[600],
+                ),
               ),
             ),
+
         ],
       ),
     );

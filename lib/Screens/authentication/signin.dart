@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/auth.dart';
+
 
 // ── Design tokens (shared with splash) ──────────────────────────────────────
 const Color _deepNavy = Color(0xFF080E1E);
@@ -101,40 +103,16 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
         password: _passwordController.text.trim(),
       );
     } on sb.AuthException catch (e) {
-      if (mounted) _showError(e.message);
-    } catch (_) {
-      if (mounted) _showError('An unexpected error occurred');
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+    } catch (e) {
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
     } finally {
+
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.outfit(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF991B1B),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {

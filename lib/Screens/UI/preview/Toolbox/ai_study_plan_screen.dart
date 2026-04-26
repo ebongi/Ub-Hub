@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
-import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/services/ai_service.dart';
+import 'package:go_study/services/deepseek_service.dart';
+// import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/exam_event.dart';
@@ -16,7 +18,7 @@ class AIStudyPlanScreen extends StatefulWidget {
 }
 
 class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
-  final GeminiService _geminiService = GeminiService();
+  final AIService _aiService = DeepSeekService();
   final _supabase = Supabase.instance.client;
 
   bool _isLoading = false;
@@ -46,7 +48,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
           .toList();
 
       // 3. Generate plan
-      final plan = await _geminiService.generateStudyPlan(
+      final plan = await _aiService.generateStudyPlan(
         tasks: activeTasks,
         exams: upcomingExams,
       );
@@ -90,7 +92,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 20),
                   Text(
-                    "Gemini is analyzing your schedule...",
+                    "AI is analyzing your schedule...",
                     style: GoogleFonts.outfit(color: Colors.grey),
                   ),
                 ],

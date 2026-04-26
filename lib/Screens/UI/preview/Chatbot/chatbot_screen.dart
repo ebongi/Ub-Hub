@@ -1,36 +1,40 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
-import 'package:uuid/uuid.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:markdown_widget/markdown_widget.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
-import 'package:markdown/markdown.dart' as md;
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:go_study/services/gemini_service.dart';
-import 'package:go_study/Screens/Shared/premium_dialog.dart';
-import 'package:go_study/Screens/Shared/animations.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:go_study/Screens/Shared/constanst.dart';
-import 'package:provider/provider.dart';
-import 'package:go_study/services/ai_sync_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:google_generative_ai/google_generative_ai.dart'
-    show DataPart, Content, TextPart;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+// import 'package:go_study/services/gemini_service.dart'; // No longer used
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/services/ai_service.dart';
+import 'package:go_study/services/ai_sync_service.dart';
+import 'package:go_study/services/deepseek_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:markdown/markdown.dart' as md;
+import 'package:markdown_widget/markdown_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+
+// import 'package:google_generative_ai/google_generative_ai.dart'
+//    show DataPart, Content, TextPart;
 
 class ChatbotScreen extends StatefulWidget {
-  final GeminiService? geminiService;
+  final AIService? aiService;
   final AISyncService? syncService;
 
-  const ChatbotScreen({super.key, this.geminiService, this.syncService});
+  const ChatbotScreen({super.key, this.aiService, this.syncService});
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
 }
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
-  late final GeminiService _geminiService;
+  late final AIService _aiService;
   late final AISyncService _syncService;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -68,7 +72,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
-    _geminiService = widget.geminiService ?? GeminiService();
+    _aiService = widget.aiService ?? DeepSeekService();
     _syncService = widget.syncService ?? AISyncService();
     _loadSessionsFromBackend();
   }
@@ -127,9 +131,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _sessions.add(newSession);
         _currentSessionIndex = _sessions.length - 1;
       });
-      _syncService
-          .saveSession(newSession)
-          .catchError((e) => debugPrint("Sync Error (Session): $e"));
+      try {
+        await _syncService.saveSession(newSession);
+      } catch (e) {
+        debugPrint("Sync Error (Session): $e");
+      }
     }
 
     final attachmentModels = _selectedFiles.map((file) {
@@ -170,11 +176,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       String fullResponse = "";
       bool hasError = false;
 
-      _aiSubscription = _geminiService
+      _aiSubscription = _aiService
           .streamMessage(
             text,
             attachments: userMessage.attachments
-                ?.map((e) => DataPart(e.mimeType, e.bytes))
+                ?.map((e) => AIAttachment(e.mimeType, e.bytes))
                 .toList(),
           )
           .listen(
@@ -298,7 +304,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   void _createNewChat() {
-    _geminiService.resetChat();
+    _aiService.resetChat();
     setState(() {
       _currentSessionIndex = null;
       _controller.clear();
@@ -309,27 +315,23 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _currentSessionIndex = index;
     });
-    _syncGeminiHistory();
+    _syncAIHistory();
     Navigator.pop(context); // Close drawer
   }
 
-  void _syncGeminiHistory() {
+  void _syncAIHistory() {
     if (_currentSessionIndex == null) return;
     final session = _sessions[_currentSessionIndex!];
     final history = session.messages.map((msg) {
-      if (msg.isUser) {
-        if (msg.attachments != null && msg.attachments!.isNotEmpty) {
-          return Content.multi([
-            TextPart(msg.text),
-            ...msg.attachments!.map((e) => DataPart(e.mimeType, e.bytes)),
-          ]);
-        }
-        return Content.text(msg.text);
-      } else {
-        return Content.model([TextPart(msg.text)]);
-      }
+      return AIChatMessage(
+        text: msg.text,
+        isUser: msg.isUser,
+        attachments: msg.attachments
+            ?.map((e) => AIAttachment(e.mimeType, e.bytes))
+            .toList(),
+      );
     }).toList();
-    _geminiService.updateHistory(history);
+    _aiService.updateHistory(history);
   }
 
   Future<void> _deleteSession(int index) async {
@@ -507,34 +509,36 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildEmptyState(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ).createShader(bounds),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              size: 80,
-              color: Colors.white,
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 80,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            "How can I help you today?",
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.w400,
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+            const SizedBox(height: 24),
+            Text(
+              "How can I help you today?",
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.w400,
+                color: theme.colorScheme.onSurface.withOpacity(0.8),
+              ),
             ),
-          ),
-          const SizedBox(height: 48),
-          _buildQuickStarters(theme),
-        ],
+            const SizedBox(height: 48),
+            _buildQuickStarters(theme),
+          ],
+        ),
       ),
     );
   }
@@ -682,7 +686,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               if (_selectedFiles.isNotEmpty) _buildFilePreview(theme),
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  MediaQuery.of(context).orientation == Orientation.landscape
+                      ? 8
+                      : 24,
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -718,7 +729,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             color: textColor,
                           ),
                           decoration: InputDecoration(
-                            hintText: "Ask Gemini",
+                            hintText: "Ask AI",
                             hintStyle: GoogleFonts.outfit(
                               color: textColor.withOpacity(0.4),
                             ),
@@ -849,7 +860,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Gemini AI Assistant",
+                    "AI Assistant",
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -1221,12 +1232,18 @@ class _MessageBubbleState extends State<_MessageBubble> {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Row(
-          mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment: isUser
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isUser) ...[
               Padding(
-                padding: const EdgeInsets.only(left: 2.0, right: 4.0, bottom: 2),
+                padding: const EdgeInsets.only(
+                  left: 2.0,
+                  right: 4.0,
+                  bottom: 2,
+                ),
                 child: Icon(
                   Icons.auto_awesome_rounded,
                   size: 20,
@@ -1236,12 +1253,16 @@ class _MessageBubbleState extends State<_MessageBubble> {
             ],
             Flexible(
               child: Column(
-                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * (isUser ? 0.75 : 0.85),
+                      maxWidth:
+                          MediaQuery.of(context).size.width *
+                          (isUser ? 0.75 : 0.85),
                     ),
                     padding: EdgeInsets.symmetric(
                       horizontal: isUser ? 20 : 16,
@@ -1249,8 +1270,12 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     ),
                     decoration: BoxDecoration(
                       color: isUser
-                          ? (isDark ? const Color(0xFF2F2F2F) : theme.colorScheme.primary)
-                          : (widget.message.isError ? Colors.red.withOpacity(0.05) : Colors.transparent),
+                          ? (isDark
+                                ? const Color(0xFF2F2F2F)
+                                : theme.colorScheme.primary)
+                          : (widget.message.isError
+                                ? Colors.red.withOpacity(0.05)
+                                : Colors.transparent),
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(24),
                         topRight: const Radius.circular(24),
@@ -1258,7 +1283,10 @@ class _MessageBubbleState extends State<_MessageBubble> {
                         bottomRight: Radius.circular(isUser ? 0 : 24),
                       ),
                       border: !isUser && widget.message.isError
-                          ? Border.all(color: Colors.red.withOpacity(0.2), width: 1)
+                          ? Border.all(
+                              color: Colors.red.withOpacity(0.2),
+                              width: 1,
+                            )
                           : null,
                     ),
                     child: isUser
@@ -1266,7 +1294,10 @@ class _MessageBubbleState extends State<_MessageBubble> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               if (widget.message.attachments != null)
-                                _buildAttachmentDisplay(widget.message.attachments!, true),
+                                _buildAttachmentDisplay(
+                                  widget.message.attachments!,
+                                  true,
+                                ),
                               Text(
                                 widget.message.text,
                                 style: GoogleFonts.outfit(
@@ -1285,7 +1316,8 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                   onTap: () {
                                     setState(() {
                                       _showThinking = !_showThinking;
-                                      widget.message.showThinking = _showThinking;
+                                      widget.message.showThinking =
+                                          _showThinking;
                                     });
                                   },
                                   child: Row(
@@ -1317,7 +1349,10 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                 ),
                                 if (_showThinking)
                                   Padding(
-                                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 16,
+                                    ),
                                     child: Text(
                                       widget.message.thinking!,
                                       style: GoogleFonts.outfit(
@@ -1330,14 +1365,19 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                 const SizedBox(height: 12),
                               ],
                               if (widget.message.attachments != null)
-                                _buildAttachmentDisplay(widget.message.attachments!, false),
+                                _buildAttachmentDisplay(
+                                  widget.message.attachments!,
+                                  false,
+                                ),
                               MarkdownBlock(
                                 data: widget.message.text,
                                 config: MarkdownConfig(
                                   configs: [
                                     PConfig(
                                       textStyle: GoogleFonts.outfit(
-                                        color: widget.message.isError ? Colors.red.shade400 : onSurface,
+                                        color: widget.message.isError
+                                            ? Colors.red.shade400
+                                            : onSurface,
                                         fontSize: 18,
                                         height: 1.6,
                                       ),
@@ -1349,15 +1389,20 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                       ),
                                     ),
                                     PreConfig(
-                                      wrapper: (child, code, language) => _CodeBlockWrapper(
-                                        code: code,
-                                        language: language,
-                                        child: child,
-                                      ),
+                                      wrapper: (child, code, language) =>
+                                          _CodeBlockWrapper(
+                                            code: code,
+                                            language: language,
+                                            child: child,
+                                          ),
                                       decoration: BoxDecoration(
-                                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.05)
+                                            : Colors.black.withOpacity(0.05),
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: onSurface.withOpacity(0.1)),
+                                        border: Border.all(
+                                          color: onSurface.withOpacity(0.1),
+                                        ),
                                       ),
                                       padding: const EdgeInsets.all(16),
                                     ),

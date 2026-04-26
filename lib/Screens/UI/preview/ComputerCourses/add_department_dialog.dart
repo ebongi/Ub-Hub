@@ -6,8 +6,14 @@ import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
 import 'package:go_study/services/nkwa_service.dart';
 import 'package:go_study/services/payment_models.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:go_study/core/error_handler.dart';
+
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+
+
 
 Future<void> showAddDepartmentDialog(
   BuildContext context, {
@@ -15,8 +21,6 @@ Future<void> showAddDepartmentDialog(
   void Function(Department)? onOptimisticCreate,
 }) async {
   XFile? imageFile;
-  final currentUser = Supabase.instance.client.auth.currentUser;
-  final dbService = DatabaseService(uid: currentUser?.id);
   final departname = TextEditingController();
   final schoolid = TextEditingController(text: defaultSchoolId);
   final description = TextEditingController();
@@ -101,8 +105,11 @@ Future<void> showAddDepartmentDialog(
                           hint: "Mobile Money Number",
                           icon: Icons.phone_android_rounded,
                           keyboardType: TextInputType.phone,
-                          validator: (v) =>
-                              v?.isEmpty ?? true ? 'Phone required' : null,
+                          validator: (v) {
+                            final userModel = Provider.of<UserModel>(context, listen: false);
+                            if (userModel.role == UserRole.admin) return null;
+                            return v?.isEmpty ?? true ? 'Phone required' : null;
+                          },
                         ),
                         const SizedBox(height: 24),
                         Text(
@@ -203,105 +210,132 @@ Future<void> showAddDepartmentDialog(
                         label: "Create Department",
                         isLoading: false,
                         onPressed: () async {
-                          if (!adddepartmentKey.currentState!.validate()) {
-                            return;
-                          }
-                          if (imageFile == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please upload an image'),
-                              ),
-                            );
+                          if (!(adddepartmentKey.currentState?.validate() ?? false)) return;
+                          // 1. Capture data and show optimistic UI
+                          final name = departname.text.trim();
+                          final descriptionText = description.text.trim();
+                          final schoolIdText = schoolid.text.trim();
+                          final userModel = Provider.of<UserModel>(context, listen: false);
+                          final userId = userModel.uid;
+                          final isAdmin = userModel.role == UserRole.admin;
+
+                          if (userId == null) {
+                            ErrorHandler.showErrorSnackBar(
+                                context, 'User not authenticated');
                             return;
                           }
 
+
                           // Construct optimistic department
+                          final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
                           final tempDept = Department(
-                            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-                            name: departname.text,
-                            schoolId: schoolid.text,
-                            description: description.text,
-                            imageUrl: null, // Image is uploading
+                            id: tempId,
+                            name: name,
+                            schoolId: schoolIdText,
+                            description: descriptionText,
+                            imageUrl: null, 
+                            adminId: userId,
                             createdAt: DateTime.now(),
                           );
+
+                          // 2. Capture all needed data before popping context
+                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          final backgroundDbService = DatabaseService(uid: userId);
 
                           // Trigger optimistic update and close dialog
                           onOptimisticCreate?.call(tempDept);
                           Navigator.pop(context);
 
-                          // Start background work
+
                           try {
-                            final userId = dbService.uid;
-                            if (userId == null) throw Exception('Auth Error');
+                            String? imageUrl;
+                            if (imageFile != null) {
+                              final imageBytes = await imageFile!.readAsBytes();
+                              imageUrl = await backgroundDbService.uploadDepartmentImage(
+                                imageBytes,
+                                name,
+                              );
+                            }
 
-                            final imageBytes = await imageFile!.readAsBytes();
-                            final imageUrl = await dbService.uploadDepartmentImage(
-                              imageBytes,
-                              departname.text,
-                            );
-
-                            final paymentRef = NkwaService.generatePaymentRef();
-                            final amount = NkwaService.getDepartmentCreationFee();
-                            final formattedPhone = NkwaService.formatPhoneNumber(
-                              phoneController.text,
-                            );
-
-                            await dbService.createPaymentTransaction(
-                              PaymentTransaction(
-                                id: '',
-                                userId: userId,
-                                paymentRef: paymentRef,
-                                amount: amount,
-                                currency: NkwaService.getCurrency(),
-                                status: PaymentStatus.pending,
-                                itemType: 'department',
-                                createdAt: DateTime.now(),
-                                updatedAt: DateTime.now(),
-                              ),
-                            );
-
-                            final collectResponse = await NkwaService.collectPayment(
-                              amount: amount,
-                              phoneNumber: formattedPhone,
-                              description: 'Dept: ${departname.text}',
-                            );
-
-                            final nkwaId = collectResponse['id'] ?? collectResponse['paymentId'];
-
+                            String? paymentRef;
                             PaymentStatus status = PaymentStatus.pending;
-                            int attempts = 0;
-                            while (status == PaymentStatus.pending && attempts < 60) {
-                              await Future.delayed(const Duration(seconds: 3));
-                              status = await NkwaService.checkPaymentStatus(nkwaId.toString());
-                              attempts++;
+
+                            if (!isAdmin) {
+                              paymentRef = NkwaService.generatePaymentRef();
+                              final amount = NkwaService.getDepartmentCreationFee(role: userModel.role);
+                              final formattedPhone = NkwaService.formatPhoneNumber(
+                                phoneController.text,
+                              );
+
+                              await backgroundDbService.createPaymentTransaction(
+                                PaymentTransaction(
+                                  id: '',
+                                  userId: userId,
+                                  paymentRef: paymentRef,
+                                  amount: amount,
+                                  currency: NkwaService.getCurrency(),
+                                  status: PaymentStatus.pending,
+                                  itemType: 'department',
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                ),
+                              );
+
+                              final collectResponse = await NkwaService.collectPayment(
+                                amount: amount,
+                                phoneNumber: formattedPhone,
+                                description: 'Dept: $name',
+                              );
+
+                              final nkwaId = collectResponse['id'] ?? collectResponse['paymentId'];
+
+                              status = PaymentStatus.pending;
+                              int attempts = 0;
+                              while (status == PaymentStatus.pending && attempts < 60) {
+                                await Future.delayed(const Duration(seconds: 3));
+                                status = await NkwaService.checkPaymentStatus(nkwaId.toString());
+                                attempts++;
+                              }
+
+                              await backgroundDbService.updatePaymentStatus(paymentRef, status);
+                              if (status != PaymentStatus.success) {
+                                throw Exception('Payment Incomplete');
+                              }
                             }
 
-                            await dbService.updatePaymentStatus(paymentRef, status);
-                            if (status != PaymentStatus.success) {
-                              throw Exception('Payment Incomplete');
-                            }
-
-                            final deptId = await dbService.createDepartment(
+                            final deptId = await backgroundDbService.createDepartment(
                               Department(
                                 id: '',
-                                name: departname.text,
-                                schoolId: schoolid.text,
-                                description: description.text,
+                                name: name,
+                                schoolId: schoolIdText,
+                                description: descriptionText,
                                 imageUrl: imageUrl,
+                                adminId: userId,
                                 createdAt: DateTime.now(),
                               ),
                             );
 
-                            await dbService.updatePaymentStatus(
-                              paymentRef,
-                              status,
-                              departmentId: deptId,
-                            );
+                            if (!isAdmin && paymentRef != null) {
+                              await backgroundDbService.updatePaymentStatus(
+                                paymentRef,
+                                status,
+                                departmentId: deptId,
+                              );
+                            }
+
                           } catch (e) {
-                            // On error, we could notify the user via a global notification service
-                            // For now, we'll just log it. 
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: Text(ErrorHandler.getFriendlyMessage(e)),
+                                backgroundColor: const Color(0xFF991B1B),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
                             debugPrint("Background Dept Creation Error: $e");
                           }
+
+
                         },
                       ),
                     ),

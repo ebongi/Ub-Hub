@@ -2,7 +2,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/course_material.dart';
+
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/nkwa_service.dart';
@@ -285,16 +287,79 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       ),
                     )
                   : null,
-          trailing: IconButton(
-            icon: Icon(
-              Icons.download_rounded,
-              color: isPending
-                  ? Colors.grey
-                  : (isDark ? Colors.white70 : theme.colorScheme.primary),
-              size: 20,
-            ),
-            onPressed: isPending ? null : () => _handleDownload(material),
-          ),
+          trailing: (material.uploaderId == _dbService.uid ||
+                  widget.course.adminId == _dbService.uid)
+              ? PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    size: 20,
+                    color:
+                        isDark ? Colors.white70 : theme.colorScheme.primary,
+                  ),
+                  onSelected: (value) async {
+                    if (value == 'delete') {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Delete Material?"),
+                          content: Text(
+                              "Are you sure you want to delete ${material.title}? This cannot be undone."),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel")),
+                            TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text("Delete",
+                                    style: TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      );
+                        if (confirmed == true) {
+                          await _dbService.deleteMaterial(material.id);
+                          if (mounted) {
+                            ErrorHandler.showSuccessSnackBar(context, "Material deleted");
+                          }
+                        }
+
+                    } else if (value == 'download') {
+                      _handleDownload(material);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'download',
+                      child: Row(
+                        children: [
+                          Icon(Icons.download_rounded, size: 20),
+                          SizedBox(width: 8),
+                          Text("Download"),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded,
+                              color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Text("Delete", style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : IconButton(
+                  icon: Icon(
+                    Icons.download_rounded,
+                    size: 20,
+                    color: isPending
+                        ? Colors.grey
+                        : (isDark ? Colors.white70 : theme.colorScheme.primary),
+                  ),
+                  onPressed: isPending ? null : () => _handleDownload(material),
+                ),
           onTap: isPending
               ? null
               : () {
@@ -334,10 +399,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Could not launch download link")),
-          );
+          ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
         }
+
       }
       return;
     }
@@ -455,13 +519,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     } catch (e) {
                                       setState(() => isProcessing = false);
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text("Error: $e"),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
+                                        ErrorHandler.showErrorSnackBar(context, e);
                                       }
+
                                     }
                                   },
                                 ),
@@ -569,12 +629,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         material.fileName,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Material secured for offline access! 🔒"),
-          ),
-        );
+        ErrorHandler.showSuccessSnackBar(
+            context, "Material secured for offline access! 🔒");
       }
+
     } catch (e) {
       print("Offline cache failed: $e");
     }
@@ -629,14 +687,75 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             color: isDark ? Colors.white70 : Colors.black54,
           ),
         ),
-        trailing: IconButton(
-          icon: Icon(
-            Icons.download_rounded,
-            color: isDark ? Colors.white70 : colorScheme.primary,
-            size: 20,
-          ),
-          onPressed: () => _handleDownload(question),
-        ),
+        trailing: (question.uploaderId == _dbService.uid ||
+                widget.course.adminId == _dbService.uid)
+            ? PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert_rounded,
+                  color: isDark ? Colors.white70 : colorScheme.primary,
+                  size: 20,
+                ),
+                onSelected: (value) async {
+                  if (value == 'delete') {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Past Question?"),
+                        content: Text(
+                            "Are you sure you want to delete ${question.title}? This cannot be undone."),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancel")),
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Delete",
+                                  style: TextStyle(color: Colors.red))),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await _dbService.deleteMaterial(question.id);
+                      if (mounted) {
+                        ErrorHandler.showSuccessSnackBar(context, "Past Question deleted");
+                      }
+                    }
+                  } else if (value == 'download') {
+                    _handleDownload(question);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'download',
+                    child: Row(
+                      children: [
+                        Icon(Icons.download_rounded, size: 20),
+                        SizedBox(width: 8),
+                        Text("Download"),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline_rounded,
+                            color: Colors.red, size: 20),
+                        SizedBox(width: 8),
+                        Text("Delete", style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : IconButton(
+                icon: Icon(
+                  Icons.download_rounded,
+                  color: isDark ? Colors.white70 : colorScheme.primary,
+                  size: 20,
+                ),
+                onPressed: () => _handleDownload(question),
+              ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -673,7 +792,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        "Verified Answer • 300 XAF",
+                        "Verified Answer • ${NkwaService.getAnswerDownloadFee().toInt()} XAF",
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -716,7 +835,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     String? initialCategory,
     String? initialQuestionId,
   }) async {
-    if (!(_userProfile?.canUploadMaterial ?? false)) return;
+    if (!(_userProfile?.canUploadMaterial ?? false)) {
+      ErrorHandler.showErrorSnackBar(
+          context, 'Only contributors and admins can upload content.');
+      return;
+    }
+
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -973,12 +1097,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           linkedId: selectedQuestionId,
                                         );
                                       } else if (result == null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content:
-                                                  Text("Please select a file")),
-                                        );
+                                        ErrorHandler.showErrorSnackBar(context, "Please select a file");
                                       }
                                     },
                                   ),
@@ -1037,31 +1156,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Upload successful!"),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ErrorHandler.showSuccessSnackBar(context, "Upload successful!");
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Error: $e"), backgroundColor: Colors.redAccent),
-        );
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }
 
   void _showUploadSelection() {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Only contributors and admins can upload content.')),
-      );
+      ErrorHandler.showErrorSnackBar(
+          context, 'Only contributors and admins can upload content.');
       return;
     }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
