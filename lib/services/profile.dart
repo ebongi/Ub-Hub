@@ -22,15 +22,17 @@ enum UserRole {
 
 enum SubscriptionTier {
   free,
-  silver,
-  gold;
+  monthly,
+  yearly;
 
   static SubscriptionTier fromString(String? tier) {
     switch (tier?.toLowerCase()) {
+      case 'monthly':
       case 'silver':
-        return SubscriptionTier.silver;
+        return SubscriptionTier.monthly;
+      case 'yearly':
       case 'gold':
-        return SubscriptionTier.gold;
+        return SubscriptionTier.yearly;
       case 'free':
       default:
         return SubscriptionTier.free;
@@ -54,6 +56,8 @@ class UserProfile {
   final DateTime? createdAt;
   final String? avatarUrl;
   final String? institutionId;
+  final String? bio;
+  final String? department;
 
   UserProfile({
     required this.id,
@@ -69,12 +73,20 @@ class UserProfile {
     this.createdAt,
     this.avatarUrl,
     this.institutionId,
+    this.bio,
+    this.department,
   });
 
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
+    String? parsedName = json['name'];
+    if (parsedName == null || parsedName.trim().isEmpty) {
+      final user = Supabase.instance.client.auth.currentUser;
+      parsedName = user?.userMetadata?['name'] ?? user?.email?.split('@').first;
+    }
+
     return UserProfile(
       id: json['id'] ?? '',
-      name: json['name'],
+      name: parsedName,
       matricule: json['matricule'],
       phoneNumber: json['phone_number'],
       level: json['level'],
@@ -94,6 +106,8 @@ class UserProfile {
           : null,
       avatarUrl: json['avatar_url'],
       institutionId: json['institution_id'],
+      bio: json['bio'],
+      department: json['department'],
     );
   }
 
@@ -112,6 +126,8 @@ class UserProfile {
       'created_at': createdAt?.toIso8601String(),
       'avatar_url': avatarUrl,
       'institution_id': institutionId,
+      'bio': bio,
+      'department': department,
     };
   }
 
@@ -148,8 +164,8 @@ class UserProfile {
   bool get hasUnlimitedDownloads =>
       role == UserRole.contributor ||
       role == UserRole.admin ||
-      subscriptionTier == SubscriptionTier.gold ||
-      (subscriptionTier == SubscriptionTier.silver && isSubscribed) ||
+      subscriptionTier == SubscriptionTier.yearly ||
+      (subscriptionTier == SubscriptionTier.monthly && isSubscribed) ||
       isTrialActive;
 
   bool get canCreateDepartment =>

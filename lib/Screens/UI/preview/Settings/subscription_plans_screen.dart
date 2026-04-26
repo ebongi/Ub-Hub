@@ -64,20 +64,20 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             const SizedBox(height: 32),
             _buildTierCard(
               context,
-              tier: SubscriptionTier.silver,
-              title: "Silver Plan",
-              price: SubscriptionService.silverPrice,
+              tier: SubscriptionTier.monthly,
+              title: "Monthly Plan",
+              price: SubscriptionService.monthlyPrice,
               color: Colors.blueGrey,
-              isCurrent: currentTier == SubscriptionTier.silver,
+              isCurrent: currentTier == SubscriptionTier.monthly,
             ),
             const SizedBox(height: 20),
             _buildTierCard(
               context,
-              tier: SubscriptionTier.gold,
-              title: "Gold Plan",
-              price: SubscriptionService.goldPrice,
+              tier: SubscriptionTier.yearly,
+              title: "Yearly Plan",
+              price: SubscriptionService.yearlyPrice,
               color: const Color(0xFFFFD700),
-              isCurrent: currentTier == SubscriptionTier.gold,
+              isCurrent: currentTier == SubscriptionTier.yearly,
               isPremium: true,
             ),
             const SizedBox(height: 20),
@@ -172,7 +172,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                tier == SubscriptionTier.silver ? "/ 2 weeks" : "/ month",
+                tier == SubscriptionTier.monthly ? "/ month" : "/ year",
                 style: GoogleFonts.outfit(fontSize: 16, color: theme.hintColor),
               ),
             ],
@@ -204,7 +204,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: isCurrent || _isProcessing
+            onPressed: isCurrent || _isProcessing || widget.userProfile?.role == UserRole.admin
                 ? null
                 : () => _handlePurchase(tier, price),
             style: ElevatedButton.styleFrom(
@@ -253,7 +253,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     ],
                   )
                 : Text(
-                    isCurrent ? "Current Plan" : "Upgrade Now",
+                    widget.userProfile?.role == UserRole.admin 
+                        ? "Admin Access"
+                        : (isCurrent ? "Current Plan" : "Upgrade Now"),
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -314,7 +316,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: widget.userProfile?.role == UserRole.contributor
+            onPressed: widget.userProfile?.role == UserRole.contributor || widget.userProfile?.role == UserRole.admin
                 ? null
                 : () => _handleContributorUpgrade(),
             style: ElevatedButton.styleFrom(
@@ -345,15 +347,15 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 10,
-                            color: Colors.white70,
+                  color: Colors.white70,
                           ),
                         ),
                       ],
                     ],
                   )
                 : Text(
-                    widget.userProfile?.role == UserRole.contributor
-                        ? "Already a Contributor"
+                    widget.userProfile?.role == UserRole.contributor || widget.userProfile?.role == UserRole.admin
+                        ? "Included with Admin/Contributor"
                         : "One-time Payment 5000 XAF",
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
@@ -397,7 +399,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Enter your Mobile Money number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.silver ? '14' : '30'} days of access.",
+                          "Enter your Mobile Money number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.monthly ? '30' : '365'} days of access.",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 14,

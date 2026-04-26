@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+
 
 /// Shows a dialog to add a new course to a department.
 Future<void> showAddCourseDialog(
@@ -10,11 +14,14 @@ Future<void> showAddCourseDialog(
   String departmentId, {
   void Function(Course)? onOptimisticCreate,
 }) async {
-  final dbService = DatabaseService();
+  final userModel = Provider.of<UserModel>(context, listen: false);
+  final dbService = DatabaseService(uid: userModel.uid);
   final courseNameController = TextEditingController();
+
   final courseCodeController = TextEditingController();
   final addCourseKey = GlobalKey<FormState>();
   String? selectedLevel;
+  bool isSubmitting = false;
 
   return showPremiumGeneralDialog(
     context: context,
@@ -22,6 +29,7 @@ Future<void> showAddCourseDialog(
     child: StatefulBuilder(
       builder: (context, setDialogState) {
         final theme = Theme.of(context);
+
         final isDark = theme.brightness == Brightness.dark;
 
         return AlertDialog(
@@ -113,36 +121,53 @@ Future<void> showAddCourseDialog(
                       flex: 2,
                       child: PremiumSubmitButton(
                         label: "Add Course",
-                        isLoading: false,
+                        isLoading: isSubmitting,
+
                         onPressed: () async {
                           if (addCourseKey.currentState!.validate()) {
+                            if (userModel.uid == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('User not authenticated')),
+                              );
+                              return;
+                            }
+                            setDialogState(() => isSubmitting = true);
+
+
                             final newCourse = Course(
                               id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-                              name: courseNameController.text,
-                              code: courseCodeController.text,
+                              name: courseNameController.text.trim(),
+                              code: courseCodeController.text.trim(),
+
                               departmentId: departmentId,
                               level: selectedLevel,
+                              adminId: userModel.uid,
                               createdAt: DateTime.now(),
                             );
 
+
                             // Optimistic Update
                             onOptimisticCreate?.call(newCourse);
+                            final scaffoldMessenger = ScaffoldMessenger.of(context);
                             Navigator.pop(context);
 
                             try {
-                              await dbService.createCourse(newCourse);
-                              // The real data will arrive via the stream
+                              await dbService.createCourse(newCourse).timeout(
+                                const Duration(seconds: 15),
+                                onTimeout: () => throw 'Connection timed out. Please check your internet.',
+                              );
                             } catch (e) {
-                              // On error, the caller should handle removing the optimistic item
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.red,
-                                    content: Text('Failed to add course: $e'),
-                                  ),
-                                );
-                              }
+                              scaffoldMessenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(ErrorHandler.getFriendlyMessage(e)),
+                                  backgroundColor: const Color(0xFF991B1B),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              );
                             }
+
+
                           }
                         },
                       ),

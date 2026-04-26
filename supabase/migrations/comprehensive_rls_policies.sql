@@ -51,8 +51,12 @@ DO $$ BEGIN
     ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
     DROP POLICY IF EXISTS "Anyone can view departments" ON departments;
     CREATE POLICY "Anyone can view departments" ON departments FOR SELECT USING (true);
-    DROP POLICY IF EXISTS "Admins can manage departments" ON departments;
-    CREATE POLICY "Admins can manage departments" ON departments FOR ALL USING (is_admin());
+    DROP POLICY IF EXISTS "Authenticated users can create departments" ON departments;
+    CREATE POLICY "Authenticated users can create departments" ON departments FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+    DROP POLICY IF EXISTS "Contributors can manage departments" ON departments;
+    CREATE POLICY "Contributors can manage departments" ON departments FOR ALL USING (is_contributor());
+
+
   END IF;
 END $$;
 
@@ -62,8 +66,12 @@ DO $$ BEGIN
     ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
     DROP POLICY IF EXISTS "Anyone can view courses" ON courses;
     CREATE POLICY "Anyone can view courses" ON courses FOR SELECT USING (true);
-    DROP POLICY IF EXISTS "Admins can manage courses" ON courses;
-    CREATE POLICY "Admins can manage courses" ON courses FOR ALL USING (is_admin());
+    DROP POLICY IF EXISTS "Authenticated users can create courses" ON courses;
+    CREATE POLICY "Authenticated users can create courses" ON courses FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+    DROP POLICY IF EXISTS "Contributors can manage courses" ON courses;
+    CREATE POLICY "Contributors can manage courses" ON courses FOR ALL USING (is_contributor());
+
+
   END IF;
 END $$;
 

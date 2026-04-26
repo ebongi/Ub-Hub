@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:go_study/core/app_config.dart';
 import 'package:go_study/services/gemini_client.dart';
 
-class GeminiService {
+import 'package:go_study/services/ai_service.dart';
+
+class GeminiService implements AIService {
   // Read API key from environment
   static final String _apiKey = AppConfig.geminiApiKey;
   static const String _modelName = 'gemini-2.5-flash-lite';
@@ -33,22 +35,38 @@ class GeminiService {
     );
   }
 
-  void updateHistory(List<Content> history) {
-    _client = _createNewClient(history: history);
+  @override
+  void updateHistory(List<AIChatMessage> history) {
+    final geminiHistory = history.map((msg) {
+      if (msg.isUser) {
+        if (msg.attachments != null && msg.attachments!.isNotEmpty) {
+          return Content.multi([
+            TextPart(msg.text),
+            ...msg.attachments!.map((e) => DataPart(e.mimeType, e.bytes)),
+          ]);
+        }
+        return Content.text(msg.text);
+      } else {
+        return Content.model([TextPart(msg.text)]);
+      }
+    }).toList();
+    _client = _createNewClient(history: geminiHistory);
   }
 
+  @override
   void resetChat() {
     _client = _createNewClient();
   }
 
+  @override
   Future<String> sendMessage(
     String message, {
-    List<DataPart>? attachments,
+    List<dynamic>? attachments,
   }) async {
     try {
       final responseText = await _client.sendMessage(
         message,
-        attachments: attachments,
+        attachments: attachments?.whereType<DataPart>().toList(),
       );
       return responseText ?? "I couldn't generate a response.";
     } catch (e) {
@@ -59,12 +77,16 @@ class GeminiService {
     }
   }
 
+  @override
   Stream<String> streamMessage(
     String message, {
-    List<DataPart>? attachments,
+    List<dynamic>? attachments,
   }) async* {
     try {
-      yield* _client.sendMessageStream(message, attachments: attachments);
+      yield* _client.sendMessageStream(
+        message,
+        attachments: attachments?.whereType<DataPart>().toList(),
+      );
     } catch (e) {
       if (kDebugMode) {
         print('Gemini Stream Error: $e');
@@ -73,6 +95,7 @@ class GeminiService {
     }
   }
 
+  @override
   Future<String> generateStudyPlan({
     required List<dynamic> tasks,
     required List<dynamic> exams,
@@ -113,6 +136,7 @@ Format your response in professional Markdown.
     return sendMessage(prompt);
   }
 
+  @override
   Future<String> generateQuiz(String sourceText) async {
     final prompt =
         """
@@ -139,7 +163,9 @@ Provide ONLY the JSON object. Do not include markdown formatting or extra text.
     return sendMessage(prompt);
   }
 
-  Future<String> summarizePdf(Uint8List pdfBytes) async {
+  @override
+  Future<String> summarizePdf(dynamic pdfSource) async {
+    final Uint8List pdfBytes = pdfSource as Uint8List;
     const prompt = """
 You are an academic assistant. Please summarize the attached PDF document.
 Provide:

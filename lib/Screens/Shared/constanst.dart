@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:go_study/services/profile.dart';
 
 // Custom widget for image customization
 Widget buildImage({String? path}) {
@@ -28,14 +29,22 @@ PageDecoration pageDecoration() {
 }
 
 class UserModel extends ChangeNotifier {
-  final String? _uid;
+  String? _uid;
   String? _name;
-  final String? _email;
+  String? _email;
   String? _matricule;
   String? _phonenumber;
   String? _avatarUrl;
   String? _institutionId;
   String? _institutionName;
+  String? _bio;
+  String? _department;
+  String? _level;
+  UserRole _role;
+  SubscriptionTier _subscriptionTier;
+  DateTime? _subscriptionExpiry;
+  int _freeDownloadCount;
+  DateTime? _createdAt;
 
   UserModel({
     String? uid,
@@ -46,6 +55,14 @@ class UserModel extends ChangeNotifier {
     String? avatarUrl,
     String? institutionId,
     String? institutionName,
+    String? bio,
+    String? department,
+    String? level,
+    UserRole role = UserRole.viewer,
+    SubscriptionTier subscriptionTier = SubscriptionTier.free,
+    DateTime? subscriptionExpiry,
+    int freeDownloadCount = 0,
+    DateTime? createdAt,
   }) : _uid = uid,
        _name = name,
        _email = email,
@@ -53,7 +70,15 @@ class UserModel extends ChangeNotifier {
        _phonenumber = phonenumber,
        _avatarUrl = avatarUrl,
        _institutionId = institutionId,
-       _institutionName = institutionName;
+       _institutionName = institutionName,
+       _bio = bio,
+       _department = department,
+       _level = level,
+       _role = role,
+       _subscriptionTier = subscriptionTier,
+       _subscriptionExpiry = subscriptionExpiry,
+       _freeDownloadCount = freeDownloadCount,
+       _createdAt = createdAt;
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
@@ -63,6 +88,33 @@ class UserModel extends ChangeNotifier {
   String? get avatarUrl => _avatarUrl;
   String? get institutionId => _institutionId;
   String? get institutionName => _institutionName;
+  String? get bio => _bio;
+  String? get department => _department;
+  String? get level => _level;
+  UserRole get role => _role;
+  SubscriptionTier get subscriptionTier => _subscriptionTier;
+  DateTime? get subscriptionExpiry => _subscriptionExpiry;
+  int get freeDownloadCount => _freeDownloadCount;
+  DateTime? get createdAt => _createdAt;
+
+  bool get isTrialActive {
+    if (_createdAt == null) return false;
+    return DateTime.now().difference(_createdAt!).inDays < 10;
+  }
+
+  String get trialTimeLeft {
+    if (_createdAt == null) return "Expired";
+    final expiryDate = _createdAt!.add(const Duration(days: 10));
+    final remaining = expiryDate.difference(DateTime.now());
+
+    if (remaining.isNegative) return "Expired";
+
+    if (remaining.inDays > 0) {
+      return "${remaining.inDays}d ${remaining.inHours % 24}h remaining";
+    } else {
+      return "${remaining.inHours}h ${remaining.inMinutes % 60}m remaining";
+    }
+  }
   void setName(String name) {
     _name = name;
     notifyListeners();
@@ -79,19 +131,39 @@ class UserModel extends ChangeNotifier {
   }
 
   void update({
+    String? uid,
     String? name,
+    String? email,
     String? matricule,
     String? phoneNumber,
     String? avatarUrl,
     String? institutionId,
     String? institutionName,
+    String? bio,
+    String? department,
+    String? level,
+    UserRole? role,
+    SubscriptionTier? subscriptionTier,
+    DateTime? subscriptionExpiry,
+    int? freeDownloadCount,
+    DateTime? createdAt,
   }) {
+    if (uid != null) _uid = uid;
     if (name != null) _name = name;
+    if (email != null) _email = email;
     if (matricule != null) _matricule = matricule;
     if (phoneNumber != null) _phonenumber = phoneNumber;
     if (avatarUrl != null) _avatarUrl = avatarUrl;
     if (institutionId != null) _institutionId = institutionId;
     if (institutionName != null) _institutionName = institutionName;
+    if (bio != null) _bio = bio;
+    if (department != null) _department = department;
+    if (level != null) _level = level;
+    if (role != null) _role = role;
+    if (subscriptionTier != null) _subscriptionTier = subscriptionTier;
+    if (subscriptionExpiry != null) _subscriptionExpiry = subscriptionExpiry;
+    if (freeDownloadCount != null) _freeDownloadCount = freeDownloadCount;
+    if (createdAt != null) _createdAt = createdAt;
     notifyListeners();
   }
 }

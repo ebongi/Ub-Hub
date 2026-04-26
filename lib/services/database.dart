@@ -15,6 +15,7 @@ import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/services/notification_model.dart';
 import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/school.dart';
+import 'package:go_study/services/recent_activity_service.dart';
 
 class DatabaseService {
   final String? uid;
@@ -29,6 +30,9 @@ class DatabaseService {
     String? phoneNumber,
     String? level,
     String? institutionId,
+    String? department,
+    String? bio,
+    String? avatarUrl,
   }) async {
     if (uid == null) return;
     return await _supabase.from('profiles').upsert({
@@ -38,6 +42,9 @@ class DatabaseService {
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (level != null) 'level': level,
       if (institutionId != null) 'institution_id': institutionId,
+      if (department != null) 'department': department,
+      if (bio != null) 'bio': bio,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
     });
   }
 
@@ -47,7 +54,14 @@ class DatabaseService {
         .from('profiles')
         .stream(primaryKey: ['id'])
         .eq('id', uid!)
-        .map((data) => UserProfile.fromSupabase(data.first));
+        .map((data) {
+          if (data.isEmpty) {
+            final authUser = Supabase.instance.client.auth.currentUser;
+            final parsedName = authUser?.userMetadata?['name'] ?? authUser?.email?.split('@').first;
+            return UserProfile(id: uid!, name: parsedName);
+          }
+          return UserProfile.fromSupabase(data.first);
+        });
   }
 
   // ==================== Multitenancy Methods ====================
@@ -103,7 +117,7 @@ class DatabaseService {
     
     if (institutionId != null) {
       return query
-          .eq('institution_id', institutionId)
+          .eq('school_id', institutionId)
           .order('name')
           .map((data) => data.map((json) => Department.fromSupabase(json)).toList());
     }
@@ -115,6 +129,22 @@ class DatabaseService {
 
   // Legacy getter for backward compatibility
   Stream<List<Department>> get departments => getDepartments();
+
+  // Get a single department by ID
+  Future<Department?> getDepartment(String id) async {
+    try {
+      final data = await _supabase
+          .from('departments')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
+      if (data == null) return null;
+      return Department.fromSupabase(data);
+    } catch (e) {
+      print('Error fetching department: $e');
+      return null;
+    }
+  }
 
   // Get courses for a specific department
   Stream<List<Course>> getCoursesForDepartment(String departmentId) {
@@ -141,6 +171,7 @@ class DatabaseService {
         .insert(department.toSupabase())
         .select()
         .single();
+
     final id = data['id'] as String;
 
     // Trigger notification
@@ -154,6 +185,12 @@ class DatabaseService {
     return id;
   }
 
+  // Delete a department
+  Future<void> deleteDepartment(String departmentId) async {
+    await _supabase.from('departments').delete().eq('id', departmentId);
+    await RecentActivityService().clearIfMatches(departmentId);
+  }
+
   // Create a new course
   Future<String> createCourse(Course course) async {
     final data = await _supabase
@@ -161,6 +198,7 @@ class DatabaseService {
         .insert(course.toSupabase())
         .select()
         .single();
+
     final id = data['id'] as String;
 
     // Trigger notification
@@ -172,6 +210,11 @@ class DatabaseService {
     );
 
     return id;
+  }
+
+  // Delete a course
+  Future<void> deleteCourse(String courseId) async {
+    await _supabase.from('courses').delete().eq('id', courseId);
   }
 
   // Upload an image and get the public URL
@@ -214,7 +257,10 @@ class DatabaseService {
   Future<String> addMaterial(CourseMaterial material) async {
     final data = await _supabase
         .from('course_materials')
-        .insert(material.toSupabase())
+        .insert({
+          ...material.toSupabase(),
+          if (material.uploaderId == null && uid != null) 'uploader_id': uid,
+        })
         .select()
         .single();
     final id = data['id'] as String;
@@ -232,6 +278,11 @@ class DatabaseService {
     );
 
     return id;
+  }
+
+  // Delete a material record
+  Future<void> deleteMaterial(String materialId) async {
+    await _supabase.from('course_materials').delete().eq('id', materialId);
   }
 
   // Get materials for a specific course
@@ -411,8 +462,8 @@ class DatabaseService {
   Future<void> upgradeSubscription(SubscriptionTier tier) async {
     if (uid == null) return;
 
-    // Silver lasts for 14 days, others for 30 days
-    final durationDays = tier == SubscriptionTier.silver ? 14 : 30;
+    // Monthly lasts for 30 days, Yearly for 365 days
+    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
     final expiry = DateTime.now().add(Duration(days: durationDays));
 
     await _supabase

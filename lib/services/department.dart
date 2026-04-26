@@ -4,6 +4,7 @@ class Department {
   final String schoolId;
   final String description;
   final String? imageUrl;
+  final String? adminId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -13,6 +14,7 @@ class Department {
     this.schoolId = '',
     this.description = '',
     this.imageUrl,
+    this.adminId,
     this.createdAt,
     this.updatedAt,
   });
@@ -24,6 +26,7 @@ class Department {
       schoolId: json['school_id'] ?? '',
       description: json['description'] ?? '',
       imageUrl: json['image_url'],
+      adminId: json['admin_id'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -39,6 +42,7 @@ class Department {
       'school_id': schoolId,
       'description': description,
       'image_url': imageUrl,
+      'admin_id': adminId,
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }

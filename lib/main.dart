@@ -1,4 +1,5 @@
 import 'package:go_study/services/message_provider.dart';
+import 'package:rive/rive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -19,7 +20,7 @@ void main() async {
 
   // 1. Load environment variables FIRST
   await AppConfig.init();
-
+  await RiveNative.init();
   // 2. Run remaining initializations in parallel
   final initResults = await Future.wait([
     sb.Supabase.initialize(
@@ -39,14 +40,26 @@ void main() async {
   final prefs = initResults[1] as SharedPreferences;
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
   final themeModeIndex = prefs.getInt('theme_mode');
-  final initialThemeMode = themeModeIndex != null ? ThemeMode.values[themeModeIndex] : ThemeMode.system;
+  final initialThemeMode = themeModeIndex != null
+      ? ThemeMode.values[themeModeIndex]
+      : ThemeMode.system;
+
+  final accentColorValue = prefs.getInt('accent_color');
+  final initialAccentColor = accentColorValue != null
+      ? Color(accentColorValue)
+      : Colors.blue;
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => UserModel()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider(initialMode: initialThemeMode)),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(
+            initialMode: initialThemeMode,
+            initialColor: initialAccentColor,
+          ),
+        ),
         StreamProvider<sb.User?>(
           create: (_) => sb.Supabase.instance.client.auth.onAuthStateChange.map(
             (data) => data.session?.user,

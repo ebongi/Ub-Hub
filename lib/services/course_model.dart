@@ -6,6 +6,7 @@ class Course {
   final String? semester;
   final String? level;
   final DateTime? createdAt;
+  final String? adminId;
   final DateTime? updatedAt;
 
   Course({
@@ -16,6 +17,7 @@ class Course {
     this.semester,
     this.level,
     this.createdAt,
+    this.adminId,
     this.updatedAt,
   });
 
@@ -30,6 +32,7 @@ class Course {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
+      adminId: json['admin_id'],
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
@@ -43,6 +46,7 @@ class Course {
       'department_id': departmentId,
       if (semester != null) 'semester': semester,
       if (level != null) 'level': level,
+      'admin_id': adminId,
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }
