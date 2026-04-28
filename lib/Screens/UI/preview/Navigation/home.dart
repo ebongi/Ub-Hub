@@ -7,6 +7,7 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/portalScreen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
@@ -27,6 +28,7 @@ import 'package:go_study/services/recent_activity_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/core/responsive.dart';
 
 class ToolItem {
   final String name;
@@ -159,10 +161,17 @@ class _HomeState extends State<Home> {
     ToolItem(
       name: "Transcripts",
       icon: Icons.description_rounded,
-      backgroundColor: const Color(0xFF4CAF50),
-      brandColor: Colors.grey,
+      backgroundColor:   Colors.transparent,
+      brandColor:  const Color(0xFFE53935),
       widget:  const Transcriptscreen(),
     ),
+    ToolItem(
+      name:"PORTAL",
+      icon: Icons.school_rounded,
+      backgroundColor:  Colors.transparent,
+      brandColor: const Color(0xFA308BAF),
+      widget: const Portalscreen(),
+    )
   ];
 
   // int _notificationCount = ;
@@ -360,13 +369,14 @@ class ToolboxSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final crossAxisCount = context.isMobile ? 3 : (context.isTablet ? 4 : 6);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 10,
-        mainAxisExtent: 110, // Compact height
+        mainAxisExtent: context.isMobile ? 110 : 130, // Proportional height
         mainAxisSpacing: 10,
       ),
       itemCount: items.length,
@@ -604,9 +614,10 @@ class DepartmentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final cardWidth = context.isMobile ? 280.0 : 320.0;
 
     return Container(
-      height: 240,
+      height: context.isMobile ? 240 : 280,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -618,7 +629,7 @@ class DepartmentSection extends StatelessWidget {
           return FadeInSlide(
             delay: index * 0.1,
             child: Container(
-              width: 280,
+              width: cardWidth,
               margin: const EdgeInsets.only(right: 16),
               child: ScaleButton(
                 onTap: () async {

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_study/main.dart';
+import 'package:go_study/Screens/authentication/wrap.dart';
+import 'package:go_study/Screens/onboarding/onboarding_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-// Hide Rive's 'Animation' to avoid ambiguity with Flutter's Animation class
-import 'package:rive/rive.dart' hide Animation;
 
 class SplashScreen extends StatefulWidget {
   final bool isFirstLaunch;
@@ -21,19 +20,17 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // FileLoader must be created once and disposed — no StateMachineController needed
-  final FileLoader _fileLoader = FileLoader.fromAsset(
-    'assets/rive/15288-28809-just-for-test.riv',
-    riveFactory: Factory.flutter,
-  );
-
   Future<void> _loadVersionDetails() async {
-    final appInfo = await PackageInfo.fromPlatform();
-    if (mounted) {
-      setState(() {
-        _version = appInfo.version;
-        _buildNumber = appInfo.buildNumber;
-      });
+    try {
+      final appInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _version = appInfo.version;
+          _buildNumber = appInfo.buildNumber;
+        });
+      }
+    } catch (e) {
+      debugPrint("Failed to load version info: $e");
     }
   }
 
@@ -57,19 +54,18 @@ class _SplashScreenState extends State<SplashScreen>
           CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
         );
 
-    // Reveal text after animation settles
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) _fadeController.forward();
-    });
+    // Start entrance animation
+    _fadeController.forward();
 
     // Navigate after splash completes
-    Future.delayed(const Duration(milliseconds: 3200), () {
+    Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, animation, __) =>
-                AppEntryPoint(isFirstLaunch: widget.isFirstLaunch),
+            pageBuilder: (_, animation, __) => widget.isFirstLaunch
+                ? const OnboardingScreen()
+                : const AuthWrapper(),
             transitionsBuilder: (_, animation, __, child) =>
                 FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 600),
@@ -82,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _fileLoader.dispose();
     super.dispose();
   }
 
@@ -106,36 +101,25 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Rive animation (new v0.14 API)
-                    SizedBox(
-                      width: 260,
-                      height: 260,
-                      child: RiveWidgetBuilder(
-                        fileLoader: _fileLoader,
-                        artboardSelector: const ArtboardDefault(),
-                        stateMachineSelector: const StateMachineDefault(),
-                        builder: (context, state) {
-                          return switch (state) {
-                            RiveLoaded(:final controller) => RiveWidget(
-                              controller: controller,
-                              fit: Fit.contain,
-                            ),
-                            RiveLoading() => const Center(
-                              child: CircularProgressIndicator.adaptive(),
-                            ),
-                            RiveFailed() => Center(
-                              child: Icon(
-                                Icons.animation,
-                                size: 64,
-                                color: cs.primary,
-                              ),
-                            ),
-                          };
-                        },
+                    // Static App Logo
+                    ScaleTransition(
+                      scale: _fadeAnimation,
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(
+                          'assets/images/logoicon.png',
+                          width: 140,
+                          height: 140,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 48),
 
                     // Staggered text reveal
                     SlideTransition(
@@ -152,12 +136,12 @@ class _SplashScreenState extends State<SplashScreen>
                                 letterSpacing: -1,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             _TaglineRow(
                               colorScheme: cs,
                               tags: const ['Learn', 'Practice', 'Achieve'],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 24),
                             Text(
                               'Algorithm Driven UBCOMSA',
                               style: theme.textTheme.bodyLarge?.copyWith(
@@ -194,8 +178,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-// ─── Top colour band ──────────────────────────────────────────────────────────
-
 class _ColorBand extends StatelessWidget {
   final Color primary;
   final Color secondary;
@@ -214,8 +196,6 @@ class _ColorBand extends StatelessWidget {
     );
   }
 }
-
-// ─── Tagline pill row ─────────────────────────────────────────────────────────
 
 class _TaglineRow extends StatelessWidget {
   final ColorScheme colorScheme;
@@ -247,8 +227,6 @@ class _TaglineRow extends StatelessWidget {
     );
   }
 }
-
-// ─── Version badge ────────────────────────────────────────────────────────────
 
 class _VersionBadge extends StatelessWidget {
   final String version;
