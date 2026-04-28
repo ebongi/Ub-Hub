@@ -78,6 +78,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   syncfusion_flutter_pdf: ^28.2.12
   rive: ^0.14.4
+  webview_flutter: ^4.10.0
   
 
 dev_dependencies:

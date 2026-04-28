@@ -23,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/services/recent_activity_service.dart';
+import 'package:go_study/core/responsive.dart';
 
 class DepartmentScreen extends StatefulWidget {
   final String departmentName;
@@ -106,7 +107,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 120.0,
+              expandedHeight: context.dynamicSize(120),
               floating: false,
               pinned: true,
               stretch: true,
@@ -187,7 +188,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 title: Text(
                   widget.departmentName,
                   style: GoogleFonts.outfit(
-                    fontSize: 22,
+                    fontSize: context.dynamicText(22),
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : theme.colorScheme.primary,
                   ),
@@ -212,11 +213,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   dividerColor: Colors.transparent,
                   labelStyle: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: context.dynamicText(13),
                   ),
                   unselectedLabelStyle: GoogleFonts.outfit(
                     fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                    fontSize: context.dynamicText(13),
                   ),
                   tabs: const [
                     Tab(

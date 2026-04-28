@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/responsive.dart';
 
 /// Standardized scaling animation for premium dialogs.
 Future<T?> showPremiumGeneralDialog<T>({
@@ -73,7 +74,7 @@ class PremiumDialogHeader extends StatelessWidget {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.w800,
-              fontSize: 22,
+              fontSize: context.dynamicText(22),
               color: isDark ? Colors.white : theme.colorScheme.primary,
             ),
           ),
@@ -84,7 +85,7 @@ class PremiumDialogHeader extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  fontSize: 13,
+                  fontSize: context.dynamicText(13),
                   color: isDark ? Colors.white54 : Colors.grey[600],
                 ),
               ),
@@ -130,7 +131,7 @@ class PremiumTextField extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.outfit(
-            fontSize: 13,
+            fontSize: context.dynamicText(13),
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.white70 : Colors.black54,
             letterSpacing: 0.5,
@@ -144,17 +145,18 @@ class PremiumTextField extends StatelessWidget {
           validator: validator,
           enabled: enabled,
           style: GoogleFonts.outfit(
-            fontSize: 15,
+            fontSize: context.dynamicText(15),
             color: isDark ? Colors.white : Colors.black87,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.outfit(
+              fontSize: context.dynamicText(14),
               color: isDark ? Colors.white24 : Colors.black26,
             ),
             prefixIcon: Icon(
               icon,
-              size: 20,
+              size: context.dynamicSize(20),
               color: isDark ? Colors.white38 : Colors.black38,
             ),
             filled: true,
@@ -309,7 +311,7 @@ class PremiumSubmitButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      height: 54,
+      height: context.dynamicSize(54),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(

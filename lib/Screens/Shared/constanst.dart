@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/core/responsive.dart';
 
 // Custom widget for image customization
 Widget buildImage({String? path}) {
@@ -182,8 +183,8 @@ class DepartmentUI extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.sizeOf(context).height / 3.5,
-      width: MediaQuery.sizeOf(context).width / 2.275,
+      height: context.isMobile ? 220 : 250,
+      width: context.isMobile ? context.widthPct(45) : 280,
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -200,8 +201,8 @@ class DepartmentUI extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 100,
-            width: MediaQuery.sizeOf(context).width / 2.5,
+            height: context.isMobile ? 100 : 120,
+            width: double.infinity,
             child: Image.asset(imageurl, fit: BoxFit.cover),
           ),
           SizedBox(height: 2),
@@ -370,7 +371,7 @@ class AuthHeader extends StatelessWidget {
         Text(
           title,
           style: GoogleFonts.outfit(
-            fontSize: 36,
+            fontSize: context.dynamicText(36),
             fontWeight: FontWeight.w800,
             color: isDarkMode ? Colors.white : theme.colorScheme.primary,
             letterSpacing: -0.5,
@@ -380,7 +381,7 @@ class AuthHeader extends StatelessWidget {
         Text(
           subtitle,
           style: GoogleFonts.outfit(
-            fontSize: 17,
+            fontSize: context.dynamicText(17),
             height: 1.5,
             color: isDarkMode ? Colors.white70 : Colors.grey[600],
             fontWeight: FontWeight.w400,
@@ -428,11 +429,12 @@ class AuthTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: GoogleFonts.outfit(
+          fontSize: context.dynamicText(14),
           color: isDarkMode ? Colors.white38 : Colors.grey[500],
         ),
         prefixIcon: Icon(
           prefixIcon,
-          size: 22,
+          size: context.dynamicSize(22),
           color: isDarkMode ? Colors.cyanAccent : theme.colorScheme.primary,
         ),
         suffixIcon: suffixIcon,
@@ -440,9 +442,9 @@ class AuthTextField extends StatelessWidget {
         fillColor: isDarkMode
             ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
             : Colors.grey.withOpacity(0.08),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 20,
+        contentPadding: EdgeInsets.symmetric(
+          vertical: context.dynamicSize(18),
+          horizontal: context.dynamicSize(20),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -492,7 +494,7 @@ class AuthButton extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      height: 60,
+      height: context.dynamicSize(60),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: isDarkMode
