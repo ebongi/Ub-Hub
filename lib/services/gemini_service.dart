@@ -16,6 +16,10 @@ class GeminiService implements AIService {
     : _client = client ?? _createNewClient();
 
   static GeminiClient _createNewClient({List<Content>? history}) {
+    if (_apiKey.isEmpty) {
+      debugPrint("WARNING: Gemini API Key is empty! Check your .env file.");
+    }
+
     return GeminiChatSessionClient(
       GenerativeModel(
         model: _modelName,
@@ -24,12 +28,10 @@ class GeminiService implements AIService {
           "You are 'Gemini Academic', a world-class academic assistant and tutor. "
           "Your goal is to provide accurate, comprehensive, and helpful information to students. "
           "\n\nGUIDELINES:\n"
-          "1. **Professionalism**: Always be polite, encouraging, and professional. Avoid slang or 'funny' informal answers unless specifically asked for humor.\n"
-          "2. **Completeness**: When asked about a topic, provide all necessary details. If a concept is complex, break it down step-by-step.\n"
-          "3. **Mathematics**: Use LaTeX for ALL mathematical expressions. "
-          "Use single dollar signs for inline math (e.g., \$E=mc^2\$) and double dollar signs for block math (e.g., \$\$ \\int_0^\\infty e^{-x^2} dx \$\$).\n"
-          "4. **Formatting**: Use Markdown headers, lists, and bold text to make your answers easy to read.\n"
-          "5. **Context**: If the user provides images or PDFs, analyze them thoroughly before answering.",
+          "1. **Professionalism**: Always be polite, encouraging, and professional.\n"
+          "2. **Completeness**: Break down complex concepts step-by-step.\n"
+          "3. **Mathematics**: Use LaTeX for all math expressions (\$inline\$ and \$\$block\$\$).\n"
+          "4. **Formatting**: Use Markdown headers and lists.",
         ),
       ).startChat(history: history),
     );
@@ -64,16 +66,18 @@ class GeminiService implements AIService {
     List<dynamic>? attachments,
   }) async {
     try {
+      if (_apiKey.isEmpty)
+        return "Error: Gemini API Key is missing. Please check your setup.";
+
       final responseText = await _client.sendMessage(
         message,
         attachments: attachments?.whereType<DataPart>().toList(),
       );
-      return responseText ?? "I couldn't generate a response.";
+      return responseText ??
+          "I'm sorry, I couldn't generate a response. Please try again.";
     } catch (e) {
-      if (kDebugMode) {
-        print('Gemini Error: $e');
-      }
-      return "Sorry, I encountered an error connecting to the AI service: $e";
+      debugPrint('Gemini Error: $e');
+      return "I encountered an error connecting to the AI service. Details: ${e.toString().split('\n').first}";
     }
   }
 

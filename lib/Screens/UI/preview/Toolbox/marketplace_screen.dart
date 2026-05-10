@@ -21,6 +21,7 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/listing_detail_screen.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -285,9 +286,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                         width: double.infinity,
                         color: colorScheme.primary.withOpacity(0.05),
                         child: Icon(
-                          listing.itemType == 'digital'
-                              ? Icons.description_rounded
-                              : Icons.inventory_2_rounded,
+                          _getCategoryIcon(listing.category),
                           color: colorScheme.primary.withOpacity(0.3),
                           size: 40,
                         ),
@@ -535,130 +534,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
   }
 
   void _showListingDetail(MarketplaceListing listing) {
-    final isMe = listing.vendorId == _currentUser!.id;
-
-    showPremiumGeneralDialog(
-      context: context,
-      barrierLabel: "Listing Detail",
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-        contentPadding: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (listing.imageUrls.isNotEmpty)
-              SizedBox(
-                height: 250,
-                child: PageView.builder(
-                  itemCount: listing.imageUrls.length,
-                  itemBuilder: (context, i) => CachedNetworkImage(
-                    imageUrl: listing.imageUrls[i],
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              )
-            else
-              Container(
-                height: 150,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                child: Center(
-                  child: Icon(
-                    Icons.inventory_2_rounded,
-                    size: 60,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildBadge(listing.category.toUpperCase(), Colors.blue),
-                      if (listing.condition != null)
-                        _buildBadge(listing.condition!, Colors.green),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    listing.title,
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "${listing.price.toInt()} XAF",
-                    style: GoogleFonts.outfit(
-                      fontSize: 20,
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    listing.description ?? "No description provided.",
-                    style: GoogleFonts.outfit(
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  if (!isMe)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: PremiumSubmitButton(
-                            label: "Message Seller",
-                            isLoading: false,
-                            onPressed: () => _messageSeller(listing),
-                          ),
-                        ),
-                        if (listing.itemType == 'digital') ...[
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: PremiumSubmitButton(
-                              label: "Buy Now",
-                              isLoading: false,
-                              onPressed: () => _handleDigitalPurchase(listing),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _messageSeller(MarketplaceListing listing) async {
-    // Fetch vendor profile
-    final vendorData = await Supabase.instance.client
-        .from('profiles')
-        .select('id, name, avatar_url')
-        .eq('id', listing.vendorId)
-        .single();
-
-    if (!mounted) return;
-
-    final vendor = FriendProfile.fromJson(vendorData);
-
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PrivateChatScreen(
-          friend: vendor,
-          myId: _currentUser!.id,
-          friendsService: FriendsService(),
+        builder: (_) => ListingDetailScreen(
+          listing: listing,
+          currentUserId: _currentUser!.id,
         ),
       ),
     );
@@ -709,37 +590,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                       setDialogState(() => itemType = v.first),
                 ),
                 const SizedBox(height: 20),
-                if (itemType == 'digital') ...[
-                  if (digitalFile == null)
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final result = await FilePicker.platform.pickFiles();
-                        if (result != null)
-                          setDialogState(
-                            () => digitalFile = result.files.first,
-                          );
-                      },
-                      icon: const Icon(Icons.attach_file_rounded),
-                      label: const Text("Select PDF/Ebook"),
-                    )
-                  else
-                    ListTile(
-                      leading: const Icon(
-                        Icons.insert_drive_file_rounded,
-                        color: Colors.blue,
-                      ),
-                      title: Text(
-                        digitalFile!.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () =>
-                            setDialogState(() => digitalFile = null),
-                      ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Item Images",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
-                ] else ...[
+                  ),
+                  const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -807,19 +666,53 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: condition,
-                    items:
-                        ['New', 'Used - Like New', 'Used - Good', 'Used - Fair']
-                            .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
-                    onChanged: (v) => setDialogState(() => condition = v!),
-                    decoration: const InputDecoration(labelText: "Condition"),
-                  ),
-                ],
+                  const SizedBox(height: 20),
+                  if (itemType == 'digital') ...[
+                    if (digitalFile == null)
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final result = await FilePicker.platform.pickFiles();
+                          if (result != null)
+                            setDialogState(
+                              () => digitalFile = result.files.first,
+                            );
+                        },
+                        icon: const Icon(Icons.attach_file_rounded),
+                        label: const Text("Select PDF/Ebook"),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                      )
+                    else
+                      ListTile(
+                        leading: const Icon(
+                          Icons.insert_drive_file_rounded,
+                          color: Colors.blue,
+                        ),
+                        title: Text(
+                          digitalFile!.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () =>
+                              setDialogState(() => digitalFile = null),
+                        ),
+                      ),
+                  ] else ...[
+                    DropdownButtonFormField<String>(
+                      value: condition,
+                      items:
+                          ['New', 'Used - Like New', 'Used - Good', 'Used - Fair']
+                              .map(
+                                (c) => DropdownMenuItem(value: c, child: Text(c)),
+                              )
+                              .toList(),
+                      onChanged: (v) => setDialogState(() => condition = v!),
+                      decoration: const InputDecoration(labelText: "Condition"),
+                    ),
+                  ],
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: selectedCategory,
@@ -881,11 +774,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                   // Upload images
                   for (var img in selectedImages) {
                     final bytes = await File(img.path).readAsBytes();
-                    final url = await _dbService.uploadMaterialFile(
+                    final url = await _dbService.uploadMarketplaceImage(
                       bytes,
-                      'listings',
                       img.name,
-                      false,
                     );
                     imageUrls.add(url);
                   }
@@ -936,13 +827,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
     );
   }
 
-  void _handleDigitalPurchase(MarketplaceListing listing) async {
-    // Similar to previous purchase flow logic
-    ErrorHandler.showErrorSnackBar(
-      context,
-      "Purchase flow for specific listings is coming soon!",
-    );
-  }
+
 
   void _confirmDeleteListing(MarketplaceListing listing) async {
     final confirmed = await showDialog<bool>(
@@ -989,27 +874,26 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.outfit(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
+
 
   Future<void> _showWithdrawDialog(double amount) async {
     // Reusing previous withdraw dialog logic
     ErrorHandler.showSuccessSnackBar(context, "Withdrawal request sent!");
   }
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Electronics':
+        return Icons.devices_other_rounded;
+      case 'Books & PDFs':
+        return Icons.book_rounded;
+      case 'Stationery':
+        return Icons.edit_note_rounded;
+      case 'Services':
+        return Icons.build_rounded;
+      default:
+        return Icons.inventory_2_rounded;
+    }
+  }
+
+
 }

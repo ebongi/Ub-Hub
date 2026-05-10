@@ -181,16 +181,28 @@ class _NotificationsState extends State<Notifications> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Recent Activity",
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: theme.colorScheme.primary,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Recent Activity",
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
-                    ),
+                      TextButton(
+                        onPressed: _clearAll,
+                        child: Text(
+                          "Clear All",
+                          style: GoogleFonts.outfit(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

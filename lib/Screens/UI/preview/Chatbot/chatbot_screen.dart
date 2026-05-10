@@ -11,7 +11,7 @@ import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/ai_sync_service.dart';
-import 'package:go_study/services/deepseek_service.dart';
+import 'package:go_study/services/gemini_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -72,7 +72,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
-    _aiService = widget.aiService ?? DeepSeekService();
+    _aiService = widget.aiService ?? GeminiService();
     _syncService = widget.syncService ?? AISyncService();
     _loadSessionsFromBackend();
   }

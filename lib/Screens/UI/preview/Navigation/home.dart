@@ -14,6 +14,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_manager_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/marketplace_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
@@ -25,6 +26,9 @@ import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
 import 'package:go_study/services/recent_activity_service.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_manager_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -164,19 +168,26 @@ class _HomeState extends State<Home> {
     ToolItem(
       name: "Transcripts",
       icon: Icons.description_rounded,
-      backgroundColor:   Colors.transparent,
-      brandColor:  const Color(0xFFE53935),
-      widget:  const Transcriptscreen(),
+      backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFFE53935),
+      widget: const Transcriptscreen(),
     ),
     ToolItem(
-      name:"PORTAL",
+      name: "PORTAL",
       icon: Icons.school_rounded,
-      backgroundColor:  Colors.transparent,
+      backgroundColor: Colors.transparent,
       brandColor: const Color(0xFA308BAF),
       widget: const Portalscreen(),
     ),
 
-    ToolItem(name: "Q/A", icon: Icons.bolt_outlined, backgroundColor: Colors.transparent, brandColor: const Color(0xFFEA4335), widget: Text(""))
+
+    ToolItem(
+      name: "UB Support Bot",
+      icon: Icons.psychology_rounded,
+      backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFFEA4335),
+      widget: const KnowledgeBotChatScreen(),
+    ),
   ];
 
   // int _notificationCount = ;
@@ -287,10 +298,7 @@ class _HomeState extends State<Home> {
                   },
                 ),
                 const ViewSection(title: "Other Services"),
-                ToolboxSection(
-                  items: toolboxItems,
-                  userProfile: _userProfile,
-                ),
+                ToolboxSection(items: toolboxItems, userProfile: _userProfile),
                 const SizedBox(height: 25), // Padding for FAB
               ]),
             ),

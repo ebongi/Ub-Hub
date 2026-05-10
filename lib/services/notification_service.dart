@@ -8,7 +8,39 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Handling a background message: ${message.messageId}");
+  // We need to initialize local notifications in the background isolate
+  final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
+  
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: DarwinInitializationSettings(),
+  );
+
+  await localNotifications.initialize(initializationSettings);
+
+  if (message.notification != null) {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'go_study_background',
+      'GO Study Background',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await localNotifications.show(
+      message.hashCode,
+      message.notification!.title,
+      message.notification!.body,
+      platformDetails,
+    );
+  }
 }
 
 class NotificationService {
@@ -324,6 +356,7 @@ class NotificationService {
   Future<void> clearAll() async {
     if (_uid == null) return;
     await _supabase.from('notifications').delete().eq('user_id', _uid!);
+    await _notificationsPlugin.cancelAll();
   }
 
   /// Mark a notification as read

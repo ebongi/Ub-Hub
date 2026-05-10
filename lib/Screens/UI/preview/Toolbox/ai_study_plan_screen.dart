@@ -4,8 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/ai_service.dart';
-import 'package:go_study/services/deepseek_service.dart';
-// import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/exam_event.dart';
@@ -18,7 +17,7 @@ class AIStudyPlanScreen extends StatefulWidget {
 }
 
 class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
-  final AIService _aiService = DeepSeekService();
+  final AIService _aiService = GeminiService();
   final _supabase = Supabase.instance.client;
 
   bool _isLoading = false;

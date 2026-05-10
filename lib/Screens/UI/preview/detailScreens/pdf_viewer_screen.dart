@@ -12,8 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/ai_service.dart';
 
-import 'package:go_study/services/deepseek_service.dart';
-// import 'package:go_study/services/gemini_service.dart';
+import 'package:go_study/services/gemini_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
@@ -34,7 +33,7 @@ class PDFViewerScreen extends StatefulWidget {
 }
 
 class _PDFViewerScreenState extends State<PDFViewerScreen> {
-  final AIService _aiService = DeepSeekService();
+  final AIService _aiService = GeminiService();
   final PdfViewerController _pdfViewerController = PdfViewerController();
   final TextEditingController _searchController = TextEditingController();
   PdfTextSearchResult _searchResult = PdfTextSearchResult();

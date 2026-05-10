@@ -17,6 +17,7 @@ import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/school.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/services/marketplace_listing.dart';
+import 'package:go_study/services/bot_knowledge.dart';
 
 class DatabaseService {
   final String? uid;
@@ -58,7 +59,9 @@ class DatabaseService {
         .map((data) {
           if (data.isEmpty) {
             final authUser = Supabase.instance.client.auth.currentUser;
-            final parsedName = authUser?.userMetadata?['name'] ?? authUser?.email?.split('@').first;
+            final parsedName =
+                authUser?.userMetadata?['name'] ??
+                authUser?.email?.split('@').first;
             return UserProfile(id: uid!, name: parsedName);
           }
           return UserProfile.fromSupabase(data.first);
@@ -73,7 +76,9 @@ class DatabaseService {
         .from('institutions')
         .stream(primaryKey: ['id'])
         .order('name')
-        .map((data) => data.map((json) => Institution.fromSupabase(json)).toList());
+        .map(
+          (data) => data.map((json) => Institution.fromSupabase(json)).toList(),
+        );
   }
 
   /// Get a single institution by ID
@@ -109,21 +114,28 @@ class DatabaseService {
         .stream(primaryKey: ['id'])
         .eq('school_id', schoolId)
         .order('name')
-        .map((data) => data.map((json) => Department.fromSupabase(json)).toList());
+        .map(
+          (data) => data.map((json) => Department.fromSupabase(json)).toList(),
+        );
   }
 
   // Get departments stream (optionally filtered by institution)
   Stream<List<Department>> getDepartments({String? institutionId}) {
     final query = _supabase.from('departments').stream(primaryKey: ['id']);
-    
+
     if (institutionId != null) {
       return query
           .eq('school_id', institutionId)
           .order('name')
-          .map((data) => data.map((json) => Department.fromSupabase(json)).toList());
+          .map(
+            (data) =>
+                data.map((json) => Department.fromSupabase(json)).toList(),
+          );
     }
-    
-    return query.order('name').map(
+
+    return query
+        .order('name')
+        .map(
           (data) => data.map((json) => Department.fromSupabase(json)).toList(),
         );
   }
@@ -233,6 +245,30 @@ class DatabaseService {
           path,
           imageData,
           fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+
+    return _supabase.storage.from('department_images').getPublicUrl(path);
+  }
+
+  // Upload an image for a marketplace listing
+  Future<String> uploadMarketplaceImage(
+    Uint8List imageData,
+    String fileName,
+  ) async {
+    final cleanName =
+        '${DateTime.now().millisecondsSinceEpoch}_${fileName.replaceAll(' ', '_')}';
+    final path = 'marketplace/$cleanName';
+
+    // Using 'department_images' bucket as it is configured for public images
+    await _supabase.storage
+        .from('department_images')
+        .uploadBinary(
+          path,
+          imageData,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
         );
 
     return _supabase.storage.from('department_images').getPublicUrl(path);
@@ -546,6 +582,7 @@ class DatabaseService {
               data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
         );
   }
+
   /// Get all materials available in the marketplace
   Stream<List<CourseMaterial>> getAllMarketplaceMaterials() {
     return _supabase
@@ -568,8 +605,9 @@ class DatabaseService {
         .eq('status', 'active')
         .order('created_at', ascending: false)
         .map(
-          (data) =>
-              data.map((json) => MarketplaceListing.fromSupabase(json)).toList(),
+          (data) => data
+              .map((json) => MarketplaceListing.fromSupabase(json))
+              .toList(),
         );
   }
 
@@ -581,8 +619,9 @@ class DatabaseService {
         .eq('vendor_id', userId)
         .order('created_at', ascending: false)
         .map(
-          (data) =>
-              data.map((json) => MarketplaceListing.fromSupabase(json)).toList(),
+          (data) => data
+              .map((json) => MarketplaceListing.fromSupabase(json))
+              .toList(),
         );
   }
 
@@ -612,12 +651,22 @@ class DatabaseService {
         .eq('status', 'success')
         .asyncMap((transactions) async {
           // 1. Get user's material IDs
-          final materials = await _supabase.from('course_materials').select('id').eq('uploader_id', userId);
-          final materialIds = (materials as List).map((m) => m['id'] as String).toList();
+          final materials = await _supabase
+              .from('course_materials')
+              .select('id')
+              .eq('uploader_id', userId);
+          final materialIds = (materials as List)
+              .map((m) => m['id'] as String)
+              .toList();
 
           // 2. Get user's listing IDs
-          final listings = await _supabase.from('marketplace_listings').select('id').eq('vendor_id', userId);
-          final listingIds = (listings as List).map((l) => l['id'] as String).toList();
+          final listings = await _supabase
+              .from('marketplace_listings')
+              .select('id')
+              .eq('vendor_id', userId);
+          final listingIds = (listings as List)
+              .map((l) => l['id'] as String)
+              .toList();
 
           double total = 0;
           for (var t in transactions) {
@@ -660,6 +709,32 @@ class DatabaseService {
     });
   }
 
+  // ==================== Custom Bot Knowledge Methods ====================
+
+  /// Get all knowledge entries for a user (including global ones)
+  Stream<List<BotKnowledge>> getBotKnowledge(String userId) {
+    return _supabase
+        .from('bot_knowledge')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map((data) {
+          return data
+              .map((json) => BotKnowledge.fromSupabase(json))
+              .where((k) => k.userId == userId || k.isGlobal)
+              .toList();
+        });
+  }
+
+  /// Add a new knowledge entry
+  Future<void> addBotKnowledge(BotKnowledge knowledge) async {
+    await _supabase.from('bot_knowledge').insert(knowledge.toSupabase());
+  }
+
+  /// Delete a knowledge entry
+  Future<void> deleteBotKnowledge(String id) async {
+    await _supabase.from('bot_knowledge').delete().eq('id', id);
+  }
+
   // ==================== Grade Tracking / Predictor Methods ====================
 
   /// Get all grades for a specific user
@@ -689,31 +764,42 @@ class DatabaseService {
   /// Get all campus locations (halls, amphis, labs)
   Stream<List<CampusLocation>> getCampusLocations({String? institutionId}) {
     final query = _supabase.from('campus_locations').stream(primaryKey: ['id']);
-    
+
     if (institutionId != null) {
       return query
           .eq('institution_id', institutionId)
           .order('name')
-          .map((data) => data.map((json) => CampusLocation.fromSupabase(json)).toList());
+          .map(
+            (data) =>
+                data.map((json) => CampusLocation.fromSupabase(json)).toList(),
+          );
     }
-    
-    return query.order('name').map(
-          (data) => data.map((json) => CampusLocation.fromSupabase(json)).toList(),
+
+    return query
+        .order('name')
+        .map(
+          (data) =>
+              data.map((json) => CampusLocation.fromSupabase(json)).toList(),
         );
   }
 
   /// Get latest university news
   Stream<List<NewsArticle>> getUniversityNews({String? institutionId}) {
     final query = _supabase.from('university_news').stream(primaryKey: ['id']);
-    
+
     if (institutionId != null) {
       return query
           .eq('institution_id', institutionId)
           .order('created_at', ascending: false)
-          .map((data) => data.map((json) => NewsArticle.fromSupabase(json)).toList());
+          .map(
+            (data) =>
+                data.map((json) => NewsArticle.fromSupabase(json)).toList(),
+          );
     }
-    
-    return query.order('created_at', ascending: false).map(
+
+    return query
+        .order('created_at', ascending: false)
+        .map(
           (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
         );
   }
@@ -727,7 +813,9 @@ class DatabaseService {
       final results = await _supabase
           .from('profiles')
           .select()
-          .or('name.ilike.%$query%,matricule.ilike.%$query%,department.ilike.%$query%')
+          .or(
+            'name.ilike.%$query%,matricule.ilike.%$query%,department.ilike.%$query%',
+          )
           .limit(30);
 
       return (results as List)
