@@ -100,12 +100,19 @@ class UserModel extends ChangeNotifier {
 
   bool get isTrialActive {
     if (_createdAt == null) return false;
-    return DateTime.now().difference(_createdAt!).inDays < 10;
+    return DateTime.now().difference(_createdAt!).inDays < 4;
   }
+
+  bool get hasAccess =>
+      _role == UserRole.admin ||
+      _role == UserRole.contributor ||
+      (_subscriptionTier != SubscriptionTier.free &&
+       (_subscriptionExpiry == null || _subscriptionExpiry!.isAfter(DateTime.now()))) ||
+      isTrialActive;
 
   String get trialTimeLeft {
     if (_createdAt == null) return "Expired";
-    final expiryDate = _createdAt!.add(const Duration(days: 10));
+    final expiryDate = _createdAt!.add(const Duration(days: 4));
     final remaining = expiryDate.difference(DateTime.now());
 
     if (remaining.isNegative) return "Expired";

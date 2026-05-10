@@ -138,18 +138,18 @@ class UserProfile {
 
   bool get isTrialActive {
     if (createdAt == null) return false;
-    return DateTime.now().difference(createdAt!).inDays < 10;
+    return DateTime.now().difference(createdAt!).inDays < 4;
   }
 
   int get trialDaysRemaining {
     if (createdAt == null) return 0;
-    final diff = 10 - DateTime.now().difference(createdAt!).inDays;
-    return diff.clamp(0, 10);
+    final diff = 4 - DateTime.now().difference(createdAt!).inDays;
+    return diff.clamp(0, 4);
   }
 
   String get trialTimeLeft {
     if (createdAt == null) return "Expired";
-    final expiryDate = createdAt!.add(const Duration(days: 10));
+    final expiryDate = createdAt!.add(const Duration(days: 4));
     final remaining = expiryDate.difference(DateTime.now());
 
     if (remaining.isNegative) return "Expired";
@@ -173,4 +173,15 @@ class UserProfile {
 
   bool get canUploadMaterial =>
       role == UserRole.contributor || role == UserRole.admin;
+
+  /// Central logic for the Hard Paywall.
+  /// Access is granted if:
+  /// 1. User is an Admin or Contributor.
+  /// 2. User has an active paid subscription.
+  /// 3. User is still within their 4-day free trial.
+  bool get hasAccess =>
+      role == UserRole.admin ||
+      role == UserRole.contributor ||
+      isSubscribed ||
+      isTrialActive;
 }

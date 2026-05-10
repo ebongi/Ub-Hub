@@ -5,6 +5,7 @@ import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 import 'package:go_study/Screens/authentication/authenticate.dart';
+import 'package:go_study/Screens/authentication/paywall_screen.dart';
 
 import 'package:provider/provider.dart';
 
@@ -92,13 +93,28 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<sb.User?>(context);
+    final userModel = Provider.of<UserModel>(context);
 
     // if the user is not logged in, show the signin screen
     if (user == null) {
       // Show the widget that toggles between Sign In and Register
       return const Authenticate();
     } else {
-      // if the user is logged in, show the home screen
+      // if the user is logged in, check their access status
+      // We only enforce the paywall if the profile has been loaded (createdAt != null)
+      if (userModel.createdAt != null && !userModel.hasAccess) {
+        // Build a user profile object to pass to the paywall
+        final profile = UserProfile(
+          id: userModel.uid ?? user.id,
+          name: userModel.name,
+          role: userModel.role,
+          subscriptionTier: userModel.subscriptionTier,
+          createdAt: userModel.createdAt,
+        );
+        return PaywallScreen(profile: profile);
+      }
+
+      // If they have access, show the home screen
       return const NavBar();
     }
   }
