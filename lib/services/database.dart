@@ -16,6 +16,7 @@ import 'package:go_study/services/notification_model.dart';
 import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/school.dart';
 import 'package:go_study/services/recent_activity_service.dart';
+import 'package:go_study/services/marketplace_listing.dart';
 
 class DatabaseService {
   final String? uid;
@@ -545,27 +546,88 @@ class DatabaseService {
               data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
         );
   }
+  /// Get all materials available in the marketplace
+  Stream<List<CourseMaterial>> getAllMarketplaceMaterials() {
+    return _supabase
+        .from("course_materials")
+        .stream(primaryKey: ["id"])
+        .order("uploaded_at", ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+        );
+  }
 
-  /// Get gross earnings for a specific uploader from successful downloads
+  // --- New Marketplace Listing Methods ---
+
+  /// Get all active marketplace listings
+  Stream<List<MarketplaceListing>> getAllMarketplaceListings() {
+    return _supabase
+        .from('marketplace_listings')
+        .stream(primaryKey: ['id'])
+        .eq('status', 'active')
+        .order('created_at', ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => MarketplaceListing.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Get listings created by a specific user
+  Stream<List<MarketplaceListing>> getUserMarketplaceListings(String userId) {
+    return _supabase
+        .from('marketplace_listings')
+        .stream(primaryKey: ['id'])
+        .eq('vendor_id', userId)
+        .order('created_at', ascending: false)
+        .map(
+          (data) =>
+              data.map((json) => MarketplaceListing.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Add a new marketplace listing
+  Future<void> addMarketplaceListing(MarketplaceListing listing) async {
+    await _supabase.from('marketplace_listings').insert(listing.toSupabase());
+  }
+
+  /// Update a marketplace listing
+  Future<void> updateMarketplaceListing(MarketplaceListing listing) async {
+    await _supabase
+        .from('marketplace_listings')
+        .update(listing.toSupabase())
+        .eq('id', listing.id);
+  }
+
+  /// Delete a marketplace listing
+  Future<void> deleteMarketplaceListing(String id) async {
+    await _supabase.from('marketplace_listings').delete().eq('id', id);
+  }
+
+  /// Get gross earnings for a specific user from all sales (materials & marketplace)
   Stream<double> getGrossEarningsForUploader(String userId) {
     return _supabase
-        .from('course_materials')
+        .from('payment_transactions')
         .stream(primaryKey: ['id'])
-        .eq('uploader_id', userId)
-        .asyncMap((materials) async {
-          if (materials.isEmpty) return 0.0;
-          final materialIds = materials.map((m) => m['id']).toList();
+        .eq('status', 'success')
+        .asyncMap((transactions) async {
+          // 1. Get user's material IDs
+          final materials = await _supabase.from('course_materials').select('id').eq('uploader_id', userId);
+          final materialIds = (materials as List).map((m) => m['id'] as String).toList();
 
-          final transactions = await _supabase
-              .from('payment_transactions')
-              .select('amount')
-              .eq('status', 'success')
-              .eq('item_type', 'download')
-              .filter('material_id', 'in', '(${materialIds.join(",")})');
+          // 2. Get user's listing IDs
+          final listings = await _supabase.from('marketplace_listings').select('id').eq('vendor_id', userId);
+          final listingIds = (listings as List).map((l) => l['id'] as String).toList();
 
           double total = 0;
           for (var t in transactions) {
-            total += (t['amount'] as num).toDouble();
+            final mId = t['material_id'];
+            final lId = t['listing_id'];
+            if (mId != null && materialIds.contains(mId)) {
+              total += (t['amount'] as num).toDouble();
+            } else if (lId != null && listingIds.contains(lId)) {
+              total += (t['amount'] as num).toDouble();
+            }
           }
           return total;
         });
@@ -654,5 +716,42 @@ class DatabaseService {
     return query.order('created_at', ascending: false).map(
           (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
         );
+  }
+  // ==================== Admin Management Methods ====================
+
+  /// Search users for admin purposes (can search by name, matricule, or department)
+  Future<List<UserProfile>> adminSearchUsers(String query) async {
+    if (query.trim().isEmpty) return [];
+
+    try {
+      final results = await _supabase
+          .from('profiles')
+          .select()
+          .or('name.ilike.%$query%,matricule.ilike.%$query%,department.ilike.%$query%')
+          .limit(30);
+
+      return (results as List)
+          .map((json) => UserProfile.fromSupabase(json))
+          .toList();
+    } catch (e) {
+      print('Error searching users: $e');
+      return [];
+    }
+  }
+
+  /// Update a user's role
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    await _supabase
+        .from('profiles')
+        .update({'role': role.name})
+        .eq('id', userId);
+
+    await NotificationService().createNotification(
+      title: 'Privileges Updated',
+      body: 'Your account role has been updated to ${role.name.toUpperCase()}.',
+      type: NotificationType.system,
+      recipientId: userId,
+      notifySelf: false,
+    );
   }
 }

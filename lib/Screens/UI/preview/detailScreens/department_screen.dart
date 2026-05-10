@@ -1037,11 +1037,14 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final formKey = GlobalKey<FormState>();
     bool isProcessing = false;
 
-    double fee = NkwaService.getDocumentDownloadFee();
-    if (material.materialCategory == 'past_question') {
-      fee = NkwaService.getPastQuestionDownloadFee();
-    } else if (material.materialCategory == 'answer') {
-      fee = NkwaService.getAnswerDownloadFee();
+    double fee = material.price;
+    if (fee <= 0) {
+      fee = NkwaService.getDocumentDownloadFee();
+      if (material.materialCategory == 'past_question') {
+        fee = NkwaService.getPastQuestionDownloadFee();
+      } else if (material.materialCategory == 'answer') {
+        fee = NkwaService.getAnswerDownloadFee();
+      }
     }
 
     await showPremiumGeneralDialog(
@@ -1187,11 +1190,14 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     if (userId == null) throw "User not authenticated";
 
     final paymentRef = NkwaService.generatePaymentRef();
-    double amount = NkwaService.getDocumentDownloadFee();
-    if (material.materialCategory == 'past_question') {
-      amount = NkwaService.getPastQuestionDownloadFee();
-    } else if (material.materialCategory == 'answer') {
-      amount = NkwaService.getAnswerDownloadFee();
+    double amount = material.price;
+    if (amount <= 0) {
+      amount = NkwaService.getDocumentDownloadFee();
+      if (material.materialCategory == 'past_question') {
+        amount = NkwaService.getPastQuestionDownloadFee();
+      } else if (material.materialCategory == 'answer') {
+        amount = NkwaService.getAnswerDownloadFee();
+      }
     }
     final formattedPhone = NkwaService.formatPhoneNumber(phoneNumber);
 

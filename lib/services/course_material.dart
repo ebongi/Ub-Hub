@@ -13,6 +13,7 @@ class CourseMaterial {
   final bool isAnswer;
   final String? linkedMaterialId; // ID of the linked question or answer
   final String? uploaderId;
+  final double price;
 
   CourseMaterial({
     this.id = '',
@@ -29,10 +30,8 @@ class CourseMaterial {
     this.isAnswer = false,
     this.linkedMaterialId,
     this.uploaderId,
-  }) : assert(
-         courseId != null || departmentId != null,
-         'Either courseId or departmentId must be provided',
-       );
+    this.price = 0.0,
+  });
 
   factory CourseMaterial.fromSupabase(Map<String, dynamic> json) {
     return CourseMaterial(
@@ -52,6 +51,7 @@ class CourseMaterial {
       isAnswer: json['is_answer'] ?? false,
       linkedMaterialId: json['linked_material_id'],
       uploaderId: json['uploader_id'],
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -69,6 +69,7 @@ class CourseMaterial {
       'is_answer': isAnswer,
       'linked_material_id': linkedMaterialId,
       'uploader_id': uploaderId,
+      'price': price,
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };
   }

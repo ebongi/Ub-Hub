@@ -10,6 +10,7 @@ import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.d
 import 'package:image_picker/image_picker.dart';
 import 'package:go_study/theme_provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 import 'package:provider/provider.dart';
 
 class Profile extends StatefulWidget {
@@ -267,6 +268,12 @@ class _ProfileState extends State<Profile> {
                 _buildThemeSection(context, theme),
 
                 const SizedBox(height: 32),
+
+                // Admin Dashboard Section
+                if (user.role == UserRole.admin) ...[
+                  _buildAdminDashboardCard(context, theme),
+                  const SizedBox(height: 32),
+                ],
 
                 // Logout Section
                 SizedBox(
@@ -862,6 +869,97 @@ class _ProfileState extends State<Profile> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAdminDashboardCard(BuildContext context, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Administrative Control",
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "Manage users and platform settings",
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminPanel()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                "Open Admin Dashboard",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

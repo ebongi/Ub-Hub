@@ -30,6 +30,9 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/core/responsive.dart';
 
+import '../../../../services/notification_model.dart';
+import '../../../../services/notification_service.dart';
+
 class ToolItem {
   final String name;
   final IconData icon;
@@ -171,7 +174,9 @@ class _HomeState extends State<Home> {
       backgroundColor:  Colors.transparent,
       brandColor: const Color(0xFA308BAF),
       widget: const Portalscreen(),
-    )
+    ),
+
+    ToolItem(name: "Q/A", icon: Icons.bolt_outlined, backgroundColor: Colors.transparent, brandColor: const Color(0xFFEA4335), widget: Text(""))
   ];
 
   // int _notificationCount = ;
@@ -283,13 +288,7 @@ class _HomeState extends State<Home> {
                 ),
                 const ViewSection(title: "Other Services"),
                 ToolboxSection(
-                  items: toolboxItems.where((item) {
-                    if (item.name == "Marketplace") {
-                      return _userProfile?.role == UserRole.contributor ||
-                          _userProfile?.role == UserRole.admin;
-                    }
-                    return true;
-                  }).toList(),
+                  items: toolboxItems,
                   userProfile: _userProfile,
                 ),
                 const SizedBox(height: 25), // Padding for FAB
@@ -1137,16 +1136,40 @@ class AppBarUser extends StatelessWidget {
               ),
               icon: const Icon(Icons.notifications_outlined),
             ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-              ),
+            StreamBuilder<List<NotificationModel>>(
+              stream: NotificationService().notifications,
+              builder: (context, snapshot) {
+                final unreadCount = snapshot.hasData
+                    ? snapshot.data!.where((n) => !n!.isRead).length
+                    : 0;
+
+                if (unreadCount == 0) return const SizedBox.shrink();
+
+                return Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

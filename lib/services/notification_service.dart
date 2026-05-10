@@ -4,6 +4,12 @@ import 'package:go_study/services/notification_model.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Handling a background message: ${message.messageId}");
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -13,6 +19,8 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
   final _supabase = Supabase.instance.client;
+  final _fcm = FirebaseMessaging.instance;
+  RealtimeChannel? _notificationChannel;
 
   String? get _uid => _supabase.auth.currentUser?.id;
 
@@ -46,6 +54,104 @@ class NotificationService {
         // Handle notification tap
       },
     );
+    
+    // Initialize FCM
+    await _initFCM();
+    
+    // Start listening for real-time notifications (foreground)
+    refresh();
+  }
+
+  Future<void> _initFCM() async {
+    // Request permissions for iOS
+    NotificationSettings settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      // Get token and save it
+      String? token = await _fcm.getToken();
+      if (token != null) {
+        await _saveTokenToSupabase(token);
+      }
+    }
+
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        showAlert(
+          id: message.hashCode,
+          title: message.notification!.title ?? 'New Notification',
+          body: message.notification!.body ?? '',
+        );
+      }
+    });
+
+    // Handle background messages
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
+
+  Future<void> _saveTokenToSupabase(String token) async {
+    if (_uid == null) return;
+    try {
+      await _supabase.from('profiles').update({
+        'fcm_token': token,
+      }).eq('id', _uid!);
+    } catch (e) {
+      print('Error saving FCM token: $e');
+    }
+  }
+
+  void refresh() {
+    _listenForNotifications();
+    _updateFCMToken();
+  }
+
+  Future<void> _updateFCMToken() async {
+    if (_uid == null) return;
+    String? token = await _fcm.getToken();
+    if (token != null) {
+      await _saveTokenToSupabase(token);
+    }
+  }
+
+  void clear() {
+    _notificationChannel?.unsubscribe();
+    _notificationChannel = null;
+  }
+
+  void _listenForNotifications() {
+    if (_uid == null) return;
+    
+    // Cleanup existing channel if any
+    _notificationChannel?.unsubscribe();
+
+    _notificationChannel = _supabase
+        .channel('public:notifications:user_id=eq.$_uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: _uid,
+          ),
+          callback: (payload) {
+            final data = payload.newRecord;
+            final title = data['title'] as String;
+            final body = data['body'] as String;
+            
+            showAlert(
+              id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+              title: title,
+              body: body,
+            );
+          },
+        )
+        .subscribe();
   }
 
   Future<void> showAlert({
@@ -179,10 +285,12 @@ class NotificationService {
     String? recipientId,
     Map<String, dynamic>? data,
     bool showLocal = true,
-    bool notifySelf = false, // New parameter to control self-notifications
+    bool notifySelf = false,
   }) async {
     final targetUserId = recipientId;
-    if (targetUserId == null && !notifySelf) return; // Don't notify self by default
+    
+    // If no recipient and not notifying self, do nothing
+    if (targetUserId == null && !notifySelf) return;
 
     final finalUserId = targetUserId ?? _uid;
     if (finalUserId == null) return;
@@ -201,8 +309,9 @@ class NotificationService {
 
     // Only show local alert if:
     // 1. showLocal is true AND
-    // 2. We are notifying someone else (recipientId != null) OR we explicitly want to notify self
-    if (showLocal && (recipientId != null || notifySelf)) {
+    // 2. We are notifying the current user (finalUserId == _uid)
+    // This prevents the sender from getting a local alert for a message they just sent.
+    if (showLocal && finalUserId == _uid) {
       await showAlert(
         id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
         title: title,

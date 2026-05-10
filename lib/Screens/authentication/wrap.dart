@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
+import 'package:go_study/services/notification_service.dart';
 
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
@@ -37,12 +38,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // Initialize with basic data immediately to avoid full-screen loaders
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          userModel.update(
-            uid: user.id,
-            name: user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'User',
-            email: user.email,
-          );
-        });
+            userModel.update(
+              uid: user.id,
+              name: user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'User',
+              email: user.email,
+            );
+            // Refresh notification listener for the new user
+            NotificationService().refresh();
+          });
 
         // Listen to real-time profile updates
         _profileSubscription = DatabaseService(uid: user.id).userProfile.listen(
@@ -73,6 +76,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
       } else {
         _profileSubscription?.cancel();
         _profileSubscription = null;
+        // Cleanup notification listener on logout
+        NotificationService().clear();
       }
       _previousUser = user;
     }

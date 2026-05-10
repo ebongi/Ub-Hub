@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
-// import 'package:go_study/services/gemini_service.dart'; // No longer used
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/ai_sync_service.dart';
@@ -19,9 +18,6 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-
-// import 'package:google_generative_ai/google_generative_ai.dart'
-//    show DataPart, Content, TextPart;
 
 class ChatbotScreen extends StatefulWidget {
   final AIService? aiService;
@@ -49,17 +45,21 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       : [];
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-      allowMultiple: true,
-      withData: true,
-    );
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowMultiple: true,
+        withData: true,
+      );
 
-    if (result != null) {
-      setState(() {
-        _selectedFiles.addAll(result.files);
-      });
+      if (result != null) {
+        setState(() {
+          _selectedFiles.addAll(result.files);
+        });
+      }
+    } catch (e) {
+      _showErrorSnackBar("Failed to pick files: $e");
     }
   }
 
@@ -91,8 +91,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       }
     } catch (e) {
       debugPrint("Error loading sessions: $e");
-      // Optional: show a snackbar or subtle error indicator
+      _showErrorSnackBar("Failed to load chat history. Please check your connection.");
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   @override
@@ -108,7 +128,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _isLoading = false;
     });
-    // Add logic to save truncated message if needed
     if (_messages.isNotEmpty && !_messages.last.isUser) {
       final currentSession = _sessions[_currentSessionIndex!];
       _syncService
@@ -119,12 +138,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _selectedFiles.isEmpty) return;
 
-    // Cloud Sync: Session (Don't let it block the UI/AI flow)
     if (_currentSessionIndex == null) {
       final newSession = ChatSession(
-        title: text.length > 30 ? "${text.substring(0, 30)}..." : text,
+        title: text.isEmpty 
+            ? "New File Analysis" 
+            : (text.length > 30 ? "${text.substring(0, 30)}..." : text),
         messages: [],
       );
       setState(() {
@@ -134,7 +154,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       try {
         await _syncService.saveSession(newSession);
       } catch (e) {
-        debugPrint("Sync Error (Session): $e");
+        _showErrorSnackBar("Failed to sync new session: $e");
       }
     }
 
@@ -159,19 +179,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _selectedFiles = [];
       _messages.add(userMessage);
-      _messages.add(aiResponsePlaceholder); // Placeholder for AI response
+      _messages.add(aiResponsePlaceholder);
       _isLoading = true;
     });
 
-    // Cloud Sync: User Message
     final currentSession = _sessions[_currentSessionIndex!];
     _syncService
         .saveMessage(currentSession.id, userMessage)
-        .catchError((e) => debugPrint("Sync Error (User Msg): $e"));
+        .catchError((e) => _showErrorSnackBar("Message sync failed. Local history may be out of date."));
 
     _scrollToBottom();
 
-    // Streaming Logic
     try {
       String fullResponse = "";
       bool hasError = false;
@@ -190,6 +208,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               if (chunk.startsWith("Error:")) {
                 fullResponse = chunk;
                 hasError = true;
+                _showErrorSnackBar(chunk.replaceFirst("Error:", "").trim());
                 _stopAIResponse();
                 return;
               }
@@ -215,6 +234,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             },
             onError: (e) {
               if (!mounted) return;
+              _showErrorSnackBar("AI Error: $e");
               setState(() {
                 final index = _messages.indexOf(aiResponsePlaceholder);
                 final errorMessage = ChatMessage(
@@ -234,9 +254,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 _isLoading = false;
                 _syncService
                     .saveMessage(currentSession.id, errorMessage)
-                    .catchError(
-                      (k) => debugPrint("Sync Error (Error Msg): $k"),
-                    );
+                    .catchError((k) => debugPrint("Sync Error: $k"));
               });
             },
             onDone: () {
@@ -258,10 +276,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   _messages[index] = finalMessage;
                   _isLoading = false;
                 });
-                // Cloud Sync: AI Response
                 _syncService
                     .saveMessage(currentSession.id, finalMessage)
-                    .catchError((e) => debugPrint("Sync Error (AI Msg): $e"));
+                    .catchError((e) => debugPrint("Sync Error: $e"));
               } else {
                 setState(() {
                   _isLoading = false;
@@ -272,6 +289,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           );
     } catch (e) {
       if (!mounted) return;
+      _showErrorSnackBar("Critical Error: $e");
       final errorMessage = ChatMessage(
         text: "Sorry, I encountered a critical error: $e",
         isUser: false,
@@ -283,7 +301,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       });
       _syncService
           .saveMessage(currentSession.id, errorMessage)
-          .catchError((k) => debugPrint("Sync Error (Error Msg): $k"));
+          .catchError((k) => debugPrint("Sync Error: $k"));
     }
   }
 
@@ -308,6 +326,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     setState(() {
       _currentSessionIndex = null;
       _controller.clear();
+      _selectedFiles = [];
     });
   }
 
@@ -316,7 +335,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       _currentSessionIndex = index;
     });
     _syncAIHistory();
-    Navigator.pop(context); // Close drawer
+    Navigator.pop(context);
   }
 
   void _syncAIHistory() {
@@ -404,16 +423,20 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
 
     if (confirm == true) {
-      await _syncService.deleteSession(session.id);
-      setState(() {
-        _sessions.removeAt(index);
-        if (_currentSessionIndex == index) {
-          _currentSessionIndex = null;
-        } else if (_currentSessionIndex != null &&
-            _currentSessionIndex! > index) {
-          _currentSessionIndex = _currentSessionIndex! - 1;
-        }
-      });
+      try {
+        await _syncService.deleteSession(session.id);
+        setState(() {
+          _sessions.removeAt(index);
+          if (_currentSessionIndex == index) {
+            _currentSessionIndex = null;
+          } else if (_currentSessionIndex != null &&
+              _currentSessionIndex! > index) {
+            _currentSessionIndex = _currentSessionIndex! - 1;
+          }
+        });
+      } catch (e) {
+        _showErrorSnackBar("Failed to delete chat: $e");
+      }
     }
   }
 
@@ -484,14 +507,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
-                      // Show typing indicator only if it's the last message, it's NOT user, and text is empty (waiting for first chunk)
                       if (!msg.isUser && msg.text.isEmpty && _isLoading) {
                         return const _TypingIndicator();
                       }
 
                       return FadeInSlide(
                         key: ValueKey(msg.id),
-                        // Reduced delay for faster chat feel
                         delay: 0,
                         child: _MessageBubble(
                           message: msg,
@@ -558,7 +579,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       children: starters.map((text) {
         return ScaleButton(
           onTap: () {
-            _controller.text = text.substring(2); // Remove emoji
+            _controller.text = text.substring(2);
             _sendMessage();
           },
           child: Container(
@@ -1073,12 +1094,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               );
 
               if (confirm == true) {
-                await _syncService.clearAllSessions();
-                setState(() {
-                  _sessions.clear();
-                  _currentSessionIndex = null;
-                });
-                if (context.mounted) Navigator.pop(context);
+                try {
+                  await _syncService.clearAllSessions();
+                  setState(() {
+                    _sessions.clear();
+                    _currentSessionIndex = null;
+                  });
+                  if (context.mounted) Navigator.pop(context);
+                } catch (e) {
+                  _showErrorSnackBar("Failed to clear chats: $e");
+                }
               }
             },
           ),
@@ -1187,8 +1212,6 @@ class ChatAttachment {
     return {
       'name': name,
       'mime_type': mimeType,
-      // We usually don't save bytes to the message log to avoid massive DB rows.
-      // In a real app, you'd upload these to storage and save the URL.
     };
   }
 }
@@ -1585,7 +1608,6 @@ class _TypingIndicatorState extends State<_TypingIndicator>
   }
 }
 
-/// A LaTeX generator for [MarkdownWidget]
 final latexGenerator = SpanNodeGeneratorWithTag(
   tag: 'latex',
   generator: (e, config, visitor) =>

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:go_study/services/auth.dart';
-import 'package:go_study/theme_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
-import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
-import 'package:go_study/Screens/UI/preview/Settings/about.dart';
-
-import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/developer_info_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
-
-import 'package:go_study/services/auth.dart' show Authentication;
+// import 'package:go_study/Screens/UI/preview/Settings/about_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:go_study/Screens/authentication/authenticate.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_study/theme_provider.dart';
+
+import '../../../../services/auth.dart';
+import '../Settings/about.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -155,27 +157,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // Support Section
                   _buildGoogleSettingsCard(context, [
-                    // _GoogleSettingsTile(
-                    //   icon: Icons.help_outline_rounded,
-                    //   iconColor: Colors.cyan,
-                    //   title: "Support",
-                    //   subtitle: "Get help or report an issue",
-                    //   isDark: isDark,
-                    //   onTap: () => showSupportDialog(context),
-                    // ),
-                    // _GoogleSettingsTile(
-                    //   icon: Icons.code_rounded,
-                    //   iconColor: Colors.blueGrey,
-                    //   title: "Developer Information",
-                    //   subtitle: "App version, build, and engineering details",
-                    //   isDark: isDark,
-                    //   onTap: () => Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) => const DeveloperInfoScreen(),
-                    //     ),
-                    //   ),
-                    // ),
+                    _GoogleSettingsTile(
+                      icon: Icons.code_rounded,
+                      iconColor: Colors.blueGrey,
+                      title: "Developer Information",
+                      subtitle: "App version, build, and engineering details",
+                      isDark: isDark,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DeveloperInfoScreen(),
+                        ),
+                      ),
+                    ),
                     _GoogleSettingsTile(
                       icon: Icons.info_outline_rounded,
                       iconColor: Colors.teal,
@@ -226,71 +220,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildProfileHeader(UserModel userModel, bool isDark) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.withOpacity(0.2)),
-              ),
-              child: CircleAvatar(
-                radius: 48,
-                backgroundImage: userModel.avatarUrl != null
-                    ? CachedNetworkImageProvider(userModel.avatarUrl!)
-                    : null,
-                child: userModel.avatarUrl == null
-                    ? const Icon(Icons.person, size: 50)
-                    : null,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF303134) : Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.camera_alt_outlined,
-                size: 20,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          userModel.name ?? "User Name",
-          style: GoogleFonts.outfit(
-            fontSize: 24,
-            fontWeight: FontWeight.w400,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          userModel.email ?? "user@email.com",
-          style: GoogleFonts.outfit(
-            fontSize: 14,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildGoogleSettingsCard(
     BuildContext context,
     List<Widget> tiles, {
@@ -315,29 +244,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-  Widget _buildBottomButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18),
-      label: Text(
-        label,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.w400),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: isDark ? Colors.white70 : Colors.black87,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: isDark ? Colors.white24 : Colors.grey),
-      ),
-    );
-  }
 }
 
 class _GoogleSettingsTile extends StatelessWidget {
@@ -346,16 +252,16 @@ class _GoogleSettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? trailing;
-  final VoidCallback? onTap;
   final bool isDark;
+  final VoidCallback? onTap;
 
   const _GoogleSettingsTile({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.subtitle,
-    required this.isDark,
     this.trailing,
+    required this.isDark,
     this.onTap,
   });
 
@@ -363,42 +269,34 @@ class _GoogleSettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
       leading: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: iconColor.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: iconColor, size: 24),
+        child: Icon(icon, color: iconColor, size: 22),
       ),
       title: Text(
         title,
         style: GoogleFonts.outfit(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
           color: isDark ? Colors.white : Colors.black87,
         ),
       ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4.0),
-        child: Text(
-          subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.outfit(
-            fontSize: 14,
-            color: isDark ? Colors.white70 : Colors.black54,
-            height: 1.2,
-          ),
+      subtitle: Text(
+        subtitle,
+        style: GoogleFonts.outfit(
+          fontSize: 13,
+          color: isDark ? Colors.white70 : Colors.black54,
         ),
       ),
-      trailing:
-          trailing ??
-          Icon(
-            Icons.chevron_right_rounded,
-            color: isDark ? Colors.white38 : Colors.grey,
-          ),
+      trailing: trailing ?? Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 14,
+        color: isDark ? Colors.white30 : Colors.grey[400],
+      ),
     );
   }
 }

@@ -303,7 +303,7 @@ class PremiumSubmitButton extends StatelessWidget {
   const PremiumSubmitButton({
     super.key,
     required this.label,
-    required this.isLoading,
+    this.isLoading = false,
     required this.onPressed,
   });
 

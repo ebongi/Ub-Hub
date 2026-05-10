@@ -275,6 +275,9 @@ class _NotificationsState extends State<Notifications> {
                           case NotificationType.subscription:
                             icon = Icons.card_membership_rounded;
                             break;
+                          case NotificationType.friendRequest:
+                            icon = Icons.person_add_rounded;
+                            break;
                           default:
                             icon = Icons.info_outline_rounded;
                         }

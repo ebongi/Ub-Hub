@@ -7,8 +7,10 @@ import 'package:go_study/Screens/UI/preview/Navigation/settings_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
+import 'package:go_study/services/friends_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/message_provider.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class NavBar extends StatefulWidget {
@@ -67,28 +69,46 @@ class _NavBarState extends State<NavBar> {
           fontWeight: FontWeight.normal,
           fontSize: 12,
         ),
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Iconsax.home),
             activeIcon: Icon(Iconsax.home_1_copy), // Bold/filled version
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Iconsax.folder_cloud),
             activeIcon: Icon(Iconsax.folder_cloud_copy), // Bold version
             label: 'Departments',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Iconsax.teacher),
             activeIcon: Icon(Iconsax.teacher_copy), // Bold version
             label: 'AI Assistant',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Iconsax.message),
-            activeIcon: Icon(Iconsax.message_2_copy), // Bold version
+            icon: Consumer2<MessageProvider, List<FriendRequest>?>(
+              builder: (context, messageProvider, requests, child) {
+                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+                return Badge(
+                  label: Text('$totalBadge'),
+                  isLabelVisible: totalBadge > 0,
+                  child: const Icon(Iconsax.message),
+                );
+              },
+            ),
+            activeIcon: Consumer2<MessageProvider, List<FriendRequest>?>(
+              builder: (context, messageProvider, requests, child) {
+                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+                return Badge(
+                  label: Text('$totalBadge'),
+                  isLabelVisible: totalBadge > 0,
+                  child: const Icon(Iconsax.message_2_copy),
+                );
+              },
+            ),
             label: 'Messages',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Iconsax.setting),
             activeIcon: Icon(Iconsax.setting_2_copy), // Bold version
             label: 'Settings',
@@ -119,15 +139,28 @@ class _NavBarState extends State<NavBar> {
           _buildRailDestination(Iconsax.home, Iconsax.home_1_copy, 'Home'),
           _buildRailDestination(Iconsax.folder_cloud, Iconsax.folder_cloud_copy, 'Departments'),
           _buildRailDestination(Iconsax.teacher, Iconsax.teacher_copy, 'AI Assistant'),
-          _buildRailDestination(Iconsax.message, Iconsax.message_2_copy, 'Messages'),
+          _buildRailDestination(
+            Iconsax.message,
+            Iconsax.message_2_copy,
+            'Messages',
+            badgeCount: true,
+          ),
           _buildRailDestination(Iconsax.setting, Iconsax.setting_2_copy, 'Settings'),
         ],
       );
     }
 
-    return StreamProvider<List<Department>?>.value(
-      value: DatabaseService().getDepartments(institutionId: institutionId),
-      initialData: null,
+    return MultiProvider(
+      providers: [
+        StreamProvider<List<Department>?>.value(
+          value: DatabaseService().getDepartments(institutionId: institutionId),
+          initialData: null,
+        ),
+        StreamProvider<List<FriendRequest>?>.value(
+          value: FriendsService().getPendingRequestsStream(),
+          initialData: null,
+        ),
+      ],
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: Row(
@@ -147,11 +180,34 @@ class _NavBarState extends State<NavBar> {
   NavigationRailDestination _buildRailDestination(
       IconData unselectedIcon,
       IconData selectedIcon,
-      String label,
-      ) {
+      String label, {
+        bool badgeCount = false,
+      }) {
     return NavigationRailDestination(
-      icon: Icon(unselectedIcon),
-      selectedIcon: Icon(selectedIcon),
+      icon: badgeCount
+          ? Consumer2<MessageProvider, List<FriendRequest>?>(
+        builder: (context, messageProvider, requests, child) {
+          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+          return Badge(
+            label: Text('$totalBadge'),
+            isLabelVisible: totalBadge > 0,
+            child: Icon(unselectedIcon),
+          );
+        },
+      )
+          : Icon(unselectedIcon),
+      selectedIcon: badgeCount
+          ? Consumer2<MessageProvider, List<FriendRequest>?>(
+        builder: (context, messageProvider, requests, child) {
+          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+          return Badge(
+            label: Text('$totalBadge'),
+            isLabelVisible: totalBadge > 0,
+            child: Icon(selectedIcon),
+          );
+        },
+      )
+          : Icon(selectedIcon),
       label: Text(label),
     );
   }

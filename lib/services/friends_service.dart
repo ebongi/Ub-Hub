@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/notification_model.dart';
 
 /// A single friend's profile data
 class FriendProfile {
@@ -65,21 +67,70 @@ class FriendsService {
   // Send a friend request
   // ---------------------------------------------------------------------------
   Future<void> sendFriendRequest(String receiverId) async {
+    // 1. Fetch my profile to get my name
+    final myProfile = await _supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', _myId)
+        .maybeSingle();
+    
+    final myName = myProfile?['name'] ?? 'Someone';
+
+    // 2. Insert the request
     await _supabase.from('friend_requests').insert({
       'sender_id': _myId,
       'receiver_id': receiverId,
       'status': 'pending',
     });
+
+    // 3. Trigger notification
+    await NotificationService().createNotification(
+      title: 'New Friend Request',
+      body: '$myName sent you a friend request.',
+      type: NotificationType.friendRequest,
+      recipientId: receiverId,
+      data: {'senderId': _myId},
+    );
   }
 
   // ---------------------------------------------------------------------------
   // Respond to an incoming friend request
   // ---------------------------------------------------------------------------
   Future<void> respondToRequest(String requestId, bool accept) async {
+    // 1. Fetch request details to get sender_id and receiver (me) name
+    final request = await _supabase
+        .from('friend_requests')
+        .select('sender_id, receiver_id')
+        .eq('id', requestId)
+        .single();
+    
+    final senderId = request['sender_id'] as String;
+
+    // 2. Fetch my profile to get my name
+    final myProfile = await _supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', _myId)
+        .maybeSingle();
+    
+    final myName = myProfile?['name'] ?? 'Someone';
+
+    // 3. Update the request status
     await _supabase
         .from('friend_requests')
-        .update({'status': accept ? 'accepted' : 'declined'}).eq(
-            'id', requestId);
+        .update({'status': accept ? 'accepted' : 'declined'})
+        .eq('id', requestId);
+
+    // 4. Trigger notification to the original sender
+    if (accept) {
+      await NotificationService().createNotification(
+        title: 'Friend Request Accepted',
+        body: '$myName accepted your friend request.',
+        type: NotificationType.friendRequest,
+        recipientId: senderId,
+        data: {'receiverId': _myId},
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------

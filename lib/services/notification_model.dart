@@ -6,6 +6,7 @@ enum NotificationType {
   course,
   material,
   subscription,
+  friendRequest,
   system;
 
   static NotificationType fromString(String? type) {
@@ -20,6 +21,8 @@ enum NotificationType {
         return NotificationType.material;
       case 'subscription':
         return NotificationType.subscription;
+      case 'friendrequest':
+        return NotificationType.friendRequest;
       case 'system':
       default:
         return NotificationType.system;
