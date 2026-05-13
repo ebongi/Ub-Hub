@@ -32,6 +32,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/core/responsive.dart';
 
 import '../../../../services/notification_model.dart';
@@ -72,6 +73,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
+    _checkStudyReminders();
 
     _loadRecentActivity();
 
@@ -198,6 +200,13 @@ class _HomeState extends State<Home> {
       setState(() {
         _recentActivity = activity;
       });
+    }
+  }
+
+  Future<void> _checkStudyReminders() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('study_reminders') ?? false) {
+      await NotificationService().scheduleStudyReminders();
     }
   }
 
@@ -1144,12 +1153,10 @@ class AppBarUser extends StatelessWidget {
               ),
               icon: const Icon(Icons.notifications_outlined),
             ),
-            StreamBuilder<List<NotificationModel>>(
-              stream: NotificationService().notifications,
+            StreamBuilder<int>(
+              stream: NotificationService().unreadCountStream,
               builder: (context, snapshot) {
-                final unreadCount = snapshot.hasData
-                    ? snapshot.data!.where((n) => !n!.isRead).length
-                    : 0;
+                final unreadCount = snapshot.data ?? 0;
 
                 if (unreadCount == 0) return const SizedBox.shrink();
 

@@ -79,7 +79,7 @@ class PaywallScreen extends StatelessWidget {
                   FadeInSlide(
                     delay: 400,
                     child: Text(
-                      "Your 4-day free access to UB-Hub has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
+                      "Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 16,

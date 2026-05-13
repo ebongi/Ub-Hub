@@ -15,11 +15,14 @@ class Notifications extends StatefulWidget {
 class _NotificationsState extends State<Notifications> {
   bool _pushEnabled = true;
   bool _emailEnabled = false;
+  bool _studyRemindersEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    // Clear the notification badge when viewing notifications
+    NotificationService().markAllAsRead();
   }
 
   Future<void> _loadSettings() async {
@@ -27,6 +30,7 @@ class _NotificationsState extends State<Notifications> {
     setState(() {
       _pushEnabled = prefs.getBool('push_notifications') ?? true;
       _emailEnabled = prefs.getBool('email_notifications') ?? false;
+      _studyRemindersEnabled = prefs.getBool('study_reminders') ?? false;
     });
   }
 
@@ -40,6 +44,18 @@ class _NotificationsState extends State<Notifications> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('email_notifications', value);
     setState(() => _emailEnabled = value);
+  }
+
+  Future<void> _toggleStudyReminders(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('study_reminders', value);
+    setState(() => _studyRemindersEnabled = value);
+    
+    if (value) {
+      await NotificationService().scheduleStudyReminders();
+    } else {
+      await NotificationService().cancelStudyReminders();
+    }
   }
 
   Future<void> _clearAll() async {
@@ -178,6 +194,18 @@ class _NotificationsState extends State<Notifications> {
                   ),
                   value: _emailEnabled,
                   onChanged: _toggleEmail,
+                ),
+                SwitchListTile(
+                  title: Text(
+                    "Study Reminders",
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    "Daily reminder to stay on track",
+                    style: GoogleFonts.outfit(fontSize: 12),
+                  ),
+                  value: _studyRemindersEnabled,
+                  onChanged: _toggleStudyReminders,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),

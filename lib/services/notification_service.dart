@@ -293,6 +293,35 @@ class NotificationService {
     await _notificationsPlugin.cancel(id);
   }
 
+  /// Schedule study reminders for the next 7 days at 7:00 PM
+  Future<void> scheduleStudyReminders() async {
+    // Unique ID range for study reminders: 1000-1007
+    final now = DateTime.now();
+    for (int i = 0; i < 7; i++) {
+      var scheduledDate = DateTime(now.year, now.month, now.day, 19, 0)
+          .add(Duration(days: i));
+      
+      if (scheduledDate.isBefore(now)) {
+        // If 7 PM today has passed, schedule for 7 PM tomorrow
+        if (i == 0) continue; 
+      }
+
+      await scheduleNotification(
+        id: 1000 + i,
+        title: "Study Time! 📚",
+        body: "Consistency is key to success. Ready for a quick session?",
+        scheduledDate: scheduledDate,
+      );
+    }
+  }
+
+  /// Cancel all scheduled study reminders
+  Future<void> cancelStudyReminders() async {
+    for (int i = 0; i < 7; i++) {
+      await cancelNotification(1000 + i);
+    }
+  }
+
   // --- Supabase Persistence ---
 
   /// Get notifications stream for the current user
@@ -307,6 +336,13 @@ class NotificationService {
           (data) =>
               data.map((json) => NotificationModel.fromSupabase(json)).toList(),
         );
+  }
+
+  /// Get stream of unread notification count
+  Stream<int> get unreadCountStream {
+    return notifications.map(
+      (list) => list.where((n) => !n.isRead).length,
+    );
   }
 
   /// Create and save a new notification
@@ -365,5 +401,15 @@ class NotificationService {
         .from('notifications')
         .update({'is_read': true})
         .eq('id', id);
+  }
+
+  /// Mark all notifications as read for the current user
+  Future<void> markAllAsRead() async {
+    if (_uid == null) return;
+    await _supabase
+        .from('notifications')
+        .update({'is_read': true})
+        .eq('user_id', _uid!)
+        .eq('is_read', false);
   }
 }

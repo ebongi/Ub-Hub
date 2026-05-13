@@ -14,7 +14,6 @@ class AboutScreen extends StatefulWidget {
 class _AboutScreenState extends State<AboutScreen> {
   String _version = '';
   String _buildNumber = '';
-  String _appName = '';
 
   @override
   void initState() {
@@ -26,14 +25,13 @@ class _AboutScreenState extends State<AboutScreen> {
     final info = await PackageInfo.fromPlatform();
     if (mounted) {
       setState(() {
-        _appName = info.appName;
         _version = info.version;
         _buildNumber = info.buildNumber;
       });
     }
   }
 
-  void _showPlatformAboutDialog() {
+  void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
       applicationName: "GO-Study",
@@ -48,9 +46,9 @@ class _AboutScreenState extends State<AboutScreen> {
       ),
       applicationLegalese: "© 2026 Jovial Studio",
       children: [
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Text(
-          "GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
+          "GO-Study is an all-in-one academic platform built specifically for students at the University of Buea. Our mission is to digitize the campus experience, making academic resources, collaboration, and planning accessible from anywhere.",
           style: GoogleFonts.outfit(fontSize: 14),
         ),
       ],
@@ -114,39 +112,52 @@ class _AboutScreenState extends State<AboutScreen> {
             
             // App Description
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: isDark 
                     ? theme.colorScheme.surfaceContainerLow 
                     : Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
                 border: Border.all(color: Colors.grey.withOpacity(0.1)),
                 boxShadow: [
                   if (!isDark)
                     BoxShadow(
                       color: Colors.black.withOpacity(0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
                 ],
               ),
-              child: Text(
-                "GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  height: 1.6,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    "Empowering Academic Excellence",
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "GO-Study is specifically designed to meet the technical and academic needs of University of Buea students. We provide a centralized hub for course materials, AI-powered study assistance, real-time exam tracking, and a collaborative global chat to ensure you stay ahead in your studies.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      height: 1.6,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
 
-            // Standard About Dialog Trigger
+            // Dialog trigger
             ListTile(
-              onTap: _showPlatformAboutDialog,
+              onTap: () => _showAboutDialog(context),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 side: BorderSide(color: Colors.grey.withOpacity(0.1)),
               ),
               tileColor: isDark 
@@ -158,24 +169,24 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               title: Text(
                 "Licenses & Legal",
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
-                "Open source libraries and legal info",
+                "Open source libraries and legal information",
                 style: GoogleFonts.outfit(fontSize: 12),
               ),
               trailing: const Icon(Iconsax.arrow_right_3, size: 18),
             ),
             
             const SizedBox(height: 60),
-            // Text(
-            //   "Built with ❤️ for UB Students",
-            //   style: GoogleFonts.outfit(
-            //     fontSize: 14,
-            //     color: Colors.grey,
-            //     fontStyle: FontStyle.italic,
-            //   ),
-            // ),
+            Text(
+              "Built with ❤️ for UB Students",
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               "© 2026 Jovial Studio",

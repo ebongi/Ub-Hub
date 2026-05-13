@@ -11,6 +11,7 @@ import 'package:go_study/services/friends_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/message_provider.dart';
+import 'package:go_study/services/notification_service.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class NavBar extends StatefulWidget {
@@ -86,9 +87,9 @@ class _NavBarState extends State<NavBar> {
             label: 'AI Assistant',
           ),
           BottomNavigationBarItem(
-            icon: Consumer2<MessageProvider, List<FriendRequest>?>(
-              builder: (context, messageProvider, requests, child) {
-                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+            icon: Consumer3<MessageProvider, List<FriendRequest>?, int>(
+              builder: (context, messageProvider, requests, unreadNotifications, child) {
+                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
                 return Badge(
                   label: Text('$totalBadge'),
                   isLabelVisible: totalBadge > 0,
@@ -96,9 +97,9 @@ class _NavBarState extends State<NavBar> {
                 );
               },
             ),
-            activeIcon: Consumer2<MessageProvider, List<FriendRequest>?>(
-              builder: (context, messageProvider, requests, child) {
-                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+            activeIcon: Consumer3<MessageProvider, List<FriendRequest>?, int>(
+              builder: (context, messageProvider, requests, unreadNotifications, child) {
+                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
                 return Badge(
                   label: Text('$totalBadge'),
                   isLabelVisible: totalBadge > 0,
@@ -160,6 +161,10 @@ class _NavBarState extends State<NavBar> {
           value: FriendsService().getPendingRequestsStream(),
           initialData: null,
         ),
+        StreamProvider<int>.value(
+          value: NotificationService().unreadCountStream,
+          initialData: 0,
+        ),
       ],
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -185,9 +190,9 @@ class _NavBarState extends State<NavBar> {
       }) {
     return NavigationRailDestination(
       icon: badgeCount
-          ? Consumer2<MessageProvider, List<FriendRequest>?>(
-        builder: (context, messageProvider, requests, child) {
-          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+          ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
+        builder: (context, messageProvider, requests, unreadNotifications, child) {
+          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
           return Badge(
             label: Text('$totalBadge'),
             isLabelVisible: totalBadge > 0,
@@ -197,9 +202,9 @@ class _NavBarState extends State<NavBar> {
       )
           : Icon(unselectedIcon),
       selectedIcon: badgeCount
-          ? Consumer2<MessageProvider, List<FriendRequest>?>(
-        builder: (context, messageProvider, requests, child) {
-          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0);
+          ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
+        builder: (context, messageProvider, requests, unreadNotifications, child) {
+          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
           return Badge(
             label: Text('$totalBadge'),
             isLabelVisible: totalBadge > 0,

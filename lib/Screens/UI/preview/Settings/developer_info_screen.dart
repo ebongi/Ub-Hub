@@ -87,7 +87,7 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
                     ),
                     child: ClipOval(
                       child: Image.asset(
-                        "assets/images/developerImage.jpg",
+                        "assets/images/apple.png",
                         fit: BoxFit.cover,
                         width: 160,
                         height: 160,
