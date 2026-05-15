@@ -15,6 +15,8 @@ import 'package:go_study/Screens/UI/preview/Navigation/splash_screen.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -81,6 +83,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: "GO Study",
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,

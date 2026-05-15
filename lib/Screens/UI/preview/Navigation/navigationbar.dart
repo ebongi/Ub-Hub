@@ -15,14 +15,21 @@ import 'package:go_study/services/notification_service.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 class NavBar extends StatefulWidget {
-  const NavBar({super.key});
+  final int initialIndex;
+  const NavBar({super.key, this.initialIndex = 0});
 
   @override
   State<NavBar> createState() => _NavBarState();
 }
 
 class _NavBarState extends State<NavBar> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   final List<Widget> _widgetOptions = <Widget>[
     const Home(),

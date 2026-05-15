@@ -5,6 +5,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:go_study/main.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -83,7 +85,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        // Handle notification tap
+        _handleNotificationTap(details.payload);
       },
     );
     
@@ -92,6 +94,31 @@ class NotificationService {
     
     // Start listening for real-time notifications (foreground)
     refresh();
+
+    // Handle when app is opened from a terminated state via notification
+    final NotificationAppLaunchDetails? appLaunchDetails =
+        await _notificationsPlugin.getNotificationAppLaunchDetails();
+    if (appLaunchDetails?.didNotificationLaunchApp ?? false) {
+      _handleNotificationTap(appLaunchDetails?.notificationResponse?.payload);
+    }
+  }
+
+  void _handleNotificationTap(String? payload) {
+    if (payload == null) return;
+    
+    // For friend requests or messages, navigate to the Messages tab (index 3)
+    if (payload == 'friendRequest' || payload == 'message') {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 3)),
+        (route) => false,
+      );
+    } else {
+      // Default navigation to Home
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 0)),
+        (route) => false,
+      );
+    }
   }
 
   Future<void> _initFCM() async {
@@ -175,11 +202,13 @@ class NotificationService {
             final data = payload.newRecord;
             final title = data['title'] as String;
             final body = data['body'] as String;
+            final type = data['type'] as String?;
             
             showAlert(
               id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
               title: title,
               body: body,
+              payload: type,
             );
           },
         )
@@ -384,6 +413,7 @@ class NotificationService {
         id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
         title: title,
         body: body,
+        payload: type.name,
       );
     }
   }
