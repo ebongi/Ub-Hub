@@ -51,7 +51,7 @@ class FriendsService {
   final SupabaseClient _supabase;
 
   FriendsService({SupabaseClient? supabase})
-      : _supabase = supabase ?? Supabase.instance.client;
+    : _supabase = supabase ?? Supabase.instance.client;
 
   String get _myId => _supabase.auth.currentUser!.id;
 
@@ -73,7 +73,7 @@ class FriendsService {
         .select('name')
         .eq('id', _myId)
         .maybeSingle();
-    
+
     final myName = myProfile?['name'] ?? 'Someone';
 
     // 2. Insert the request
@@ -103,7 +103,7 @@ class FriendsService {
         .select('sender_id, receiver_id')
         .eq('id', requestId)
         .single();
-    
+
     final senderId = request['sender_id'] as String;
 
     // 2. Fetch my profile to get my name
@@ -112,7 +112,7 @@ class FriendsService {
         .select('name')
         .eq('id', _myId)
         .maybeSingle();
-    
+
     final myName = myProfile?['name'] ?? 'Someone';
 
     // 3. Update the request status
@@ -142,7 +142,9 @@ class FriendsService {
         .from('friend_requests')
         .delete()
         .eq('status', 'accepted')
-        .or('and(sender_id.eq.$_myId,receiver_id.eq.$otherUserId),and(sender_id.eq.$otherUserId,receiver_id.eq.$_myId)');
+        .or(
+          'and(sender_id.eq.$_myId,receiver_id.eq.$otherUserId),and(sender_id.eq.$otherUserId,receiver_id.eq.$_myId)',
+        );
   }
 
   // ---------------------------------------------------------------------------
@@ -155,14 +157,19 @@ class FriendsService {
         .stream(primaryKey: ['id'])
         .eq('status', 'accepted')
         .asyncMap((rows) async {
-          final myFriendRows = rows.where((r) =>
-              r['sender_id'] == _myId || r['receiver_id'] == _myId).toList();
+          final myFriendRows = rows
+              .where(
+                (r) => r['sender_id'] == _myId || r['receiver_id'] == _myId,
+              )
+              .toList();
 
           if (myFriendRows.isEmpty) return <FriendProfile>[];
 
           final friendIds = myFriendRows
-              .map((r) =>
-                  r['sender_id'] == _myId ? r['receiver_id'] : r['sender_id'])
+              .map(
+                (r) =>
+                    r['sender_id'] == _myId ? r['receiver_id'] : r['sender_id'],
+              )
               .toSet()
               .toList();
 
@@ -171,7 +178,9 @@ class FriendsService {
               .select('id, name, avatar_url')
               .filter('id', 'in', '(${friendIds.join(',')})');
 
-          final friendProfiles = profiles.map((p) => FriendProfile.fromJson(p)).toList();
+          final friendProfiles = profiles
+              .map((p) => FriendProfile.fromJson(p))
+              .toList();
 
           // Fetch last message for each friend
           final List<FriendProfile> enrichedProfiles = [];
@@ -185,15 +194,17 @@ class FriendsService {
                 .limit(1)
                 .maybeSingle();
 
-            enrichedProfiles.add(FriendProfile(
-              id: friend.id,
-              name: friend.name,
-              avatarUrl: friend.avatarUrl,
-              lastMessage: lastMsgRow?['content'] as String?,
-              lastMessageTime: lastMsgRow != null
-                  ? DateTime.parse(lastMsgRow['created_at'] as String)
-                  : null,
-            ));
+            enrichedProfiles.add(
+              FriendProfile(
+                id: friend.id,
+                name: friend.name,
+                avatarUrl: friend.avatarUrl,
+                lastMessage: lastMsgRow?['content'] as String?,
+                lastMessageTime: lastMsgRow != null
+                    ? DateTime.parse(lastMsgRow['created_at'] as String)
+                    : null,
+              ),
+            );
           }
 
           return enrichedProfiles;
@@ -210,20 +221,21 @@ class FriendsService {
         .eq('receiver_id', _myId)
         .asyncMap((rows) async {
           // Filter by status manually as SupabaseStreamBuilder might not support multiple eq filters
-          final pendingRows = rows.where((r) => r['status'] == 'pending').toList();
+          final pendingRows = rows
+              .where((r) => r['status'] == 'pending')
+              .toList();
           if (pendingRows.isEmpty) return <FriendRequest>[];
 
-          final senderIds = pendingRows.map((r) => r['sender_id'] as String).toList();
+          final senderIds = pendingRows
+              .map((r) => r['sender_id'] as String)
+              .toList();
 
           final profiles = await _supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .filter('id', 'in', '(${senderIds.join(',')})');
 
-          final profileMap = {
-            for (final p in profiles)
-              p['id'] as String: p,
-          };
+          final profileMap = {for (final p in profiles) p['id'] as String: p};
 
           return pendingRows.map((r) {
             final profile = profileMap[r['sender_id']] ?? {};
@@ -251,9 +263,7 @@ class FriendsService {
         .neq('id', _myId)
         .limit(30);
 
-    return results
-        .map((p) => FriendProfile.fromJson(p))
-        .toList();
+    return results.map((p) => FriendProfile.fromJson(p)).toList();
   }
 
   // ---------------------------------------------------------------------------
@@ -264,7 +274,9 @@ class FriendsService {
     final rows = await _supabase
         .from('friend_requests')
         .select('id, sender_id, status')
-        .or('and(sender_id.eq.$_myId,receiver_id.eq.$otherUserId),and(sender_id.eq.$otherUserId,receiver_id.eq.$_myId)')
+        .or(
+          'and(sender_id.eq.$_myId,receiver_id.eq.$otherUserId),and(sender_id.eq.$otherUserId,receiver_id.eq.$_myId)',
+        )
         .limit(1);
 
     if ((rows as List).isEmpty) return 'none';
@@ -275,5 +287,14 @@ class FriendsService {
       return row['sender_id'] == _myId ? 'pending_sent' : 'pending_received';
     }
     return 'none';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stream of ALL friend requests involving the current user (any status)
+  // ---------------------------------------------------------------------------
+  Stream<List<Map<String, dynamic>>> getAllRequestsStream() {
+    return _supabase
+        .from('friend_requests')
+        .stream(primaryKey: ['id']);
   }
 }

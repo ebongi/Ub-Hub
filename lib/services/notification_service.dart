@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/notification_model.dart';
@@ -11,11 +12,12 @@ import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // We need to initialize local notifications in the background isolate
-  final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
-  
+  final FlutterLocalNotificationsPlugin localNotifications =
+      FlutterLocalNotificationsPlugin();
+
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
-  
+
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: DarwinInitializationSettings(),
@@ -24,12 +26,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await localNotifications.initialize(initializationSettings);
 
   if (message.notification != null) {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'go_study_background',
-      'GO Study Background',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'go_study_background',
+          'GO Study Background',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
@@ -88,12 +91,24 @@ class NotificationService {
         _handleNotificationTap(details.payload);
       },
     );
-    
+
+    // Listen for Auth changes to start/stop the real-time listener
+    _supabase.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
+        refresh(); // Start listening when user is available
+      } else if (event == AuthChangeEvent.signedOut) {
+        clear(); // Stop listening when user signs out
+      }
+    });
+
     // Initialize FCM
     await _initFCM();
-    
+
     // Start listening for real-time notifications (foreground)
-    refresh();
+    if (_uid != null) {
+      refresh();
+    }
 
     // Handle when app is opened from a terminated state via notification
     final NotificationAppLaunchDetails? appLaunchDetails =
@@ -105,7 +120,7 @@ class NotificationService {
 
   void _handleNotificationTap(String? payload) {
     if (payload == null) return;
-    
+
     // For friend requests or messages, navigate to the Messages tab (index 3)
     if (payload == 'friendRequest' || payload == 'message') {
       navigatorKey.currentState?.pushAndRemoveUntil(
@@ -155,9 +170,10 @@ class NotificationService {
   Future<void> _saveTokenToSupabase(String token) async {
     if (_uid == null) return;
     try {
-      await _supabase.from('profiles').update({
-        'fcm_token': token,
-      }).eq('id', _uid!);
+      await _supabase
+          .from('profiles')
+          .update({'fcm_token': token})
+          .eq('id', _uid!);
     } catch (e) {
       print('Error saving FCM token: $e');
     }
@@ -183,7 +199,7 @@ class NotificationService {
 
   void _listenForNotifications() {
     if (_uid == null) return;
-    
+
     // Cleanup existing channel if any
     _notificationChannel?.unsubscribe();
 
@@ -203,7 +219,7 @@ class NotificationService {
             final title = data['title'] as String;
             final body = data['body'] as String;
             final type = data['type'] as String?;
-            
+
             showAlert(
               id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
               title: title,
@@ -327,12 +343,17 @@ class NotificationService {
     // Unique ID range for study reminders: 1000-1007
     final now = DateTime.now();
     for (int i = 0; i < 7; i++) {
-      var scheduledDate = DateTime(now.year, now.month, now.day, 19, 0)
-          .add(Duration(days: i));
-      
+      var scheduledDate = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        19,
+        0,
+      ).add(Duration(days: i));
+
       if (scheduledDate.isBefore(now)) {
         // If 7 PM today has passed, schedule for 7 PM tomorrow
-        if (i == 0) continue; 
+        if (i == 0) continue;
       }
 
       await scheduleNotification(
@@ -355,23 +376,36 @@ class NotificationService {
 
   /// Get notifications stream for the current user
   Stream<List<NotificationModel>> get notifications {
-    if (_uid == null) return Stream.value([]);
-    return _supabase
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _uid!)
-        .order('created_at', ascending: false)
-        .map(
-          (data) =>
-              data.map((json) => NotificationModel.fromSupabase(json)).toList(),
-        );
+    return _supabase.auth.onAuthStateChange.asyncMap((data) async {
+      final user = data.session?.user ?? _supabase.auth.currentUser;
+      if (user == null) return <NotificationModel>[];
+      
+      // We return the stream from Supabase for this specific user
+      return _supabase
+          .from('notifications')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+    }).asyncExpand((listFuture) async* {
+      // Since stream() doesn't easily compose with asyncMap, we use a different approach
+      // or we just re-trigger the stream whenever auth changes.
+      if (_uid == null) {
+        yield [];
+        return;
+      }
+      
+      yield* _supabase
+          .from('notifications')
+          .stream(primaryKey: ['id'])
+          .eq('user_id', _uid!)
+          .order('created_at', ascending: false)
+          .map((data) => data.map((json) => NotificationModel.fromSupabase(json)).toList());
+    });
   }
 
   /// Get stream of unread notification count
   Stream<int> get unreadCountStream {
-    return notifications.map(
-      (list) => list.where((n) => !n.isRead).length,
-    );
+    return notifications.map((list) => list.where((n) => !n.isRead).length);
   }
 
   /// Create and save a new notification
@@ -385,7 +419,7 @@ class NotificationService {
     bool notifySelf = false,
   }) async {
     final targetUserId = recipientId;
-    
+
     // If no recipient and not notifying self, do nothing
     if (targetUserId == null && !notifySelf) return;
 

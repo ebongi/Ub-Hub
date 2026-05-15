@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Search for other users by name and send/view friend requests.
 class UserSearchScreen extends StatefulWidget {
@@ -18,10 +20,46 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<FriendProfile> _results = [];
   final Map<String, String> _statusCache = {}; // userId -> status
   bool _isLoading = false;
+  StreamSubscription? _statusSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initRealtimeListener();
+  }
+
+  void _initRealtimeListener() {
+    _statusSubscription = widget.friendsService.getAllRequestsStream().listen((rows) {
+      if (!mounted) return;
+      
+      final myId = Supabase.instance.client.auth.currentUser?.id;
+      if (myId == null) return;
+
+      final newStatuses = <String, String>{};
+      for (final row in rows) {
+        final senderId = row['sender_id'] as String;
+        final receiverId = row['receiver_id'] as String;
+        final status = row['status'] as String;
+        final otherId = (senderId == myId) ? receiverId : senderId;
+
+        if (status == 'accepted') {
+          newStatuses[otherId] = 'accepted';
+        } else if (status == 'pending') {
+          newStatuses[otherId] = (senderId == myId) ? 'pending_sent' : 'pending_received';
+        }
+      }
+
+      setState(() {
+        // We only update statuses for users we are currently looking at (or have in cache)
+        _statusCache.addAll(newStatuses);
+      });
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _statusSubscription?.cancel();
     super.dispose();
   }
 

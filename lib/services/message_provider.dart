@@ -11,11 +11,32 @@ class MessageProvider with ChangeNotifier {
   bool get isChatOpen => _isChatOpen;
 
   MessageProvider() {
-    _initRealtimeListener();
+    final supabase = Supabase.instance.client;
+    
+    // Handle auth changes seamlessly
+    supabase.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
+        _initRealtimeListener();
+      } else if (event == AuthChangeEvent.signedOut) {
+        _channel?.unsubscribe();
+        _channel = null;
+        _unreadCount = 0;
+        notifyListeners();
+      }
+    });
+
+    // Initial check if user is already logged in
+    if (supabase.auth.currentUser != null) {
+      _initRealtimeListener();
+    }
   }
 
   void _initRealtimeListener() {
     final supabase = Supabase.instance.client;
+    
+    // Cleanup any existing subscription
+    _channel?.unsubscribe();
 
     _channel = supabase
         .channel('public:messages')
