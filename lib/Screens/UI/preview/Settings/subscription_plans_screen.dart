@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/subscription_service.dart';
-import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/campay_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
@@ -458,9 +458,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     });
 
     try {
-      final response = await NkwaService.collectPayment(
+      final response = await CampayService.collectPayment(
         amount: amount,
-        phoneNumber: NkwaService.formatPhoneNumber(phone),
+        phoneNumber: CampayService.formatPhoneNumber(phone),
         description: "${SubscriptionService.getTierName(tier)} Subscription",
       );
 
@@ -468,7 +468,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       setState(() => _statusMessage = "Check your phone to approve...");
 
-      final status = await NkwaService.waitForSuccessfulPayment(paymentId);
+      final status = await CampayService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await _db.upgradeSubscription(tier);
@@ -585,9 +585,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       _isProcessingContributor = true;
     });
     try {
-      final response = await NkwaService.collectPayment(
+      final response = await CampayService.collectPayment(
         amount: 5000.0,
-        phoneNumber: NkwaService.formatPhoneNumber(phone),
+        phoneNumber: CampayService.formatPhoneNumber(phone),
         description: "Contributor Upgrade",
       );
 
@@ -595,7 +595,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       setState(() => _statusMessage = "Check your phone to approve...");
 
-      final status = await NkwaService.waitForSuccessfulPayment(paymentId);
+      final status = await CampayService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await _db.upgradeUserToContributor();

@@ -5,17 +5,73 @@ import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/core/app_config.dart';
 import 'package:go_study/services/profile.dart';
 
-/// Service for handling Nkwa Pay integration
-class NkwaService {
-  // Nkwa API credentials from environment
-  static String get _apiKey => AppConfig.nkwaApiKey;
+/// Service for handling Campay integration
+class CampayService {
+  static String? _cachedToken;
+  static DateTime? _tokenExpiryTime;
 
-  // Base URLs
-  static const String _stagingUrl = 'https://api.pay.staging.mynkwa.com';
-  static const String _productionUrl = 'https://api.pay.mynkwa.com';
+  // Base URL computed based on environment configuration
+  static String get _baseUrl {
+    final env = AppConfig.campayEnv.toLowerCase();
+    if (env == 'production' || env == 'prod') {
+      return 'https://campay.net';
+    }
+    return 'https://demo.campay.net';
+  }
 
-  // Default to production as most users use production keys
-  static String get _baseUrl => _productionUrl;
+  /// Fetch access token dynamically or use the permanent dashboard token.
+  static Future<String> _getAuthToken() async {
+    // 1. If a permanent token is provided in configuration, use it directly.
+    final permToken = AppConfig.campayToken;
+    if (permToken.isNotEmpty) {
+      return permToken;
+    }
+
+    // 2. Check if we have a valid cached token.
+    if (_cachedToken != null &&
+        _tokenExpiryTime != null &&
+        DateTime.now().isBefore(_tokenExpiryTime!)) {
+      return _cachedToken!;
+    }
+
+    // 3. Otherwise, fetch a new token dynamically.
+    final username = AppConfig.campayUsername;
+    final password = AppConfig.campayPassword;
+
+    if (username.isEmpty || password.isEmpty) {
+      throw Exception('Campay credentials (username/password or permanent token) are missing.');
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/token/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final token = data['token'] as String?;
+        if (token == null || token.isEmpty) {
+          throw Exception('Token not found in response');
+        }
+
+        _cachedToken = token;
+        // Conservative 1-hour cache duration
+        _tokenExpiryTime = DateTime.now().add(const Duration(hours: 1));
+
+        return token;
+      } else {
+        throw Exception('Failed to get token (${response.statusCode}): ${response.body}');
+      }
+    } catch (e) {
+      print('Campay Token Error: $e');
+      rethrow;
+    }
+  }
 
   /// Collect payment from a phone number
   static Future<Map<String, dynamic>> collectPayment({
@@ -24,23 +80,33 @@ class NkwaService {
     String? description,
   }) async {
     try {
-      if (_apiKey.isEmpty) {
-        throw Exception('Nkwa API Key is missing. Check .env');
-      }
+      final token = await _getAuthToken();
+      final formattedPhone = formatPhoneNumber(phoneNumber);
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/collect'),
-        headers: {'Content-Type': 'application/json', 'X-API-KEY': _apiKey},
+        Uri.parse('$_baseUrl/api/collect/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
         body: jsonEncode({
-          'amount': amount.toInt(),
-          'phoneNumber': phoneNumber,
-          if (description != null) 'description': description,
+          'amount': amount.toInt().toString(),
+          'currency': getCurrency(),
+          'from': formattedPhone,
+          'description': description ?? 'App Payment',
+          'external_reference': generatePaymentRef(),
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final reference = data['reference'];
+        // Provide 'id' and 'paymentId' key aliases for backward compatibility with screens
+        return {
+          ...data,
+          'id': reference,
+          'paymentId': reference,
+        };
       } else {
         String errorMessage;
         try {
@@ -53,7 +119,7 @@ class NkwaService {
         throw Exception('API Error (${response.statusCode}): $errorMessage');
       }
     } catch (e) {
-      print('Nkwa Payment Error: $e');
+      print('Campay Payment Error: $e');
       rethrow;
     }
   }
@@ -65,23 +131,33 @@ class NkwaService {
     String? description,
   }) async {
     try {
-      if (_apiKey.isEmpty) {
-        throw Exception('Nkwa API Key is missing. Check .env');
-      }
+      final token = await _getAuthToken();
+      final formattedPhone = formatPhoneNumber(phoneNumber);
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/disburse'),
-        headers: {'Content-Type': 'application/json', 'X-API-KEY': _apiKey},
+        Uri.parse('$_baseUrl/api/withdraw/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
         body: jsonEncode({
-          'amount': amount.toInt(),
-          'phoneNumber': phoneNumber,
-          if (description != null) 'description': description,
+          'amount': amount.toInt().toString(),
+          'currency': getCurrency(),
+          'phone_number': formattedPhone,
+          'description': description ?? 'App Payout',
+          'external_reference': generatePaymentRef(),
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final reference = data['reference'];
+        // Provide 'id' and 'paymentId' key aliases for backward compatibility
+        return {
+          ...data,
+          'id': reference,
+          'paymentId': reference,
+        };
       } else {
         String errorMessage;
         try {
@@ -94,46 +170,50 @@ class NkwaService {
         throw Exception('API Error (${response.statusCode}): $errorMessage');
       }
     } catch (e) {
-      print('Nkwa Payout Error: $e');
+      print('Campay Payout Error: $e');
       rethrow;
     }
   }
 
   /// Check the status of a payment
   ///
-  /// Returns the current status of a payment by its ID.
-  /// Status can be: pending, success, failed, canceled
+  /// Returns the current status of a payment by its reference/ID.
   static Future<PaymentStatus> checkPaymentStatus(String paymentId) async {
     try {
+      final token = await _getAuthToken();
+
       final response = await http.get(
-        Uri.parse('$_baseUrl/payments/$paymentId'),
-        headers: {'X-API-KEY': _apiKey},
+        Uri.parse('$_baseUrl/api/transaction/$paymentId/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final status = data['status'] as String?;
-        print('Nkwa Payment Status response: ${response.body}');
-        print('Nkwa Payment Status check for $paymentId: $status');
+        print('Campay Payment Status response: ${response.body}');
+        print('Campay Payment Status check for $paymentId: $status');
 
-        switch (status?.toLowerCase()) {
-          case 'success':
-          case 'successful':
-          case 'completed':
-          case 'validated':
+        switch (status?.toUpperCase()) {
+          case 'SUCCESSFUL':
+          case 'SUCCESS':
+          case 'COMPLETED':
+          case 'VALIDATED':
             return PaymentStatus.success;
-          case 'failed':
-          case 'error':
-          case 'denied':
-          case 'rejected':
+          case 'FAILED':
+          case 'ERROR':
+          case 'DENIED':
+          case 'REJECTED':
             final reason = data['reason'] ?? status;
             throw Exception('Payment Failed: $reason');
-          case 'canceled':
-          case 'cancelled':
+          case 'CANCELLED':
+          case 'CANCELED':
             return PaymentStatus.cancelled;
-          case 'pending':
-          case 'processing':
-          case 'initiated':
+          case 'PENDING':
+          case 'PROCESSING':
+          case 'INITIATED':
           default:
             return PaymentStatus.pending;
         }
@@ -141,6 +221,9 @@ class NkwaService {
         throw Exception('Failed to check payment status: ${response.body}');
       }
     } catch (e) {
+      if (e.toString().contains('Payment Failed:')) {
+        rethrow;
+      }
       throw Exception('Failed to check payment status: $e');
     }
   }
@@ -160,7 +243,6 @@ class NkwaService {
             status == PaymentStatus.cancelled) {
           return status;
         }
-        // If status is failed, we might want to check the actual reason
       } catch (e) {
         // Log error but keep polling if it's a network error
         if (kDebugMode) {

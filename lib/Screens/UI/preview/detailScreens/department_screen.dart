@@ -12,7 +12,7 @@ import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
-import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/campay_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/subscription_service.dart';
@@ -799,7 +799,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 ),
                               ),
                               subtitle: Text(
-                                "Verified Answer • ${NkwaService.getAnswerDownloadFee().toInt()} XAF",
+                                "Verified Answer • ${CampayService.getAnswerDownloadFee().toInt()} XAF",
                                 style: const TextStyle(fontSize: 11),
                               ),
                               trailing: IconButton(
@@ -1039,11 +1039,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     double fee = material.price;
     if (fee <= 0) {
-      fee = NkwaService.getDocumentDownloadFee();
+      fee = CampayService.getDocumentDownloadFee();
       if (material.materialCategory == 'past_question') {
-        fee = NkwaService.getPastQuestionDownloadFee();
+        fee = CampayService.getPastQuestionDownloadFee();
       } else if (material.materialCategory == 'answer') {
-        fee = NkwaService.getAnswerDownloadFee();
+        fee = CampayService.getAnswerDownloadFee();
       }
     }
 
@@ -1189,24 +1189,24 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final userId = _dbService.uid;
     if (userId == null) throw "User not authenticated";
 
-    final paymentRef = NkwaService.generatePaymentRef();
+    final paymentRef = CampayService.generatePaymentRef();
     double amount = material.price;
     if (amount <= 0) {
-      amount = NkwaService.getDocumentDownloadFee();
+      amount = CampayService.getDocumentDownloadFee();
       if (material.materialCategory == 'past_question') {
-        amount = NkwaService.getPastQuestionDownloadFee();
+        amount = CampayService.getPastQuestionDownloadFee();
       } else if (material.materialCategory == 'answer') {
-        amount = NkwaService.getAnswerDownloadFee();
+        amount = CampayService.getAnswerDownloadFee();
       }
     }
-    final formattedPhone = NkwaService.formatPhoneNumber(phoneNumber);
+    final formattedPhone = CampayService.formatPhoneNumber(phoneNumber);
 
     final transaction = PaymentTransaction(
       id: '',
       userId: userId,
       paymentRef: paymentRef,
       amount: amount,
-      currency: NkwaService.getCurrency(),
+      currency: CampayService.getCurrency(),
       status: PaymentStatus.pending,
       materialId: material.id,
       itemType: 'download',
@@ -1216,7 +1216,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     await _dbService.createPaymentTransaction(transaction);
 
-    final collectResponse = await NkwaService.collectPayment(
+    final collectResponse = await CampayService.collectPayment(
       amount: amount,
       phoneNumber: formattedPhone,
       description: 'Download: ${material.title}',
@@ -1229,7 +1229,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     int attempts = 0;
     while (status == PaymentStatus.pending && attempts < 60) {
       await Future.delayed(const Duration(seconds: 3));
-      status = await NkwaService.checkPaymentStatus(nkwaPaymentId.toString());
+      status = await CampayService.checkPaymentStatus(nkwaPaymentId.toString());
       attempts++;
     }
 

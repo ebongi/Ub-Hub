@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/campay_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
@@ -88,7 +88,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                             if (value == null || value.isEmpty) {
                               return 'Phone number required';
                             }
-                            if (!NkwaService.isValidPhoneNumber(value)) {
+                            if (!CampayService.isValidPhoneNumber(value)) {
                               return 'Enter a valid Cameroon phone number';
                             }
                             return null;
@@ -135,9 +135,9 @@ Future<void> showSupportDialog(BuildContext context) async {
                             }
 
                             final amount = double.parse(amountController.text);
-                            final paymentRef = NkwaService.generatePaymentRef();
+                            final paymentRef = CampayService.generatePaymentRef();
                             final formattedPhone =
-                                NkwaService.formatPhoneNumber(
+                                CampayService.formatPhoneNumber(
                                   phoneController.text,
                                 );
 
@@ -148,7 +148,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                                 userId: userId,
                                 paymentRef: paymentRef,
                                 amount: amount,
-                                currency: NkwaService.getCurrency(),
+                                currency: CampayService.getCurrency(),
                                 status: PaymentStatus.pending,
                                 itemType: 'donation',
                                 createdAt: DateTime.now(),
@@ -158,7 +158,7 @@ Future<void> showSupportDialog(BuildContext context) async {
 
                             // 2. Initiate Payment
                             final collectResponse =
-                                await NkwaService.collectPayment(
+                                await CampayService.collectPayment(
                                   amount: amount,
                                   phoneNumber: formattedPhone,
                                   description: 'Developer Support Donation',
@@ -177,7 +177,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                             while (status == PaymentStatus.pending &&
                                 attempts < 40) {
                               await Future.delayed(const Duration(seconds: 3));
-                              status = await NkwaService.checkPaymentStatus(
+                              status = await CampayService.checkPaymentStatus(
                                 nkwaPaymentId.toString(),
                               );
                               attempts++;

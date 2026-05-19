@@ -6,7 +6,10 @@ class AppConfig {
 
   static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  static String get nkwaApiKey => dotenv.env['NKWA_API_KEY'] ?? '';
+  static String get campayUsername => dotenv.env['CAMPAY_USERNAME'] ?? '';
+  static String get campayPassword => dotenv.env['CAMPAY_PASSWORD'] ?? '';
+  static String get campayToken => dotenv.env['CAMPAY_TOKEN'] ?? '';
+  static String get campayEnv => dotenv.env['CAMPAY_ENV'] ?? 'sandbox';
 
   static String get firebaseApiKeyAndroid =>
       dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '';

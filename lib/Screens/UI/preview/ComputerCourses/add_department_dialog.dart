@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
-import 'package:go_study/services/nkwa_service.dart';
+import 'package:go_study/services/campay_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
@@ -260,10 +260,10 @@ Future<void> showAddDepartmentDialog(
                             String? paymentRef;
                             PaymentStatus status = PaymentStatus.pending;
 
-                            if (!isAdmin) {
-                              paymentRef = NkwaService.generatePaymentRef();
-                              final amount = NkwaService.getDepartmentCreationFee(role: userModel.role);
-                              final formattedPhone = NkwaService.formatPhoneNumber(
+                             if (!isAdmin) {
+                              paymentRef = CampayService.generatePaymentRef();
+                              final amount = CampayService.getDepartmentCreationFee(role: userModel.role);
+                              final formattedPhone = CampayService.formatPhoneNumber(
                                 phoneController.text,
                               );
 
@@ -273,15 +273,15 @@ Future<void> showAddDepartmentDialog(
                                   userId: userId,
                                   paymentRef: paymentRef,
                                   amount: amount,
-                                  currency: NkwaService.getCurrency(),
+                                  currency: CampayService.getCurrency(),
                                   status: PaymentStatus.pending,
                                   itemType: 'department',
                                   createdAt: DateTime.now(),
                                   updatedAt: DateTime.now(),
-                                ),
+                                  ),
                               );
 
-                              final collectResponse = await NkwaService.collectPayment(
+                              final collectResponse = await CampayService.collectPayment(
                                 amount: amount,
                                 phoneNumber: formattedPhone,
                                 description: 'Dept: $name',
@@ -293,7 +293,7 @@ Future<void> showAddDepartmentDialog(
                               int attempts = 0;
                               while (status == PaymentStatus.pending && attempts < 60) {
                                 await Future.delayed(const Duration(seconds: 3));
-                                status = await NkwaService.checkPaymentStatus(nkwaId.toString());
+                                status = await CampayService.checkPaymentStatus(nkwaId.toString());
                                 attempts++;
                               }
 
