@@ -62,6 +62,60 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               style: GoogleFonts.outfit(fontSize: 16, color: theme.hintColor),
             ),
             const SizedBox(height: 32),
+            // --- SANDBOX TEST PLAN (25 XAF) ---
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber, width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "SANDBOX TEST MODE",
+                        style: GoogleFonts.outfit(
+                          color: Colors.amber[800],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Icon(Icons.bug_report_outlined, color: Colors.amber),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Test payment integration with the minimum Campay Sandbox amount (25 XAF). Upgrades you to Monthly tier on success.",
+                    style: GoogleFonts.outfit(fontSize: 13, color: theme.colorScheme.onSurface),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _isProcessing
+                        ? null
+                        : () => _handlePurchase(SubscriptionTier.monthly, 25.0),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      minimumSize: const Size(double.infinity, 44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      "Pay 25 XAF (Test)",
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // ----------------------------------
             _buildTierCard(
               context,
               tier: SubscriptionTier.monthly,
