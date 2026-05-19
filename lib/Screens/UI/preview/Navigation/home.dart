@@ -400,10 +400,7 @@ class ToolboxSection extends StatelessWidget {
         final tool = items[index];
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        final isRestricted =
-            (tool.name == "AI Study" || tool.name == "Library") &&
-            userProfile?.role == UserRole.viewer &&
-            !(userProfile?.isTrialActive ?? false);
+        const isRestricted = false; // Always unlocked in this free community version
 
         return FadeInSlide(
           delay: index * 0.05,

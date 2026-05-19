@@ -1,16 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_study/services/subscription_service.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
 
-import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:go_study/theme_provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
-import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 import 'package:provider/provider.dart';
 
 class Profile extends StatefulWidget {
@@ -121,24 +120,20 @@ class _ProfileState extends State<Profile> {
 
                 // Role & Subscription Badge
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildBadge(
-                      label: user.role.name.toUpperCase(),
-                      color: _getRoleColor(user.role),
-                    ),
-                    if (user.subscriptionTier != SubscriptionTier.free) ...[
-                      const SizedBox(width: 8),
-                      _buildBadge(
-                        label: user.subscriptionTier.name.toUpperCase(),
-                        color: user.subscriptionTier == SubscriptionTier.yearly
-                            ? Colors.amber
-                            : Colors.blueGrey,
-                        isPremium: true,
-                      ),
-                    ],
-                  ],
-                ),
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     _buildBadge(
+                       label: user.role.name.toUpperCase(),
+                       color: _getRoleColor(user.role),
+                     ),
+                     const SizedBox(width: 8),
+                     _buildBadge(
+                       label: "BETA MEMBER",
+                       color: Colors.teal,
+                       isPremium: true,
+                     ),
+                   ],
+                 ),
 
                 const SizedBox(height: 32),
 
@@ -258,9 +253,7 @@ class _ProfileState extends State<Profile> {
                 const SizedBox(height: 32),
 
                 // Subscription Section
-                user.role == UserRole.contributor || user.role == UserRole.admin
-                    ? _buildUnlimitedBanner(theme)
-                    : _buildManageSubscriptionCard(context, user, theme),
+                _buildUnlimitedBanner(theme),
 
                 const SizedBox(height: 32),
 
@@ -269,11 +262,7 @@ class _ProfileState extends State<Profile> {
 
                 const SizedBox(height: 32),
 
-                // Admin Dashboard Section
-                if (user.role == UserRole.admin) ...[
-                  _buildAdminDashboardCard(context, theme),
-                  const SizedBox(height: 32),
-                ],
+
 
                 // Logout Section
                 SizedBox(
@@ -377,141 +366,8 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildManageSubscriptionCard(
-    BuildContext context,
-    UserModel user,
-    ThemeData theme,
-  ) {
-    final isContributor =
-        user.role == UserRole.contributor || user.role == UserRole.admin;
-    final hasMonthly = user.subscriptionTier == SubscriptionTier.monthly;
-    final hasYearly = user.subscriptionTier == SubscriptionTier.yearly;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.stars_rounded,
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                "Subscription & Access",
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isContributor
-                          ? "Unlimited Creator"
-                          : (hasYearly
-                                ? "Yearly Member"
-                                : (hasMonthly
-                                      ? "Monthly Member"
-                                      : "Free Member")),
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (user.subscriptionTier != SubscriptionTier.free &&
-                        user.subscriptionExpiry != null)
-                      Text(
-                        "Expires: ${user.subscriptionExpiry!.day}/${user.subscriptionExpiry!.month}/${user.subscriptionExpiry!.year}",
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: theme.hintColor,
-                        ),
-                      )
-                    else if (!isContributor)
-                      Text(
-                        "Upgrade to unlock full features",
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: theme.hintColor,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (!isContributor)
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SubscriptionPlansScreen(
-                        userProfile: UserProfile(
-                          id: user.uid ?? '',
-                          name: user.name,
-                          matricule: user.matricule,
-                          phoneNumber: user.phoneNumber,
-                          level: user.level,
-                          role: user.role,
-                          subscriptionTier: user.subscriptionTier,
-                          avatarUrl: user.avatarUrl,
-                          institutionId: user.institutionId,
-                          bio: user.bio,
-                          department: user.department,
-                          createdAt: user.createdAt,
-                        ),
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    user.subscriptionTier == SubscriptionTier.free
-                        ? "Upgrade"
-                        : "Manage",
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                  ),
-                ),
-            ],
-          ),
-          if (user.subscriptionTier == SubscriptionTier.free &&
-              !user.isTrialActive) ...[
-            const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value:
-                    user.freeDownloadCount /
-                    SubscriptionService.freeTierDownloadLimit,
-                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                minHeight: 10,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Free Downloads used: ${user.freeDownloadCount}/${SubscriptionService.freeTierDownloadLimit}",
-              style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildUnlimitedBanner(ThemeData theme) {
     return Container(
@@ -873,94 +729,5 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildAdminDashboardCard(BuildContext context, ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.admin_panel_settings_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Administrative Control",
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Manage users and platform settings",
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminPanel()),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                "Open Admin Dashboard",
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

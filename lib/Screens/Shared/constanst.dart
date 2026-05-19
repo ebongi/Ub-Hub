@@ -98,31 +98,11 @@ class UserModel extends ChangeNotifier {
   int get freeDownloadCount => _freeDownloadCount;
   DateTime? get createdAt => _createdAt;
 
-  bool get isTrialActive {
-    if (_createdAt == null) return false;
-    return DateTime.now().difference(_createdAt!).inDays < 4;
-  }
+  bool get isTrialActive => false; // Disable trial countdowns entirely for free version
 
-  bool get hasAccess =>
-      _role == UserRole.admin ||
-      _role == UserRole.contributor ||
-      (_subscriptionTier != SubscriptionTier.free &&
-       (_subscriptionExpiry == null || _subscriptionExpiry!.isAfter(DateTime.now()))) ||
-      isTrialActive;
+  bool get hasAccess => true; // Always allow access in free version
 
-  String get trialTimeLeft {
-    if (_createdAt == null) return "Expired";
-    final expiryDate = _createdAt!.add(const Duration(days: 4));
-    final remaining = expiryDate.difference(DateTime.now());
-
-    if (remaining.isNegative) return "Expired";
-
-    if (remaining.inDays > 0) {
-      return "${remaining.inDays}d ${remaining.inHours % 24}h remaining";
-    } else {
-      return "${remaining.inHours}h ${remaining.inMinutes % 60}m remaining";
-    }
-  }
+  String get trialTimeLeft => "Unlimited";
   void setName(String name) {
     _name = name;
     notifyListeners();

@@ -4,7 +4,8 @@ import 'package:go_study/Screens/UI/preview/Settings/developer_info_screen.dart'
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
 // import 'package:go_study/Screens/UI/preview/Settings/about_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
-import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:go_study/Screens/authentication/authenticate.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -110,19 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    _GoogleSettingsTile(
-                      icon: Icons.payment_rounded,
-                      iconColor: Colors.green,
-                      title: "Subscription Plans",
-                      subtitle: "View your current plan and billing details",
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SubscriptionPlansScreen(),
-                        ),
-                      ),
-                    ),
+
                     _GoogleSettingsTile(
                       icon: Icons.dark_mode_outlined,
                       iconColor: Colors.indigo,
@@ -157,6 +146,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // Support Section
                   _buildGoogleSettingsCard(context, [
+                    _GoogleSettingsTile(
+                      icon: Icons.volunteer_activism_rounded,
+                      iconColor: Colors.redAccent,
+                      title: "Support Go Study",
+                      subtitle: "Sponsor development or volunteer to help",
+                      isDark: isDark,
+                      onTap: () => _supportPlatformViaWhatsApp(context, userModel),
+                    ),
                     _GoogleSettingsTile(
                       icon: Icons.code_rounded,
                       iconColor: Colors.blueGrey,
@@ -241,6 +238,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           );
         }),
+      ),
+    );
+  }
+
+  Future<void> _supportPlatformViaWhatsApp(BuildContext context, UserModel userModel) async {
+    final String studentName = userModel.name ?? 'a Go Study User';
+    final String messageText = "💖 *SUPPORT & VOLUNTEER FOR GO STUDY* 💖\n\n"
+        "Hi Developer, I love using Go Study and would like to voluntarily support the development and growth of this platform!\n\n"
+        "Please let me know how I can contribute or help.\n\n"
+        "Best regards,\n"
+        "$studentName";
+
+    final String whatsappNumber = "237682397481"; // Support contact from developer_info_screen
+    final String url = "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(messageText)}";
+    final Uri uri = Uri.parse(url);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          "Support Go Study",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "Thank you for your generosity! We will open WhatsApp so you can send a message directly to the developer to discuss how to support or volunteer.",
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.outfit(
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                // Direct launch bypasses canLaunchUrl package visibility constraints
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } catch (e) {
+                try {
+                  await launchUrl(uri);
+                } catch (e2) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Could not open WhatsApp. Please ensure WhatsApp is installed."),
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            child: Text(
+              "Open WhatsApp",
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

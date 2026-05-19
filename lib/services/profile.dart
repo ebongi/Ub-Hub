@@ -131,57 +131,21 @@ class UserProfile {
     };
   }
 
-  bool get isSubscribed =>
-      subscriptionTier != SubscriptionTier.free &&
-      (subscriptionExpiry == null ||
-          subscriptionExpiry!.isAfter(DateTime.now()));
+  bool get isSubscribed => true; // Always treat as subscribed/active in free community beta
 
-  bool get isTrialActive {
-    if (createdAt == null) return false;
-    return DateTime.now().difference(createdAt!).inDays < 4;
-  }
+  bool get isTrialActive => false; // Disable trial countdowns entirely for free version
 
-  int get trialDaysRemaining {
-    if (createdAt == null) return 0;
-    final diff = 4 - DateTime.now().difference(createdAt!).inDays;
-    return diff.clamp(0, 4);
-  }
+  int get trialDaysRemaining => 0;
 
-  String get trialTimeLeft {
-    if (createdAt == null) return "Expired";
-    final expiryDate = createdAt!.add(const Duration(days: 4));
-    final remaining = expiryDate.difference(DateTime.now());
+  String get trialTimeLeft => "Unlimited";
 
-    if (remaining.isNegative) return "Expired";
+  bool get hasUnlimitedDownloads => true; // Everyone gets unlimited downloads
 
-    if (remaining.inDays > 0) {
-      return "${remaining.inDays}d ${remaining.inHours % 24}h remaining";
-    } else {
-      return "${remaining.inHours}h ${remaining.inMinutes % 60}m remaining";
-    }
-  }
+  bool get canCreateDepartment => true; // Everyone can help build the platform by adding departments
 
-  bool get hasUnlimitedDownloads =>
-      role == UserRole.contributor ||
-      role == UserRole.admin ||
-      subscriptionTier == SubscriptionTier.yearly ||
-      (subscriptionTier == SubscriptionTier.monthly && isSubscribed) ||
-      isTrialActive;
-
-  bool get canCreateDepartment =>
-      role == UserRole.contributor || role == UserRole.admin;
-
-  bool get canUploadMaterial =>
-      role == UserRole.contributor || role == UserRole.admin;
+  bool get canUploadMaterial => true; // Everyone can help build the platform by uploading notes/study guides
 
   /// Central logic for the Hard Paywall.
-  /// Access is granted if:
-  /// 1. User is an Admin or Contributor.
-  /// 2. User has an active paid subscription.
-  /// 3. User is still within their 4-day free trial.
-  bool get hasAccess =>
-      role == UserRole.admin ||
-      role == UserRole.contributor ||
-      isSubscribed ||
-      isTrialActive;
+  /// In the free community version, access is granted unconditionally to all users.
+  bool get hasAccess => true;
 }

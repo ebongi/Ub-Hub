@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Transcriptscreen extends StatefulWidget {
   const Transcriptscreen({super.key});
@@ -41,25 +42,83 @@ class _TranscriptscreenState extends State<Transcriptscreen> {
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      final String name = _nameController.text.trim();
+      final String phone = _phoneController.text.trim();
+      final String email = _emailController.text.trim();
+      final String matricule = _matriculeController.text.trim();
+      final String faculty = _facultyController.text.trim();
+      final String department = _departmentController.text.trim();
+
+      final String messageText =
+          "🎓 *NEW TRANSCRIPT APPLICATION* 🎓\n\n"
+          "Hi  Go-Study Support, I would like to apply for an academic transcript. Here are my application details:\n\n"
+          "📝 *Full Name:* $name\n"
+          "📞 *Phone Number:* $phone\n"
+          "📧 *Email:* $email\n"
+          "🆔 *Matricule:* $matricule\n"
+          "🏫 *Faculty:* $faculty\n"
+          "📚 *Department:* $department\n"
+          "⚡ *Mode of Application:* $_modeOfApplication\n"
+          "👤 *Student Status:* $_status\n\n"
+          "Please let me know the next steps for processing. Thank you!";
+
+      final String whatsappNumber =
+          "237682397481"; // Support contact from developer_info_screen
+      final String url =
+          "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(messageText)}";
+      final Uri uri = Uri.parse(url);
+
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: Text(
-            "Application Submitted",
+            "Application Prepared",
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           ),
           content: Text(
-            "Your application for a transcript has been successfully submitted. We will contact you via email for the next steps.",
+            "Your application details are ready. Tap 'Open WhatsApp' to send them directly to the support team for processing.",
             style: GoogleFonts.outfit(),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                "OK",
+                "Cancel",
+                style: GoogleFonts.outfit(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  // Direct launch bypasses canLaunchUrl's package visibility constraints in newer OS versions
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (e) {
+                  try {
+                    await launchUrl(uri);
+                  } catch (e2) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Could not open WhatsApp. Please ensure WhatsApp is installed.",
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              child: Text(
+                "Open WhatsApp",
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,

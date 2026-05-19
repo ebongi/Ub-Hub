@@ -24,7 +24,7 @@ Future<void> showAddDepartmentDialog(
   final departname = TextEditingController();
   final schoolid = TextEditingController(text: defaultSchoolId);
   final description = TextEditingController();
-  final phoneController = TextEditingController();
+
   final adddepartmentKey = GlobalKey<FormState>();
 
 
@@ -98,19 +98,7 @@ Future<void> showAddDepartmentDialog(
                               ? 'Description required'
                               : null,
                         ),
-                        const SizedBox(height: 18),
-                        PremiumTextField(
-                          controller: phoneController,
-                          label: "Payment Number",
-                          hint: "Mobile Money Number",
-                          icon: Icons.phone_android_rounded,
-                          keyboardType: TextInputType.phone,
-                          validator: (v) {
-                            final userModel = Provider.of<UserModel>(context, listen: false);
-                            if (userModel.role == UserRole.admin) return null;
-                            return v?.isEmpty ?? true ? 'Phone required' : null;
-                          },
-                        ),
+
                         const SizedBox(height: 24),
                         Text(
                           "Department Identity",
@@ -257,53 +245,7 @@ Future<void> showAddDepartmentDialog(
                               );
                             }
 
-                            String? paymentRef;
-                            PaymentStatus status = PaymentStatus.pending;
-
-                             if (!isAdmin) {
-                              paymentRef = CampayService.generatePaymentRef();
-                              final amount = CampayService.getDepartmentCreationFee(role: userModel.role);
-                              final formattedPhone = CampayService.formatPhoneNumber(
-                                phoneController.text,
-                              );
-
-                              await backgroundDbService.createPaymentTransaction(
-                                PaymentTransaction(
-                                  id: '',
-                                  userId: userId,
-                                  paymentRef: paymentRef,
-                                  amount: amount,
-                                  currency: CampayService.getCurrency(),
-                                  status: PaymentStatus.pending,
-                                  itemType: 'department',
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                  ),
-                              );
-
-                              final collectResponse = await CampayService.collectPayment(
-                                amount: amount,
-                                phoneNumber: formattedPhone,
-                                description: 'Dept: $name',
-                              );
-
-                              final nkwaId = collectResponse['id'] ?? collectResponse['paymentId'];
-
-                              status = PaymentStatus.pending;
-                              int attempts = 0;
-                              while (status == PaymentStatus.pending && attempts < 60) {
-                                await Future.delayed(const Duration(seconds: 3));
-                                status = await CampayService.checkPaymentStatus(nkwaId.toString());
-                                attempts++;
-                              }
-
-                              await backgroundDbService.updatePaymentStatus(paymentRef, status);
-                              if (status != PaymentStatus.success) {
-                                throw Exception('Payment Incomplete');
-                              }
-                            }
-
-                            final deptId = await backgroundDbService.createDepartment(
+                            await backgroundDbService.createDepartment(
                               Department(
                                 id: '',
                                 name: name,
@@ -314,14 +256,6 @@ Future<void> showAddDepartmentDialog(
                                 createdAt: DateTime.now(),
                               ),
                             );
-
-                            if (!isAdmin && paymentRef != null) {
-                              await backgroundDbService.updatePaymentStatus(
-                                paymentRef,
-                                status,
-                                departmentId: deptId,
-                              );
-                            }
 
                           } catch (e) {
                             scaffoldMessenger.showSnackBar(

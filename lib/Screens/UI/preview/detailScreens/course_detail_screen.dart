@@ -383,251 +383,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
-    // Check if user can download for free
-    if (_userProfile != null &&
-        SubscriptionService.canDownloadForFree(_userProfile!)) {
-      // Secure for offline use
-      await _secureForOffline(material);
+    // Secure for offline use
+    await _secureForOffline(material);
 
-      // Increment free download count if not unlimited
-      if (!_userProfile!.hasUnlimitedDownloads) {
-        await _dbService.incrementFreeDownloadCount();
-      }
-
-      final uri = Uri.parse(material.fileUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
-        }
-
-      }
-      return;
-    }
-
-    final phoneController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool isProcessing = false;
-
-    double fee = material.price;
-    if (fee <= 0) {
-      fee = CampayService.getDocumentDownloadFee();
-      if (material.materialCategory == 'past_question') {
-        fee = CampayService.getPastQuestionDownloadFee();
-      } else if (material.materialCategory == 'answer') {
-        fee = CampayService.getAnswerDownloadFee();
-      }
-    }
-
-    await showPremiumGeneralDialog(
-      context: context,
-      barrierLabel: "Download",
-      child: Builder(
-        builder: (context) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-          return StatefulBuilder(
-            builder: (context, setState) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-              ),
-              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-              surfaceTintColor: Colors.transparent,
-              contentPadding: EdgeInsets.zero,
-              clipBehavior: Clip.antiAlias,
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const PremiumDialogHeader(
-                    title: "Download Material",
-                    subtitle: "Secure access to your study resources",
-                    icon: Icons.download_for_offline_rounded,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                    child: Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.05)
-                                  : theme.colorScheme.primary.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.1)
-                                    : theme.colorScheme.primary.withOpacity(0.1),
-                              ),
-                            ),
-                            child: Text(
-                              "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
-                              style: GoogleFonts.outfit(
-                                fontSize: 13,
-                                height: 1.5,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          PremiumTextField(
-                            controller: phoneController,
-                            label: "Payment Phone",
-                            hint: "6xxxxxxxx (MTN/Orange)",
-                            icon: Icons.phone_android_rounded,
-                            keyboardType: TextInputType.phone,
-                            enabled: !isProcessing,
-                            validator: (v) =>
-                                v == null || v.isEmpty ? "Required" : null,
-                          ),
-                          const SizedBox(height: 32),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                  onPressed: isProcessing
-                                      ? null
-                                      : () => Navigator.pop(context),
-                                  child: Text("Cancel",
-                                      style: GoogleFonts.outfit(
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                flex: 2,
-                                child: PremiumSubmitButton(
-                                  label: "Pay & Download",
-                                  isLoading: isProcessing,
-                                  onPressed: () async {
-                                    if (!formKey.currentState!.validate()) return;
-                                    setState(() => isProcessing = true);
-                                    try {
-                                      await _processDownloadPayment(
-                                        material,
-                                        phoneController.text,
-                                      );
-                                      if (context.mounted) Navigator.pop(context);
-                                    } catch (e) {
-                                      setState(() => isProcessing = false);
-                                      if (context.mounted) {
-                                        ErrorHandler.showErrorSnackBar(context, e);
-                                      }
-
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> _processDownloadPayment(
-    CourseMaterial material,
-    String phoneNumber,
-  ) async {
-    final userId = _dbService.uid;
-    if (userId == null) throw "User not authenticated";
-
-    final paymentRef = CampayService.generatePaymentRef();
-    double amount = material.price;
-    if (amount <= 0) {
-      amount = CampayService.getDocumentDownloadFee();
-      if (material.materialCategory == 'past_question') {
-        amount = CampayService.getPastQuestionDownloadFee();
-      } else if (material.materialCategory == 'answer') {
-        amount = CampayService.getAnswerDownloadFee();
-      }
-    }
-    final formattedPhone = CampayService.formatPhoneNumber(phoneNumber);
-
-    // 1. Create pending transaction
-    final transaction = PaymentTransaction(
-      id: '',
-      userId: userId,
-      paymentRef: paymentRef,
-      amount: amount,
-      currency: CampayService.getCurrency(),
-      status: PaymentStatus.pending,
-      materialId: material.id,
-      itemType: 'download',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    await _dbService.createPaymentTransaction(transaction);
-
-    // 2. Initiate Payment
-    final collectResponse = await CampayService.collectPayment(
-      amount: amount,
-      phoneNumber: formattedPhone,
-      description: 'Download: ${material.title}',
-    );
-
-    final nkwaPaymentId = collectResponse['id'] ?? collectResponse['paymentId'];
-    if (nkwaPaymentId == null) throw "Failed to initiate payment";
-
-    // 3. Poll
-    PaymentStatus status = PaymentStatus.pending;
-    int attempts = 0;
-    while (status == PaymentStatus.pending && attempts < 60) {
-      await Future.delayed(const Duration(seconds: 3));
-      status = await CampayService.checkPaymentStatus(nkwaPaymentId.toString());
-      attempts++;
-    }
-
-    // 4. Update status
-    await _dbService.updatePaymentStatus(
-      paymentRef,
-      status,
-      materialId: material.id,
-    );
-
-    if (status == PaymentStatus.success) {
-      // Secure for offline use
-      await _secureForOffline(material);
-
-      final uri = Uri.parse(material.fileUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch download link';
-      }
+    final uri = Uri.parse(material.fileUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      throw "Payment failed or timed out.";
+      if (mounted) {
+        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
+      }
     }
   }
 
   Future<void> _secureForOffline(CourseMaterial material) async {
-    // Only premium users (Silver, Gold, Contributor) can save to the offline library
-    // Unless they are within their 10-day free trial
-    if (_userProfile?.role == UserRole.viewer &&
-        !(_userProfile?.isTrialActive ?? false)) {
-      return;
-    }
-
     try {
       await StorageService().downloadAndEncrypt(
         material.fileUrl,
@@ -638,7 +407,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ErrorHandler.showSuccessSnackBar(
             context, "Material secured for offline access! 🔒");
       }
-
     } catch (e) {
       print("Offline cache failed: $e");
     }
@@ -1181,42 +949,49 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Upload Material",
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Select the type of material you want to share",
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: Colors.grey,
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                "Upload Material",
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Select the type of material you want to share",
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 32),
+              _buildUgcGuidelinesCard(Theme.of(context)),
+              const SizedBox(height: 12),
               _buildUploadOption(
                 icon: Icons.note_add_rounded,
                 color: Colors.blue,
@@ -1252,8 +1027,94 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               const SizedBox(height: 24),
             ],
           ),
-        );
+        ),
+      ),
+    );
       },
+    );
+  }
+
+  Widget _buildUgcGuidelinesCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(isDark ? 0.08 : 0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: primaryColor.withOpacity(isDark ? 0.2 : 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.volunteer_activism_rounded,
+                color: primaryColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Community Contribution Code",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildGuidelineItem(
+            Icons.done_all_rounded,
+            "Ensure content is readable, correct, and fit for study.",
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildGuidelineItem(
+            Icons.find_in_page_rounded,
+            "Check if this resource is already uploaded.",
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildGuidelineItem(
+            Icons.school_rounded,
+            "Upload only academic and educational materials.",
+            theme,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuidelineItem(IconData icon, String text, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: isDark ? Colors.white70 : Colors.black54,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              color: isDark ? Colors.white70 : Colors.black87,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1271,9 +1132,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.02) : Colors.grey[50],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black12,
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
           ),
         ),
         child: Row(

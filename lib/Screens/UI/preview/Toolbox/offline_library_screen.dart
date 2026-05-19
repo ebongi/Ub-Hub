@@ -77,13 +77,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
       body: StreamBuilder<UserProfile>(
         stream: _dbService.userProfile,
         builder: (context, snapshot) {
-          final user = snapshot.data;
-          final isViewer = user?.role == UserRole.viewer;
-          final isTrialActive = user?.isTrialActive ?? false;
-
-          if (isViewer && !isTrialActive) {
-            return _buildLockedState(theme);
-          }
+          // Always unlocked in free version
 
           if (_isLoading) {
             return const Center(child: CircularProgressIndicator());

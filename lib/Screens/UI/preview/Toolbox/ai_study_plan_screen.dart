@@ -130,47 +130,19 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
             style: GoogleFonts.outfit(color: Colors.grey),
           ),
           const SizedBox(height: 40),
-          StreamBuilder<UserProfile>(
-            stream: _dbService.userProfile,
-            builder: (context, snapshot) {
-              final user = snapshot.data;
-              final isViewer = user?.role == UserRole.viewer;
-              final isTrialActive = user?.isTrialActive ?? false;
-              final isRestricted = isViewer && !isTrialActive;
-
-              return Column(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: isRestricted ? null : _generatePlan,
-                    icon: const Icon(Icons.bolt_rounded),
-                    label: Text(
-                      isRestricted ? "PREMIUM FEATURE" : "GENERATE MY PLAN",
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                  ),
-                  if (isViewer) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      "Please upgrade to Silver or Gold to use the AI Study Plan.",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        color: theme.colorScheme.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            },
+          ElevatedButton.icon(
+            onPressed: _generatePlan,
+            icon: const Icon(Icons.bolt_rounded),
+            label: const Text("GENERATE MY PLAN"),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
           ),
           if (_error != null) ...[
             const SizedBox(height: 20),

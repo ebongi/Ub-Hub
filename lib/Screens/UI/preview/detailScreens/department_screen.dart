@@ -1347,108 +1347,120 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: _buildUgcGuidelinesCard(Theme.of(context)),
+                ),
+                ListTile(
+                  leading: Icon(Icons.school_rounded, color: colorScheme.primary),
+                  title: const Text("Add New Course"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _addCourse();
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.folder_shared_rounded,
+                    color: colorScheme.primary,
+                  ),
+                  title: const Text("Upload Department Resource"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showAddMaterialDialog(isDepartment: true);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.note_add_rounded, color: colorScheme.primary),
+                  title: const Text("Upload Course Material"),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final courses = await _dbService
+                        .getCoursesForDepartment(widget.departmentId)
+                        .first;
+                    if (courses.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Add a course first!")),
+                      );
+                      return;
+                    }
+                    _showCourseSelectionForUpload(courses);
+                  },
+                ),
+                const Divider(indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(
+                    Icons.history_edu_rounded,
+                    color: Colors.orange,
+                  ),
+                  title: const Text("Upload Past Question"),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final courses = await _dbService
+                        .getCoursesForDepartment(widget.departmentId)
+                        .first;
+                    if (courses.isEmpty) {
+                      _showAddMaterialDialog(
+                        isDepartment: true,
+                        initialCategory: 'past_question',
+                      );
+                    } else {
+                      _showCourseSelectionForUpload(
+                        courses,
+                        category: 'past_question',
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                  ),
+                  title: const Text("Upload Answer"),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final courses = await _dbService
+                        .getCoursesForDepartment(widget.departmentId)
+                        .first;
+                    if (courses.isEmpty) {
+                      _showAddMaterialDialog(
+                        isDepartment: true,
+                        initialCategory: 'answer',
+                      );
+                    } else {
+                      _showCourseSelectionForUpload(courses, category: 'answer');
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-            ListTile(
-              leading: Icon(Icons.school_rounded, color: colorScheme.primary),
-              title: const Text("Add New Course"),
-              onTap: () {
-                Navigator.pop(context);
-                _addCourse();
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.folder_shared_rounded,
-                color: colorScheme.primary,
-              ),
-              title: const Text("Upload Department Resource"),
-              onTap: () {
-                Navigator.pop(context);
-                _showAddMaterialDialog(isDepartment: true);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.note_add_rounded, color: colorScheme.primary),
-              title: const Text("Upload Course Material"),
-              onTap: () async {
-                Navigator.pop(context);
-                final courses = await _dbService
-                    .getCoursesForDepartment(widget.departmentId)
-                    .first;
-                if (courses.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Add a course first!")),
-                  );
-                  return;
-                }
-                _showCourseSelectionForUpload(courses);
-              },
-            ),
-            const Divider(indent: 16, endIndent: 16),
-            ListTile(
-              leading: const Icon(
-                Icons.history_edu_rounded,
-                color: Colors.orange,
-              ),
-              title: const Text("Upload Past Question"),
-              onTap: () async {
-                Navigator.pop(context);
-                final courses = await _dbService
-                    .getCoursesForDepartment(widget.departmentId)
-                    .first;
-                if (courses.isEmpty) {
-                  _showAddMaterialDialog(
-                    isDepartment: true,
-                    initialCategory: 'past_question',
-                  );
-                } else {
-                  _showCourseSelectionForUpload(
-                    courses,
-                    category: 'past_question',
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-              ),
-              title: const Text("Upload Answer"),
-              onTap: () async {
-                Navigator.pop(context);
-                final courses = await _dbService
-                    .getCoursesForDepartment(widget.departmentId)
-                    .first;
-                if (courses.isEmpty) {
-                  _showAddMaterialDialog(
-                    isDepartment: true,
-                    initialCategory: 'answer',
-                  );
-                } else {
-                  _showCourseSelectionForUpload(courses, category: 'answer');
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-          ],
+          ),
         ),
       ),
     );
@@ -1992,6 +2004,89 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           _optimisticCourses.add(course);
         });
       },
+    );
+  }
+
+  Widget _buildUgcGuidelinesCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(isDark ? 0.08 : 0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: primaryColor.withOpacity(isDark ? 0.2 : 0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.volunteer_activism_rounded,
+                color: primaryColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Community Contribution Code",
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildGuidelineItem(
+            Icons.done_all_rounded,
+            "Ensure content is readable, correct, and fit for study.",
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildGuidelineItem(
+            Icons.find_in_page_rounded,
+            "Check if this resource is already uploaded.",
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildGuidelineItem(
+            Icons.school_rounded,
+            "Upload only academic and educational materials.",
+            theme,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuidelineItem(IconData icon, String text, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: isDark ? Colors.white70 : Colors.black54,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              color: isDark ? Colors.white70 : Colors.black87,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
