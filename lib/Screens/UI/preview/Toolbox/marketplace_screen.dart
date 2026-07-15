@@ -1,25 +1,17 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart'
-    show PDFViewerScreen;
-import 'package:go_study/Screens/UI/preview/Navigation/private_chat_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/marketplace_listing.dart';
-import 'package:go_study/services/friends_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
-import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/core/error_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/listing_detail_screen.dart';
 
@@ -590,129 +582,130 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                       setDialogState(() => itemType = v.first),
                 ),
                 const SizedBox(height: 20),
-                  const SizedBox(height: 20),
-                  Text(
-                    "Item Images",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(height: 20),
+                Text(
+                  "Item Images",
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ...selectedImages.map(
-                        (img) => Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(img.path),
-                                width: 60,
-                                height: 60,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              right: -4,
-                              top: -4,
-                              child: GestureDetector(
-                                onTap: () => setDialogState(
-                                  () => selectedImages.remove(img),
-                                ),
-                                child: const CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Colors.red,
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          final picker = FilePicker.platform;
-                          final result = await picker.pickFiles(
-                            type: FileType.image,
-                            allowMultiple: true,
-                          );
-                          if (result != null) {
-                            setDialogState(
-                              () => selectedImages.addAll(
-                                result.files.map((f) => XFile(f.path!)),
-                              ),
-                            );
-                          }
-                        },
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ...selectedImages.map(
+                      (img) => Stack(
+                        children: [
+                          ClipRRect(
                             borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(img.path),
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.add_a_photo_rounded,
-                            color: Colors.grey,
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: GestureDetector(
+                              onTap: () => setDialogState(
+                                () => selectedImages.remove(img),
+                              ),
+                              child: const CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.red,
+                                child: Icon(
+                                  Icons.close,
+                                  size: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        final picker = FilePicker.platform;
+                        final result = await picker.pickFiles(
+                          type: FileType.image,
+                          allowMultiple: true,
+                        );
+                        if (result != null) {
+                          setDialogState(
+                            () => selectedImages.addAll(
+                              result.files.map((f) => XFile(f.path!)),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.add_a_photo_rounded,
+                          color: Colors.grey,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (itemType == 'digital') ...[
-                    if (digitalFile == null)
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final result = await FilePicker.platform.pickFiles();
-                          if (result != null)
-                            setDialogState(
-                              () => digitalFile = result.files.first,
-                            );
-                        },
-                        icon: const Icon(Icons.attach_file_rounded),
-                        label: const Text("Select PDF/Ebook"),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                      )
-                    else
-                      ListTile(
-                        leading: const Icon(
-                          Icons.insert_drive_file_rounded,
-                          color: Colors.blue,
-                        ),
-                        title: Text(
-                          digitalFile!.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () =>
-                              setDialogState(() => digitalFile = null),
-                        ),
-                      ),
-                  ] else ...[
-                    DropdownButtonFormField<String>(
-                      value: condition,
-                      items:
-                          ['New', 'Used - Like New', 'Used - Good', 'Used - Fair']
-                              .map(
-                                (c) => DropdownMenuItem(value: c, child: Text(c)),
-                              )
-                              .toList(),
-                      onChanged: (v) => setDialogState(() => condition = v!),
-                      decoration: const InputDecoration(labelText: "Condition"),
                     ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                if (itemType == 'digital') ...[
+                  if (digitalFile == null)
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await FilePicker.platform.pickFiles();
+                        if (result != null) {
+                          setDialogState(
+                            () => digitalFile = result.files.first,
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.attach_file_rounded),
+                      label: const Text("Select PDF/Ebook"),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                    )
+                  else
+                    ListTile(
+                      leading: const Icon(
+                        Icons.insert_drive_file_rounded,
+                        color: Colors.blue,
+                      ),
+                      title: Text(
+                        digitalFile!.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () =>
+                            setDialogState(() => digitalFile = null),
+                      ),
+                    ),
+                ] else ...[
+                  DropdownButtonFormField<String>(
+                    value: condition,
+                    items:
+                        ['New', 'Used - Like New', 'Used - Good', 'Used - Fair']
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                    onChanged: (v) => setDialogState(() => condition = v!),
+                    decoration: const InputDecoration(labelText: "Condition"),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: selectedCategory,
@@ -827,8 +820,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
     );
   }
 
-
-
   void _confirmDeleteListing(MarketplaceListing listing) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -874,12 +865,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
     );
   }
 
-
-
   Future<void> _showWithdrawDialog(double amount) async {
     // Reusing previous withdraw dialog logic
     ErrorHandler.showSuccessSnackBar(context, "Withdrawal request sent!");
   }
+
   IconData _getCategoryIcon(String category) {
     switch (category) {
       case 'Electronics':
@@ -894,6 +884,4 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
         return Icons.inventory_2_rounded;
     }
   }
-
-
 }

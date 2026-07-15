@@ -4,16 +4,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
-import 'package:go_study/services/campay_service.dart';
-import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/core/error_handler.dart';
 
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
-
-
 
 Future<void> showAddDepartmentDialog(
   BuildContext context, {
@@ -26,7 +22,6 @@ Future<void> showAddDepartmentDialog(
   final description = TextEditingController();
 
   final adddepartmentKey = GlobalKey<FormState>();
-
 
   await showPremiumGeneralDialog(
     context: context,
@@ -198,51 +193,60 @@ Future<void> showAddDepartmentDialog(
                         label: "Create Department",
                         isLoading: false,
                         onPressed: () async {
-                          if (!(adddepartmentKey.currentState?.validate() ?? false)) return;
+                          if (!(adddepartmentKey.currentState?.validate() ??
+                              false)) {
+                            return;
+                          }
                           // 1. Capture data and show optimistic UI
                           final name = departname.text.trim();
                           final descriptionText = description.text.trim();
                           final schoolIdText = schoolid.text.trim();
-                          final userModel = Provider.of<UserModel>(context, listen: false);
+                          final userModel = Provider.of<UserModel>(
+                            context,
+                            listen: false,
+                          );
                           final userId = userModel.uid;
                           final isAdmin = userModel.role == UserRole.admin;
 
                           if (userId == null) {
                             ErrorHandler.showErrorSnackBar(
-                                context, 'User not authenticated');
+                              context,
+                              'User not authenticated',
+                            );
                             return;
                           }
 
-
                           // Construct optimistic department
-                          final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+                          final tempId =
+                              'temp_${DateTime.now().millisecondsSinceEpoch}';
                           final tempDept = Department(
                             id: tempId,
                             name: name,
                             schoolId: schoolIdText,
                             description: descriptionText,
-                            imageUrl: null, 
+                            imageUrl: null,
                             adminId: userId,
                             createdAt: DateTime.now(),
                           );
 
                           // 2. Capture all needed data before popping context
-                          final scaffoldMessenger = ScaffoldMessenger.of(context);
-                          final backgroundDbService = DatabaseService(uid: userId);
+                          final scaffoldMessenger = ScaffoldMessenger.of(
+                            context,
+                          );
+                          final backgroundDbService = DatabaseService(
+                            uid: userId,
+                          );
 
                           // Trigger optimistic update and close dialog
                           onOptimisticCreate?.call(tempDept);
                           Navigator.pop(context);
 
-
                           try {
                             String? imageUrl;
                             if (imageFile != null) {
                               final imageBytes = await imageFile!.readAsBytes();
-                              imageUrl = await backgroundDbService.uploadDepartmentImage(
-                                imageBytes,
-                                name,
-                              );
+                              imageUrl = await backgroundDbService
+                                  .uploadDepartmentImage(imageBytes, name);
                             }
 
                             await backgroundDbService.createDepartment(
@@ -256,20 +260,21 @@ Future<void> showAddDepartmentDialog(
                                 createdAt: DateTime.now(),
                               ),
                             );
-
                           } catch (e) {
                             scaffoldMessenger.showSnackBar(
                               SnackBar(
-                                content: Text(ErrorHandler.getFriendlyMessage(e)),
+                                content: Text(
+                                  ErrorHandler.getFriendlyMessage(e),
+                                ),
                                 backgroundColor: const Color(0xFF991B1B),
                                 behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             );
                             debugPrint("Background Dept Creation Error: $e");
                           }
-
-
                         },
                       ),
                     ),

@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 
@@ -60,9 +58,10 @@ class _PortalscreenState extends State<Portalscreen> {
           },
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url.toLowerCase();
-            
+
             // Robust check for downloadable files and special protocols
-            final isDownloadable = url.contains('.pdf') ||
+            final isDownloadable =
+                url.contains('.pdf') ||
                 url.contains('.doc') ||
                 url.contains('.docx') ||
                 url.contains('.xls') ||
@@ -240,7 +239,9 @@ class _PortalscreenState extends State<Portalscreen> {
                     await Clipboard.setData(ClipboardData(text: url));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Link copied to clipboard")),
+                        const SnackBar(
+                          content: Text("Link copied to clipboard"),
+                        ),
                       );
                     }
                   }

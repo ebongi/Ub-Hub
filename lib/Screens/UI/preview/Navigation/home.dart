@@ -14,7 +14,6 @@ import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
-import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_manager_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/marketplace_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
@@ -27,15 +26,12 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_chat_screen.dart';
-import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_manager_screen.dart';
-import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/core/responsive.dart';
 
-import '../../../../services/notification_model.dart';
 import '../../../../services/notification_service.dart';
 
 class ToolItem {
@@ -172,7 +168,7 @@ class _HomeState extends State<Home> {
       icon: Icons.description_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFE53935),
-      widget: const Transcriptscreen(),
+      widget: const TranscriptScreen(),
     ),
     ToolItem(
       name: "PORTAL",
@@ -181,7 +177,6 @@ class _HomeState extends State<Home> {
       brandColor: const Color(0xFA308BAF),
       widget: const Portalscreen(),
     ),
-
 
     ToolItem(
       name: "UB Support Bot",
@@ -306,9 +301,9 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                const ViewSection(title: "Other Services"),
+                const ViewSection(title: "TOOLS"),
                 ToolboxSection(items: toolboxItems, userProfile: _userProfile),
-                const SizedBox(height: 25), // Padding for FAB
+                const SizedBox(height: 20), // Padding for FAB
               ]),
             ),
           ),
@@ -400,7 +395,8 @@ class ToolboxSection extends StatelessWidget {
         final tool = items[index];
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        const isRestricted = false; // Always unlocked in this free community version
+        const isRestricted =
+            false; // Always unlocked in this free community version
 
         return FadeInSlide(
           delay: index * 0.05,

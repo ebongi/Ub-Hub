@@ -1,16 +1,33 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/auth.dart';
 
+// ── Design tokens ────────────────────────────────────────────────────────────
+const Color _indigo = Color(0xFF4F46E5);
+const Color _slate900 = Color(0xFF0F172A);
+const Color _slate700 = Color(0xFF334155);
+const Color _slate500 = Color(0xFF64748B);
+const Color _slate300 = Color(0xFFCBD5E1);
+const Color _slate100 = Color(0xFFF1F5F9);
 
-// ── Design tokens (shared with splash) ──────────────────────────────────────
-const Color _deepNavy = Color(0xFF080E1E);
-const Color _cardNavy = Color(0xFF111D3D);
-const Color _accentBlue = Color(0xFF3B82F6);
-const Color _accentCyan = Color(0xFF06B6D4);
-const Color _white = Colors.white;
+// ── Dark mode equivalents ─────────────────────────────────────────────────────
+Color _bgColor(bool isDark) =>
+    isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+Color _surfaceColor(bool isDark) =>
+    isDark ? const Color(0xFF1E293B) : Colors.white;
+Color _headingColor(bool isDark) =>
+    isDark ? Colors.white : _slate900;
+Color _bodyColor(bool isDark) =>
+    isDark ? Colors.white.withOpacity(0.55) : _slate500;
+Color _borderColor(bool isDark) =>
+    isDark ? Colors.white.withOpacity(0.1) : _slate300;
+Color _fieldFill(bool isDark) =>
+    isDark ? Colors.white.withOpacity(0.06) : _slate100;
+Color _iconColor(bool isDark) =>
+    isDark ? Colors.white.withOpacity(0.4) : _slate500;
 
 class Signin extends StatefulWidget {
   final Authentication? authService;
@@ -53,7 +70,7 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
       ),
     );
     _headerSlide =
-        Tween<Offset>(begin: const Offset(0, -0.15), end: Offset.zero).animate(
+        Tween<Offset>(begin: const Offset(0, -0.12), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _entryController,
             curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
@@ -66,7 +83,7 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
         curve: const Interval(0.25, 0.75, curve: Curves.easeOut),
       ),
     );
-    _cardSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+    _cardSlide = Tween<Offset>(begin: const Offset(0, 0.10), end: Offset.zero)
         .animate(
           CurvedAnimation(
             parent: _entryController,
@@ -107,217 +124,159 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
     } catch (e) {
       if (mounted) ErrorHandler.showErrorSnackBar(context, e);
     } finally {
-
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? _deepNavy : const Color(0xFFF8FAFC);
 
     return Scaffold(
-      backgroundColor: bgColor,
-      body: Stack(
-        children: [
-          // ── Background atmosphere ──────────────────────────────────────
-          const Positioned.fill(child: _BackgroundPainter()),
+      backgroundColor: _bgColor(isDark),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
 
-          // ── Content ───────────────────────────────────────────────────
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-
-                    // ── Header ─────────────────────────────────────────
-                    SlideTransition(
-                      position: _headerSlide,
-                      child: FadeTransition(
-                        opacity: _headerFade,
-                        child: const _SignInHeader(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // ── Form card ──────────────────────────────────────
-                    SlideTransition(
-                      position: _cardSlide,
-                      child: FadeTransition(
-                        opacity: _cardFade,
-                        child: _FormCard(
-                          emailController: _emailController,
-                          passwordController: _passwordController,
-                          viewPassword: _viewPassword,
-                          isLoading: _isLoading,
-                          onTogglePassword: () =>
-                              setState(() => _viewPassword = !_viewPassword),
-                          onSignIn: _handleSignIn,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // ── Footer ─────────────────────────────────────────
-                    FadeTransition(
-                      opacity: _footerFade,
-                      child: _SignInFooter(onToggle: widget.istoggle),
-                    ),
-                  ],
+                // ── Brand chip ─────────────────────────────────────────────
+                SlideTransition(
+                  position: _headerSlide,
+                  child: FadeTransition(
+                    opacity: _headerFade,
+                    child: _BrandChip(isDark: isDark),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 32),
+
+                // ── Heading ────────────────────────────────────────────────
+                SlideTransition(
+                  position: _headerSlide,
+                  child: FadeTransition(
+                    opacity: _headerFade,
+                    child: _SignInHeader(isDark: isDark),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── Form card ──────────────────────────────────────────────
+                SlideTransition(
+                  position: _cardSlide,
+                  child: FadeTransition(
+                    opacity: _cardFade,
+                    child: _FormCard(
+                      emailController: _emailController,
+                      passwordController: _passwordController,
+                      viewPassword: _viewPassword,
+                      isLoading: _isLoading,
+                      isDark: isDark,
+                      onTogglePassword: () =>
+                          setState(() => _viewPassword = !_viewPassword),
+                      onSignIn: _handleSignIn,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ── Footer ─────────────────────────────────────────────────
+                FadeTransition(
+                  opacity: _footerFade,
+                  child: _SignInFooter(onToggle: widget.istoggle, isDark: isDark),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// ── Background (orbs + dot grid) ─────────────────────────────────────────────
-class _BackgroundPainter extends StatelessWidget {
-  const _BackgroundPainter();
+// ── Brand chip ────────────────────────────────────────────────────────────────
+class _BrandChip extends StatelessWidget {
+  final bool isDark;
+  const _BrandChip({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return CustomPaint(
-      painter: _BgPainter(isDark: isDark),
-      child: const SizedBox.expand(),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: _indigo,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.school_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text.rich(
+          TextSpan(
+            text: 'Go',
+            style: GoogleFonts.outfit(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: _indigo,
+              letterSpacing: 0.2,
+            ),
+            children: [
+              TextSpan(
+                text: 'Study',
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w400,
+                  color: isDark ? Colors.white.withOpacity(0.8) : _slate700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
-}
-
-class _BgPainter extends CustomPainter {
-  final bool isDark;
-  _BgPainter({required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final orbOpacity1 = isDark ? 0.13 : 0.07;
-    final orbOpacity2 = isDark ? 0.09 : 0.05;
-    final dotOpacity = isDark ? 0.025 : 0.05;
-
-    // Orb top-left
-    final orbPaint1 = Paint()
-      ..shader = RadialGradient(
-        colors: [_accentBlue.withOpacity(orbOpacity1), Colors.transparent],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.1, size.height * 0.05),
-          radius: 220,
-        ),
-      );
-    canvas.drawCircle(
-      Offset(size.width * 0.1, size.height * 0.05),
-      220,
-      orbPaint1,
-    );
-
-    // Orb bottom-right
-    final orbPaint2 = Paint()
-      ..shader = RadialGradient(
-        colors: [_accentCyan.withOpacity(orbOpacity2), Colors.transparent],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.9, size.height * 0.85),
-          radius: 260,
-        ),
-      );
-    canvas.drawCircle(
-      Offset(size.width * 0.9, size.height * 0.85),
-      260,
-      orbPaint2,
-    );
-
-    // Dot grid
-    final dotPaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withOpacity(dotOpacity);
-    const spacing = 32.0;
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        canvas.drawCircle(Offset(x, y), 1, dotPaint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BgPainter oldDelegate) =>
-      oldDelegate.isDark != isDark;
 }
 
 // ── Header section ────────────────────────────────────────────────────────────
 class _SignInHeader extends StatelessWidget {
-  const _SignInHeader();
+  final bool isDark;
+  const _SignInHeader({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Brand wordmark
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [_accentBlue, _accentCyan],
-          ).createShader(bounds),
-          child: Text.rich(
-            TextSpan(
-              text: 'Go',
-              style: GoogleFonts.outfit(
-                fontSize: 48,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                letterSpacing: 3,
-                height: 1,
-              ),
-              children: [
-                TextSpan(
-                  text: 'Study',
-                  style: GoogleFonts.outfit(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.blue,
-                    letterSpacing: 3,
-                    height: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
-
-        // Greeting
         Text(
-          'Welcome\nback.',
+          'Welcome back',
           style: GoogleFonts.outfit(
-            fontSize: 42,
+            fontSize: 30,
             fontWeight: FontWeight.w800,
-            color: Theme.of(context).brightness == Brightness.dark
-                ? _white
-                : const Color(0xFF0F172A),
-            height: 1.1,
-            letterSpacing: -0.5,
+            color: _headingColor(isDark),
+            height: 1.15,
+            letterSpacing: -0.3,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         Text(
           'Sign in to continue your academic journey.',
           style: GoogleFonts.outfit(
-            fontSize: 15,
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : const Color(0xFF0F172A))
-                .withOpacity(0.45),
+            fontSize: 14.5,
+            color: _bodyColor(isDark),
             fontWeight: FontWeight.w400,
             height: 1.5,
           ),
@@ -333,6 +292,7 @@ class _FormCard extends StatelessWidget {
   final TextEditingController passwordController;
   final bool viewPassword;
   final bool isLoading;
+  final bool isDark;
   final VoidCallback onTogglePassword;
   final VoidCallback onSignIn;
 
@@ -341,29 +301,24 @@ class _FormCard extends StatelessWidget {
     required this.passwordController,
     required this.viewPassword,
     required this.isLoading,
+    required this.isDark,
     required this.onTogglePassword,
     required this.onSignIn,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? _cardNavy : Colors.white;
-    final borderColor = isDark
-        ? Colors.white.withOpacity(0.07)
-        : Colors.black.withOpacity(0.05);
-
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1),
+        color: _surfaceColor(isDark),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _borderColor(isDark), width: 1),
         boxShadow: [
           BoxShadow(
-            color: _accentBlue.withOpacity(isDark ? 0.12 : 0.08),
-            blurRadius: 40,
-            offset: const Offset(0, 12),
+            color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -371,270 +326,243 @@ class _FormCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Email
-          _FieldLabel(label: 'Email address'),
-          const SizedBox(height: 8),
-          _GoTextField(
-            controller: emailController,
-            hint: 'you@example.com',
-            icon: Icons.alternate_email_rounded,
-            keyboardType: TextInputType.emailAddress,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Please enter your email';
-              return null;
-            },
+          FadeInDown(
+            duration: const Duration(milliseconds: 350),
+            delay: const Duration(milliseconds: 50),
+            child: _EduField(
+              label: 'Email address',
+              hint: 'you@university.edu',
+              icon: Icons.alternate_email_rounded,
+              controller: emailController,
+              isDark: isDark,
+              keyboardType: TextInputType.emailAddress,
+              validator: (v) {
+                if (v == null || v.isEmpty) {
+                  return 'Please enter your email';
+                }
+                return null;
+              },
+            ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
 
           // Password
-          _FieldLabel(label: 'Password'),
-          const SizedBox(height: 8),
-          _GoTextField(
-            controller: passwordController,
-            hint: '••••••••',
-            icon: Icons.lock_outline_rounded,
-            obscureText: !viewPassword,
-            suffixIcon: GestureDetector(
-              onTap: onTogglePassword,
-              child: Icon(
-                viewPassword
-                    ? Icons.visibility_rounded
-                    : Icons.visibility_off_rounded,
-                color: (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : const Color(0xFF0F172A))
-                    .withOpacity(0.35),
-                size: 20,
+          FadeInDown(
+            duration: const Duration(milliseconds: 350),
+            delay: const Duration(milliseconds: 120),
+            child: _EduField(
+              label: 'Password',
+              hint: '••••••••',
+              icon: Icons.lock_outline_rounded,
+              controller: passwordController,
+              isDark: isDark,
+              obscureText: !viewPassword,
+              suffixIcon: GestureDetector(
+                onTap: onTogglePassword,
+                child: Icon(
+                  viewPassword
+                      ? Icons.visibility_rounded
+                      : Icons.visibility_off_rounded,
+                  color: _iconColor(isDark),
+                  size: 20,
+                ),
               ),
+              validator: (v) =>
+                  v == null || v.length < 6 ? 'Minimum 6 characters' : null,
             ),
-            validator: (v) =>
-                v == null || v.length < 6 ? 'Minimum 6 characters' : null,
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // Forgot password
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 32),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Forgot password?',
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  color: _accentCyan.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
+          FadeInDown(
+            duration: const Duration(milliseconds: 350),
+            delay: const Duration(milliseconds: 180),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Forgot password?',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    color: _indigo,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // Sign in button
-          _SignInButton(isLoading: isLoading, onPressed: onSignIn),
+          FadeInDown(
+            duration: const Duration(milliseconds: 350),
+            delay: const Duration(milliseconds: 230),
+            child: _PrimaryButton(
+              label: 'Sign In',
+              isLoading: isLoading,
+              onPressed: onSignIn,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _FieldLabel extends StatelessWidget {
+// ── Reusable educational field ─────────────────────────────────────────────────
+class _EduField extends StatelessWidget {
   final String label;
-  const _FieldLabel({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Text(
-      label,
-      style: GoogleFonts.outfit(
-        fontSize: 12.5,
-        fontWeight: FontWeight.w600,
-        color: (isDark ? Colors.white : const Color(0xFF0F172A))
-            .withOpacity(0.45),
-        letterSpacing: 0.8,
-      ),
-    );
-  }
-}
-
-class _GoTextField extends StatelessWidget {
-  final TextEditingController controller;
   final String hint;
   final IconData icon;
-  final TextInputType keyboardType;
+  final TextEditingController controller;
+  final bool isDark;
   final bool obscureText;
+  final TextInputType keyboardType;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
 
-  const _GoTextField({
-    required this.controller,
+  const _EduField({
+    required this.label,
     required this.hint,
     required this.icon,
-    this.keyboardType = TextInputType.text,
+    required this.controller,
+    required this.isDark,
     this.obscureText = false,
+    this.keyboardType = TextInputType.text,
     this.suffixIcon,
     this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      style: GoogleFonts.outfit(
-        color: (Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF0F172A))
-            .withOpacity(0.9),
-        fontSize: 15,
-      ),
-      validator: validator,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.outfit(
-          color: (Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : const Color(0xFF0F172A))
-              .withOpacity(0.2),
-          fontSize: 15,
-        ),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Icon(
-            icon,
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : const Color(0xFF0F172A))
-                .withOpacity(0.3),
-            size: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white.withOpacity(0.7) : _slate700,
+            letterSpacing: 0.1,
           ),
         ),
-        suffixIcon: suffixIcon != null
-            ? Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: suffixIcon,
-              )
-            : null,
-        filled: true,
-        fillColor: (Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF0F172A))
-            .withOpacity(0.05),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : const Color(0xFF0F172A))
-                .withOpacity(0.08),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          validator: validator,
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            color: isDark ? Colors.white.withOpacity(0.9) : _slate900,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.outfit(
+              fontSize: 15,
+              color: isDark ? Colors.white.withOpacity(0.2) : _slate300,
+            ),
+            prefixIcon: Icon(icon, color: _iconColor(isDark), size: 19),
+            suffixIcon: suffixIcon != null
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: suffixIcon,
+                  )
+                : null,
+            filled: true,
+            fillColor: _fieldFill(isDark),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _borderColor(isDark)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: _borderColor(isDark)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _indigo, width: 1.8),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.6),
+            ),
+            errorStyle: GoogleFonts.outfit(
+              color: const Color(0xFFEF4444),
+              fontSize: 12,
+            ),
           ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : const Color(0xFF0F172A))
-                .withOpacity(0.08),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _accentBlue, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-        ),
-        errorStyle: GoogleFonts.outfit(
-          color: const Color(0xFFEF4444),
-          fontSize: 12,
-        ),
-      ),
+      ],
     );
   }
 }
 
-class _SignInButton extends StatelessWidget {
+// ── Primary button ─────────────────────────────────────────────────────────────
+class _PrimaryButton extends StatelessWidget {
+  final String label;
   final bool isLoading;
   final VoidCallback onPressed;
 
-  const _SignInButton({required this.isLoading, required this.onPressed});
+  const _PrimaryButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 54,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: isLoading
-              ? LinearGradient(
-                  colors: [
-                    _accentBlue.withOpacity(0.5),
-                    _accentCyan.withOpacity(0.5),
-                  ],
-                )
-              : const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_accentBlue, _accentCyan],
-                ),
-          boxShadow: isLoading
-              ? []
-              : [
-                  BoxShadow(
-                    color: _accentBlue.withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-        ),
-        child: ElevatedButton(
-          onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+      height: 52,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _indigo,
+          disabledBackgroundColor: _indigo.withOpacity(0.55),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Text(
-                  'Sign In',
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
         ),
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.2,
+                ),
+              )
+            : Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
       ),
     );
   }
@@ -643,34 +571,29 @@ class _SignInButton extends StatelessWidget {
 // ── Footer ────────────────────────────────────────────────────────────────────
 class _SignInFooter extends StatelessWidget {
   final Function onToggle;
-  const _SignInFooter({required this.onToggle});
+  final bool isDark;
+  const _SignInFooter({required this.onToggle, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Divider with OR
+        // OR divider
         Row(
           children: [
             Expanded(
               child: Divider(
-                color: (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : const Color(0xFF0F172A))
-                    .withOpacity(0.08),
+                color: _borderColor(isDark),
                 thickness: 1,
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
                 'OR',
                 style: GoogleFonts.outfit(
                   fontSize: 11,
-                  color: (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : const Color(0xFF0F172A))
-                      .withOpacity(0.2),
+                  color: _bodyColor(isDark),
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
                 ),
@@ -678,10 +601,7 @@ class _SignInFooter extends StatelessWidget {
             ),
             Expanded(
               child: Divider(
-                color: (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : const Color(0xFF0F172A))
-                    .withOpacity(0.08),
+                color: _borderColor(isDark),
                 thickness: 1,
               ),
             ),
@@ -690,6 +610,7 @@ class _SignInFooter extends StatelessWidget {
 
         const SizedBox(height: 20),
 
+        // Sign up link
         Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -697,33 +618,27 @@ class _SignInFooter extends StatelessWidget {
               Text(
                 "Don't have an account?",
                 style: GoogleFonts.outfit(
-                  color: (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : const Color(0xFF0F172A))
-                      .withOpacity(0.4),
+                  color: _bodyColor(isDark),
                   fontSize: 14.5,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               GestureDetector(
                 onTap: () => onToggle(),
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [_accentBlue, _accentCyan],
-                  ).createShader(bounds),
-                  child: Text(
-                    'Sign Up',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
-                    ),
+                child: Text(
+                  'Sign Up',
+                  style: GoogleFonts.outfit(
+                    color: _indigo,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.5,
                   ),
                 ),
               ),
             ],
           ),
         ),
+
+        const SizedBox(height: 16),
       ],
     );
   }

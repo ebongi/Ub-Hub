@@ -164,10 +164,18 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Knowledge Scope"),
-          content: const Text("Should this information be available to all students (Global) or just you (Personal)?"),
+          content: const Text(
+            "Should this information be available to all students (Global) or just you (Personal)?",
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Personal")),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Global")),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Personal"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Global"),
+            ),
           ],
         ),
       );
@@ -232,8 +240,14 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text("Make Global", style: TextStyle(fontSize: 14)),
-                subtitle: const Text("Visible to all users", style: TextStyle(fontSize: 10)),
+                title: const Text(
+                  "Make Global",
+                  style: TextStyle(fontSize: 14),
+                ),
+                subtitle: const Text(
+                  "Visible to all users",
+                  style: TextStyle(fontSize: 10),
+                ),
                 value: isGlobal,
                 onChanged: (val) => setDialogState(() => isGlobal = val),
               ),
@@ -249,8 +263,9 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
               isLoading: false,
               onPressed: () async {
                 if (titleController.text.isEmpty ||
-                    contentController.text.isEmpty)
+                    contentController.text.isEmpty) {
                   return;
+                }
                 final k = BotKnowledge(
                   userId: _currentUser!.id,
                   title: titleController.text,

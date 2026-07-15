@@ -3,33 +3,47 @@ import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 
-class Transcriptscreen extends StatefulWidget {
-  const Transcriptscreen({super.key});
+class TranscriptScreen extends StatefulWidget {
+  const TranscriptScreen({super.key});
 
   @override
-  State<Transcriptscreen> createState() => _TranscriptscreenState();
+  State<TranscriptScreen> createState() => _TranscriptScreenState();
 }
 
-class _TranscriptscreenState extends State<Transcriptscreen> {
+class _TranscriptScreenState extends State<TranscriptScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _matriculeController = TextEditingController();
-  final TextEditingController _facultyController = TextEditingController();
-  final TextEditingController _departmentController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _emailController;
+  late TextEditingController _matriculeController;
+  late TextEditingController _facultyController;
+  late TextEditingController _departmentController;
 
   String _modeOfApplication = '';
   String _status = '';
 
   final List<String> _modes = [
-    'Normal Mode(1200XAF)',
-    'Fast Mode(2500XAF)',
-    'Super Fast Mode(3500XAF)',
+    'Normal Mode (1200 XAF)',
+    'Fast Mode (2500 XAF)',
+    'Super Fast Mode (3500 XAF)',
   ];
-  final List<String> _statuses = ['Current', 'Former'];
+  final List<String> _statuses = ['Current Student', 'Former Student'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill data from UserModel if available
+    final user = Provider.of<UserModel>(context, listen: false);
+    _nameController = TextEditingController(text: user.name);
+    _phoneController = TextEditingController(text: user.phoneNumber);
+    _emailController = TextEditingController(text: user.email);
+    _matriculeController = TextEditingController(text: user.matricule);
+    _facultyController = TextEditingController(text: user.institutionName);
+    _departmentController = TextEditingController(text: user.department);
+  }
 
   @override
   void dispose() {
@@ -52,83 +66,99 @@ class _TranscriptscreenState extends State<Transcriptscreen> {
       final String department = _departmentController.text.trim();
 
       final String messageText =
-          "🎓 *NEW TRANSCRIPT APPLICATION* 🎓\n\n"
-          "Hi  Go-Study Support, I would like to apply for an academic transcript. Here are my application details:\n\n"
-          "📝 *Full Name:* $name\n"
-          "📞 *Phone Number:* $phone\n"
+          "🎓 *NEW TRANSCRIPT APPLICATION* 🎓\n"
+          "----------------------------------\n"
+          "📝 *Name:* $name\n"
+          "📞 *Tel:* $phone\n"
           "📧 *Email:* $email\n"
-          "🆔 *Matricule:* $matricule\n"
+          "🆔 *Matricule:* ${matricule.toUpperCase()}\n"
           "🏫 *Faculty:* $faculty\n"
-          "📚 *Department:* $department\n"
-          "⚡ *Mode of Application:* $_modeOfApplication\n"
-          "👤 *Student Status:* $_status\n\n"
-          "Please let me know the next steps for processing. Thank you!";
+          "📚 *Dept:* $department\n"
+          "⚡ *Mode:* $_modeOfApplication\n"
+          "👤 *Status:* $_status\n"
+          "----------------------------------\n"
+          "Please process my application. Thank you!";
 
-      final String whatsappNumber =
-          "237682397481"; // Support contact from developer_info_screen
+      final String whatsappNumber = "237682397481";
       final String url =
           "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(messageText)}";
       final Uri uri = Uri.parse(url);
 
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            "Application Prepared",
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            "Your application details are ready. Tap 'Open WhatsApp' to send them directly to the support team for processing.",
-            style: GoogleFonts.outfit(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.outfit(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+      _showConfirmationDialog(uri);
+    }
+  }
+
+  void _showConfirmationDialog(Uri uri) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          "Confirm Application",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "You will be redirected to WhatsApp to complete your application with our support team.",
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.outfit(color: Colors.grey),
             ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                // Direct launch bypasses canLaunchUrl's package visibility constraints in newer OS versions
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } catch (e) {
                 try {
-                  // Direct launch bypasses canLaunchUrl's package visibility constraints in newer OS versions
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } catch (e) {
-                  try {
-                    await launchUrl(uri);
-                  } catch (e2) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Could not open WhatsApp. Please ensure WhatsApp is installed.",
-                          ),
+                  await launchUrl(uri);
+                } catch (e2) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "Could not open WhatsApp. Please ensure WhatsApp is installed.",
                         ),
-                      );
-                    }
+                      ),
+                    );
                   }
                 }
-              },
-              child: Text(
-                "Open WhatsApp",
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+              }
+            },
+            child: Text(
+              "Continue to WhatsApp",
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0, top: 8.0),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.outfit(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+          letterSpacing: 1.2,
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -143,19 +173,17 @@ class _TranscriptscreenState extends State<Transcriptscreen> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: isDarkMode ? Colors.white : Colors.black,
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Form(
               key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -165,133 +193,82 @@ class _TranscriptscreenState extends State<Transcriptscreen> {
                         "Fill in the details below to request your academic transcript.",
                   ),
                   const SizedBox(height: 32),
-
+                  _buildSectionTitle("Personal Information"),
                   AuthTextField(
                     controller: _nameController,
                     hintText: "Full Name",
                     prefixIcon: Iconsax.user,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your name";
-                      }
-                      return null;
-                    },
+                    validator: (v) => v!.isEmpty ? "Enter your name" : null,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   AuthTextField(
                     controller: _phoneController,
-                    hintText: "Phone Number (+237...)",
+                    hintText: "WhatsApp Number (e.g. 6xxxxxxxx)",
                     prefixIcon: Iconsax.call,
                     keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your phone number";
-                      }
-                      return null;
-                    },
+                    validator: (v) =>
+                        (v!.length < 9) ? "Enter a valid phone number" : null,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   AuthTextField(
                     controller: _emailController,
                     hintText: "Email Address",
                     prefixIcon: Iconsax.sms,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your email";
-                      }
-                      if (!RegExp(
-                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                      ).hasMatch(value)) {
-                        return "Please enter a valid email";
-                      }
-                      return null;
-                    },
+                    validator: (v) => !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(v!)
+                        ? "Enter a valid email"
+                        : null,
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 32),
+                  _buildSectionTitle("Academic Details"),
                   AuthTextField(
                     controller: _matriculeController,
                     hintText: "Matricule Number",
                     prefixIcon: Iconsax.card,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your matricule";
-                      }
-                      return null;
-                    },
+                    validator: (v) => v!.isEmpty ? "Enter your matricule" : null,
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 16),
                   AuthTextField(
                     controller: _facultyController,
                     hintText: "Faculty",
                     prefixIcon: Iconsax.bank,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your faculty";
-                      }
-                      return null;
-                    },
+                    validator: (v) => v!.isEmpty ? "Enter your faculty" : null,
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 16),
                   AuthTextField(
                     controller: _departmentController,
                     hintText: "Department",
                     prefixIcon: Iconsax.hierarchy,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter your department";
-                      }
-                      return null;
-                    },
+                    validator: (v) => v!.isEmpty ? "Enter your department" : null,
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 32),
+                  _buildSectionTitle("Application Options"),
                   AuthDropdown(
                     value: _modeOfApplication,
                     hintText: "Mode of Application",
                     prefixIcon: Iconsax.speedometer,
                     items: _modes,
-                    onChanged: (value) {
-                      setState(() {
-                        _modeOfApplication = value ?? '';
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please select a mode";
-                      }
-                      return null;
-                    },
+                    onChanged: (val) => setState(() => _modeOfApplication = val ?? ''),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? "Select a mode" : null,
                   ),
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 16),
                   AuthDropdown(
                     value: _status,
                     hintText: "Student Status",
                     prefixIcon: Iconsax.user_tag,
                     items: _statuses,
-                    onChanged: (value) {
-                      setState(() {
-                        _status = value ?? '';
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please select your status";
-                      }
-                      return null;
-                    },
+                    onChanged: (val) => setState(() => _status = val ?? ''),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? "Select your status" : null,
                   ),
                   const SizedBox(height: 40),
-
                   AuthButton(
                     label: "Submit Application",
                     onPressed: _submitForm,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),

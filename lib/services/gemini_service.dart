@@ -66,8 +66,9 @@ class GeminiService implements AIService {
     List<dynamic>? attachments,
   }) async {
     try {
-      if (_apiKey.isEmpty)
+      if (_apiKey.isEmpty) {
         return "Error: Gemini API Key is missing. Please check your setup.";
+      }
 
       final responseText = await _client.sendMessage(
         message,

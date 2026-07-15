@@ -8,9 +8,7 @@ import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/campay_service.dart';
-import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/profile.dart';
-import 'package:go_study/services/subscription_service.dart';
 import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -107,11 +105,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           }
 
           final serverMaterials = snapshot.data ?? [];
-          
+
           // Reconciliation
-          _optimisticMaterials.removeWhere((optimistic) =>
-              serverMaterials.any((server) => server.title == optimistic.title));
-          
+          _optimisticMaterials.removeWhere(
+            (optimistic) => serverMaterials.any(
+              (server) => server.title == optimistic.title,
+            ),
+          );
+
           final allMaterials = [..._optimisticMaterials, ...serverMaterials];
 
           if (allMaterials.isEmpty) {
@@ -236,8 +237,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
         ),
         child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
           leading: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -277,24 +280,24 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
           subtitle:
               material.description != null && material.description!.isNotEmpty
-                  ? Text(
-                      material.description!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
-                    )
-                  : null,
-          trailing: (material.uploaderId == _dbService.uid ||
+              ? Text(
+                  material.description!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                )
+              : null,
+          trailing:
+              (material.uploaderId == _dbService.uid ||
                   widget.course.adminId == _dbService.uid)
               ? PopupMenuButton<String>(
                   icon: Icon(
                     Icons.more_vert_rounded,
                     size: 20,
-                    color:
-                        isDark ? Colors.white70 : theme.colorScheme.primary,
+                    color: isDark ? Colors.white70 : theme.colorScheme.primary,
                   ),
                   onSelected: (value) async {
                     if (value == 'delete') {
@@ -303,25 +306,32 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         builder: (context) => AlertDialog(
                           title: const Text("Delete Material?"),
                           content: Text(
-                              "Are you sure you want to delete ${material.title}? This cannot be undone."),
+                            "Are you sure you want to delete ${material.title}? This cannot be undone.",
+                          ),
                           actions: [
                             TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel")),
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancel"),
+                            ),
                             TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text("Delete",
-                                    style: TextStyle(color: Colors.red))),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
                           ],
                         ),
                       );
-                        if (confirmed == true) {
-                          await _dbService.deleteMaterial(material.id);
-                          if (mounted) {
-                            ErrorHandler.showSuccessSnackBar(context, "Material deleted");
-                          }
+                      if (confirmed == true) {
+                        await _dbService.deleteMaterial(material.id);
+                        if (mounted) {
+                          ErrorHandler.showSuccessSnackBar(
+                            context,
+                            "Material deleted",
+                          );
                         }
-
+                      }
                     } else if (value == 'download') {
                       _handleDownload(material);
                     }
@@ -341,8 +351,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline_rounded,
-                              color: Colors.red, size: 20),
+                          Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text("Delete", style: TextStyle(color: Colors.red)),
                         ],
@@ -391,7 +404,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
+        ErrorHandler.showErrorSnackBar(
+          context,
+          "Could not launch download link",
+        );
       }
     }
   }
@@ -405,7 +421,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       );
       if (mounted) {
         ErrorHandler.showSuccessSnackBar(
-            context, "Material secured for offline access! 🔒");
+          context,
+          "Material secured for offline access! 🔒",
+        );
       }
     } catch (e) {
       print("Offline cache failed: $e");
@@ -461,7 +479,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             color: isDark ? Colors.white70 : Colors.black54,
           ),
         ),
-        trailing: (question.uploaderId == _dbService.uid ||
+        trailing:
+            (question.uploaderId == _dbService.uid ||
                 widget.course.adminId == _dbService.uid)
             ? PopupMenuButton<String>(
                 icon: Icon(
@@ -476,22 +495,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       builder: (context) => AlertDialog(
                         title: const Text("Delete Past Question?"),
                         content: Text(
-                            "Are you sure you want to delete ${question.title}? This cannot be undone."),
+                          "Are you sure you want to delete ${question.title}? This cannot be undone.",
+                        ),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel")),
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancel"),
+                          ),
                           TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Delete",
-                                  style: TextStyle(color: Colors.red))),
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ],
                       ),
                     );
                     if (confirmed == true) {
                       await _dbService.deleteMaterial(question.id);
                       if (mounted) {
-                        ErrorHandler.showSuccessSnackBar(context, "Past Question deleted");
+                        ErrorHandler.showSuccessSnackBar(
+                          context,
+                          "Past Question deleted",
+                        );
                       }
                     }
                   } else if (value == 'download') {
@@ -513,8 +540,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline_rounded,
-                            color: Colors.red, size: 20),
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.red,
+                          size: 20,
+                        ),
                         SizedBox(width: 8),
                         Text("Delete", style: TextStyle(color: Colors.red)),
                       ],
@@ -611,7 +641,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }) async {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
-          context, 'Only contributors and admins can upload content.');
+        context,
+        'Only contributors and admins can upload content.',
+      );
       return;
     }
 
@@ -686,10 +718,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               StreamBuilder<List<CourseMaterial>>(
                                 stream: _materialStream,
                                 builder: (context, snapshot) {
-                                  final questions = snapshot.data
-                                          ?.where((m) =>
-                                              m.materialCategory ==
-                                              'past_question')
+                                  final questions =
+                                      snapshot.data
+                                          ?.where(
+                                            (m) =>
+                                                m.materialCategory ==
+                                                'past_question',
+                                          )
                                           .toList() ??
                                       [];
                                   return PremiumDropdownField<String>(
@@ -698,20 +733,24 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     hint: "Select the question",
                                     icon: Icons.link_rounded,
                                     items: questions
-                                        .map((q) => DropdownMenuItem(
-                                              value: q.id,
-                                              child: Text(q.title,
-                                                  overflow:
-                                                      TextOverflow.ellipsis),
-                                            ))
+                                        .map(
+                                          (q) => DropdownMenuItem(
+                                            value: q.id,
+                                            child: Text(
+                                              q.title,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
                                         .toList(),
                                     onChanged: (v) => setDialogState(
-                                        () => selectedQuestionId = v),
+                                      () => selectedQuestionId = v,
+                                    ),
                                     validator: (v) =>
                                         selectedCategory == 'answer' &&
-                                                v == null
-                                            ? "Required"
-                                            : null,
+                                            v == null
+                                        ? "Required"
+                                        : null,
                                   );
                                 },
                               ),
@@ -748,18 +787,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: result != null
-                                      ? Colors.green
-                                          .withOpacity(isDark ? 0.1 : 0.05)
+                                      ? Colors.green.withOpacity(
+                                          isDark ? 0.1 : 0.05,
+                                        )
                                       : (isDark
-                                          ? Colors.white.withOpacity(0.04)
-                                          : Colors.grey[50]),
+                                            ? Colors.white.withOpacity(0.04)
+                                            : Colors.grey[50]),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: result != null
                                         ? Colors.green.withOpacity(0.3)
                                         : (isDark
-                                            ? Colors.white10
-                                            : Colors.black12),
+                                              ? Colors.white10
+                                              : Colors.black12),
                                     width: 1.5,
                                     style: BorderStyle.solid,
                                   ),
@@ -793,12 +833,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       result != null
                                           ? "File selected successfully"
                                           : (selectedCategory == 'past_question'
-                                              ? "Upload PDF or Word"
-                                              : "Supports PDF, DOC, Images"),
+                                                ? "Upload PDF or Word"
+                                                : "Supports PDF, DOC, Images"),
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
-                                        color:
-                                            isDark ? Colors.white38 : Colors.grey,
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.grey,
                                       ),
                                     ),
                                   ],
@@ -812,16 +853,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   child: TextButton(
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
+                                        vertical: 16,
+                                      ),
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
                                     ),
                                     onPressed: () => Navigator.pop(context),
-                                    child: Text("Cancel",
-                                        style: GoogleFonts.outfit(
-                                            color: Colors.grey,
-                                            fontWeight: FontWeight.bold)),
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -842,13 +887,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           fileName: result!.files.single.name,
                                           fileType:
                                               result!.files.single.extension ??
-                                                  'file',
+                                              'file',
                                           uploadedAt: DateTime.now(),
                                           courseId: widget.course.id,
                                           departmentId:
                                               widget.course.departmentId,
                                           materialCategory: selectedCategory,
-                                          isPastQuestion: selectedCategory ==
+                                          isPastQuestion:
+                                              selectedCategory ==
                                               'past_question',
                                           isAnswer:
                                               selectedCategory == 'answer',
@@ -857,8 +903,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                         );
 
                                         setState(() {
-                                          _optimisticMaterials
-                                              .add(tempMaterial);
+                                          _optimisticMaterials.add(
+                                            tempMaterial,
+                                          );
                                         });
 
                                         Navigator.pop(context);
@@ -871,7 +918,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           linkedId: selectedQuestionId,
                                         );
                                       } else if (result == null) {
-                                        ErrorHandler.showErrorSnackBar(context, "Please select a file");
+                                        ErrorHandler.showErrorSnackBar(
+                                          context,
+                                          "Please select a file",
+                                        );
                                       }
                                     },
                                   ),
@@ -942,7 +992,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   void _showUploadSelection() {
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
-          context, 'Only contributors and admins can upload content.');
+        context,
+        'Only contributors and admins can upload content.',
+      );
       return;
     }
 
@@ -985,51 +1037,48 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     "Select the type of material you want to share",
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: Colors.grey,
-                ),
+                    style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
+                  ),
+                  _buildUgcGuidelinesCard(Theme.of(context)),
+                  const SizedBox(height: 12),
+                  _buildUploadOption(
+                    icon: Icons.note_add_rounded,
+                    color: Colors.blue,
+                    title: "General Resources",
+                    subtitle: "Lecture notes, summaries, textbooks",
+                    onTap: () {
+                      Navigator.pop(context);
+                      _addMaterial(initialCategory: 'regular');
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildUploadOption(
+                    icon: Icons.history_edu_rounded,
+                    color: Colors.orange,
+                    title: "Past Question",
+                    subtitle: "Previous exam or test papers",
+                    onTap: () {
+                      Navigator.pop(context);
+                      _addMaterial(initialCategory: 'past_question');
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildUploadOption(
+                    icon: Icons.check_circle_rounded,
+                    color: Colors.green,
+                    title: "Verified Answer",
+                    subtitle: "Solutions to past questions",
+                    onTap: () {
+                      Navigator.pop(context);
+                      _addMaterial(initialCategory: 'answer');
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              _buildUgcGuidelinesCard(Theme.of(context)),
-              const SizedBox(height: 12),
-              _buildUploadOption(
-                icon: Icons.note_add_rounded,
-                color: Colors.blue,
-                title: "General Resources",
-                subtitle: "Lecture notes, summaries, textbooks",
-                onTap: () {
-                  Navigator.pop(context);
-                  _addMaterial(initialCategory: 'regular');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildUploadOption(
-                icon: Icons.history_edu_rounded,
-                color: Colors.orange,
-                title: "Past Question",
-                subtitle: "Previous exam or test papers",
-                onTap: () {
-                  Navigator.pop(context);
-                  _addMaterial(initialCategory: 'past_question');
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildUploadOption(
-                icon: Icons.check_circle_rounded,
-                color: Colors.green,
-                title: "Verified Answer",
-                subtitle: "Solutions to past questions",
-                onTap: () {
-                  Navigator.pop(context);
-                  _addMaterial(initialCategory: 'answer');
-                },
-              ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
       },
     );
   }
@@ -1098,11 +1147,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDark ? Colors.white70 : Colors.black54,
-        ),
+        Icon(icon, size: 16, color: isDark ? Colors.white70 : Colors.black54),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -1135,7 +1180,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           color: isDark ? Colors.white.withOpacity(0.02) : Colors.grey[50],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.03),
           ),
         ),
         child: Row(
@@ -1162,16 +1209,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Colors.grey),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: Colors.grey,
+            ),
           ],
         ),
       ),

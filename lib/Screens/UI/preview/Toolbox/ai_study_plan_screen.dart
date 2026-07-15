@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -135,10 +134,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
             icon: const Icon(Icons.bolt_rounded),
             label: const Text("GENERATE MY PLAN"),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),

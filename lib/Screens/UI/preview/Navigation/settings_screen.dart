@@ -6,13 +6,10 @@ import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart'
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:go_study/Screens/authentication/authenticate.dart';
-import 'package:go_study/services/profile.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/theme_provider.dart';
 
 import '../../../../services/auth.dart';
@@ -152,7 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: "Support Go Study",
                       subtitle: "Sponsor development or volunteer to help",
                       isDark: isDark,
-                      onTap: () => _supportPlatformViaWhatsApp(context, userModel),
+                      onTap: () =>
+                          _supportPlatformViaWhatsApp(context, userModel),
                     ),
                     _GoogleSettingsTile(
                       icon: Icons.code_rounded,
@@ -242,16 +240,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _supportPlatformViaWhatsApp(BuildContext context, UserModel userModel) async {
+  Future<void> _supportPlatformViaWhatsApp(
+    BuildContext context,
+    UserModel userModel,
+  ) async {
     final String studentName = userModel.name ?? 'a Go Study User';
-    final String messageText = "💖 *SUPPORT & VOLUNTEER FOR GO STUDY* 💖\n\n"
+    final String messageText =
+        "💖 *SUPPORT & VOLUNTEER FOR GO STUDY* 💖\n\n"
         "Hi Developer, I love using Go Study and would like to voluntarily support the development and growth of this platform!\n\n"
         "Please let me know how I can contribute or help.\n\n"
         "Best regards,\n"
         "$studentName";
 
-    final String whatsappNumber = "237682397481"; // Support contact from developer_info_screen
-    final String url = "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(messageText)}";
+    final String whatsappNumber =
+        "237682397481"; // Support contact from developer_info_screen
+    final String url =
+        "https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(messageText)}";
     final Uri uri = Uri.parse(url);
 
     showDialog(
@@ -290,7 +294,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Could not open WhatsApp. Please ensure WhatsApp is installed."),
+                        content: Text(
+                          "Could not open WhatsApp. Please ensure WhatsApp is installed.",
+                        ),
                       ),
                     );
                   }
@@ -357,11 +363,13 @@ class _GoogleSettingsTile extends StatelessWidget {
           color: isDark ? Colors.white70 : Colors.black54,
         ),
       ),
-      trailing: trailing ?? Icon(
-        Icons.arrow_forward_ios_rounded,
-        size: 14,
-        color: isDark ? Colors.white30 : Colors.grey[400],
-      ),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: isDark ? Colors.white30 : Colors.grey[400],
+          ),
     );
   }
 }

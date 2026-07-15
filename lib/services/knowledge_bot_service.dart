@@ -1,11 +1,13 @@
 import 'package:go_study/services/gemini_service.dart';
 import 'package:go_study/services/bot_knowledge.dart';
-import 'package:go_study/services/ai_service.dart';
 
 class KnowledgeBotService {
   final GeminiService _geminiService = GeminiService();
 
-  Future<String> askQuestion(String question, List<BotKnowledge> knowledge) async {
+  Future<String> askQuestion(
+    String question,
+    List<BotKnowledge> knowledge,
+  ) async {
     if (knowledge.isEmpty) {
       return "Hello! I am the University of Buea Customer Support Bot. I don't have any specific UB information loaded yet. Please add some university details to my knowledge base so I can help you!";
     }
@@ -16,7 +18,8 @@ class KnowledgeBotService {
         .map((k) => "### ${k.title}\n${k.content}")
         .join("\n\n");
 
-    final prompt = """
+    final prompt =
+        """
 You are the official 'UB Support Bot', a dedicated customer service assistant for the University of Buea. 
 Your goal is to provide helpful, professional, and accurate information to students, staff, and visitors about the university.
 
@@ -39,7 +42,10 @@ GUIDELINES:
     return _geminiService.sendMessage(prompt);
   }
 
-  Stream<String> streamQuestion(String question, List<BotKnowledge> knowledge) async* {
+  Stream<String> streamQuestion(
+    String question,
+    List<BotKnowledge> knowledge,
+  ) async* {
     if (knowledge.isEmpty) {
       yield "Hello! I am the University of Buea Support Bot. Please add some knowledge snippets first!";
       return;
@@ -50,7 +56,8 @@ GUIDELINES:
         .map((k) => "### ${k.title}\n${k.content}")
         .join("\n\n");
 
-    final prompt = """
+    final prompt =
+        """
 You are the official 'UB Support Bot', a dedicated customer service assistant for the University of Buea. 
 Your goal is to provide helpful, professional, and accurate information to students, staff, and visitors.
 
@@ -73,14 +80,21 @@ GUIDELINES:
   }
 
   /// Simple keyword-based relevance ranking to find the best context
-  List<BotKnowledge> _getRelevantSnippets(String query, List<BotKnowledge> allKnowledge) {
+  List<BotKnowledge> _getRelevantSnippets(
+    String query,
+    List<BotKnowledge> allKnowledge,
+  ) {
     if (allKnowledge.length <= 5) return allKnowledge;
 
-    final queryWords = query.toLowerCase().split(RegExp(r'\W+')).where((w) => w.length > 3).toSet();
-    
+    final queryWords = query
+        .toLowerCase()
+        .split(RegExp(r'\W+'))
+        .where((w) => w.length > 3)
+        .toSet();
+
     // Sort knowledge by how many query words they contain
     final scoredKnowledge = allKnowledge.map((k) {
-      final content = (k.title + " " + k.content).toLowerCase();
+      final content = ("${k.title} ${k.content}").toLowerCase();
       int score = 0;
       for (final word in queryWords) {
         if (content.contains(word)) score++;
