@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 
 
 import 'package:image_picker/image_picker.dart';
@@ -134,6 +135,31 @@ class _ProfileState extends State<Profile> {
                      ),
                    ],
                  ),
+                if (user.role == UserRole.admin) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AdminPanel(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.admin_panel_settings_rounded),
+                      label: Text(
+                        "Open Admin Dashboard",
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 32),
 

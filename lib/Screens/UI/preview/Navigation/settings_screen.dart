@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 import 'package:go_study/Screens/UI/preview/Settings/developer_info_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
 // import 'package:go_study/Screens/UI/preview/Settings/about_screen.dart';
@@ -11,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/theme_provider.dart';
+import 'package:go_study/services/profile.dart';
 
 import '../../../../services/auth.dart';
 import '../Settings/about.dart';
@@ -90,6 +92,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
+                    if (userModel.role == UserRole.admin)
+                      _GoogleSettingsTile(
+                        icon: Icons.admin_panel_settings_rounded,
+                        iconColor: Colors.indigo,
+                        title: "Admin Dashboard",
+                        subtitle: "Manage users, roles, and departments",
+                        isDark: isDark,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdminPanel(),
+                          ),
+                        ),
+                      ),
                   ], cardColor: cardColor),
                   const SizedBox(height: 16),
 
