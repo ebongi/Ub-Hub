@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:introduction_screen/introduction_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:animate_do/animate_do.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,269 +10,344 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  Future<void> _onIntroEnd(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isFirstLaunch', false);
-    if (context.mounted) {
-      Navigator.of(context).pushReplacementNamed('/auth');
-    }
+  final List<_OnboardingPageData> _pages = const [
+    _OnboardingPageData(
+      image: 'assets/images/college project-rafiki.png',
+      title: "Let's get\nStarted",
+      body:
+          'Set up your academic journey in a structured space built for students, departments, and shared study resources.',
+      accent: Color(0xFFE11D48),
+    ),
+    _OnboardingPageData(
+      image: 'assets/images/Teaching-rafiki.png',
+      title: 'Get to\nKnow',
+      body:
+          'Find your institution, explore its schools and departments, and move quickly into the right courses and materials.',
+      accent: Color(0xFF0EA5E9),
+    ),
+    _OnboardingPageData(
+      image: 'assets/images/college students-rafiki.png',
+      title: 'Study\nTogether',
+      body:
+          'Use department pages, group chat, notes, and shared content to collaborate with classmates without friction.',
+      accent: Color(0xFF7C3AED),
+    ),
+    _OnboardingPageData(
+      image: 'assets/images/Learning-rafiki.png',
+      title: 'Learn\nSmarter',
+      body:
+          'Track tasks, prepare for exams, use AI support, and stay organized with tools designed for an academic workflow.',
+      accent: Color(0xFF16A34A),
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
-  Widget _buildImage(String assetName, double screenWidth) {
-    // Dynamically adjust image width based on screen size
-    final double width = screenWidth * 0.75;
-    if (assetName.endsWith('.svg')) {
-      return SvgPicture.asset('assets/images/$assetName', width: width);
+  Future<void> _finishOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstLaunch', false);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/auth');
+  }
+
+  void _skip() {
+    _finishOnboarding();
+  }
+
+  void _next() {
+    if (_currentPage == _pages.length - 1) {
+      _finishOnboarding();
+      return;
     }
-    return Image.asset('assets/images/$assetName', width: width);
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _previous() {
+    if (_currentPage == 0) return;
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-    final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.height < 700;
-
-    final pageDecoration = PageDecoration(
-      titleTextStyle: GoogleFonts.outfit(
-        fontSize: isSmallScreen ? 24.0 : 28.0,
-        fontWeight: FontWeight.w700,
-        color: textTheme.headlineMedium?.color ??
-            (theme.brightness == Brightness.dark ? Colors.white : Colors.black87),
-      ),
-      bodyTextStyle: GoogleFonts.outfit(
-        fontSize: isSmallScreen ? 16.0 : 18.0,
-        color: textTheme.bodyLarge?.color?.withOpacity(0.7) ??
-            (theme.brightness == Brightness.dark
-                ? Colors.white70
-                : Colors.black54),
-      ),
-      bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, isSmallScreen ? 8.0 : 16.0),
-      pageColor: theme.scaffoldBackgroundColor,
-      imagePadding: const EdgeInsets.only(bottom: 24.0, top: 24.0),
-      titlePadding: const EdgeInsets.only(top: 0.0, bottom: 8.0),
-      bodyAlignment: Alignment.center,
-      imageAlignment: Alignment.center,
-      footerPadding: const EdgeInsets.symmetric(vertical: 8),
-    );
+    final isDark = theme.brightness == Brightness.dark;
+    final page = _pages[_currentPage];
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDark ? const Color(0xFFF7F7F7) : Colors.white,
       body: SafeArea(
-        child: IntroductionScreen(
-          globalBackgroundColor: theme.scaffoldBackgroundColor,
-          allowImplicitScrolling: true,
-          onChange: (index) {
-            setState(() {
-              _currentPage = index;
-            });
-          },
-          pages: [
-            PageViewModel(
-              titleWidget: FadeInDown(
-                key: ValueKey('title_0_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
-                  ).createShader(bounds),
-                  child: Text(
-                    "Welcome to GO Study",
-                    textAlign: TextAlign.center,
-                    style:
-                        pageDecoration.titleTextStyle.copyWith(color: Colors.white),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              right: -60,
+              child: _SoftBlob(color: page.accent.withOpacity(0.08), size: 220),
+            ),
+            Positioned(
+              bottom: -60,
+              left: -50,
+              child: _SoftBlob(color: page.accent.withOpacity(0.06), size: 180),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        'GO Study',
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _skip,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                        ),
+                        child: Text(
+                          'Skip',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              bodyWidget: FadeInUp(
-                key: ValueKey('body_0_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Your Campus, Anytime. Everything you need to study smarter, collaborate faster, and achieve more — all in one place.",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.bodyTextStyle,
-                ),
-              ),
-              image: ZoomIn(
-                key: ValueKey('img_0_$_currentPage'),
-                duration: const Duration(milliseconds: 600),
-                child: _buildImage('logoicon.svg', size.width),
-              ),
-              decoration: pageDecoration,
-            ),
-            PageViewModel(
-              titleWidget: FadeInDown(
-                key: ValueKey('title_tailored_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Tailored for You",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.titleTextStyle,
-                ),
-              ),
-              bodyWidget: FadeInUp(
-                key: ValueKey('body_tailored_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Select your university and enjoy a customized experience with your departments, courses, and campus news.",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.bodyTextStyle,
-                ),
-              ),
-              image: ZoomIn(
-                key: ValueKey('img_tailored_$_currentPage'),
-                duration: const Duration(milliseconds: 600),
-                child: Icon(
-                  Icons.school_rounded,
-                  size: isSmallScreen ? 120 : 180,
-                  color: colorScheme.primary,
-                ),
-              ),
-              decoration: pageDecoration,
-            ),
-            PageViewModel(
-              titleWidget: FadeInDown(
-                key: ValueKey('title_ai_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Premium AI Assistant",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.titleTextStyle,
-                ),
-              ),
-              bodyWidget: FadeInUp(
-                key: ValueKey('body_ai_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Access powerful AI tools to summarize notes, generate study plans, and help you master difficult topics.",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.bodyTextStyle,
-                ),
-              ),
-              image: ZoomIn(
-                key: ValueKey('img_ai_$_currentPage'),
-                duration: const Duration(milliseconds: 600),
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
-                  ).createShader(bounds),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: isSmallScreen ? 120 : 180,
-                    color: Colors.white,
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _pages.length,
+                      onPageChanged: (index) {
+                        setState(() => _currentPage = index);
+                      },
+                      itemBuilder: (context, index) {
+                        final data = _pages[index];
+                        return _OnboardingPage(data: data, isDark: isDark);
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _PageDots(
+                        currentIndex: _currentPage,
+                        count: _pages.length,
+                      ),
+                      const Spacer(),
+                      _NavButton(
+                        icon: Icons.arrow_back_rounded,
+                        onPressed: _previous,
+                        enabled: _currentPage > 0,
+                        background: Colors.white,
+                        foreground: Colors.black87,
+                        borderColor: Colors.black12,
+                      ),
+                      const SizedBox(width: 12),
+                      _NavButton(
+                        icon: Icons.arrow_forward_rounded,
+                        onPressed: _next,
+                        enabled: true,
+                        background: Colors.black,
+                        foreground: Colors.white,
+                        borderColor: Colors.black,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                ],
               ),
-              decoration: pageDecoration,
-            ),
-            PageViewModel(
-              titleWidget: FadeInDown(
-                key: ValueKey('title_3_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Connect & Collaborate",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.titleTextStyle,
-                ),
-              ),
-              bodyWidget: FadeInUp(
-                key: ValueKey('body_3_$_currentPage'),
-                duration: const Duration(milliseconds: 500),
-                child: Text(
-                  "Share notes, collaborate on assignments, and chat with coursemates in dedicated study groups.",
-                  textAlign: TextAlign.center,
-                  style: pageDecoration.bodyTextStyle,
-                ),
-              ),
-              image: ZoomIn(
-                key: ValueKey('img_3_$_currentPage'),
-                duration: const Duration(milliseconds: 600),
-                child: _buildImage('colob.svg', size.width),
-              ),
-              decoration: pageDecoration,
             ),
           ],
-          onDone: () => _onIntroEnd(context),
-          onSkip: () => _onIntroEnd(context),
-          showSkipButton: true,
-          skipOrBackFlex: 0,
-          nextFlex: 0,
-          showBackButton: false,
-          back: Icon(Icons.arrow_back, color: colorScheme.primary),
-          skip: Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Skip',
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.primary,
-              ),
-            ),
-          ),
-          next: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
-          ),
-          done: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4285F4), Color(0xFF9B72F3)],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4285F4).withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Text(
-              'Get Started',
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          curve: Curves.fastLinearToSlowEaseIn,
-          controlsMargin: const EdgeInsets.all(16),
-          controlsPadding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-          dotsDecorator: DotsDecorator(
-            size: const Size(8.0, 8.0),
-            color: theme.brightness == Brightness.dark
-                ? Colors.white24
-                : Colors.black12,
-            activeSize: const Size(24.0, 8.0),
-            activeColor: colorScheme.primary,
-            activeShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25.0),
-            ),
-          ),
         ),
       ),
     );
   }
+}
+
+class _OnboardingPage extends StatelessWidget {
+  const _OnboardingPage({
+    required this.data,
+    required this.isDark,
+  });
+
+  final _OnboardingPageData data;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final imageHeight = size.height < 700 ? 250.0 : 310.0;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          height: imageHeight,
+          child: Center(
+            child: Image.asset(
+              data.image,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(right: 8),
+          child: Text(
+            data.title,
+            textAlign: TextAlign.left,
+            style: GoogleFonts.outfit(
+              fontSize: size.width < 380 ? 32 : 36,
+              height: 1.0,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.only(right: 16),
+          child: Text(
+            data.body,
+            textAlign: TextAlign.left,
+            style: GoogleFonts.outfit(
+              fontSize: 14.5,
+              height: 1.55,
+              color: Colors.black54,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PageDots extends StatelessWidget {
+  const _PageDots({
+    required this.currentIndex,
+    required this.count,
+  });
+
+  final int currentIndex;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(count, (index) {
+        final active = index == currentIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.only(right: 6),
+          width: active ? 22 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: active ? Colors.black : Colors.black26,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  const _NavButton({
+    required this.icon,
+    required this.onPressed,
+    required this.enabled,
+    required this.background,
+    required this.foreground,
+    required this.borderColor,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool enabled;
+  final Color background;
+  final Color foreground;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: enabled ? background : background.withOpacity(0.4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: borderColor.withOpacity(enabled ? 1 : 0.2)),
+      ),
+      elevation: enabled && background == Colors.black ? 4 : 0,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: enabled ? onPressed : null,
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(icon, color: foreground, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _SoftBlob extends StatelessWidget {
+  const _SoftBlob({
+    required this.color,
+    required this.size,
+  });
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _OnboardingPageData {
+  const _OnboardingPageData({
+    required this.image,
+    required this.title,
+    required this.body,
+    required this.accent,
+  });
+
+  final String image;
+  final String title;
+  final String body;
+  final Color accent;
 }

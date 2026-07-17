@@ -1,15 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
-import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/portalScreen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
-import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
@@ -40,6 +40,7 @@ class ToolItem {
   final Color backgroundColor;
   final Color brandColor;
   final Widget widget;
+  final bool comingSoon;
 
   ToolItem({
     required this.name,
@@ -47,6 +48,7 @@ class ToolItem {
     required this.backgroundColor,
     required this.brandColor,
     required this.widget,
+    this.comingSoon = false,
   });
 }
 
@@ -183,6 +185,7 @@ class _HomeState extends State<Home> {
       icon: Icons.psychology_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFEA4335),
+      comingSoon: true,
       widget: const KnowledgeBotChatScreen(),
     ),
   ];
@@ -395,15 +398,13 @@ class ToolboxSection extends StatelessWidget {
         final tool = items[index];
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        const isRestricted =
-            false; // Always unlocked in this free community version
 
         return FadeInSlide(
           delay: index * 0.05,
           child: ScaleButton(
             onTap: () {
-              if (isRestricted) {
-                _showUpgradePrompt(context);
+              if (tool.comingSoon) {
+                _showComingSoonDialog(context);
               } else {
                 Navigator.push(
                   context,
@@ -425,6 +426,18 @@ class ToolboxSection extends StatelessWidget {
               ),
               child: Stack(
                 children: [
+                  if (tool.comingSoon)
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                          child: Container(
+                            color: Colors.white.withOpacity(isDark ? 0.05 : 0.14),
+                          ),
+                        ),
+                      ),
+                    ),
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -454,21 +467,23 @@ class ToolboxSection extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: tool.comingSoon
+                                  ? (isDark ? Colors.white54 : Colors.black45)
+                                  : (isDark ? Colors.white : Colors.black87),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (isRestricted)
+                  if (tool.comingSoon)
                     Positioned(
                       top: 10,
                       right: 10,
                       child: Icon(
-                        Icons.lock_rounded,
+                        Icons.lock_clock_rounded,
                         size: 14,
-                        color: Colors.grey.withOpacity(0.6),
+                        color: Colors.grey.withOpacity(0.7),
                       ),
                     ),
                 ],
@@ -480,90 +495,35 @@ class ToolboxSection extends StatelessWidget {
     );
   }
 
-  void _showUpgradePrompt(BuildContext context) {
-    showPremiumGeneralDialog(
+  void _showComingSoonDialog(BuildContext context) {
+    showDialog(
       context: context,
-      barrierLabel: "Premium",
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xFF0F172A)
             : Colors.white,
-        surfaceTintColor: Colors.transparent,
-        contentPadding: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const PremiumDialogHeader(
-              title: "Premium Feature",
-              subtitle: "Expand your academic horizons",
-              icon: Icons.stars_rounded,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: Column(
-                children: [
-                  Text(
-                    "The AI Study Plan is a premium feature. Upgrade to Silver or Gold to unlock it!",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white70
-                          : Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            "Later",
-                            style: GoogleFonts.outfit(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: PremiumSubmitButton(
-                          label: "Upgrade Now",
-                          isLoading: false,
-                          onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubscriptionPlansScreen(
-                                  userProfile: userProfile!,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+        title: Text(
+          "Feature in development",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
+        content: Text(
+          "UB Support is being developed and will be available soon.",
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "OK",
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
     );
   }
+
 }
 
 // Helper to map department names to UI properties
