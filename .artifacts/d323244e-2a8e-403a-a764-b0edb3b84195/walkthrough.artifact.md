@@ -1,29 +1,25 @@
-# Walkthrough - Robust Payment Polling & Network Resilience
+# Walkthrough - New Icon Integration
 
-I have implemented a smarter, network-aware polling mechanism for Fapshi payments. This solves the `SocketException` (Failed host lookup) error you were seeing by making the app intelligent enough to handle connectivity drops during the payment verification process.
+I have successfully registered your new icons and updated the application to use the high-resolution source as the primary logo.
 
 ## Changes Made
 
-### 1. Network-Aware Service Layer
-- **Updated** [FapshiService.dart](file:///home/joviallaps/Desktop/Ub-Hub/lib/services/fapshi_service.dart):
-    - **Connectivity Checks**: Before every status check, the app now uses `connectivity_plus` to verify the device is physically online. If offline, it pauses polling and shows a "Waiting for internet..." status.
-    - **Exponential Backoff**: If a network error occurs (like DNS failure), the app now waits longer before retrying (5s → 7.5s → 11s → ... up to 30s) instead of spamming your logs.
-    - **Error Handling**: Wrapped the API calls in try-catch blocks to specifically identify and handle `SocketException`.
+### 1. Asset Registration
+- **Updated** [pubspec.yaml](file:///home/joviallaps/Desktop/Ub-Hub/pubspec.yaml):
+    - Added `assets/icons/android/` and `assets/icons/ios/` to the assets list to make them available in code.
+    - Updated the `flutter_launcher_icons` configuration to point to `assets/icons/android/play_store_512.png`. This ensures that if you run the icon generation command in the future, it will use the high-res source.
 
-### 2. UI Status Updates
-- **Updated** [SubscriptionPlansScreen](file:///home/joviallaps/Desktop/Ub-Hub/lib/Screens/UI/preview/Settings/subscription_plans_screen.dart):
-    - The processing status now dynamically updates based on the network state. You will see messages like:
-        - *"Waiting for internet..."*
-        - *"Connection issue: Retrying in Xs..."*
-        - *"Waiting for payment approval..."*
-- **Standardized Callers**: Updated [support_dialog.dart](file:///home/joviallaps/Desktop/Ub-Hub/lib/Screens/UI/preview/Settings/support_dialog.dart) and [department_screen.dart](file:///home/joviallaps/Desktop/Ub-Hub/lib/Screens/UI/preview/detailScreens/department_screen.dart) to use the centralized `waitForSuccessfulPayment` method instead of manual loops, ensuring consistent resilience across the entire app.
-
-## Benefits
-- **Clean Logs**: No more continuous `SocketException` spam in your debugger.
-- **Battery Efficiency**: Exponential backoff prevents unnecessary network requests during connectivity outages.
-- **Better UX**: Users get clear feedback if their internet drops while they are in the middle of a payment.
+### 2. UI Updates
+- **Updated** [SplashScreen.dart](file:///home/joviallaps/Desktop/Ub-Hub/lib/Screens/UI/preview/Navigation/splash_screen.dart):
+    - Replaced the old low-resolution `logoicon.png` with the new 512x512 high-resolution `play_store_512.png`.
 
 ## Verification Results
-- **Connectivity Check**: Verified that the app correctly identifies `ConnectivityResult.none`.
-- **Backoff Logic**: Confirmed the retry interval increases correctly upon successive network failures.
-- **Standardization**: All three payment entry points now benefit from these improvements.
+- **Asset Registration**: Ran `flutter pub get` and confirmed that all new icon paths are correctly recognized by the Flutter build system.
+- **Visuals**: The Splash Screen now uses the crisp, high-resolution logo from your new assets folder.
+
+> [!TIP]
+> **Generating Home Screen Icons**
+> If you want to update the app icon that appears on the Android/iOS home screens, you can now run this command in your terminal:
+> ```bash
+> flutter pub run flutter_launcher_icons
+> ```

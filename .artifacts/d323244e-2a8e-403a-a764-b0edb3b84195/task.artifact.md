@@ -1,7 +1,3 @@
-- [x] Service Layer Resilience
-    - [x] Update `FapshiService` with `connectivity_plus` checks
-    - [x] Implement exponential backoff in `waitForSuccessfulPayment`
-- [x] UI Layer Improvements
-    - [x] Update `SubscriptionPlansScreen` with network-aware status messages
-- [ ] Verification
-    - [ ] Test polling with and without internet connection
+- [x] Register new icon assets in `pubspec.yaml`
+- [x] Update `SplashScreen` to use high-resolution icon
+- [x] Verify asset loading

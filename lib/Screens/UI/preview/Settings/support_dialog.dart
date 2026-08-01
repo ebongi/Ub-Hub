@@ -6,6 +6,7 @@ import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Future<void> showSupportDialog(BuildContext context) async {
   final amountController = TextEditingController();

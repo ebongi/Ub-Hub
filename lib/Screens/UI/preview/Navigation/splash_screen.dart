@@ -90,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromRGBO(14, 25, 213, 1),
       body: SafeArea(
         child: Center(
           child: FadeTransition(
@@ -101,21 +101,21 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/logoicon.png',
+                    'assets/icons/android/play_store_512.png',
                     width: 116,
                     height: 116,
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'GO Study',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.9,
-                      color: Colors.black,
-                    ),
-                  ),
+                  // Text(
+                  //   'GO Study',
+                  //   style: const TextStyle(
+                  //     fontSize: 30,
+                  //     fontWeight: FontWeight.w800,
+                  //     letterSpacing: -0.9,
+                  //     color: Colors.white,
+                  //   ),
+                  // ),
                   const SizedBox(height: 8),
                   if (_version.isNotEmpty)
                     Text(
@@ -123,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black54,
+                        color: Colors.white,
                         letterSpacing: 0.2,
                       ),
                     ),
