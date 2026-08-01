@@ -45,6 +45,7 @@ class UserModel extends ChangeNotifier {
   SubscriptionTier _subscriptionTier;
   DateTime? _subscriptionExpiry;
   int _freeDownloadCount;
+  int _aiCredits;
   DateTime? _createdAt;
 
   UserModel({
@@ -63,6 +64,7 @@ class UserModel extends ChangeNotifier {
     SubscriptionTier subscriptionTier = SubscriptionTier.free,
     DateTime? subscriptionExpiry,
     int freeDownloadCount = 0,
+    int aiCredits = 5,
     DateTime? createdAt,
   }) : _uid = uid,
        _name = name,
@@ -79,6 +81,7 @@ class UserModel extends ChangeNotifier {
        _subscriptionTier = subscriptionTier,
        _subscriptionExpiry = subscriptionExpiry,
        _freeDownloadCount = freeDownloadCount,
+       _aiCredits = aiCredits,
        _createdAt = createdAt;
   // Gettters
   String? get uid => _uid;
@@ -96,7 +99,18 @@ class UserModel extends ChangeNotifier {
   SubscriptionTier get subscriptionTier => _subscriptionTier;
   DateTime? get subscriptionExpiry => _subscriptionExpiry;
   int get freeDownloadCount => _freeDownloadCount;
+  int get aiCredits => _aiCredits;
   DateTime? get createdAt => _createdAt;
+
+  bool get canUseAI {
+    if (role == UserRole.admin) return true;
+    if (subscriptionTier != SubscriptionTier.free) {
+      if (subscriptionExpiry != null && subscriptionExpiry!.isAfter(DateTime.now())) {
+        return true;
+      }
+    }
+    return _aiCredits > 0;
+  }
 
   bool get isTrialActive => false; // Disable trial countdowns entirely for free version
 
@@ -134,6 +148,7 @@ class UserModel extends ChangeNotifier {
     SubscriptionTier? subscriptionTier,
     DateTime? subscriptionExpiry,
     int? freeDownloadCount,
+    int? aiCredits,
     DateTime? createdAt,
   }) {
     if (uid != null) _uid = uid;
@@ -151,6 +166,7 @@ class UserModel extends ChangeNotifier {
     if (subscriptionTier != null) _subscriptionTier = subscriptionTier;
     if (subscriptionExpiry != null) _subscriptionExpiry = subscriptionExpiry;
     if (freeDownloadCount != null) _freeDownloadCount = freeDownloadCount;
+    if (aiCredits != null) _aiCredits = aiCredits;
     if (createdAt != null) _createdAt = createdAt;
     notifyListeners();
   }

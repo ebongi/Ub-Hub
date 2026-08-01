@@ -539,6 +539,61 @@ class DatabaseService {
         .eq('id', uid!);
   }
 
+  /// Deduct AI credits from the user's account
+  Future<void> useAICredit({int amount = 1}) async {
+    if (uid == null) return;
+
+    final profile = await _supabase
+        .from('profiles')
+        .select('ai_credits, role, subscription_tier, subscription_expiry')
+        .eq('id', uid!)
+        .single();
+
+    final role = UserRole.fromString(profile['role']);
+    final tier = SubscriptionTier.fromString(profile['subscription_tier']);
+    final expiry = profile['subscription_expiry'] != null
+        ? DateTime.parse(profile['subscription_expiry'])
+        : null;
+
+    // Admin or active unlimited subscription - no deduction
+    if (role == UserRole.admin) return;
+    if (tier != SubscriptionTier.free && expiry != null && expiry.isAfter(DateTime.now())) {
+      return;
+    }
+
+    final currentCredits = profile['ai_credits'] as int? ?? 0;
+    if (currentCredits < amount) throw Exception("Insufficient AI credits");
+
+    await _supabase
+        .from('profiles')
+        .update({'ai_credits': currentCredits - amount})
+        .eq('id', uid!);
+  }
+
+  /// Add AI credits to the user's account
+  Future<void> addAICredits(int amount) async {
+    if (uid == null) return;
+
+    final profile = await _supabase
+        .from('profiles')
+        .select('ai_credits')
+        .eq('id', uid!)
+        .single();
+
+    final currentCredits = profile['ai_credits'] as int? ?? 0;
+
+    await _supabase
+        .from('profiles')
+        .update({'ai_credits': currentCredits + amount})
+        .eq('id', uid!);
+        
+    await NotificationService().createNotification(
+      title: 'Credits Added!',
+      body: '$amount AI credits have been added to your account.',
+      type: NotificationType.system,
+    );
+  }
+
   /// Upload profile avatar and update profile URL
   Future<String> uploadAvatar(Uint8List imageData) async {
     if (uid == null) throw "User not authenticated";

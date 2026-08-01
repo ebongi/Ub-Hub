@@ -11,6 +11,10 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/ai_service.dart';
+import 'package:provider/provider.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
 
 import 'package:go_study/services/gemini_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,6 +49,19 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   List<PdfBookmark> _bookmarks = [];
 
   Future<void> _summarizeDocument() async {
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
     setState(() => _isSummarizing = true);
 
     try {
@@ -53,6 +70,12 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       if (response.statusCode == 200) {
         // 2. Generate summary
         final summary = await _aiService.summarizePdf(response.bodyBytes);
+
+        if (summary == "OUT_OF_CREDITS") {
+          setState(() => _isSummarizing = false);
+          if (mounted) AIUsageGate.checkAndShow(context, profile);
+          return;
+        }
 
         if (mounted) {
           _showSummarySheet(summary);
@@ -513,6 +536,19 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending || _pdfBytes == null) return;
 
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
     setState(() {
       _messages.add({"role": "user", "content": text});
       _isSending = true;
@@ -524,6 +560,12 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
         "Context: The user is asking about the attached PDF document. \n\nUser Question: $text",
         attachments: [AIAttachment('application/pdf', _pdfBytes!)],
       );
+
+      if (response == "OUT_OF_CREDITS") {
+        setState(() => _isSending = false);
+        if (mounted) AIUsageGate.checkAndShow(context, profile);
+        return;
+      }
 
       if (mounted) {
         setState(() {

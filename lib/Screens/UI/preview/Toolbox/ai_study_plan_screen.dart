@@ -7,6 +7,10 @@ import 'package:go_study/services/gemini_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/exam_event.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
+import 'package:provider/provider.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 
 class AIStudyPlanScreen extends StatefulWidget {
   const AIStudyPlanScreen({super.key});
@@ -29,6 +33,19 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
   }
 
   Future<void> _generatePlan() async {
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -50,6 +67,12 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
         tasks: activeTasks,
         exams: upcomingExams,
       );
+
+      if (plan == "OUT_OF_CREDITS") {
+        setState(() => _isLoading = false);
+        AIUsageGate.checkAndShow(context, profile);
+        return;
+      }
 
       setState(() {
         _studyPlan = plan;

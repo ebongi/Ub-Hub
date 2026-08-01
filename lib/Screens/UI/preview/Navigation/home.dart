@@ -19,6 +19,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/task_manager_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
 import 'package:go_study/services/message_provider.dart';
@@ -1097,6 +1098,37 @@ class AppBarUser extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
+        Consumer<UserModel>(
+          builder: (context, user, child) => GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SubscriptionPlansScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    "${user.aiCredits}",
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
         Stack(
           children: [
             IconButton(

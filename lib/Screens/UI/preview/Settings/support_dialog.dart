@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/campay_service.dart';
+import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
@@ -88,7 +89,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                             if (value == null || value.isEmpty) {
                               return 'Phone number required';
                             }
-                            if (!CampayService.isValidPhoneNumber(value)) {
+                            if (!FapshiService.isValidPhoneNumber(value)) {
                               return 'Enter a valid Cameroon phone number';
                             }
                             return null;
@@ -135,9 +136,9 @@ Future<void> showSupportDialog(BuildContext context) async {
                             }
 
                             final amount = double.parse(amountController.text);
-                            final paymentRef = CampayService.generatePaymentRef();
+                            final paymentRef = FapshiService.generatePaymentRef();
                             final formattedPhone =
-                                CampayService.formatPhoneNumber(
+                                FapshiService.formatPhoneNumber(
                                   phoneController.text,
                                 );
 
@@ -148,7 +149,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                                 userId: userId,
                                 paymentRef: paymentRef,
                                 amount: amount,
-                                currency: CampayService.getCurrency(),
+                                currency: FapshiService.getCurrency(),
                                 status: PaymentStatus.pending,
                                 itemType: 'donation',
                                 createdAt: DateTime.now(),
@@ -158,7 +159,7 @@ Future<void> showSupportDialog(BuildContext context) async {
 
                             // 2. Initiate Payment
                             final collectResponse =
-                                await CampayService.collectPayment(
+                                await FapshiService.collectPayment(
                                   amount: amount,
                                   phoneNumber: formattedPhone,
                                   description: 'Developer Support Donation',
@@ -167,21 +168,31 @@ Future<void> showSupportDialog(BuildContext context) async {
                             final nkwaPaymentId =
                                 collectResponse['id'] ??
                                 collectResponse['paymentId'];
+                            final redirectUrl = collectResponse['redirectUrl'];
+                            
                             if (nkwaPaymentId == null) {
                               throw Exception('Payment initiation failed');
                             }
 
-                            // 3. Poll for status
-                            PaymentStatus status = PaymentStatus.pending;
-                            int attempts = 0;
-                            while (status == PaymentStatus.pending &&
-                                attempts < 40) {
-                              await Future.delayed(const Duration(seconds: 3));
-                              status = await CampayService.checkPaymentStatus(
-                                nkwaPaymentId.toString(),
-                              );
-                              attempts++;
+                            if (redirectUrl != null) {
+                              final uri = Uri.parse(redirectUrl);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                setDialogState(() => isLoading = true);
+                              } else {
+                                throw Exception("Could not open payment link");
+                              }
                             }
+
+                            // 3. Poll for status
+                            final status = await FapshiService.waitForSuccessfulPayment(
+                              nkwaPaymentId.toString(),
+                              onStatusUpdate: (msg) {
+                                // Potentially update dialog UI if needed, 
+                                // but for now just log/debug
+                                if (kDebugMode) print(msg);
+                              },
+                            );
 
                             // 4. Update status
                             await dbService.updatePaymentStatus(

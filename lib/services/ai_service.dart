@@ -5,12 +5,14 @@ abstract class AIService {
   Future<String> sendMessage(
     String message, {
     List<dynamic>? attachments,
+    int creditCost = 1,
   });
 
   /// Sends a message and returns a stream of response chunks.
   Stream<String> streamMessage(
     String message, {
     List<dynamic>? attachments,
+    int creditCost = 1,
   });
 
   /// Updates the chat history for stateful services.

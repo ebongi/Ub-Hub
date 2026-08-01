@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/subscription_service.dart';
-import 'package:go_study/services/campay_service.dart';
+import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionPlansScreen extends StatefulWidget {
   final UserProfile? userProfile;
@@ -29,14 +32,16 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentTier =
-        widget.userProfile?.subscriptionTier ?? SubscriptionTier.free;
+    final userModel = Provider.of<UserModel>(context);
+    
+    final currentTier = userModel.subscriptionTier;
+    final credits = userModel.aiCredits;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Subscription Plans",
+          "AI Credits & Plans",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -48,21 +53,61 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Credits Balance Header
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 30),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Current Balance",
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
+                      ),
+                      Text(
+                        "$credits Credits",
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
             Text(
-              "Upgrade your experience",
+              "Top up AI Credits",
               style: GoogleFonts.outfit(
-                fontSize: 28,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              "Choose the plan that suits your academic needs.",
-              style: GoogleFonts.outfit(fontSize: 16, color: theme.hintColor),
+              "Credits are used for Gemini AI interactions. Core academic tools remain free for everyone.",
+              style: GoogleFonts.outfit(fontSize: 14, color: theme.hintColor),
             ),
-            const SizedBox(height: 32),
-            // --- SANDBOX TEST PLAN (25 XAF) ---
+            const SizedBox(height: 24),
+            // --- FAPSHI SANDBOX TEST MODE (100 XAF) ---
             Container(
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 20),
@@ -79,7 +124,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "SANDBOX TEST MODE",
+                        "FAPSHI TEST MODE",
                         style: GoogleFonts.outfit(
                           color: Colors.amber[800],
                           fontWeight: FontWeight.bold,
@@ -91,14 +136,14 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Test payment integration with the minimum Campay Sandbox amount (25 XAF). Upgrades you to Monthly tier on success.",
+                    "Test payment integration with the Fapshi Sandbox (100 XAF). Adds 10 test credits.",
                     style: GoogleFonts.outfit(fontSize: 13, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _isProcessing
                         ? null
-                        : () => _handlePurchase(SubscriptionTier.monthly, 25.0),
+                        : () => _handlePurchaseCredits(100.0, 10, "Test Credits"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber,
                       foregroundColor: Colors.black,
@@ -108,37 +153,124 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                       ),
                     ),
                     child: Text(
-                      "Pay 25 XAF (Test)",
+                      "Pay 100 XAF (Test)",
                       style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
             ),
-            // ----------------------------------
+            
+            // Credit Packs
+            _buildCreditPack(
+              context,
+              title: "Starter Pack",
+              credits: 50,
+              price: 500,
+              icon: Icons.auto_awesome_outlined,
+              color: Colors.blue,
+            ),
+            const SizedBox(height: 16),
+            _buildCreditPack(
+              context,
+              title: "Student Pack",
+              credits: 150,
+              price: 1000,
+              icon: Icons.rocket_launch_outlined,
+              color: Colors.purple,
+              isRecommended: true,
+            ),
+            const SizedBox(height: 32),
+            Text(
+              "Unlimited AI Subscriptions",
+              style: GoogleFonts.outfit(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
             _buildTierCard(
               context,
               tier: SubscriptionTier.monthly,
-              title: "Monthly Plan",
-              price: SubscriptionService.monthlyPrice,
-              color: Colors.blueGrey,
+              title: "Unlimited Monthly",
+              price: 2500,
+              color: Colors.orange,
               isCurrent: currentTier == SubscriptionTier.monthly,
             ),
-            const SizedBox(height: 20),
-            _buildTierCard(
-              context,
-              tier: SubscriptionTier.yearly,
-              title: "Yearly Plan",
-              price: SubscriptionService.yearlyPrice,
-              color: const Color(0xFFFFD700),
-              isCurrent: currentTier == SubscriptionTier.yearly,
-              isPremium: true,
-            ),
-            const SizedBox(height: 20),
-            _buildContributorCard(context, theme),
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCreditPack(
+    BuildContext context, {
+    required String title,
+    required int credits,
+    required double price,
+    required IconData icon,
+    required Color color,
+    bool isRecommended = false,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isRecommended ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+          width: isRecommended ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isRecommended)
+                  Text(
+                    "MOST POPULAR",
+                    style: GoogleFonts.outfit(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  "$credits AI Credits",
+                  style: GoogleFonts.outfit(color: theme.hintColor, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _isProcessing ? null : () => _handlePurchaseCredits(price, credits, title),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isRecommended ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+              foregroundColor: isRecommended ? theme.colorScheme.onPrimary : theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text("${price.toInt()} XAF"),
+          ),
+        ],
       ),
     );
   }
@@ -153,7 +285,13 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     bool isPremium = false,
   }) {
     final theme = Theme.of(context);
-    final features = SubscriptionService.getTierFeatures(tier);
+    final features = [
+      "Unlimited Gemini AI Chat",
+      "Unlimited PDF Summaries",
+      "Priority AI Response",
+      "AI Study Plan Generator",
+      "Structure Quiz Generator",
+    ];
 
     return Container(
       width: double.infinity,
@@ -169,15 +307,6 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               : theme.colorScheme.outlineVariant,
           width: 2,
         ),
-        boxShadow: isPremium
-            ? [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ]
-            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,139 +315,170 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   title.toUpperCase(),
-                  style: GoogleFonts.outfit(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
+                  style: GoogleFonts.outfit(color: color, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
               if (isCurrent)
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
+                Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 24),
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                "${price.toInt()} XAF",
-                style: GoogleFonts.outfit(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                tier == SubscriptionTier.monthly ? "/ month" : "/ year",
-                style: GoogleFonts.outfit(fontSize: 16, color: theme.hintColor),
-              ),
-            ],
+          Text(
+            "${price.toInt()} XAF / month",
+            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 24),
-          ...features.map(
-            (f) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
+          const SizedBox(height: 20),
+          ...features.map((f) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Icon(Icons.check, size: 16, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(f, style: GoogleFonts.outfit(fontSize: 14)),
+              ],
+            ),
+          )),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: isCurrent || _isProcessing ? null : () => _handlePurchase(tier, price),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(isCurrent ? "Current Plan" : "Get Unlimited"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handlePurchaseCredits(double amount, int credits, String packName) async {
+    final phoneController = TextEditingController();
+
+    final proceed = await showPremiumGeneralDialog<bool>(
+      context: context,
+      barrierLabel: "Buy Credits",
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.done_rounded,
-                    size: 18,
-                    color: theme.colorScheme.primary,
+                  PremiumDialogHeader(
+                    title: "Buy $packName",
+                    subtitle: "Add $credits credits to your balance",
+                    icon: Icons.bolt_rounded,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      f,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Enter your MoMo/OM number to pay ${amount.toInt()} XAF.",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(fontSize: 14),
+                        ),
+                        const SizedBox(height: 24),
+                        PremiumTextField(
+                          controller: phoneController,
+                          label: "Phone Number",
+                          hint: "6XXXXXXXX",
+                          icon: Icons.phone_android_rounded,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: "Pay Now",
+                          isLoading: false,
+                          onPressed: () => Navigator.pop(context, true),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text("Cancel", style: GoogleFonts.outfit(color: Colors.redAccent)),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: isCurrent || _isProcessing || widget.userProfile?.role == UserRole.admin
-                ? null
-                : () => _handlePurchase(tier, price),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isCurrent
-                  ? Colors.transparent
-                  : (isPremium
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface),
-              foregroundColor: isCurrent
-                  ? theme.colorScheme.primary
-                  : (isPremium
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.surface),
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 0,
-              side: isCurrent
-                  ? BorderSide(color: theme.colorScheme.primary)
-                  : null,
-            ),
-            child: _processingTier == tier
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (_statusMessage != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _statusMessage!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ],
-                  )
-                : Text(
-                    widget.userProfile?.role == UserRole.admin 
-                        ? "Admin Access"
-                        : (isCurrent ? "Current Plan" : "Upgrade Now"),
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-          ),
-        ],
+          );
+        },
       ),
     );
+
+    if (proceed == true && phoneController.text.isNotEmpty) {
+      _processCreditPurchase(amount, credits, phoneController.text.trim());
+    }
+  }
+
+  Future<void> _processCreditPurchase(double amount, int credits, String phone) async {
+    setState(() => _isProcessing = true);
+
+    try {
+      final response = await FapshiService.collectPayment(
+        amount: amount,
+        phoneNumber: FapshiService.formatPhoneNumber(phone),
+        description: "AI Credit Top-up ($credits credits)",
+      );
+
+      final paymentId = response['paymentId'];
+      final redirectUrl = response['redirectUrl'];
+
+      if (redirectUrl != null) {
+        final uri = Uri.parse(redirectUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          setState(() => _statusMessage = "Complete payment in browser...");
+        } else {
+          throw "Could not open payment link";
+        }
+      } else {
+        setState(() => _statusMessage = "Waiting for approval...");
+      }
+
+      final status = await FapshiService.waitForSuccessfulPayment(
+        paymentId,
+        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
+      );
+
+      if (status == PaymentStatus.success) {
+        await _db.addAICredits(credits);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("$credits credits added successfully!")),
+          );
+        }
+      } else {
+        throw "Payment was not successful";
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _statusMessage = null;
+        });
+      }
+    }
   }
 
   Widget _buildContributorCard(BuildContext context, ThemeData theme) {
@@ -512,17 +672,31 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     });
 
     try {
-      final response = await CampayService.collectPayment(
+      final response = await FapshiService.collectPayment(
         amount: amount,
-        phoneNumber: CampayService.formatPhoneNumber(phone),
+        phoneNumber: FapshiService.formatPhoneNumber(phone),
         description: "${SubscriptionService.getTierName(tier)} Subscription",
       );
 
       final paymentId = response['paymentId'] ?? response['id'];
+      final redirectUrl = response['redirectUrl'];
 
-      setState(() => _statusMessage = "Check your phone to approve...");
+      if (redirectUrl != null) {
+        final uri = Uri.parse(redirectUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          setState(() => _statusMessage = "Complete payment in the browser window.\n\nTip: Stay on the Fapshi page until the USSD prompt appears on your phone.");
+        } else {
+          throw "Could not open payment link";
+        }
+      } else {
+        setState(() => _statusMessage = "Check your phone for a MoMo prompt.\n\nMTN: Keep screen unlocked.\nOrange: Dial #150*50# if prompted for an OTP.");
+      }
 
-      final status = await CampayService.waitForSuccessfulPayment(paymentId);
+      final status = await FapshiService.waitForSuccessfulPayment(
+        paymentId,
+        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
+      );
 
       if (status == PaymentStatus.success) {
         await _db.upgradeSubscription(tier);
@@ -639,17 +813,31 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       _isProcessingContributor = true;
     });
     try {
-      final response = await CampayService.collectPayment(
+      final response = await FapshiService.collectPayment(
         amount: 5000.0,
-        phoneNumber: CampayService.formatPhoneNumber(phone),
+        phoneNumber: FapshiService.formatPhoneNumber(phone),
         description: "Contributor Upgrade",
       );
 
       final paymentId = response['paymentId'] ?? response['id'];
+      final redirectUrl = response['redirectUrl'];
 
-      setState(() => _statusMessage = "Check your phone to approve...");
+      if (redirectUrl != null) {
+        final uri = Uri.parse(redirectUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          setState(() => _statusMessage = "Complete payment in the browser window.\n\nTip: Stay on the Fapshi page until the USSD prompt appears on your phone.");
+        } else {
+          throw "Could not open payment link";
+        }
+      } else {
+        setState(() => _statusMessage = "Check your phone for a MoMo prompt.\n\nMTN: Keep screen unlocked.\nOrange: Dial #150*50# if prompted for an OTP.");
+      }
 
-      final status = await CampayService.waitForSuccessfulPayment(paymentId);
+      final status = await FapshiService.waitForSuccessfulPayment(
+        paymentId,
+        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
+      );
 
       if (status == PaymentStatus.success) {
         await _db.upgradeUserToContributor();

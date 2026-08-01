@@ -60,7 +60,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
     final theme = Theme.of(context);
     final departments = Provider.of<List<Department>?>(context);
     final userModel = Provider.of<UserModel>(context);
-    final canCreate = userModel.role == UserRole.contributor || userModel.role == UserRole.admin;
+    final canCreate = userModel.role == UserRole.admin;
 
     if (departments == null) {
       return const Scaffold(body: GridShimmer());

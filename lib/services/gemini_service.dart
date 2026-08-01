@@ -2,6 +2,8 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_study/core/app_config.dart';
 import 'package:go_study/services/gemini_client.dart';
+import 'package:go_study/services/database.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:go_study/services/ai_service.dart';
 
@@ -64,10 +66,25 @@ class GeminiService implements AIService {
   Future<String> sendMessage(
     String message, {
     List<dynamic>? attachments,
+    int creditCost = 1,
   }) async {
     try {
       if (_apiKey.isEmpty) {
         return "Error: Gemini API Key is missing. Please check your setup.";
+      }
+
+      // Check and consume AI Credit
+      final authClient = Supabase.instance.client.auth;
+      final uid = authClient.currentUser?.id;
+      if (uid != null) {
+        try {
+          await DatabaseService(uid: uid).useAICredit(amount: creditCost);
+        } catch (e) {
+          if (e.toString().contains("Insufficient")) {
+            return "OUT_OF_CREDITS";
+          }
+          rethrow;
+        }
       }
 
       final responseText = await _client.sendMessage(
@@ -86,8 +103,24 @@ class GeminiService implements AIService {
   Stream<String> streamMessage(
     String message, {
     List<dynamic>? attachments,
+    int creditCost = 1,
   }) async* {
     try {
+      // Check and consume AI Credit before starting stream
+      final authClient = Supabase.instance.client.auth;
+      final uid = authClient.currentUser?.id;
+      if (uid != null) {
+        try {
+          await DatabaseService(uid: uid).useAICredit(amount: creditCost);
+        } catch (e) {
+          if (e.toString().contains("Insufficient")) {
+            yield "OUT_OF_CREDITS";
+            return;
+          }
+          rethrow;
+        }
+      }
+
       yield* _client.sendMessageStream(
         message,
         attachments: attachments?.whereType<DataPart>().toList(),
@@ -138,7 +171,7 @@ Please provide:
 Format your response in professional Markdown.
 """;
 
-    return sendMessage(prompt);
+    return sendMessage(prompt, creditCost: 5);
   }
 
   @override
@@ -165,7 +198,7 @@ Your response must be a valid JSON object with the following structure:
 Provide ONLY the JSON object. Do not include markdown formatting or extra text.
 """;
 
-    return sendMessage(prompt);
+    return sendMessage(prompt, creditCost: 2);
   }
 
   @override
@@ -188,7 +221,17 @@ Format the response in professional Markdown.
             attachments: [DataPart('application/pdf', pdfBytes)],
           )
           .fold("", (p, e) => p + e);
-      return response.isNotEmpty ? response : "I couldn't generate a summary.";
+
+      if (response.isNotEmpty) {
+        // Only deduct on success
+        final authClient = Supabase.instance.client.auth;
+        final uid = authClient.currentUser?.id;
+        if (uid != null) {
+          await DatabaseService(uid: uid).useAICredit(amount: 3);
+        }
+        return response;
+      }
+      return "I couldn't generate a summary.";
     } catch (e) {
       if (kDebugMode) {
         print('Gemini PDF Error: $e');

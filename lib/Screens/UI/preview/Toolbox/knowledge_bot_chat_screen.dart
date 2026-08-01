@@ -5,6 +5,10 @@ import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/knowledge_bot_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:provider/provider.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_manager_screen.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -47,6 +51,19 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final text = _inputController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
     final userMsgId = "user_${DateTime.now().millisecondsSinceEpoch}";
     final botMsgId = "bot_${DateTime.now().millisecondsSinceEpoch}";
 
@@ -79,6 +96,10 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
       final stream = _botService.streamQuestion(text, _knowledgeBase);
       
       await for (final chunk in stream) {
+        if (chunk == "OUT_OF_CREDITS") {
+          fullResponse = "OUT_OF_CREDITS";
+          break;
+        }
         fullResponse += chunk;
         if (mounted) {
           // Find the message by ID to be safe, as the list might have changed
@@ -94,6 +115,15 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
             _scrollToBottom();
           }
         }
+      }
+      
+      if (fullResponse == "OUT_OF_CREDITS") {
+        setState(() {
+          _messages.removeWhere((m) => m['id'] == botMsgId);
+          _isLoading = false;
+        });
+        if (mounted) AIUsageGate.checkAndShow(context, profile);
+        return;
       }
       
       if (fullResponse.isEmpty) {

@@ -1,4 +1,4 @@
-package com.example.neo
+package com.ebongsume.gostudy
 
 import io.flutter.embedding.android.FlutterActivity
 

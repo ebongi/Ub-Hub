@@ -9,6 +9,8 @@ import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
+import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/ai_sync_service.dart';
 import 'package:go_study/services/gemini_service.dart';
@@ -140,6 +142,21 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty && _selectedFiles.isEmpty) return;
 
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    
+    // Convert UserModel to UserProfile for the gate (or update gate to accept UserModel)
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
     if (_currentSessionIndex == null) {
       final newSession = ChatSession(
         title: text.isEmpty 
@@ -205,10 +222,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             (chunk) {
               if (!mounted) return;
 
-              if (chunk.startsWith("Error:")) {
+              if (chunk.startsWith("Error:") || chunk == "OUT_OF_CREDITS") {
                 fullResponse = chunk;
                 hasError = true;
-                _showErrorSnackBar(chunk.replaceFirst("Error:", "").trim());
+                if (chunk == "OUT_OF_CREDITS") {
+                  _showErrorSnackBar("You are out of AI credits.");
+                  AIUsageGate.checkAndShow(context, profile);
+                } else {
+                  _showErrorSnackBar(chunk.replaceFirst("Error:", "").trim());
+                }
                 _stopAIResponse();
                 return;
               }

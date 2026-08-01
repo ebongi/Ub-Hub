@@ -54,6 +54,7 @@ class UserProfile {
   final int freeDownloadCount;
   final DateTime? upgradedAt;
   final DateTime? createdAt;
+  final int aiCredits;
   final String? avatarUrl;
   final String? institutionId;
   final String? bio;
@@ -71,6 +72,7 @@ class UserProfile {
     this.freeDownloadCount = 0,
     this.upgradedAt,
     this.createdAt,
+    this.aiCredits = 5,
     this.avatarUrl,
     this.institutionId,
     this.bio,
@@ -104,6 +106,7 @@ class UserProfile {
           : Supabase.instance.client.auth.currentUser?.createdAt != null
           ? DateTime.parse(Supabase.instance.client.auth.currentUser!.createdAt)
           : null,
+      aiCredits: json['ai_credits'] ?? 5,
       avatarUrl: json['avatar_url'],
       institutionId: json['institution_id'],
       bio: json['bio'],
@@ -124,6 +127,7 @@ class UserProfile {
       'free_download_count': freeDownloadCount,
       'upgraded_at': upgradedAt?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
+      'ai_credits': aiCredits,
       'avatar_url': avatarUrl,
       'institution_id': institutionId,
       'bio': bio,
@@ -141,11 +145,27 @@ class UserProfile {
 
   bool get hasUnlimitedDownloads => true; // Everyone gets unlimited downloads
 
-  bool get canCreateDepartment => true; // Everyone can help build the platform by adding departments
+  bool get canCreateDepartment => role == UserRole.admin; // Only admins can create departments/faculties
 
   bool get canUploadMaterial => true; // Everyone can help build the platform by uploading notes/study guides
 
   /// Central logic for the Hard Paywall.
   /// In the free community version, access is granted unconditionally to all users.
   bool get hasAccess => true;
+
+  /// AI Access Logic
+  bool get canUseAI {
+    // Admins have unlimited access
+    if (role == UserRole.admin) return true;
+    
+    // Check for active unlimited subscription
+    if (subscriptionTier != SubscriptionTier.free) {
+      if (subscriptionExpiry != null && subscriptionExpiry!.isAfter(DateTime.now())) {
+        return true;
+      }
+    }
+    
+    // Otherwise check credits
+    return aiCredits > 0;
+  }
 }

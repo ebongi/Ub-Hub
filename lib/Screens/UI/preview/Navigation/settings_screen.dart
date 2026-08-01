@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/theme_provider.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 
 import '../../../../services/auth.dart';
 import '../Settings/about.dart';
@@ -111,6 +112,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // App Preferences
                   _buildGoogleSettingsCard(context, [
+                    _GoogleSettingsTile(
+                      icon: Icons.bolt_rounded,
+                      iconColor: Colors.amber,
+                      title: "AI Credits & Plans",
+                      subtitle: "${userModel.aiCredits} Credits remaining",
+                      isDark: isDark,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SubscriptionPlansScreen(
+                            userProfile: UserProfile(
+                              id: userModel.uid ?? '',
+                              name: userModel.name,
+                              aiCredits: userModel.aiCredits,
+                              subscriptionTier: userModel.subscriptionTier,
+                              subscriptionExpiry: userModel.subscriptionExpiry,
+                              role: userModel.role,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                     _GoogleSettingsTile(
                       icon: Icons.notifications_none_rounded,
                       iconColor: Colors.orange,

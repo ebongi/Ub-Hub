@@ -7,7 +7,7 @@ import 'package:go_study/services/course_material.dart';
 
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/campay_service.dart';
+import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
@@ -596,7 +596,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        "Verified Answer • ${CampayService.getAnswerDownloadFee().toInt()} XAF",
+                        "Verified Answer • ${FapshiService.getAnswerDownloadFee().toInt()} XAF",
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
