@@ -214,6 +214,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     try {
       String fullResponse = "";
       bool hasError = false;
+      // Markdown + LaTeX re-parse the ENTIRE accumulated message text from
+      // scratch on every rebuild (markdown_widget has no memoization), and
+      // every Math.tex widget gets torn down and rebuilt with it — expensive
+      // for long, equation-heavy answers. Gate UI updates to a fixed
+      // cadence instead of once per stream chunk (which can fire many
+      // times a second) so that cost is paid a bounded number of times per
+      // response, not once per token. onDone below still always flushes
+      // the final, complete text, so nothing is ever lost — only how often
+      // the growing text repaints mid-stream changes.
+      var lastUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+      const uiUpdateInterval = Duration(milliseconds: 80);
 
       _aiSubscription = _aiService
           .streamMessage(
@@ -240,6 +251,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               }
 
               fullResponse += chunk;
+              final now = DateTime.now();
+              if (now.difference(lastUiUpdate) < uiUpdateInterval) return;
+              lastUiUpdate = now;
               setState(() {
                 final index = _messages.indexWhere(
                   (m) => m.id == aiResponsePlaceholder.id,
@@ -1312,7 +1326,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     constraints: BoxConstraints(
                       maxWidth:
                           MediaQuery.of(context).size.width *
-                          (isUser ? 0.75 : 0.85),
+                          (isUser ? 0.75 : 1),
                     ),
                     padding: EdgeInsets.symmetric(
                       horizontal: isUser ? 20 : 16,
@@ -1670,13 +1684,48 @@ class LatexNode extends SpanNode {
 class LatexSyntax extends md.InlineSyntax {
   LatexSyntax() : super(r'(\$\$?)([\s\S]+?)\1');
 
+  // Short math-function names that shouldn't count against a match, so
+  // e.g. "$\sin x$" or "$\log n$" content isn't rejected for containing a
+  // plain-looking word.
+  static const _mathWords = {
+    'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
+    'log', 'ln', 'exp', 'max', 'min', 'det',
+    'lim', 'sup', 'inf', 'mod', 'gcd', 'lcm', 'arg',
+  };
+
   @override
   bool onMatch(md.InlineParser parser, Match match) {
     final content = match.group(2) ?? '';
+    if (!_looksLikeMath(content)) return false;
     parser.addNode(
       md.Element.withTag('latex')..attributes['content'] = content,
     );
     return true;
+  }
+
+  /// Guards against plain prose that happens to contain two "$" used as
+  /// currency (e.g. "It costs $5 and shipping is $10") being misread as a
+  /// matched pair of math delimiters — the greedy-ish `[\s\S]+?` above
+  /// will happily pair any two unpaired "$" in the same message. Real
+  /// LaTeX content almost always contains a command (`\frac`, `\text`,
+  /// ...) or a math operator/relation; plain currency prose contains
+  /// neither and instead reads as ordinary English words. Not a perfect
+  /// heuristic (a single-word currency phrase can still slip through),
+  /// but it resolves the common multi-word case without rejecting real
+  /// LaTeX.
+  static bool _looksLikeMath(String content) {
+    final trimmed = content.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.contains('\n\n')) return false; // spans a paragraph break
+    if (trimmed.contains('\\')) return true; // a LaTeX command
+    if (RegExp(r'[=^_+/<>]').hasMatch(trimmed)) return true; // an operator
+
+    final plainWordCount = RegExp(r'[A-Za-z]{2,}')
+        .allMatches(trimmed)
+        .map((m) => m.group(0)!.toLowerCase())
+        .where((w) => !_mathWords.contains(w))
+        .length;
+    return plainWordCount < 2;
   }
 }
 
