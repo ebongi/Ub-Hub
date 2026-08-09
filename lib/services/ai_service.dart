@@ -27,11 +27,41 @@ abstract class AIService {
     required List<dynamic> exams,
   });
 
-  /// Generates a 5-question multiple-choice quiz from source text.
-  Future<String> generateQuiz(String sourceText);
+  /// Generates a 5-question multiple-choice quiz from a PDF document's raw
+  /// bytes, at the requested difficulty.
+  Future<String> generateQuiz(
+    dynamic pdfSource, {
+    required QuestionDifficulty difficulty,
+  });
 
   /// Summarizes a PDF document from its raw bytes.
   Future<String> summarizePdf(dynamic pdfSource);
+}
+
+enum QuestionDifficulty { low, intermediate, advanced }
+
+extension QuestionDifficultyLabel on QuestionDifficulty {
+  String get label {
+    switch (this) {
+      case QuestionDifficulty.low:
+        return "Low (recall & basic understanding)";
+      case QuestionDifficulty.intermediate:
+        return "Intermediate (applied understanding)";
+      case QuestionDifficulty.advanced:
+        return "Advanced (analysis, application, exam-level difficulty)";
+    }
+  }
+
+  String get displayName {
+    switch (this) {
+      case QuestionDifficulty.low:
+        return "Low";
+      case QuestionDifficulty.intermediate:
+        return "Intermediate";
+      case QuestionDifficulty.advanced:
+        return "Advanced";
+    }
+  }
 }
 
 class AIChatMessage {

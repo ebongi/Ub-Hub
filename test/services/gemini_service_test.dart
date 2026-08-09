@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/gemini_service.dart';
 import 'package:go_study/services/gemini_client.dart';
 
@@ -58,17 +59,26 @@ void main() {
     );
 
     test(
-      'generateQuiz should call sendMessage with formatted prompt',
+      'generateQuiz should call sendMessage with formatted prompt and PDF attachment',
       () async {
         when(
-          () => mockClient.sendMessage(any()),
+          () => mockClient.sendMessage(
+            any(),
+            attachments: any(named: 'attachments'),
+          ),
         ).thenAnswer((_) async => '{"questions": []}');
 
-        final result = await geminiService.generateQuiz('History of Cameroon');
+        final result = await geminiService.generateQuiz(
+          Uint8List(0),
+          difficulty: QuestionDifficulty.intermediate,
+        );
 
         expect(result, '{"questions": []}');
         verify(
-          () => mockClient.sendMessage(any(that: contains('expert educator'))),
+          () => mockClient.sendMessage(
+            any(that: contains('expert educator')),
+            attachments: any(named: 'attachments'),
+          ),
         ).called(1);
       },
     );

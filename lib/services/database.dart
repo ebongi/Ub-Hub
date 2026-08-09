@@ -177,6 +177,33 @@ class DatabaseService {
         .map((data) => data.map((json) => Course.fromSupabase(json)).toList());
   }
 
+  /// Ids of every student profile in the given department (matched by
+  /// department name, since UserProfile.department stores the name a
+  /// student picked at registration, not an id).
+  Future<List<String>> _getStudentIdsInDepartment(String departmentId) async {
+    final dept = await _supabase
+        .from('departments')
+        .select('name')
+        .eq('id', departmentId)
+        .maybeSingle();
+    if (dept == null) return [];
+
+    final rows = await _supabase
+        .from('profiles')
+        .select('id')
+        .eq('department', dept['name'] as String);
+    return rows.map((r) => r['id'] as String).toList();
+  }
+
+  /// Ids of every student profile at the given institution.
+  Future<List<String>> _getStudentIdsInInstitution(String institutionId) async {
+    final rows = await _supabase
+        .from('profiles')
+        .select('id')
+        .eq('institution_id', institutionId);
+    return rows.map((r) => r['id'] as String).toList();
+  }
+
   // Create a new department
   Future<String> createDepartment(Department department) async {
     final data = await _supabase
@@ -187,13 +214,30 @@ class DatabaseService {
 
     final id = data['id'] as String;
 
-    // Trigger notification
-    await NotificationService().createNotification(
-      title: 'New Department',
-      body: 'A new department "${department.name}" has been added.',
-      type: NotificationType.department,
-      data: {'departmentId': id},
-    );
+    // Broadcast to every student at the parent institution (the department
+    // is brand new, so it has no students of its own yet). Best-effort —
+    // never let a notification failure block department creation.
+    try {
+      final school = await _supabase
+          .from('schools')
+          .select('institution_id')
+          .eq('id', department.schoolId)
+          .maybeSingle();
+      final institutionId = school?['institution_id'] as String?;
+      if (institutionId != null) {
+        final recipientIds = await _getStudentIdsInInstitution(institutionId);
+        await NotificationService().createBroadcastNotification(
+          recipientIds: recipientIds,
+          title: 'New Department',
+          body: 'A new department "${department.name}" has been added.',
+          type: NotificationType.department,
+          data: {'departmentId': id},
+          excludeUserId: uid,
+        );
+      }
+    } catch (_) {
+      // Silently ignore — see comment above.
+    }
 
     return id;
   }
@@ -214,13 +258,24 @@ class DatabaseService {
 
     final id = data['id'] as String;
 
-    // Trigger notification
-    await NotificationService().createNotification(
-      title: 'New Course',
-      body: 'A new course "${course.name}" (${course.code}) is now available.',
-      type: NotificationType.course,
-      data: {'courseId': id, 'departmentId': course.departmentId},
-    );
+    // Broadcast to every student already in this department. Best-effort —
+    // never let a notification failure block course creation.
+    try {
+      final recipientIds = await _getStudentIdsInDepartment(
+        course.departmentId,
+      );
+      await NotificationService().createBroadcastNotification(
+        recipientIds: recipientIds,
+        title: 'New Course',
+        body:
+            'A new course "${course.name}" (${course.code}) is now available.',
+        type: NotificationType.course,
+        data: {'courseId': id, 'departmentId': course.departmentId},
+        excludeUserId: uid,
+      );
+    } catch (_) {
+      // Silently ignore — see comment above.
+    }
 
     return id;
   }
@@ -302,17 +357,41 @@ class DatabaseService {
         .single();
     final id = data['id'] as String;
 
-    // Trigger notification
-    await NotificationService().createNotification(
-      title: 'New Material Uploaded',
-      body: 'New content "${material.title}" has been uploaded.',
-      type: NotificationType.material,
-      data: {
-        'materialId': id,
-        'courseId': material.courseId,
-        'category': material.materialCategory,
-      },
-    );
+    // Broadcast to every student in the material's department (resolve via
+    // the course if the material wasn't uploaded directly to a department).
+    String? departmentId = material.departmentId;
+    if (departmentId == null && material.courseId != null) {
+      final course = await _supabase
+          .from('courses')
+          .select('department_id')
+          .eq('id', material.courseId!)
+          .maybeSingle();
+      departmentId = course?['department_id'] as String?;
+    }
+
+    if (departmentId != null) {
+      // Best-effort: RLS permits notifying same-department peers or (if
+      // admin) anyone, but a student uploading to a department other than
+      // their own profile's department still won't have coverage. Don't
+      // let a rejected broadcast fail the upload itself.
+      try {
+        final recipientIds = await _getStudentIdsInDepartment(departmentId);
+        await NotificationService().createBroadcastNotification(
+          recipientIds: recipientIds,
+          title: 'New Material Uploaded',
+          body: 'New content "${material.title}" has been uploaded.',
+          type: NotificationType.material,
+          data: {
+            'materialId': id,
+            'courseId': material.courseId,
+            'category': material.materialCategory,
+          },
+          excludeUserId: uid,
+        );
+      } catch (_) {
+        // Silently ignore — see comment above.
+      }
+    }
 
     return id;
   }
@@ -508,6 +587,7 @@ class DatabaseService {
         .update({
           'subscription_tier': tier.name,
           'subscription_expiry': expiry.toIso8601String(),
+          'subscription_is_trial': false, // Any paid purchase/renewal clears the trial flag
           'free_download_count': 0, // Reset count on upgrade/renewal
         })
         .eq('id', uid!);
@@ -518,6 +598,64 @@ class DatabaseService {
           'Your ${tier.name.toUpperCase()} subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
       type: NotificationType.subscription,
       data: {'tier': tier.name, 'expiry': expiry.toIso8601String()},
+    );
+  }
+
+  /// Activate the App Plan's one-time free trial month. Sets the same
+  /// subscription_tier/subscription_expiry fields as a paid App Plan
+  /// purchase, but marks the period as a trial (subscription_is_trial=true)
+  /// and never touches ai_subscription_expiry, so it never grants free AI.
+  /// Guarded by `.eq('trial_used', false)` so it can only ever run once per
+  /// account.
+  Future<void> startFreeMonthlyTrial() async {
+    if (uid == null) return;
+
+    final expiry = DateTime.now().add(const Duration(days: 30));
+
+    final updated = await _supabase
+        .from('profiles')
+        .update({
+          'subscription_tier': SubscriptionTier.monthly.name,
+          'subscription_expiry': expiry.toIso8601String(),
+          'subscription_is_trial': true,
+          'trial_used': true,
+          'free_download_count': 0,
+        })
+        .eq('id', uid!)
+        .eq('trial_used', false)
+        .select();
+
+    if (updated.isEmpty) {
+      throw Exception('Free trial already used');
+    }
+
+    await NotificationService().createNotification(
+      title: 'Free Trial Activated',
+      body:
+          'Your free App Plan month is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
+      type: NotificationType.subscription,
+      data: {'tier': SubscriptionTier.monthly.name, 'expiry': expiry.toIso8601String(), 'trial': 'true'},
+    );
+  }
+
+  /// Activate the separately-purchased Unlimited AI subscription (always
+  /// paid, never free). Independent of subscription_tier/subscription_expiry
+  /// (the App Plan).
+  Future<void> purchaseAISubscription() async {
+    if (uid == null) return;
+
+    final expiry = DateTime.now().add(const Duration(days: 30));
+
+    await _supabase
+        .from('profiles')
+        .update({'ai_subscription_expiry': expiry.toIso8601String()})
+        .eq('id', uid!);
+
+    await NotificationService().createNotification(
+      title: 'AI Subscription Activated',
+      body: 'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
+      type: NotificationType.subscription,
+      data: {'ai_subscription_expiry': expiry.toIso8601String()},
     );
   }
 
@@ -539,35 +677,22 @@ class DatabaseService {
         .eq('id', uid!);
   }
 
-  /// Deduct AI credits from the user's account
+  /// Deduct AI credits from the user's account. Delegates to the
+  /// `deduct_ai_credit` Postgres function so the check-and-deduct is a
+  /// single atomic operation (row-locked in Postgres) instead of a
+  /// read-then-write from Dart, which would let concurrent requests both
+  /// pass the balance check before either deduction lands.
   Future<void> useAICredit({int amount = 1}) async {
     if (uid == null) return;
 
-    final profile = await _supabase
-        .from('profiles')
-        .select('ai_credits, role, subscription_tier, subscription_expiry')
-        .eq('id', uid!)
-        .single();
-
-    final role = UserRole.fromString(profile['role']);
-    final tier = SubscriptionTier.fromString(profile['subscription_tier']);
-    final expiry = profile['subscription_expiry'] != null
-        ? DateTime.parse(profile['subscription_expiry'])
-        : null;
-
-    // Admin or active unlimited subscription - no deduction
-    if (role == UserRole.admin) return;
-    if (tier != SubscriptionTier.free && expiry != null && expiry.isAfter(DateTime.now())) {
-      return;
+    try {
+      await _supabase.rpc('deduct_ai_credit', params: {'p_amount': amount});
+    } on PostgrestException catch (e) {
+      if (e.message.contains('Insufficient')) {
+        throw Exception('Insufficient AI credits');
+      }
+      rethrow;
     }
-
-    final currentCredits = profile['ai_credits'] as int? ?? 0;
-    if (currentCredits < amount) throw Exception("Insufficient AI credits");
-
-    await _supabase
-        .from('profiles')
-        .update({'ai_credits': currentCredits - amount})
-        .eq('id', uid!);
   }
 
   /// Add AI credits to the user's account

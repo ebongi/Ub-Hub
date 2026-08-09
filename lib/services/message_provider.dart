@@ -49,11 +49,19 @@ class MessageProvider with ChangeNotifier {
         final senderId = payload.newRecord['sender_id'];
 
         // 1. NEVER notify or increment for self-sent messages
-        // If currentUserId is null, we safely assume it might be a self-message 
+        // If currentUserId is null, we safely assume it might be a self-message
         // that hasn't synced auth yet, or just skip to be safe.
         if (senderId == null || currentUserId == null || senderId == currentUserId) return;
 
-        // 2. Only proceed if the chat UI is not active
+        // 2. Only surface messages this user is actually allowed to see:
+        // global chat, or a DM room they're a participant in. Defense in
+        // depth alongside the messages table's RLS SELECT policy.
+        final roomId = payload.newRecord['room_id'] as String? ?? 'global';
+        final isMine = roomId == 'global' ||
+            (roomId.startsWith('dm_') && roomId.split('_').skip(1).contains(currentUserId));
+        if (!isMine) return;
+
+        // 3. Only proceed if the chat UI is not active
         if (!_isChatOpen) {
           _unreadCount++;
 

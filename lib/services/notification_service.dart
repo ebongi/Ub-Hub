@@ -452,6 +452,43 @@ class NotificationService {
     }
   }
 
+  /// Create the same notification for multiple recipients at once (e.g.
+  /// broadcasting new content to everyone in a department/institution).
+  /// Each recipient's own realtime channel (see [_listenForNotifications])
+  /// picks up their row and shows a local alert if their app is open, same
+  /// as a 1:1 notification created via [createNotification] — this just
+  /// fans the insert out to many users in a single bulk insert instead of
+  /// one row.
+  Future<void> createBroadcastNotification({
+    required List<String> recipientIds,
+    required String title,
+    required String body,
+    required NotificationType type,
+    Map<String, dynamic>? data,
+    String? excludeUserId,
+  }) async {
+    final targets = excludeUserId == null
+        ? recipientIds
+        : recipientIds.where((id) => id != excludeUserId).toList();
+    if (targets.isEmpty) return;
+
+    final rows = targets
+        .map(
+          (userId) => NotificationModel(
+            id: '',
+            userId: userId,
+            title: title,
+            body: body,
+            type: type,
+            createdAt: DateTime.now(),
+            data: data,
+          ).toSupabase(),
+        )
+        .toList();
+
+    await _supabase.from('notifications').insert(rows);
+  }
+
   /// Clear all notifications for the current user
   Future<void> clearAll() async {
     if (_uid == null) return;

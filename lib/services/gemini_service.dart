@@ -175,13 +175,14 @@ Format your response in professional Markdown.
   }
 
   @override
-  Future<String> generateQuiz(String sourceText) async {
+  Future<String> generateQuiz(
+    dynamic pdfSource, {
+    required QuestionDifficulty difficulty,
+  }) async {
+    final Uint8List pdfBytes = pdfSource as Uint8List;
     final prompt =
         """
-You are an expert educator. Based on the text provided below, generate a 5-question multiple-choice quiz.
-
-TEXT:
-$sourceText
+You are an expert educator preparing students for an exam. Based on the attached PDF document, generate 5 multiple-choice questions that could plausibly appear on an exam covering this material, at a ${difficulty.label} difficulty level.
 
 RESPONSE FORMAT:
 Your response must be a valid JSON object with the following structure:
@@ -198,7 +199,11 @@ Your response must be a valid JSON object with the following structure:
 Provide ONLY the JSON object. Do not include markdown formatting or extra text.
 """;
 
-    return sendMessage(prompt, creditCost: 2);
+    return sendMessage(
+      prompt,
+      attachments: [DataPart('application/pdf', pdfBytes)],
+      creditCost: 3,
+    );
   }
 
   @override
@@ -215,6 +220,20 @@ Format the response in professional Markdown.
 """;
 
     try {
+      // Check and consume AI Credit before making the billable call
+      final authClient = Supabase.instance.client.auth;
+      final uid = authClient.currentUser?.id;
+      if (uid != null) {
+        try {
+          await DatabaseService(uid: uid).useAICredit(amount: 3);
+        } catch (e) {
+          if (e.toString().contains("Insufficient")) {
+            return "OUT_OF_CREDITS";
+          }
+          rethrow;
+        }
+      }
+
       final response = await _client
           .sendMessageStream(
             prompt,
@@ -222,15 +241,7 @@ Format the response in professional Markdown.
           )
           .fold("", (p, e) => p + e);
 
-      if (response.isNotEmpty) {
-        // Only deduct on success
-        final authClient = Supabase.instance.client.auth;
-        final uid = authClient.currentUser?.id;
-        if (uid != null) {
-          await DatabaseService(uid: uid).useAICredit(amount: 3);
-        }
-        return response;
-      }
+      if (response.isNotEmpty) return response;
       return "I couldn't generate a summary.";
     } catch (e) {
       if (kDebugMode) {
