@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
@@ -45,6 +46,7 @@ class _RegisterFlowState extends State<RegisterFlow>
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
   bool _isLoading = false;
+  bool _agreedToTerms = false;
   int _currentStep = 0;
 
   late final AnimationController _entryController;
@@ -168,6 +170,7 @@ class _RegisterFlowState extends State<RegisterFlow>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: regBgColor(isDark),
@@ -191,7 +194,7 @@ class _RegisterFlowState extends State<RegisterFlow>
                 child: SlideTransition(
                   position: _slideAnim,
                   child: Text(
-                    'Student Registration',
+                    l10n.registerTitle,
                     style: GoogleFonts.outfit(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
@@ -204,7 +207,7 @@ class _RegisterFlowState extends State<RegisterFlow>
               ),
               const SizedBox(height: 8),
               Text(
-                'Create your account in four guided steps designed for the academic workflow.',
+                l10n.registerSubtitle,
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   height: 1.5,
@@ -288,6 +291,10 @@ class _RegisterFlowState extends State<RegisterFlow>
                             selectedDepartmentName: _selectedDepartmentName,
                             onDepartmentChanged: (val) {
                               setState(() => _selectedDepartmentName = val);
+                            },
+                            agreedToTerms: _agreedToTerms,
+                            onAgreedToTermsChanged: (val) {
+                              setState(() => _agreedToTerms = val);
                             },
                             isDark: isDark,
                           ),
@@ -379,6 +386,7 @@ class _ProgressHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = regIndigo(context);
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -400,7 +408,7 @@ class _ProgressHeader extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Step ${current + 1} of $total',
+          l10n.registerStepOf(current + 1, total),
           style: GoogleFonts.outfit(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
@@ -430,6 +438,7 @@ class _NavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = regIndigo(context);
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         if (currentStep > 0)
@@ -444,7 +453,7 @@ class _NavigationButtons extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: Text(
-                'Back',
+                l10n.registerBack,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -479,7 +488,7 @@ class _NavigationButtons extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    currentStep == 3 ? 'Complete Registration' : 'Continue',
+                    currentStep == 3 ? l10n.registerComplete : l10n.registerContinue,
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -501,6 +510,7 @@ class _RegisterFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Row(
@@ -512,7 +522,7 @@ class _RegisterFooter extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'VERIFICATION REQUIRED',
+                l10n.registerVerificationRequired,
                 style: GoogleFonts.outfit(
                   fontSize: 10,
                   color: regBodyColor(isDark).withOpacity(0.8),
@@ -533,7 +543,7 @@ class _RegisterFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Already registered?',
+                l10n.alreadyRegistered,
                 style: GoogleFonts.outfit(
                   color: regBodyColor(isDark),
                   fontSize: 15,
@@ -544,7 +554,7 @@ class _RegisterFooter extends StatelessWidget {
               GestureDetector(
                 onTap: () => onToggle(),
                 child: Text(
-                  'Sign In to Portal',
+                  l10n.signInToPortal,
                   style: GoogleFonts.outfit(
                     color: regIndigo(context),
                     fontWeight: FontWeight.w800,

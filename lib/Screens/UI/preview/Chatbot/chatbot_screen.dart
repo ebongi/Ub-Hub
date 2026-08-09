@@ -10,6 +10,7 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/ai_sync_service.dart';
@@ -93,7 +94,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       }
     } catch (e) {
       debugPrint("Error loading sessions: $e");
-      _showErrorSnackBar("Failed to load chat history. Please check your connection.");
+      if (mounted) {
+        _showErrorSnackBar(AppLocalizations.of(context)!.failedToLoadChatHistory);
+      }
     }
   }
 
@@ -142,8 +145,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty && _selectedFiles.isEmpty) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context, listen: false);
-    
+
     // Convert UserModel to UserProfile for the gate (or update gate to accept UserModel)
     final profile = UserProfile(
       id: userModel.uid ?? '',
@@ -159,8 +163,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     if (_currentSessionIndex == null) {
       final newSession = ChatSession(
-        title: text.isEmpty 
-            ? "New File Analysis" 
+        title: text.isEmpty
+            ? l10n.newFileAnalysisTitle
             : (text.length > 30 ? "${text.substring(0, 30)}..." : text),
         messages: [],
       );
@@ -203,7 +207,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final currentSession = _sessions[_currentSessionIndex!];
     _syncService
         .saveMessage(currentSession.id, userMessage)
-        .catchError((e) => _showErrorSnackBar("Message sync failed. Local history may be out of date."));
+        .catchError((e) => _showErrorSnackBar(l10n.messageSyncFailed));
 
     _scrollToBottom();
 
@@ -226,7 +230,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 fullResponse = chunk;
                 hasError = true;
                 if (chunk == "OUT_OF_CREDITS") {
-                  _showErrorSnackBar("You are out of AI credits.");
+                  _showErrorSnackBar(l10n.outOfAiCreditsMessage);
                   AIUsageGate.checkAndShow(context, profile);
                 } else {
                   _showErrorSnackBar(chunk.replaceFirst("Error:", "").trim());
@@ -246,8 +250,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     text: fullResponse,
                     isUser: false,
                     isError: hasError,
-                    thinking:
-                        "I'm analyzing your request and processing the information to provide a comprehensive answer...",
+                    thinking: l10n.aiThinkingPlaceholder,
                     createdAt: aiResponsePlaceholder.createdAt,
                   );
                 }
@@ -261,7 +264,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 final index = _messages.indexOf(aiResponsePlaceholder);
                 final errorMessage = ChatMessage(
                   id: index != -1 ? aiResponsePlaceholder.id : null,
-                  text: "Sorry, I encountered an error: $e",
+                  text: l10n.sorryEncounteredError(e.toString()),
                   isUser: false,
                   isError: true,
                   createdAt: index != -1
@@ -290,8 +293,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   text: fullResponse,
                   isUser: false,
                   isError: hasError,
-                  thinking:
-                      "I'm analyzing your request and processing the information to provide a comprehensive answer...",
+                  thinking: l10n.aiThinkingPlaceholder,
                   createdAt: aiResponsePlaceholder.createdAt,
                 );
                 setState(() {
@@ -313,7 +315,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (!mounted) return;
       _showErrorSnackBar("Critical Error: $e");
       final errorMessage = ChatMessage(
-        text: "Sorry, I encountered a critical error: $e",
+        text: l10n.sorryEncounteredCriticalError(e.toString()),
         isUser: false,
         isError: true,
       );
@@ -376,10 +378,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _deleteSession(int index) async {
+    final l10n = AppLocalizations.of(context)!;
     final session = _sessions[index];
     final confirm = await showPremiumGeneralDialog<bool>(
       context: context,
-      barrierLabel: "Delete Chat",
+      barrierLabel: l10n.deleteChatDialogTitle,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -391,9 +394,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const PremiumDialogHeader(
-              title: "Delete Chat",
-              subtitle: "This action cannot be undone",
+            PremiumDialogHeader(
+              title: l10n.deleteChatDialogTitle,
+              subtitle: l10n.deleteChatDialogSubtitle,
               icon: Icons.delete_outline_rounded,
             ),
             Padding(
@@ -401,7 +404,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               child: Column(
                 children: [
                   Text(
-                    "Are you sure you want to delete this conversation? All messages will be permanently removed.",
+                    l10n.deleteChatConfirmBody,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: 15,
@@ -417,7 +420,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -429,7 +432,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       Expanded(
                         flex: 2,
                         child: PremiumSubmitButton(
-                          label: "Delete Now",
+                          label: l10n.deleteNowButton,
                           isLoading: false,
                           onPressed: () => Navigator.pop(context, true),
                         ),
@@ -466,6 +469,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final userModel = Provider.of<UserModel>(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -482,7 +486,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ),
         title: Text(
-          "AI Assistant",
+          l10n.aiAssistantTitle,
           style: GoogleFonts.outfit(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -517,12 +521,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ],
       ),
-      drawer: _buildDrawer(theme),
+      drawer: _buildDrawer(theme, l10n),
       body: Column(
         children: [
           Expanded(
             child: _messages.isEmpty
-                ? _buildEmptyState(theme)
+                ? _buildEmptyState(theme, l10n)
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
@@ -545,13 +549,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     },
                   ),
           ),
-          _buildInputArea(theme),
+          _buildInputArea(theme, l10n),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(ThemeData theme, AppLocalizations l10n) {
     return SingleChildScrollView(
       child: Center(
         child: Column(
@@ -571,7 +575,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              "How can I help you today?",
+              l10n.howCanIHelpTodayMessage,
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.w400,
@@ -579,19 +583,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               ),
             ),
             const SizedBox(height: 48),
-            _buildQuickStarters(theme),
+            _buildQuickStarters(theme, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickStarters(ThemeData theme) {
+  Widget _buildQuickStarters(ThemeData theme, AppLocalizations l10n) {
     final starters = [
-      "📈 Help me with calculus",
-      "📝 Write a study plan",
-      "💡 Project ideas",
-      "📚 Summarize notes",
+      l10n.quickStarterCalculus,
+      l10n.quickStarterStudyPlan,
+      l10n.quickStarterProjectIdeas,
+      l10n.quickStarterSummarizeNotes,
     ];
 
     return Wrap(
@@ -634,7 +638,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  Widget _buildInputArea(ThemeData theme) {
+  Widget _buildInputArea(ThemeData theme, AppLocalizations l10n) {
     final isDark = theme.brightness == Brightness.dark;
     final pillColor = isDark ? const Color(0xFF1E1F20) : Colors.grey[100];
     final textColor = theme.colorScheme.onSurface;
@@ -689,7 +693,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "Thinking",
+                          l10n.thinkingLabel,
                           style: GoogleFonts.outfit(
                             color: textColor.withOpacity(0.7),
                             fontSize: 12,
@@ -715,7 +719,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             color: Colors.red.shade400,
                           ),
                           label: Text(
-                            "Stop",
+                            l10n.stopButton,
                             style: GoogleFonts.outfit(
                               color: Colors.red.shade400,
                               fontSize: 12,
@@ -772,7 +776,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             color: textColor,
                           ),
                           decoration: InputDecoration(
-                            hintText: "Ask AI",
+                            hintText: l10n.askAiHint,
                             hintStyle: GoogleFonts.outfit(
                               color: textColor.withOpacity(0.4),
                             ),
@@ -875,7 +879,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  Widget _buildDrawer(ThemeData theme) {
+  Widget _buildDrawer(ThemeData theme, AppLocalizations l10n) {
     final isDark = theme.brightness == Brightness.dark;
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -903,7 +907,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "AI Assistant",
+                    l10n.aiAssistantTitle,
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -934,7 +938,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     Icon(Icons.add, color: theme.colorScheme.primary, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      "New Chat",
+                      l10n.newChatButton,
                       style: GoogleFonts.outfit(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -949,7 +953,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: _sessions.isEmpty
                 ? Center(
                     child: Text(
-                      "No recent chats",
+                      l10n.noRecentChats,
                       style: GoogleFonts.outfit(
                         color: theme.colorScheme.onSurface.withOpacity(0.5),
                         fontSize: 14,
@@ -1034,7 +1038,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               color: Colors.red.shade400,
             ),
             title: Text(
-              "Clear all chats",
+              l10n.clearAllChatsListTile,
               style: GoogleFonts.outfit(
                 color: Colors.red.shade400,
                 fontSize: 14,
@@ -1043,7 +1047,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             onTap: () async {
               final confirm = await showPremiumGeneralDialog<bool>(
                 context: context,
-                barrierLabel: "Clear All Chats",
+                barrierLabel: l10n.clearAllChatsDialogTitle,
                 child: AlertDialog(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(32),
@@ -1058,9 +1062,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const PremiumDialogHeader(
-                        title: "Clear All Chats",
-                        subtitle: "Start with a clean slate",
+                      PremiumDialogHeader(
+                        title: l10n.clearAllChatsDialogTitle,
+                        subtitle: l10n.clearAllChatsDialogSubtitle,
                         icon: Icons.auto_awesome_rounded,
                       ),
                       Padding(
@@ -1068,7 +1072,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         child: Column(
                           children: [
                             Text(
-                              "Are you sure you want to delete all conversations? This action will permanently remove your entire chat history.",
+                              l10n.clearAllChatsConfirmBody,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.outfit(
                                 fontSize: 15,
@@ -1087,7 +1091,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                     onPressed: () =>
                                         Navigator.pop(context, false),
                                     child: Text(
-                                      "Cancel",
+                                      l10n.cancel,
                                       style: GoogleFonts.outfit(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.grey,
@@ -1099,7 +1103,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: PremiumSubmitButton(
-                                    label: "Clear All",
+                                    label: l10n.clearAllButton,
                                     isLoading: false,
                                     onPressed: () =>
                                         Navigator.pop(context, true),
@@ -1271,6 +1275,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
     final isDark = theme.brightness == Brightness.dark;
     final isUser = widget.message.isUser;
     final onSurface = theme.colorScheme.onSurface;
+    final l10n = AppLocalizations.of(context)!;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -1375,7 +1380,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        "Show Thinking",
+                                        l10n.showThinkingLabel,
                                         style: GoogleFonts.outfit(
                                           color: onSurface.withOpacity(0.8),
                                           fontSize: 14,
@@ -1713,9 +1718,9 @@ class _CodeBlockWrapper extends StatelessWidget {
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: code));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Code copied to clipboard"),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.codeCopiedToClipboard),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 },
@@ -1728,7 +1733,7 @@ class _CodeBlockWrapper extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      "Copy",
+                      AppLocalizations.of(context)!.copyButton,
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: theme.colorScheme.primary,

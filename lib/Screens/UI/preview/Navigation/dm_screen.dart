@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/private_chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/user_search_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -51,7 +52,6 @@ class _DmScreenState extends State<DmScreen> {
         builder: (_) => PrivateChatScreen(
           friend: friend,
           myId: _myId,
-          friendsService: _friendsService,
         ),
       ),
     ).then((_) {
@@ -62,6 +62,7 @@ class _DmScreenState extends State<DmScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -71,7 +72,7 @@ class _DmScreenState extends State<DmScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Messages',
+          l10n.navMessagesLabel,
           style: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -82,7 +83,7 @@ class _DmScreenState extends State<DmScreen> {
           IconButton(
             icon: Icon(Icons.person_add_outlined,
                 color: isDark ? Colors.white70 : Colors.black87),
-            tooltip: 'Find friends',
+            tooltip: l10n.findFriendsTooltip,
             onPressed: _openSearch,
           ),
         ],
@@ -116,7 +117,7 @@ class _DmScreenState extends State<DmScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '${requests.length} pending',
+                                l10n.pendingCountLabel(requests.length),
                                 style: GoogleFonts.outfit(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -126,7 +127,7 @@ class _DmScreenState extends State<DmScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Friend Requests',
+                              l10n.friendRequestsLabel,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -200,7 +201,7 @@ class _DmScreenState extends State<DmScreen> {
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            'No friends yet',
+                            l10n.noFriendsYetTitle,
                             style: GoogleFonts.outfit(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -208,7 +209,7 @@ class _DmScreenState extends State<DmScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Tap the icon above to find\nand add fellow students',
+                            l10n.tapIconToFindFriends,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(
                               fontSize: 14,
@@ -220,7 +221,7 @@ class _DmScreenState extends State<DmScreen> {
                           FilledButton.icon(
                             onPressed: _openSearch,
                             icon: const Icon(Icons.person_add_rounded, size: 18),
-                            label: Text('Find Friends',
+                            label: Text(l10n.findFriendsTitle,
                                 style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold)),
                             style: FilledButton.styleFrom(
@@ -273,6 +274,7 @@ class _DmScreenState extends State<DmScreen> {
 
   void _showFriendOptions(FriendProfile friend) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -307,7 +309,7 @@ class _DmScreenState extends State<DmScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              friend.name ?? 'Unknown',
+              friend.name ?? l10n.unknownUserName,
               style:
                   GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
             ),
@@ -315,7 +317,7 @@ class _DmScreenState extends State<DmScreen> {
             ListTile(
               leading: Icon(Icons.chat_bubble_rounded,
                   color: theme.colorScheme.primary),
-              title: Text('Send Message',
+              title: Text(l10n.sendMessageLabel,
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
@@ -327,7 +329,7 @@ class _DmScreenState extends State<DmScreen> {
             ListTile(
               leading: const Icon(Icons.person_remove_rounded,
                   color: Colors.redAccent),
-              title: Text('Remove Friend',
+              title: Text(l10n.removeFriendLabel,
                   style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w600, color: Colors.redAccent)),
               shape: RoundedRectangleBorder(
@@ -363,7 +365,7 @@ class _FriendTile extends StatelessWidget {
     required this.onLongPress,
   });
 
-  String _formatLastMessageTime(DateTime? time) {
+  String _formatLastMessageTime(AppLocalizations l10n, DateTime? time) {
     if (time == null) return '';
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -372,7 +374,7 @@ class _FriendTile extends StatelessWidget {
     if (msgDate == today) {
       return DateFormat('HH:mm').format(time);
     } else if (msgDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
+      return l10n.yesterdayLabel;
     } else {
       return DateFormat('MMM d').format(time);
     }
@@ -380,7 +382,8 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lastMessageTime = _formatLastMessageTime(friend.lastMessageTime);
+    final l10n = AppLocalizations.of(context)!;
+    final lastMessageTime = _formatLastMessageTime(l10n, friend.lastMessageTime);
 
     return InkWell(
       onTap: onTap,
@@ -432,7 +435,7 @@ class _FriendTile extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        friend.name ?? 'Unknown',
+                        friend.name ?? l10n.unknownUserName,
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -454,7 +457,7 @@ class _FriendTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          friend.lastMessage ?? 'No messages yet',
+                          friend.lastMessage ?? l10n.noMessagesYetLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.outfit(
@@ -493,6 +496,7 @@ class _RequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
@@ -522,7 +526,7 @@ class _RequestTile extends StatelessWidget {
             icon: const Icon(Icons.check_circle_rounded),
             color: Colors.green,
             iconSize: 28,
-            tooltip: 'Accept',
+            tooltip: l10n.acceptTooltip,
           ),
           // Decline button
           IconButton(
@@ -530,7 +534,7 @@ class _RequestTile extends StatelessWidget {
             icon: const Icon(Icons.cancel_rounded),
             color: Colors.redAccent,
             iconSize: 28,
-            tooltip: 'Decline',
+            tooltip: l10n.declineTooltip,
           ),
         ],
       ),

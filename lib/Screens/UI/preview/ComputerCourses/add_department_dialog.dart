@@ -7,6 +7,7 @@ import 'package:go_study/services/department.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -22,10 +23,11 @@ Future<void> showAddDepartmentDialog(
   final description = TextEditingController();
 
   final adddepartmentKey = GlobalKey<FormState>();
+  final l10n = AppLocalizations.of(context)!;
 
   await showPremiumGeneralDialog(
     context: context,
-    barrierLabel: "Add Department",
+    barrierLabel: l10n.addDepartmentBarrierLabel,
     child: StatefulBuilder(
       builder: (context, setDialogState) {
         final theme = Theme.of(context);
@@ -52,9 +54,9 @@ Future<void> showAddDepartmentDialog(
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PremiumDialogHeader(
-                title: "New Department",
-                subtitle: "Expand your academic ecosystem",
+              PremiumDialogHeader(
+                title: l10n.newDepartmentTitle,
+                subtitle: l10n.expandAcademicEcosystemSubtitle,
                 icon: Icons.add_business_rounded,
               ),
               Flexible(
@@ -67,36 +69,36 @@ Future<void> showAddDepartmentDialog(
                       children: [
                         PremiumTextField(
                           controller: departname,
-                          label: "Department Name",
-                          hint: "e.g. Computer Science",
+                          label: l10n.departmentNameLabel,
+                          hint: l10n.departmentNameHintExample,
                           icon: Icons.title_rounded,
                           validator: (v) =>
-                              v?.isEmpty ?? true ? 'Name required' : null,
+                              v?.isEmpty ?? true ? l10n.nameRequiredValidator : null,
                         ),
                         const SizedBox(height: 18),
                         PremiumTextField(
                           controller: schoolid,
-                          label: "School ID",
-                          hint: "Identify the parent school",
+                          label: l10n.schoolIdLabel,
+                          hint: l10n.identifyParentSchoolHint,
                           icon: Icons.school_rounded,
                           validator: (v) =>
-                              v?.isEmpty ?? true ? 'School ID required' : null,
+                              v?.isEmpty ?? true ? l10n.schoolIdRequiredValidator : null,
                         ),
                         const SizedBox(height: 18),
                         PremiumTextField(
                           controller: description,
-                          label: "Description",
-                          hint: "What makes this department unique?",
+                          label: l10n.descriptionLabel,
+                          hint: l10n.whatMakesDeptUniqueHint,
                           icon: Icons.description_outlined,
                           maxLines: 3,
                           validator: (v) => v?.isEmpty ?? true
-                              ? 'Description required'
+                              ? l10n.descriptionRequiredValidator
                               : null,
                         ),
 
                         const SizedBox(height: 24),
                         Text(
-                          "Department Identity",
+                          l10n.departmentIdentityLabel,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -148,7 +150,7 @@ Future<void> showAddDepartmentDialog(
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        "Upload cover photo",
+                                        l10n.uploadCoverPhotoLabel,
                                         style: GoogleFonts.outfit(
                                           color: theme.colorScheme.primary
                                               .withOpacity(0.5),
@@ -178,7 +180,7 @@ Future<void> showAddDepartmentDialog(
                         ),
                         onPressed: () => Navigator.pop(context),
                         child: Text(
-                          "Cancel",
+                          l10n.cancel,
                           style: GoogleFonts.outfit(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
@@ -190,7 +192,7 @@ Future<void> showAddDepartmentDialog(
                     Expanded(
                       flex: 2,
                       child: PremiumSubmitButton(
-                        label: "Create Department",
+                        label: l10n.createDepartmentButton,
                         isLoading: false,
                         onPressed: () async {
                           if (!(adddepartmentKey.currentState?.validate() ??
@@ -211,7 +213,7 @@ Future<void> showAddDepartmentDialog(
                           if (userId == null) {
                             ErrorHandler.showErrorSnackBar(
                               context,
-                              'User not authenticated',
+                              l10n.userNotAuthenticatedMessage,
                             );
                             return;
                           }

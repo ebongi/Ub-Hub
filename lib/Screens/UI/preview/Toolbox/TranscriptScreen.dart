@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 
@@ -25,12 +26,15 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
   String _modeOfApplication = '';
   String _status = '';
 
-  final List<String> _modes = [
-    'Normal Mode (1200 XAF)',
-    'Fast Mode (2500 XAF)',
-    'Super Fast Mode (3500 XAF)',
-  ];
-  final List<String> _statuses = ['Current Student', 'Former Student'];
+  List<String> _modes(AppLocalizations l10n) => [
+        l10n.modeNormal,
+        l10n.modeFast,
+        l10n.modeSuperFast,
+      ];
+  List<String> _statuses(AppLocalizations l10n) => [
+        l10n.statusCurrentStudent,
+        l10n.statusFormerStudent,
+      ];
 
   @override
   void initState() {
@@ -89,23 +93,24 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
   }
 
   void _showConfirmationDialog(Uri uri) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          "Confirm Application",
+          l10n.confirmApplicationTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          "You will be redirected to WhatsApp to complete your application with our support team.",
+          l10n.redirectToWhatsappBody,
           style: GoogleFonts.outfit(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              "Cancel",
+              l10n.cancel,
               style: GoogleFonts.outfit(color: Colors.grey),
             ),
           ),
@@ -126,9 +131,9 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
                 } catch (e2) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content: Text(
-                          "Could not open WhatsApp. Please ensure WhatsApp is installed.",
+                          l10n.couldNotOpenWhatsappMessage,
                         ),
                       ),
                     );
@@ -137,7 +142,7 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
               }
             },
             child: Text(
-              "Continue to WhatsApp",
+              l10n.continueToWhatsappButton,
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
           ),
@@ -164,12 +169,13 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Transcript Application",
+          l10n.transcriptApplicationTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -187,85 +193,84 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AuthHeader(
-                    title: "Apply Now",
-                    subtitle:
-                        "Fill in the details below to request your academic transcript.",
+                  AuthHeader(
+                    title: l10n.applyNowTitle,
+                    subtitle: l10n.requestTranscriptSubtitle,
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionTitle("Personal Information"),
+                  _buildSectionTitle(l10n.personalInformationSectionTitle),
                   AuthTextField(
                     controller: _nameController,
-                    hintText: "Full Name",
+                    hintText: l10n.fullNameHint,
                     prefixIcon: Iconsax.user,
-                    validator: (v) => v!.isEmpty ? "Enter your name" : null,
+                    validator: (v) => v!.isEmpty ? l10n.enterYourNameValidator : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _phoneController,
-                    hintText: "WhatsApp Number (e.g. 6xxxxxxxx)",
+                    hintText: l10n.whatsappNumberHint,
                     prefixIcon: Iconsax.call,
                     keyboardType: TextInputType.phone,
                     validator: (v) =>
-                        (v!.length < 9) ? "Enter a valid phone number" : null,
+                        (v!.length < 9) ? l10n.enterValidPhoneValidator : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _emailController,
-                    hintText: "Email Address",
+                    hintText: l10n.emailAddressHint,
                     prefixIcon: Iconsax.sms,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) => !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                             .hasMatch(v!)
-                        ? "Enter a valid email"
+                        ? l10n.enterValidEmailValidator
                         : null,
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionTitle("Academic Details"),
+                  _buildSectionTitle(l10n.academicDetailsSectionTitle),
                   AuthTextField(
                     controller: _matriculeController,
-                    hintText: "Matricule Number",
+                    hintText: l10n.matriculeNumberHint,
                     prefixIcon: Iconsax.card,
-                    validator: (v) => v!.isEmpty ? "Enter your matricule" : null,
+                    validator: (v) => v!.isEmpty ? l10n.enterYourMatriculeValidator : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _facultyController,
-                    hintText: "Faculty",
+                    hintText: l10n.facultyHint,
                     prefixIcon: Iconsax.bank,
-                    validator: (v) => v!.isEmpty ? "Enter your faculty" : null,
+                    validator: (v) => v!.isEmpty ? l10n.enterYourFacultyValidator : null,
                   ),
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _departmentController,
-                    hintText: "Department",
+                    hintText: l10n.departmentHint,
                     prefixIcon: Iconsax.hierarchy,
-                    validator: (v) => v!.isEmpty ? "Enter your department" : null,
+                    validator: (v) => v!.isEmpty ? l10n.enterYourDepartmentValidator : null,
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionTitle("Application Options"),
+                  _buildSectionTitle(l10n.applicationOptionsSectionTitle),
                   AuthDropdown(
                     value: _modeOfApplication,
-                    hintText: "Mode of Application",
+                    hintText: l10n.modeOfApplicationHint,
                     prefixIcon: Iconsax.speedometer,
-                    items: _modes,
+                    items: _modes(l10n),
                     onChanged: (val) => setState(() => _modeOfApplication = val ?? ''),
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? "Select a mode" : null,
+                        (v == null || v.isEmpty) ? l10n.selectAModeValidator : null,
                   ),
                   const SizedBox(height: 16),
                   AuthDropdown(
                     value: _status,
-                    hintText: "Student Status",
+                    hintText: l10n.studentStatusHint,
                     prefixIcon: Iconsax.user_tag,
-                    items: _statuses,
+                    items: _statuses(l10n),
                     onChanged: (val) => setState(() => _status = val ?? ''),
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? "Select your status" : null,
+                        (v == null || v.isEmpty) ? l10n.selectYourStatusValidator : null,
                   ),
                   const SizedBox(height: 40),
                   AuthButton(
-                    label: "Submit Application",
+                    label: l10n.submitApplicationButton,
                     onPressed: _submitForm,
                   ),
                   const SizedBox(height: 30),

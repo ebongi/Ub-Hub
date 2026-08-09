@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/course_material.dart';
 
 import 'package:go_study/services/course_model.dart';
@@ -51,6 +52,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -74,14 +76,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.forum_outlined, color: theme.colorScheme.primary),
-            tooltip: "Join Discussion",
+            tooltip: l10n.joinDiscussionTooltip,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => ChatScreen(
                   roomId: widget.course.id,
-                  title: "${widget.course.code} Discussion",
-                  subtitle: "Course Discussion Room",
+                  title: l10n.courseDiscussionTitle(widget.course.code),
+                  subtitle: l10n.courseDiscussionRoomSubtitle,
                 ),
               ),
             ),
@@ -101,7 +103,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
           }
 
           final serverMaterials = snapshot.data ?? [];
@@ -123,7 +125,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   const Icon(Icons.folder_open, size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
                   Text(
-                    "No materials for this course yet.",
+                    l10n.noMaterialsYetMessage,
                     style: GoogleFonts.outfit(color: Colors.grey),
                   ),
                 ],
@@ -145,12 +147,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               if (regularMaterials.isNotEmpty) ...[
-                _buildHeader("General Resources"),
+                _buildHeader(l10n.generalResourcesHeader),
                 ...regularMaterials.map((m) => _buildMaterialTile(m)),
               ],
               if (questions.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _buildHeader("Past Questions & Answers"),
+                _buildHeader(l10n.pastQuestionsAndAnswersHeader),
                 ...questions.map((q) {
                   final relatedAnswers = answers
                       .where((a) => a.linkedMaterialId == q.id)
@@ -166,20 +168,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Widget _buildCategoryBadge(String category) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     String label;
     switch (category) {
       case 'past_question':
         color = Colors.orange;
-        label = "PQ";
+        label = l10n.pqBadge;
         break;
       case 'answer':
         color = Colors.green;
-        label = "ANS";
+        label = l10n.ansBadge;
         break;
       default:
         color = Colors.blue;
-        label = "DOC";
+        label = l10n.docBadge;
     }
 
     return Container(
@@ -219,6 +222,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   Widget _buildMaterialTile(CourseMaterial material) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
     final isPending = material.id.isEmpty || material.id.startsWith('temp_');
@@ -304,20 +308,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text("Delete Material?"),
+                          title: Text(l10n.deleteMaterialDialogTitle),
                           content: Text(
-                            "Are you sure you want to delete ${material.title}? This cannot be undone.",
+                            l10n.confirmDeleteMaterialBody(material.title),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
+                              child: Text(l10n.cancel),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: const Text(
-                                "Delete",
-                                style: TextStyle(color: Colors.red),
+                              child: Text(
+                                l10n.deleteButton,
+                                style: const TextStyle(color: Colors.red),
                               ),
                             ),
                           ],
@@ -328,7 +332,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         if (mounted) {
                           ErrorHandler.showSuccessSnackBar(
                             context,
-                            "Material deleted",
+                            l10n.materialDeletedMessage,
                           );
                         }
                       }
@@ -337,27 +341,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'download',
                       child: Row(
                         children: [
-                          Icon(Icons.download_rounded, size: 20),
-                          SizedBox(width: 8),
-                          Text("Download"),
+                          const Icon(Icons.download_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(l10n.downloadMenuItem),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.delete_outline_rounded,
                             color: Colors.red,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
-                          Text("Delete", style: TextStyle(color: Colors.red)),
+                          const SizedBox(width: 8),
+                          Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
@@ -422,7 +426,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       if (mounted) {
         ErrorHandler.showSuccessSnackBar(
           context,
-          "Material secured for offline access! 🔒",
+          AppLocalizations.of(context)!.materialSecuredOfflineMessage,
         );
       }
     } catch (e) {
@@ -435,6 +439,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     List<CourseMaterial> relatedAnswers,
   ) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
@@ -473,7 +478,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ),
         ),
         subtitle: Text(
-          "Past Question • ${relatedAnswers.length} Answers",
+          l10n.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
           style: GoogleFonts.outfit(
             fontSize: 13,
             color: isDark ? Colors.white70 : Colors.black54,
@@ -493,20 +498,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("Delete Past Question?"),
+                        title: Text(l10n.deletePastQuestionDialogTitle),
                         content: Text(
-                          "Are you sure you want to delete ${question.title}? This cannot be undone.",
+                          l10n.confirmDeleteMaterialBody(question.title),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text("Cancel"),
+                            child: Text(l10n.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text(
-                              "Delete",
-                              style: TextStyle(color: Colors.red),
+                            child: Text(
+                              l10n.deleteButton,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ),
                         ],
@@ -517,7 +522,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       if (mounted) {
                         ErrorHandler.showSuccessSnackBar(
                           context,
-                          "Past Question deleted",
+                          l10n.pastQuestionDeletedMessage,
                         );
                       }
                     }
@@ -526,27 +531,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'download',
                     child: Row(
                       children: [
-                        Icon(Icons.download_rounded, size: 20),
-                        SizedBox(width: 8),
-                        Text("Download"),
+                        const Icon(Icons.download_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        Text(l10n.downloadMenuItem),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.delete_outline_rounded,
                           color: Colors.red,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
-                        Text("Delete", style: TextStyle(color: Colors.red)),
+                        const SizedBox(width: 8),
+                        Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -569,7 +574,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      "No answers uploaded yet",
+                      l10n.noAnswersUploadedYet,
                       style: GoogleFonts.outfit(
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
@@ -596,7 +601,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        "Verified Answer • ${FapshiService.getAnswerDownloadFee().toInt()} XAF",
+                        l10n.verifiedAnswerFeeSubtitle(FapshiService.getAnswerDownloadFee().toInt()),
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -639,10 +644,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     String? initialCategory,
     String? initialQuestionId,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
         context,
-        'Only contributors and admins can upload content.',
+        l10n.onlyContributorsCanUploadMessage,
       );
       return;
     }
@@ -656,7 +662,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
     await showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Add Material",
+      barrierLabel: l10n.addMaterialTitle,
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);
@@ -674,9 +680,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const PremiumDialogHeader(
-                      title: "Add Material",
-                      subtitle: "Share resources with your peers",
+                    PremiumDialogHeader(
+                      title: l10n.addMaterialTitle,
+                      subtitle: l10n.shareResourcesSubtitle,
                       icon: Icons.note_add_rounded,
                     ),
                     Padding(
@@ -687,21 +693,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           children: [
                             PremiumDropdownField<String>(
                               value: selectedCategory,
-                              label: "Category",
-                              hint: "Select category",
+                              label: l10n.categoryLabel,
+                              hint: l10n.selectCategoryHint,
                               icon: Icons.category_rounded,
-                              items: const [
+                              items: [
                                 DropdownMenuItem(
                                   value: 'regular',
-                                  child: Text("General Material"),
+                                  child: Text(l10n.generalMaterialOption),
                                 ),
                                 DropdownMenuItem(
                                   value: 'past_question',
-                                  child: Text("Past Question"),
+                                  child: Text(l10n.pastQuestionOption),
                                 ),
                                 DropdownMenuItem(
                                   value: 'answer',
-                                  child: Text("Answer"),
+                                  child: Text(l10n.answerOption),
                                 ),
                               ],
                               onChanged: (v) {
@@ -729,8 +735,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       [];
                                   return PremiumDropdownField<String>(
                                     value: selectedQuestionId,
-                                    label: "Link to Question",
-                                    hint: "Select the question",
+                                    label: l10n.linkToQuestionLabel,
+                                    hint: l10n.selectTheQuestionHint,
                                     icon: Icons.link_rounded,
                                     items: questions
                                         .map(
@@ -749,7 +755,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     validator: (v) =>
                                         selectedCategory == 'answer' &&
                                             v == null
-                                        ? "Required"
+                                        ? l10n.requiredValidator
                                         : null,
                                   );
                                 },
@@ -758,17 +764,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             const SizedBox(height: 16),
                             PremiumTextField(
                               controller: titleController,
-                              label: "Title",
-                              hint: "e.g. Intro to Java Notes",
+                              label: l10n.titleLabel,
+                              hint: l10n.titleHintExample,
                               icon: Icons.title_rounded,
                               validator: (v) =>
-                                  v == null || v.isEmpty ? "Required" : null,
+                                  v == null || v.isEmpty ? l10n.requiredValidator : null,
                             ),
                             const SizedBox(height: 16),
                             PremiumTextField(
                               controller: descriptionController,
-                              label: "Description (Optional)",
-                              hint: "Briefly describe the content",
+                              label: l10n.descriptionOptionalLabel,
+                              hint: l10n.brieflyDescribeContentHint,
                               icon: Icons.description_rounded,
                               maxLines: 2,
                             ),
@@ -819,7 +825,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     Text(
                                       result != null
                                           ? result!.files.single.name
-                                          : "Select Material File",
+                                          : l10n.selectMaterialFileLabel,
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.outfit(
                                         fontWeight: FontWeight.bold,
@@ -831,10 +837,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     ),
                                     Text(
                                       result != null
-                                          ? "File selected successfully"
+                                          ? l10n.fileSelectedSuccessfully
                                           : (selectedCategory == 'past_question'
-                                                ? "Upload PDF or Word"
-                                                : "Supports PDF, DOC, Images"),
+                                                ? l10n.uploadPdfOrWordHint
+                                                : l10n.supportsPdfDocImagesHint),
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
                                         color: isDark
@@ -861,7 +867,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     ),
                                     onPressed: () => Navigator.pop(context),
                                     child: Text(
-                                      "Cancel",
+                                      l10n.cancel,
                                       style: GoogleFonts.outfit(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
@@ -873,7 +879,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: PremiumSubmitButton(
-                                    label: "Upload Material",
+                                    label: l10n.uploadMaterialButton,
                                     isLoading: false,
                                     onPressed: () {
                                       if (formKey.currentState!.validate() &&
@@ -920,7 +926,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       } else if (result == null) {
                                         ErrorHandler.showErrorSnackBar(
                                           context,
-                                          "Please select a file",
+                                          l10n.pleaseSelectFileMessage,
                                         );
                                       }
                                     },
@@ -980,7 +986,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ErrorHandler.showSuccessSnackBar(context, "Upload successful!");
+        ErrorHandler.showSuccessSnackBar(context, AppLocalizations.of(context)!.uploadSuccessfulMessage);
       }
     } catch (e) {
       if (mounted) {
@@ -990,10 +996,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _showUploadSelection() {
+    final l10n = AppLocalizations.of(context)!;
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
         context,
-        'Only contributors and admins can upload content.',
+        l10n.onlyContributorsCanUploadMessage,
       );
       return;
     }
@@ -1028,7 +1035,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    "Upload Material",
+                    l10n.uploadMaterialButton,
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1036,7 +1043,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Select the type of material you want to share",
+                    l10n.selectMaterialTypeSubtitle,
                     style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
                   ),
                   _buildUgcGuidelinesCard(Theme.of(context)),
@@ -1044,8 +1051,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   _buildUploadOption(
                     icon: Icons.note_add_rounded,
                     color: Colors.blue,
-                    title: "General Resources",
-                    subtitle: "Lecture notes, summaries, textbooks",
+                    title: l10n.generalResourcesHeader,
+                    subtitle: l10n.lectureNotesSubtitle,
                     onTap: () {
                       Navigator.pop(context);
                       _addMaterial(initialCategory: 'regular');
@@ -1055,8 +1062,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   _buildUploadOption(
                     icon: Icons.history_edu_rounded,
                     color: Colors.orange,
-                    title: "Past Question",
-                    subtitle: "Previous exam or test papers",
+                    title: l10n.pastQuestionOption,
+                    subtitle: l10n.previousExamPapersSubtitle,
                     onTap: () {
                       Navigator.pop(context);
                       _addMaterial(initialCategory: 'past_question');
@@ -1066,8 +1073,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   _buildUploadOption(
                     icon: Icons.check_circle_rounded,
                     color: Colors.green,
-                    title: "Verified Answer",
-                    subtitle: "Solutions to past questions",
+                    title: l10n.verifiedAnswerTitle,
+                    subtitle: l10n.solutionsToPastQuestionsSubtitle,
                     onTap: () {
                       Navigator.pop(context);
                       _addMaterial(initialCategory: 'answer');
@@ -1084,6 +1091,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Widget _buildUgcGuidelinesCard(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = theme.colorScheme.primary;
 
@@ -1110,7 +1118,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                "Community Contribution Code",
+                l10n.communityContributionCodeTitle,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -1122,19 +1130,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           const SizedBox(height: 12),
           _buildGuidelineItem(
             Icons.done_all_rounded,
-            "Ensure content is readable, correct, and fit for study.",
+            l10n.guidelineReadableContent,
             theme,
           ),
           const SizedBox(height: 8),
           _buildGuidelineItem(
             Icons.find_in_page_rounded,
-            "Check if this resource is already uploaded.",
+            l10n.guidelineCheckDuplicate,
             theme,
           ),
           const SizedBox(height: 8),
           _buildGuidelineItem(
             Icons.school_rounded,
-            "Upload only academic and educational materials.",
+            l10n.guidelineAcademicOnly,
             theme,
           ),
         ],

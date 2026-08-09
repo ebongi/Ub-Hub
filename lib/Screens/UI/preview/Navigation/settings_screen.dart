@@ -3,8 +3,12 @@ import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 import 'package:go_study/Screens/UI/preview/Settings/developer_info_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
-// import 'package:go_study/Screens/UI/preview/Settings/about_screen.dart';
+import 'package:go_study/Screens/UI/preview/Settings/terms_of_service_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/feedback.dart';
+import 'package:go_study/Screens/UI/preview/Settings/support_dialog.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/locale_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -50,7 +54,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final colorScheme = theme.colorScheme;
     final userModel = Provider.of<UserModel>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
     final Authentication authentication = Authentication();
+    final l10n = AppLocalizations.of(context)!;
 
     final bgColor = isDark ? colorScheme.surface : const Color(0xFFF8F9FA);
     final cardColor = isDark ? colorScheme.surfaceContainerLow : Colors.white;
@@ -66,7 +72,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               pinned: true,
               centerTitle: true,
               title: Text(
-                "Settings",
+                l10n.settingsTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -83,8 +89,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.person_outline_rounded,
                       iconColor: Colors.blue,
-                      title: "Account Profile",
-                      subtitle: "View and edit your personal information",
+                      title: l10n.accountProfileTitle,
+                      subtitle: l10n.accountProfileSubtitle,
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
@@ -97,8 +103,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _GoogleSettingsTile(
                         icon: Icons.admin_panel_settings_rounded,
                         iconColor: Colors.indigo,
-                        title: "Admin Dashboard",
-                        subtitle: "Manage users, roles, and departments",
+                        title: l10n.adminDashboardTitle,
+                        subtitle: l10n.adminDashboardSubtitle,
                         isDark: isDark,
                         onTap: () => Navigator.push(
                           context,
@@ -115,8 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.bolt_rounded,
                       iconColor: Colors.amber,
-                      title: "AI Credits & Plans",
-                      subtitle: "${userModel.aiCredits} Credits remaining",
+                      title: l10n.aiCreditsPlansTitle,
+                      subtitle: l10n.aiCreditsRemaining(userModel.aiCredits),
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
@@ -138,8 +144,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.notifications_none_rounded,
                       iconColor: Colors.orange,
-                      title: "Notifications",
-                      subtitle: "Manage your alerts and message preferences",
+                      title: l10n.notificationsTitle,
+                      subtitle: l10n.notificationsSubtitle,
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
@@ -152,12 +158,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.dark_mode_outlined,
                       iconColor: Colors.indigo,
-                      title: "Dark Mode",
-                      subtitle: "Switch between light and dark themes",
+                      title: l10n.darkModeTitle,
+                      subtitle: l10n.darkModeSubtitle,
                       isDark: isDark,
                       trailing: Switch(
                         value: themeProvider.themeMode == ThemeMode.dark,
                         onChanged: (value) => themeProvider.toggleTheme(value),
+                      ),
+                    ),
+
+                    _GoogleSettingsTile(
+                      icon: Icons.language_rounded,
+                      iconColor: Colors.teal,
+                      title: l10n.appLanguageTitle,
+                      subtitle: l10n.appLanguageSubtitle,
+                      isDark: isDark,
+                      onTap: () => _showLanguagePicker(
+                        context,
+                        localeProvider,
+                        l10n,
                       ),
                     ),
                   ], cardColor: cardColor),
@@ -168,13 +187,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.privacy_tip_outlined,
                       iconColor: Colors.purple,
-                      title: "Privacy Policy",
-                      subtitle: "How we protect and use your data",
+                      title: l10n.privacyPolicyTitle,
+                      subtitle: l10n.privacyPolicySubtitle,
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PrivacyPolicyScreen(),
+                        ),
+                      ),
+                    ),
+                    _GoogleSettingsTile(
+                      icon: Icons.gavel_rounded,
+                      iconColor: Colors.indigo,
+                      title: l10n.termsOfServiceTitle,
+                      subtitle: l10n.termsOfServiceSubtitle,
+                      isDark: isDark,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsOfServiceScreen(),
                         ),
                       ),
                     ),
@@ -186,17 +218,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.volunteer_activism_rounded,
                       iconColor: Colors.redAccent,
-                      title: "Support Go Study",
-                      subtitle: "Sponsor development or volunteer to help",
+                      title: l10n.supportGoStudyTitle,
+                      subtitle: l10n.supportGoStudySubtitle,
                       isDark: isDark,
-                      onTap: () =>
-                          _supportPlatformViaWhatsApp(context, userModel),
+                      onTap: () => _showSupportOptions(context, userModel),
+                    ),
+                    _GoogleSettingsTile(
+                      icon: Icons.feedback_outlined,
+                      iconColor: Colors.orange,
+                      title: l10n.sendFeedbackTitle,
+                      subtitle: l10n.sendFeedbackSubtitle,
+                      isDark: isDark,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FeedbackScreen(),
+                        ),
+                      ),
                     ),
                     _GoogleSettingsTile(
                       icon: Icons.code_rounded,
                       iconColor: Colors.blueGrey,
-                      title: "Developer Information",
-                      subtitle: "App version, build, and engineering details",
+                      title: l10n.developerInformationTitle,
+                      subtitle: l10n.developerInformationSubtitle,
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
@@ -208,8 +252,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _GoogleSettingsTile(
                       icon: Icons.info_outline_rounded,
                       iconColor: Colors.teal,
-                      title: "About",
-                      subtitle: "Learn more about the application ",
+                      title: l10n.aboutTitle,
+                      subtitle: l10n.aboutSubtitle,
                       isDark: isDark,
                       onTap: () => Navigator.push(
                         context,
@@ -225,7 +269,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () => authentication.signUserOut(),
                     icon: const Icon(Icons.logout, color: Colors.red),
                     label: Text(
-                      "Logout",
+                      l10n.logout,
                       style: GoogleFonts.outfit(
                         color: Colors.red,
                         fontSize: 20,
@@ -276,6 +320,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           );
         }),
+      ),
+    );
+  }
+
+  void _showLanguagePicker(
+    BuildContext context,
+    LocaleProvider localeProvider,
+    AppLocalizations l10n,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          l10n.appLanguageTitle,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<Locale?>(
+              title: Text(l10n.languageSystemDefault),
+              value: null,
+              groupValue: localeProvider.locale,
+              onChanged: (value) {
+                localeProvider.setLocale(value);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<Locale?>(
+              title: Text(l10n.languageEnglish),
+              value: const Locale('en'),
+              groupValue: localeProvider.locale,
+              onChanged: (value) {
+                localeProvider.setLocale(value);
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<Locale?>(
+              title: Text(l10n.languageFrench),
+              value: const Locale('fr'),
+              groupValue: localeProvider.locale,
+              onChanged: (value) {
+                localeProvider.setLocale(value);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.cancel,
+              style: GoogleFonts.outfit(
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSupportOptions(BuildContext context, UserModel userModel) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          "Support Go Study",
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "Choose how you'd like to support development.",
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.outfit(
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _supportPlatformViaWhatsApp(context, userModel);
+            },
+            child: Text(
+              "Chat on WhatsApp",
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              showSupportDialog(context);
+            },
+            child: Text(
+              "Donate via App",
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

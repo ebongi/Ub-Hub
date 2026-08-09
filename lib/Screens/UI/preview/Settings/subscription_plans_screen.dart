@@ -9,6 +9,7 @@ import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionPlansScreen extends StatefulWidget {
@@ -27,21 +28,21 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   bool _isProcessing = false;
   SubscriptionTier? _processingTier;
   bool _isProcessingContributor = false;
+  bool _isProcessingTrial = false;
   String? _statusMessage;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context);
-    
-    final currentTier = userModel.subscriptionTier;
     final credits = userModel.aiCredits;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "AI Credits & Plans",
+          l10n.aiCreditsPlansTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -76,11 +77,11 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Current Balance",
+                        l10n.currentBalanceLabel,
                         style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
                       ),
                       Text(
-                        "$credits Credits",
+                        l10n.creditsCountLabel(credits),
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontSize: 24,
@@ -94,7 +95,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              "Top up AI Credits",
+              l10n.topUpAiCreditsTitle,
               style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -103,7 +104,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              "Credits are used for Gemini AI interactions. Core academic tools remain free for everyone.",
+              l10n.creditsUsageSubtitle,
               style: GoogleFonts.outfit(fontSize: 14, color: theme.hintColor),
             ),
             const SizedBox(height: 24),
@@ -124,7 +125,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "FAPSHI TEST MODE",
+                        l10n.fapshiTestModeLabel,
                         style: GoogleFonts.outfit(
                           color: Colors.amber[800],
                           fontWeight: FontWeight.bold,
@@ -136,14 +137,14 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Test payment integration with the Fapshi Sandbox (100 XAF). Adds 10 test credits.",
+                    l10n.fapshiTestModeBody,
                     style: GoogleFonts.outfit(fontSize: 13, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _isProcessing
                         ? null
-                        : () => _handlePurchaseCredits(100.0, 10, "Test Credits"),
+                        : () => _handlePurchaseCredits(100.0, 10, l10n.testCreditsPackTitle),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber,
                       foregroundColor: Colors.black,
@@ -153,18 +154,18 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                       ),
                     ),
                     child: Text(
-                      "Pay 100 XAF (Test)",
+                      l10n.pay100XafTestButton,
                       style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Credit Packs
             _buildCreditPack(
               context,
-              title: "Starter Pack",
+              title: l10n.starterPackTitle,
               credits: 50,
               price: 500,
               icon: Icons.auto_awesome_outlined,
@@ -173,7 +174,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             const SizedBox(height: 16),
             _buildCreditPack(
               context,
-              title: "Student Pack",
+              title: l10n.studentPackTitle,
               credits: 150,
               price: 1000,
               icon: Icons.rocket_launch_outlined,
@@ -182,7 +183,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              "Unlimited AI Subscriptions",
+              l10n.unlimitedAiSubscriptionsTitle,
               style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -193,11 +194,28 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             _buildTierCard(
               context,
               tier: SubscriptionTier.monthly,
-              title: "Unlimited Monthly",
+              title: l10n.unlimitedMonthlyTitle,
               price: 2500,
               color: Colors.orange,
-              isCurrent: currentTier == SubscriptionTier.monthly,
+              isCurrent: userModel.hasUnlimitedAI,
+              onSuccess: () => _db.purchaseAISubscription(),
             ),
+            const SizedBox(height: 32),
+            Text(
+              l10n.appPlanTitle,
+              style: GoogleFonts.outfit(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.appPlanSubtitle,
+              style: GoogleFonts.outfit(fontSize: 14, color: theme.hintColor),
+            ),
+            const SizedBox(height: 16),
+            _buildAppPlanCard(context, userModel),
             const SizedBox(height: 40),
           ],
         ),
@@ -215,6 +233,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     bool isRecommended = false,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -243,7 +262,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               children: [
                 if (isRecommended)
                   Text(
-                    "MOST POPULAR",
+                    l10n.mostPopularLabel,
                     style: GoogleFonts.outfit(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -255,7 +274,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 Text(
-                  "$credits AI Credits",
+                  l10n.creditsCountAiLabel(credits),
                   style: GoogleFonts.outfit(color: theme.hintColor, fontSize: 14),
                 ),
               ],
@@ -282,15 +301,18 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     required double price,
     required Color color,
     required bool isCurrent,
+    required Future<void> Function() onSuccess,
+    List<String>? features,
     bool isPremium = false,
   }) {
     final theme = Theme.of(context);
-    final features = [
-      "Unlimited Gemini AI Chat",
-      "Unlimited PDF Summaries",
-      "Priority AI Response",
-      "AI Study Plan Generator",
-      "Structure Quiz Generator",
+    final l10n = AppLocalizations.of(context)!;
+    features ??= [
+      l10n.featureUnlimitedGeminiChat,
+      l10n.featureUnlimitedPdfSummaries,
+      l10n.featurePriorityAiResponse,
+      l10n.featureAiStudyPlanGenerator,
+      l10n.featureStructureQuizGenerator,
     ];
 
     return Container(
@@ -331,7 +353,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "${price.toInt()} XAF / month",
+            l10n.pricePerMonthLabel(price.toInt()),
             style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
@@ -347,24 +369,228 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           )),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: isCurrent || _isProcessing ? null : () => _handlePurchase(tier, price),
+            onPressed: isCurrent || _isProcessing
+                ? null
+                : () => _handlePurchase(tier, price, onSuccess),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: Text(isCurrent ? "Current Plan" : "Get Unlimited"),
+            child: Text(isCurrent ? l10n.currentPlanButton : l10n.getUnlimitedButton),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildAppPlanCard(BuildContext context, UserModel userModel) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final price = SubscriptionService.monthlyPrice;
+    final features = SubscriptionService.getTierFeatures(SubscriptionTier.monthly);
+
+    final isPaidActive = userModel.subscriptionTier == SubscriptionTier.monthly &&
+        !userModel.isTrialActive &&
+        userModel.subscriptionExpiry != null &&
+        userModel.subscriptionExpiry!.isAfter(DateTime.now());
+
+    String? badgeText;
+    Color badgeColor = theme.colorScheme.primary;
+    Widget actionButton;
+
+    if (userModel.isTrialActive) {
+      badgeText = l10n.trialActiveLeftBadge(userModel.trialTimeLeft(l10n));
+      badgeColor = Colors.teal;
+      actionButton = const SizedBox.shrink();
+    } else if (isPaidActive) {
+      badgeText = l10n.currentPlanBadge;
+      actionButton = const SizedBox.shrink();
+    } else if (!userModel.trialUsed) {
+      badgeText = l10n.firstMonthFreeBadge;
+      badgeColor = Colors.green;
+      actionButton = ElevatedButton(
+        onPressed: _isProcessingTrial ? null : _handleStartTrial,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: _isProcessingTrial
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : Text(l10n.startFreeTrialButton),
+      );
+    } else {
+      actionButton = ElevatedButton(
+        onPressed: _isProcessing
+            ? null
+            : () => _handlePurchase(
+                  SubscriptionTier.monthly,
+                  price,
+                  () => _db.upgradeSubscription(SubscriptionTier.monthly),
+                ),
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: Text(l10n.subscribeButton),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (badgeText != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                badgeText,
+                style: GoogleFonts.outfit(color: badgeColor, fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Text(
+            userModel.trialUsed || isPaidActive || userModel.isTrialActive
+                ? l10n.pricePerMonthLabel(price.toInt())
+                : l10n.freeMonthThenPriceLabel(price.toInt()),
+            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.aiFeaturesBilledSeparatelyShort,
+            style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+          ),
+          const SizedBox(height: 20),
+          ...features.map((f) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.check, size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(f, style: GoogleFonts.outfit(fontSize: 14)),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 20),
+          actionButton,
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleStartTrial() async {
+    final l10n = AppLocalizations.of(context)!;
+    final proceed = await showPremiumGeneralDialog<bool>(
+      context: context,
+      barrierLabel: l10n.startFreeTrialButton,
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PremiumDialogHeader(
+                    title: l10n.startYourFreeMonthTitle,
+                    subtitle: l10n.noPaymentRequiredTodaySubtitle,
+                    icon: Icons.card_giftcard_rounded,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.freeTrialTermsBody(SubscriptionService.monthlyPrice.toInt()),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: l10n.startFreeTrialButton,
+                          isLoading: false,
+                          onPressed: () => Navigator.pop(context, true),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            l10n.cancel,
+                            style: GoogleFonts.outfit(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (proceed != true) return;
+
+    setState(() => _isProcessingTrial = true);
+    try {
+      await _db.startFreeMonthlyTrial();
+      if (mounted) {
+        // Reflect the new trial state immediately instead of waiting on the
+        // realtime profile stream, so the button disappears right away.
+        Provider.of<UserModel>(context, listen: false).update(
+          subscriptionTier: SubscriptionTier.monthly,
+          subscriptionExpiry: DateTime.now().add(const Duration(days: 30)),
+          trialUsed: true,
+          isTrialSubscription: true,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.freeTrialActivatedMessage)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingTrial = false);
+    }
+  }
+
   Future<void> _handlePurchaseCredits(double amount, int credits, String packName) async {
     final phoneController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     final proceed = await showPremiumGeneralDialog<bool>(
       context: context,
-      barrierLabel: "Buy Credits",
+      barrierLabel: l10n.buyCreditsBarrierLabel,
       child: StatefulBuilder(
         builder: (context, setDialogState) {
           final theme = Theme.of(context);
@@ -379,8 +605,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   PremiumDialogHeader(
-                    title: "Buy $packName",
-                    subtitle: "Add $credits credits to your balance",
+                    title: l10n.buyPackTitle(packName),
+                    subtitle: l10n.addCreditsToBalanceSubtitle(credits),
                     icon: Icons.bolt_rounded,
                   ),
                   Padding(
@@ -388,28 +614,28 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Enter your MoMo/OM number to pay ${amount.toInt()} XAF.",
+                          l10n.enterMomoNumberToPayBody(amount.toInt()),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(fontSize: 14),
                         ),
                         const SizedBox(height: 24),
                         PremiumTextField(
                           controller: phoneController,
-                          label: "Phone Number",
-                          hint: "6XXXXXXXX",
+                          label: l10n.phoneNumberLabel,
+                          hint: l10n.phoneNumberHintUppercase,
                           icon: Icons.phone_android_rounded,
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 32),
                         PremiumSubmitButton(
-                          label: "Pay Now",
+                          label: l10n.payNowButton,
                           isLoading: false,
                           onPressed: () => Navigator.pop(context, true),
                         ),
                         const SizedBox(height: 12),
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: Text("Cancel", style: GoogleFonts.outfit(color: Colors.redAccent)),
+                          child: Text(l10n.cancel, style: GoogleFonts.outfit(color: Colors.redAccent)),
                         ),
                       ],
                     ),
@@ -429,6 +655,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
   Future<void> _processCreditPurchase(double amount, int credits, String phone) async {
     setState(() => _isProcessing = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final response = await FapshiService.collectPayment(
@@ -444,12 +671,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = "Complete payment in browser...");
+          setState(() => _statusMessage = l10n.completePaymentInBrowserShort);
         } else {
           throw "Could not open payment link";
         }
       } else {
-        setState(() => _statusMessage = "Waiting for approval...");
+        setState(() => _statusMessage = l10n.waitingForApprovalMessage);
       }
 
       final status = await FapshiService.waitForSuccessfulPayment(
@@ -461,7 +688,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         await _db.addAICredits(credits);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("$credits credits added successfully!")),
+            SnackBar(content: Text(l10n.creditsAddedSuccessfullyMessage(credits))),
           );
         }
       } else {
@@ -482,6 +709,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   }
 
   Widget _buildContributorCard(BuildContext context, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -503,7 +731,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              "CONTRIBUTOR",
+              l10n.contributorBadge,
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -513,7 +741,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "Be a Creator",
+            l10n.beACreatorTitle,
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -522,7 +750,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Upload your own materials, earn from downloads, and unlock everything forever.",
+            l10n.contributorUploadBody,
             style: GoogleFonts.outfit(
               fontSize: 14,
               color: Colors.white.withOpacity(0.9),
@@ -569,8 +797,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                   )
                 : Text(
                     widget.userProfile?.role == UserRole.contributor || widget.userProfile?.role == UserRole.admin
-                        ? "Included with Admin/Contributor"
-                        : "One-time Payment 5000 XAF",
+                        ? l10n.includedWithAdminContributor
+                        : l10n.oneTimePayment5000Xaf,
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -582,12 +810,17 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     );
   }
 
-  Future<void> _handlePurchase(SubscriptionTier tier, double amount) async {
+  Future<void> _handlePurchase(
+    SubscriptionTier tier,
+    double amount,
+    Future<void> Function() onSuccess,
+  ) async {
     final phoneController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     final proceed = await showPremiumGeneralDialog<bool>(
       context: context,
-      barrierLabel: "Subscribe",
+      barrierLabel: l10n.subscribeButton,
       child: StatefulBuilder(
         builder: (context, setDialogState) {
           final theme = Theme.of(context);
@@ -604,8 +837,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                    PremiumDialogHeader(
-                    title: "Subscribe to ${SubscriptionService.getTierName(tier)}",
-                    subtitle: "Unlock premium academic tools",
+                    title: l10n.subscribeToTierTitle(SubscriptionService.getTierName(tier)),
+                    subtitle: l10n.unlockPremiumToolsSubtitle,
                     icon: Icons.workspace_premium_rounded,
                   ),
                   Padding(
@@ -613,7 +846,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Enter your Mobile Money number to pay ${amount.toInt()} XAF for ${tier == SubscriptionTier.monthly ? '30' : '365'} days of access.",
+                          l10n.enterMomoForDaysBody(amount.toInt(), tier == SubscriptionTier.monthly ? 30 : 365),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
@@ -623,14 +856,14 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                         const SizedBox(height: 24),
                         PremiumTextField(
                           controller: phoneController,
-                          label: "Phone Number",
-                          hint: "6XXXXXXXX",
+                          label: l10n.phoneNumberLabel,
+                          hint: l10n.phoneNumberHintUppercase,
                           icon: Icons.phone_android_rounded,
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 32),
                         PremiumSubmitButton(
-                          label: "Pay Now",
+                          label: l10n.payNowButton,
                           isLoading: false,
                           onPressed: () => Navigator.pop(context, true),
                         ),
@@ -638,7 +871,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               color: Colors.redAccent,
                               fontWeight: FontWeight.w600,
@@ -657,7 +890,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     );
 
     if (proceed == true && phoneController.text.isNotEmpty) {
-      _processPayment(tier, amount, phoneController.text.trim());
+      _processPayment(tier, amount, phoneController.text.trim(), onSuccess);
     }
   }
 
@@ -665,11 +898,13 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     SubscriptionTier tier,
     double amount,
     String phone,
+    Future<void> Function() onSuccess,
   ) async {
     setState(() {
       _isProcessing = true;
       _processingTier = tier;
     });
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final response = await FapshiService.collectPayment(
@@ -685,12 +920,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = "Complete payment in the browser window.\n\nTip: Stay on the Fapshi page until the USSD prompt appears on your phone.");
+          setState(() => _statusMessage = l10n.completePaymentBrowserTip);
         } else {
           throw "Could not open payment link";
         }
       } else {
-        setState(() => _statusMessage = "Check your phone for a MoMo prompt.\n\nMTN: Keep screen unlocked.\nOrange: Dial #150*50# if prompted for an OTP.");
+        setState(() => _statusMessage = l10n.checkPhoneMomoPromptTip);
       }
 
       final status = await FapshiService.waitForSuccessfulPayment(
@@ -699,10 +934,10 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       );
 
       if (status == PaymentStatus.success) {
-        await _db.upgradeSubscription(tier);
+        await onSuccess();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Subscription activated!")),
+            SnackBar(content: Text(l10n.subscriptionActivatedMessage)),
           );
           Navigator.pop(context);
         }
@@ -730,10 +965,11 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
   Future<void> _handleContributorUpgrade() async {
     final phoneController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     final proceed = await showPremiumGeneralDialog<bool>(
       context: context,
-      barrierLabel: "Upgrade to Contributor",
+      barrierLabel: l10n.upgradeToContributorTitle,
       child: StatefulBuilder(
         builder: (context, setDialogState) {
           final theme = Theme.of(context);
@@ -749,9 +985,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PremiumDialogHeader(
-                    title: "Upgrade to Contributor",
-                    subtitle: "Unlock everything forever",
+                  PremiumDialogHeader(
+                    title: l10n.upgradeToContributorTitle,
+                    subtitle: l10n.unlockEverythingForeverSubtitle,
                     icon: Icons.stars_rounded,
                   ),
                   Padding(
@@ -759,7 +995,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Pay 5000 XAF once to unlock unlimited downloads, uploads, and all premium features forever.",
+                          l10n.contributorUpgradeTermsBody,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
@@ -769,14 +1005,14 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                         const SizedBox(height: 24),
                         PremiumTextField(
                           controller: phoneController,
-                          label: "Momo/OM Number",
-                          hint: "6XXXXXXXX",
+                          label: l10n.momoOmNumberLabel,
+                          hint: l10n.phoneNumberHintUppercase,
                           icon: Icons.phone_android_rounded,
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 32),
                         PremiumSubmitButton(
-                          label: "Pay Now",
+                          label: l10n.payNowButton,
                           isLoading: false,
                           onPressed: () => Navigator.pop(context, true),
                         ),
@@ -784,7 +1020,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               color: Colors.redAccent,
                               fontWeight: FontWeight.w600,
@@ -812,6 +1048,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       _isProcessing = true;
       _isProcessingContributor = true;
     });
+    final l10n = AppLocalizations.of(context)!;
     try {
       final response = await FapshiService.collectPayment(
         amount: 5000.0,
@@ -826,12 +1063,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = "Complete payment in the browser window.\n\nTip: Stay on the Fapshi page until the USSD prompt appears on your phone.");
+          setState(() => _statusMessage = l10n.completePaymentBrowserTip);
         } else {
           throw "Could not open payment link";
         }
       } else {
-        setState(() => _statusMessage = "Check your phone for a MoMo prompt.\n\nMTN: Keep screen unlocked.\nOrange: Dial #150*50# if prompted for an OTP.");
+        setState(() => _statusMessage = l10n.checkPhoneMomoPromptTip);
       }
 
       final status = await FapshiService.waitForSuccessfulPayment(
@@ -843,7 +1080,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         await _db.upgradeUserToContributor();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("You are now a Contributor!")),
+            SnackBar(content: Text(l10n.youAreNowContributorMessage)),
           );
           Navigator.pop(context);
         }

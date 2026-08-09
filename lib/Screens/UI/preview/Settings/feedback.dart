@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FeedbackScreen extends StatelessWidget {
@@ -9,7 +10,7 @@ class FeedbackScreen extends StatelessWidget {
   Future<void> _sendFeedback(BuildContext context) async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'support@ubhub.com', // Replace with actual support email
+      path: 'sumeebong7@gmail.com',
       query: _encodeQueryParameters(<String, String>{
         'subject': 'App Feedback: Ub-Hub',
         'body': 'Describe your issue or suggestion here...',
@@ -47,10 +48,11 @@ class FeedbackScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Feedback", style: GoogleFonts.outfit()),
+        title: Text(l10n.feedbackTitle, style: GoogleFonts.outfit()),
         centerTitle: true,
       ),
       body: Center(
@@ -66,7 +68,7 @@ class FeedbackScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                "We'd love to hear from you!",
+                l10n.loveToHearFromYouTitle,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 24,
@@ -75,7 +77,7 @@ class FeedbackScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                "Found a bug? Have a suggestion? Send us an email and help us make Ub-Hub better.",
+                l10n.feedbackBodyText,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey),
               ),
@@ -104,7 +106,7 @@ class FeedbackScreen extends StatelessWidget {
                       const Icon(Icons.send_rounded, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
-                        "Send Email",
+                        l10n.sendEmailButton,
                         style: GoogleFonts.outfit(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

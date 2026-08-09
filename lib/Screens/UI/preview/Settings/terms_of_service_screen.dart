@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class TermsOfServiceScreen extends StatelessWidget {
   const TermsOfServiceScreen({super.key});
@@ -8,7 +9,7 @@ class TermsOfServiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Terms of Service", style: GoogleFonts.outfit()),
+        title: Text(AppLocalizations.of(context)!.termsOfServiceTitle, style: GoogleFonts.outfit()),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

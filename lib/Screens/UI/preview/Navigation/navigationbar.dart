@@ -10,6 +10,7 @@ import 'package:go_study/services/department.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -50,6 +51,7 @@ class _NavBarState extends State<NavBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDarkMode = theme.brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width >= 600;
@@ -78,20 +80,20 @@ class _NavBarState extends State<NavBar> {
           fontSize: 12,
         ),
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Iconsax.home),
-            activeIcon: Icon(Iconsax.home_1_copy), // Bold/filled version
-            label: 'Home',
+          BottomNavigationBarItem(
+            icon: const Icon(Iconsax.home),
+            activeIcon: const Icon(Iconsax.home_1_copy), // Bold/filled version
+            label: l10n.navHomeLabel,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Iconsax.folder_cloud),
-            activeIcon: Icon(Iconsax.folder_cloud_copy), // Bold version
-            label: 'Departments',
+          BottomNavigationBarItem(
+            icon: const Icon(Iconsax.folder_cloud),
+            activeIcon: const Icon(Iconsax.folder_cloud_copy), // Bold version
+            label: l10n.navDepartmentsLabel,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Iconsax.teacher),
-            activeIcon: Icon(Iconsax.teacher_copy), // Bold version
-            label: 'AI Assistant',
+          BottomNavigationBarItem(
+            icon: const Icon(Iconsax.teacher),
+            activeIcon: const Icon(Iconsax.teacher_copy), // Bold version
+            label: l10n.navAiAssistantLabel,
           ),
           BottomNavigationBarItem(
             icon: Consumer3<MessageProvider, List<FriendRequest>?, int>(
@@ -114,12 +116,12 @@ class _NavBarState extends State<NavBar> {
                 );
               },
             ),
-            label: 'Messages',
+            label: l10n.navMessagesLabel,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Iconsax.setting),
-            activeIcon: Icon(Iconsax.setting_2_copy), // Bold version
-            label: 'Settings',
+          BottomNavigationBarItem(
+            icon: const Icon(Iconsax.setting),
+            activeIcon: const Icon(Iconsax.setting_2_copy), // Bold version
+            label: l10n.navSettingsLabel,
           ),
         ],
       );
@@ -144,16 +146,16 @@ class _NavBarState extends State<NavBar> {
           fontSize: 12,
         ),
         destinations: [
-          _buildRailDestination(Iconsax.home, Iconsax.home_1_copy, 'Home'),
-          _buildRailDestination(Iconsax.folder_cloud, Iconsax.folder_cloud_copy, 'Departments'),
-          _buildRailDestination(Iconsax.teacher, Iconsax.teacher_copy, 'AI Assistant'),
+          _buildRailDestination(Iconsax.home, Iconsax.home_1_copy, l10n.navHomeLabel),
+          _buildRailDestination(Iconsax.folder_cloud, Iconsax.folder_cloud_copy, l10n.navDepartmentsLabel),
+          _buildRailDestination(Iconsax.teacher, Iconsax.teacher_copy, l10n.navAiAssistantLabel),
           _buildRailDestination(
             Iconsax.message,
             Iconsax.message_2_copy,
-            'Messages',
+            l10n.navMessagesLabel,
             badgeCount: true,
           ),
-          _buildRailDestination(Iconsax.setting, Iconsax.setting_2_copy, 'Settings'),
+          _buildRailDestination(Iconsax.setting, Iconsax.setting_2_copy, l10n.navSettingsLabel),
         ],
       );
     }

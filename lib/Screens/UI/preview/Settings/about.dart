@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -34,6 +35,7 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   void _showPlatformAboutDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showAboutDialog(
       context: context,
       applicationName: "GO-Study",
@@ -46,11 +48,11 @@ class _AboutScreenState extends State<AboutScreen> {
           height: 48,
         ),
       ),
-      applicationLegalese: "© 2026 Jovial Studio",
+      applicationLegalese: l10n.appLegaleseCopyright,
       children: [
         const SizedBox(height: 20),
         Text(
-          "GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
+          l10n.aboutDialogDescription,
           style: GoogleFonts.outfit(fontSize: 14),
         ),
       ],
@@ -60,13 +62,14 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "About App",
+          l10n.aboutAppTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
@@ -103,7 +106,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             Text(
-              "Version $_version",
+              l10n.versionLabel(_version),
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 color: Colors.grey,
@@ -131,7 +134,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 ],
               ),
               child: Text(
-                "GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
+                l10n.appDescriptionBody,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 16,
@@ -157,11 +160,11 @@ class _AboutScreenState extends State<AboutScreen> {
                 color: theme.colorScheme.primary,
               ),
               title: Text(
-                "Licenses & Legal",
+                l10n.licensesLegalTitle,
                 style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
               ),
               subtitle: Text(
-                "Open source libraries and legal info",
+                l10n.openSourceLibrariesSubtitle,
                 style: GoogleFonts.outfit(fontSize: 12),
               ),
               trailing: const Icon(Iconsax.arrow_right_3, size: 18),
@@ -178,7 +181,7 @@ class _AboutScreenState extends State<AboutScreen> {
             // ),
             const SizedBox(height: 8),
             Text(
-              "© 2026 Jovial Studio",
+              l10n.appLegaleseCopyright,
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,

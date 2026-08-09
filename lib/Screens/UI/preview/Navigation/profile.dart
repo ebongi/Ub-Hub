@@ -6,6 +6,7 @@ import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 
 import 'package:image_picker/image_picker.dart';
@@ -29,11 +30,12 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Profile",
+          l10n.profileTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -104,7 +106,7 @@ class _ProfileState extends State<Profile> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  user.name ?? "User",
+                  user.name ?? l10n.defaultUserName,
                   style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -124,12 +126,12 @@ class _ProfileState extends State<Profile> {
                    mainAxisAlignment: MainAxisAlignment.center,
                    children: [
                      _buildBadge(
-                       label: user.role.name.toUpperCase(),
+                       label: _roleDisplayName(l10n, user.role),
                        color: _getRoleColor(user.role),
                      ),
                      const SizedBox(width: 8),
                      _buildBadge(
-                       label: "BETA MEMBER",
+                       label: l10n.betaMemberBadge,
                        color: Colors.teal,
                        isPremium: true,
                      ),
@@ -148,7 +150,7 @@ class _ProfileState extends State<Profile> {
                       ),
                       icon: const Icon(Icons.admin_panel_settings_rounded),
                       label: Text(
-                        "Open Admin Dashboard",
+                        l10n.openAdminDashboardButton,
                         style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -183,7 +185,7 @@ class _ProfileState extends State<Profile> {
                         const Icon(Icons.timer_outlined, color: Colors.white),
                         const SizedBox(width: 12),
                         Text(
-                          "Trial Ends in: ${user.trialTimeLeft}",
+                          l10n.trialEndsInLabel(user.trialTimeLeft(l10n)),
                           style: GoogleFonts.outfit(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -219,7 +221,7 @@ class _ProfileState extends State<Profile> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              "Personal Information",
+                              l10n.personalInformationTitle,
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -232,44 +234,44 @@ class _ProfileState extends State<Profile> {
                         _buildInfoRow(
                           theme,
                           icon: Icons.email_rounded,
-                          label: "Email Address",
+                          label: l10n.emailAddressLabel,
                           value:
-                              _authentication.currentUser?.email ?? "Not set",
+                              _authentication.currentUser?.email ?? l10n.notSetValue,
                         ),
                         const Divider(height: 32, thickness: 0.5),
                         _buildInfoRow(
                           theme,
                           icon: Icons.tag_rounded,
-                          label: "Matricule",
-                          value: user.matricule ?? "Not provided",
+                          label: l10n.matriculeLabel,
+                          value: user.matricule ?? l10n.notProvidedValue,
                         ),
                         const Divider(height: 32, thickness: 0.5),
                         _buildInfoRow(
                           theme,
                           icon: Icons.phone_rounded,
-                          label: "Phone Number",
-                          value: user.phoneNumber ?? "Not provided",
+                          label: l10n.phoneNumberLabel,
+                          value: user.phoneNumber ?? l10n.notProvidedValue,
                         ),
                         const Divider(height: 32, thickness: 0.5),
                         _buildInfoRow(
                           theme,
                           icon: Icons.school_rounded,
-                          label: "Current Level",
-                          value: user.level ?? "Not provided",
+                          label: l10n.currentLevelLabel,
+                          value: user.level ?? l10n.notProvidedValue,
                         ),
                         const Divider(height: 32, thickness: 0.5),
                         _buildInfoRow(
                           theme,
                           icon: Icons.business_rounded,
-                          label: "Department",
-                          value: user.department ?? "Not set",
+                          label: l10n.departmentLabel,
+                          value: user.department ?? l10n.notSetValue,
                         ),
                         const Divider(height: 32, thickness: 0.5),
                         _buildInfoRow(
                           theme,
                           icon: Icons.notes_rounded,
-                          label: "Bio",
-                          value: user.bio ?? "No bio yet",
+                          label: l10n.bioLabel,
+                          value: user.bio ?? l10n.noBioYetValue,
                         ),
                       ],
                     ),
@@ -284,7 +286,7 @@ class _ProfileState extends State<Profile> {
                 const SizedBox(height: 32),
 
                 // Theme Customization Section
-                _buildThemeSection(context, theme),
+                _buildThemeSection(context, theme, l10n),
 
                 const SizedBox(height: 32),
 
@@ -297,7 +299,7 @@ class _ProfileState extends State<Profile> {
                     onPressed: () => _handleLogout(context),
                     icon: const Icon(Icons.logout_rounded, color: Colors.red),
                     label: Text(
-                      "Sign Out",
+                      l10n.signOutTitle,
                       style: GoogleFonts.outfit(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
@@ -323,15 +325,16 @@ class _ProfileState extends State<Profile> {
   }
 
   void _handleLogout(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Sign Out"),
-        content: const Text("Are you sure you want to sign out?"),
+        title: Text(l10n.signOutTitle),
+        content: Text(l10n.signOutConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -342,7 +345,7 @@ class _ProfileState extends State<Profile> {
                 ).pushNamedAndRemoveUntil('/login', (route) => false);
               }
             },
-            child: const Text("Sign Out", style: TextStyle(color: Colors.red)),
+            child: Text(l10n.signOutTitle, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -357,6 +360,17 @@ class _ProfileState extends State<Profile> {
         return Colors.blueAccent;
       case UserRole.viewer:
         return Colors.green;
+    }
+  }
+
+  String _roleDisplayName(AppLocalizations l10n, UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return l10n.roleAdmin;
+      case UserRole.contributor:
+        return l10n.roleContributor;
+      case UserRole.viewer:
+        return l10n.roleViewer;
     }
   }
 
@@ -514,7 +528,7 @@ class _ProfileState extends State<Profile> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Change Avatar",
+                AppLocalizations.of(context)!.changeAvatarTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -524,7 +538,7 @@ class _ProfileState extends State<Profile> {
               _buildSourceOption(
                 context,
                 icon: Icons.photo_library_rounded,
-                title: "Gallery",
+                title: AppLocalizations.of(context)!.galleryOption,
                 color: Colors.blue,
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
@@ -532,7 +546,7 @@ class _ProfileState extends State<Profile> {
               _buildSourceOption(
                 context,
                 icon: Icons.camera_alt_rounded,
-                title: "Camera",
+                title: AppLocalizations.of(context)!.cameraOption,
                 color: Colors.orange,
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
@@ -629,7 +643,7 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildThemeSection(BuildContext context, ThemeData theme) {
+  Widget _buildThemeSection(BuildContext context, ThemeData theme, AppLocalizations l10n) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -669,7 +683,7 @@ class _ProfileState extends State<Profile> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "App Appearance",
+                  l10n.appAppearanceTitle,
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -679,7 +693,7 @@ class _ProfileState extends State<Profile> {
             ),
             const SizedBox(height: 20),
             Text(
-              "Accent Color",
+              l10n.accentColorLabel,
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 color: theme.hintColor,
@@ -738,7 +752,7 @@ class _ProfileState extends State<Profile> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(
-                "Dark Mode",
+                l10n.darkModeTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/chat_service.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -15,7 +16,7 @@ class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
   final String? currentUserId;
   final String roomId;
-  final String title;
+  final String? title;
   final String? subtitle;
 
   const ChatScreen({
@@ -23,7 +24,7 @@ class ChatScreen extends StatefulWidget {
     this.chatService,
     this.currentUserId,
     this.roomId = 'global',
-    this.title = 'Global Chat',
+    this.title,
     this.subtitle,
   });
 
@@ -36,6 +37,11 @@ class _ChatScreenState extends State<ChatScreen> {
   late final String? _currentUserId;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
+
+  /// Cached in [didChangeDependencies] so [dispose] never has to look up a
+  /// Provider from a possibly-defunct context.
+  MessageProvider? _messageProvider;
 
   /// The message the user is currently replying to (null = no active reply).
   ChatMessageModel? _replyingTo;
@@ -55,10 +61,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Mark chat as open in global provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        Provider.of<MessageProvider>(context, listen: false).setChatOpen(true);
-      }
+      if (mounted) _messageProvider?.setChatOpen(true);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MessageProvider is provided at the app root in main.dart and should
+    // always be found here; guarded (with visibility, unlike a silent
+    // catch) for test harnesses/embeddings that don't provide one.
+    if (_messageProvider == null) {
+      try {
+        _messageProvider = Provider.of<MessageProvider>(context, listen: false);
+      } catch (e) {
+        debugPrint('ChatScreen: MessageProvider not found in widget tree: $e');
+      }
+    }
   }
 
   @override
@@ -82,15 +101,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    // Mark chat as closed in global provider
-    // Using context.read or a delayed callback because context might be invalid here
-    // but MessageProvider is global so we can find it if we have context.
-    // However, it's safer to use the return from Navigator.push in the calling screen
-    // (like I did in DmScreen). For ChatScreen, it might be called from Home.
-    // So I'll try to set it to false here if I can safely access provider.
-    try {
-      Provider.of<MessageProvider>(context, listen: false).setChatOpen(false);
-    } catch (_) {}
+    _messageFocusNode.dispose();
+    _messageProvider?.setChatOpen(false);
     super.dispose();
   }
 
@@ -98,8 +110,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context, listen: false);
-    final senderName = userModel.name ?? 'Anonymous';
+    final senderName = userModel.name ?? l10n.anonymousFallback;
     final avatarUrl = userModel.avatarUrl;
 
     final replySnapshot = _replyingTo;
@@ -150,18 +163,13 @@ class _ChatScreenState extends State<ChatScreen> {
   void _setReplyingTo(ChatMessageModel message) {
     setState(() => _replyingTo = message);
     // Focus the text field so the keyboard opens immediately
-    FocusScope.of(context).requestFocus(FocusNode());
-    Future.delayed(const Duration(milliseconds: 50), () {
-      if (mounted) FocusScope.of(context).unfocus();
-      Future.delayed(const Duration(milliseconds: 50), () {
-        if (mounted) FocusScope.of(context).requestFocus(FocusNode());
-      });
-    });
+    _messageFocusNode.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -172,7 +180,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Column(
           children: [
             Text(
-              widget.title,
+              widget.title ?? l10n.globalChatTitle,
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -180,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             Text(
-              widget.subtitle ?? "Active Now",
+              widget.subtitle ?? l10n.activeNowLabel,
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 color: isDarkMode ? Colors.white38 : Colors.grey[500],
@@ -195,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () {
               showPremiumGeneralDialog(
                 context: context,
-                barrierLabel: "About Global Chat",
+                barrierLabel: l10n.aboutGlobalChatLabel,
                 child: AlertDialog(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(32)),
@@ -209,9 +217,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const PremiumDialogHeader(
-                        title: "Global Chat",
-                        subtitle: "Connect with your peers",
+                      PremiumDialogHeader(
+                        title: l10n.globalChatTitle,
+                        subtitle: l10n.connectWithPeersSubtitle,
                         icon: Icons.hub_rounded,
                       ),
                       Padding(
@@ -219,7 +227,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Column(
                           children: [
                             Text(
-                              "This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.",
+                              l10n.globalChatDescription,
                               textAlign: TextAlign.center,
                               style: GoogleFonts.outfit(
                                 fontSize: 15,
@@ -231,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             const SizedBox(height: 32),
                             PremiumSubmitButton(
-                              label: "Got it",
+                              label: l10n.gotItButton,
                               isLoading: false,
                               onPressed: () => Navigator.pop(context),
                             ),
@@ -258,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
                 }
 
                 final serverMessages = snapshot.data ?? [];
@@ -288,7 +296,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          "No messages yet. Say hi!",
+                          l10n.noMessagesYetSayHi,
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -342,13 +350,15 @@ class _ChatScreenState extends State<ChatScreen> {
                           duration: const Duration(milliseconds: 400),
                           beginOffset: 0.1,
                           child: _SwipeToReply(
+                            key: ValueKey(message.id),
                             isMe: isMe,
                             onReply: () => _setReplyingTo(message),
                             child: _MessageBubble(
                               message: message,
                               isMe: isMe,
                               theme: theme,
-                              isPending: _optimisticMessages.contains(message),
+                              l10n: l10n,
+                              isPending: _optimisticMessages.any((m) => m.id == message.id),
                             ),
                           ),
                         ),
@@ -367,18 +377,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     key: ValueKey(_replyingTo!.id),
                     message: _replyingTo!,
                     theme: theme,
+                    l10n: l10n,
                     onCancel: () => setState(() => _replyingTo = null),
                   )
                 : const SizedBox.shrink(),
           ),
-          _buildInputArea(theme),
+          _buildInputArea(theme, l10n),
         ],
       ),
     );
   }
 
+  static final DateFormat _dateHeaderFormat = DateFormat('MMM d, yyyy');
+
   Widget _buildDateHeader(DateTime date) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -386,11 +400,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     String dateText;
     if (messageDate == today) {
-      dateText = "Today";
+      dateText = l10n.todayLabel;
     } else if (messageDate == yesterday) {
-      dateText = "Yesterday";
+      dateText = l10n.yesterdayLabel;
     } else {
-      dateText = DateFormat('MMM d, yyyy').format(date);
+      dateText = _dateHeaderFormat.format(date);
     }
 
     return Container(
@@ -409,7 +423,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildInputArea(ThemeData theme) {
+  Widget _buildInputArea(ThemeData theme, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       decoration: const BoxDecoration(
@@ -436,12 +450,13 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: TextField(
                 controller: _messageController,
+                focusNode: _messageFocusNode,
                 textCapitalization: TextCapitalization.sentences,
                 maxLines: 5,
                 minLines: 1,
                 style: GoogleFonts.outfit(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: "Send a message",
+                  hintText: l10n.sendAMessageHint,
                   hintStyle: GoogleFonts.outfit(
                     color: theme.colorScheme.onSurface.withOpacity(0.4),
                   ),
@@ -494,12 +509,14 @@ class _ChatScreenState extends State<ChatScreen> {
 class _ReplyBanner extends StatelessWidget {
   final ChatMessageModel message;
   final ThemeData theme;
+  final AppLocalizations l10n;
   final VoidCallback onCancel;
 
   const _ReplyBanner({
     super.key,
     required this.message,
     required this.theme,
+    required this.l10n,
     required this.onCancel,
   });
 
@@ -528,7 +545,7 @@ class _ReplyBanner extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Replying to ${message.senderName ?? 'Anonymous'}',
+                  l10n.replyingToLabel(message.senderName ?? l10n.anonymousFallback),
                   style: GoogleFonts.outfit(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -573,6 +590,7 @@ class _SwipeToReply extends StatefulWidget {
   final VoidCallback onReply;
 
   const _SwipeToReply({
+    super.key,
     required this.child,
     required this.isMe,
     required this.onReply,
@@ -675,12 +693,14 @@ class _MessageBubble extends StatelessWidget {
   final ChatMessageModel message;
   final bool isMe;
   final ThemeData theme;
+  final AppLocalizations l10n;
   final bool isPending;
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
     required this.theme,
+    required this.l10n,
     this.isPending = false,
   });
 
@@ -729,7 +749,7 @@ class _MessageBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            message.replyToName ?? 'Anonymous',
+            message.replyToName ?? l10n.anonymousFallback,
             style: GoogleFonts.outfit(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -752,9 +772,10 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  static final DateFormat _timeFormat = DateFormat('HH:mm');
+
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm');
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Align(
@@ -803,7 +824,7 @@ class _MessageBubble extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Text(
-                                message.senderName ?? 'Anonymous',
+                                message.senderName ?? l10n.anonymousFallback,
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -832,7 +853,7 @@ class _MessageBubble extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
-                            timeFormat.format(message.createdAt),
+                            _timeFormat.format(message.createdAt),
                             style: GoogleFonts.outfit(
                               fontSize: 11,
                               color: isDarkMode ? Colors.white30 : Colors.grey[400],

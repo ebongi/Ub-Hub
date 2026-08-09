@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/notification_service.dart';
@@ -18,7 +19,10 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
   final _supabase = Supabase.instance.client;
   String _searchQuery = "";
   String _selectedCategory = "All";
-  final List<String> _categories = [
+
+  // Stable codes stored on TodoTask/used for filtering — never translated.
+  // Only their displayed labels (via _categoryDisplayName) are localized.
+  static const List<String> _categoryCodes = [
     "All",
     "Academic",
     "Personal",
@@ -31,18 +35,64 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     return DatabaseService(uid: user?.id);
   }
 
+  String _categoryDisplayName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case "All":
+        return l10n.categoryAll;
+      case "Academic":
+        return l10n.categoryAcademic;
+      case "Personal":
+        return l10n.categoryPersonal;
+      case "Research":
+        return l10n.categoryResearch;
+      case "Side projects":
+        return l10n.categorySideProjects;
+      default:
+        return code;
+    }
+  }
+
+  String _priorityDisplayName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case "Low":
+        return l10n.priorityLow;
+      case "Medium":
+        return l10n.priorityMedium;
+      case "High":
+        return l10n.priorityHigh;
+      default:
+        return code;
+    }
+  }
+
+  String _taskGroupDisplayName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case "Overdue":
+        return l10n.taskGroupOverdue;
+      case "Today":
+        return l10n.taskGroupToday;
+      case "Upcoming":
+        return l10n.taskGroupUpcoming;
+      case "Completed":
+        return l10n.taskGroupCompleted;
+      default:
+        return code;
+    }
+  }
+
   void _showAddTaskDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     final descController = TextEditingController();
     DateTime? selectedDeadline;
     DateTime? selectedReminder;
     double progress = 0.0;
     String priority = "Medium";
-    String category = _categories[1];
+    String category = _categoryCodes[1];
 
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Add Task",
+      barrierLabel: l10n.addTaskDialogTitle,
       child: StatefulBuilder(
         builder: (context, setDialogState) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -57,9 +107,9 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PremiumDialogHeader(
-                    title: "New Task",
-                    subtitle: "What needs to be done?",
+                  PremiumDialogHeader(
+                    title: l10n.newTaskTitle,
+                    subtitle: l10n.newTaskSubtitle,
                     icon: Icons.add_task_rounded,
                   ),
                   Padding(
@@ -68,15 +118,15 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                       children: [
                         PremiumTextField(
                           controller: nameController,
-                          label: "Task Name",
-                          hint: "e.g. Study Physics",
+                          label: l10n.taskNameLabel,
+                          hint: l10n.taskNameHint,
                           icon: Icons.title_rounded,
                         ),
                         const SizedBox(height: 16),
                         PremiumTextField(
                           controller: descController,
-                          label: "Description",
-                          hint: "Brief details...",
+                          label: l10n.taskDescriptionLabel,
+                          hint: l10n.taskDescriptionHint,
                           icon: Icons.notes_rounded,
                           maxLines: 2,
                         ),
@@ -86,11 +136,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                             Expanded(
                               child: _buildDateTimePicker(
                                 context,
-                                label: "Deadline",
+                                label: l10n.deadlineLabel,
                                 icon: Icons.calendar_today_rounded,
                                 value: selectedDeadline == null
                                     ? null
                                     : DateFormat('MMM d').format(selectedDeadline!),
+                                setLabel: l10n.setLabel,
                                 onTap: () async {
                                   final date = await showDatePicker(
                                     context: context,
@@ -110,11 +161,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                             Expanded(
                               child: _buildDateTimePicker(
                                 context,
-                                label: "Reminder",
+                                label: l10n.reminderLabel,
                                 icon: Icons.alarm_rounded,
                                 value: selectedReminder == null
                                     ? null
                                     : DateFormat('HH:mm').format(selectedReminder!),
+                                setLabel: l10n.setLabel,
                                 onTap: () async {
                                   final time = await showTimePicker(
                                     context: context,
@@ -142,7 +194,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Progress: ${(progress * 100).toInt()}%",
+                              l10n.taskProgressLabel((progress * 100).toInt()),
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -168,12 +220,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                         const SizedBox(height: 16),
                         PremiumDropdownField<String>(
                           value: priority,
-                          label: "Priority",
-                          hint: "Select priority",
+                          label: l10n.priorityLabel,
+                          hint: l10n.selectPriorityHint,
                           icon: Icons.flag_rounded,
                           items: ["Low", "Medium", "High"]
-                              .map((p) =>
-                                  DropdownMenuItem(value: p, child: Text(p)))
+                              .map((p) => DropdownMenuItem(
+                                  value: p, child: Text(_priorityDisplayName(l10n, p))))
                               .toList(),
                           onChanged: (val) =>
                               setDialogState(() => priority = val!),
@@ -181,20 +233,20 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                         const SizedBox(height: 16),
                         PremiumDropdownField<String>(
                           value: category,
-                          label: "Category",
-                          hint: "Select category",
+                          label: l10n.categoryLabel,
+                          hint: l10n.selectCategoryHint,
                           icon: Icons.category_rounded,
-                          items: _categories
+                          items: _categoryCodes
                               .where((c) => c != "All")
-                              .map((c) =>
-                                  DropdownMenuItem(value: c, child: Text(c)))
+                              .map((c) => DropdownMenuItem(
+                                  value: c, child: Text(_categoryDisplayName(l10n, c))))
                               .toList(),
                           onChanged: (val) =>
                               setDialogState(() => category = val!),
                         ),
                         const SizedBox(height: 32),
                         PremiumSubmitButton(
-                          label: "Create Task",
+                          label: l10n.createTaskButton,
                           isLoading: false,
                           onPressed: () async {
                             if (nameController.text.isNotEmpty) {
@@ -218,8 +270,8 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                               if (selectedReminder != null) {
                                 await NotificationService().scheduleNotification(
                                   id: newTask.hashCode,
-                                  title: "Task Reminder",
-                                  body: "Don't forget: ${newTask.title}",
+                                  title: l10n.taskReminderNotifTitle,
+                                  body: l10n.taskReminderNotifBody(newTask.title),
                                   scheduledDate: selectedReminder!,
                                 );
                               }
@@ -245,6 +297,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     required String label,
     required IconData icon,
     required String? value,
+    required String setLabel,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
@@ -280,7 +333,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    value ?? "Set",
+                    value ?? setLabel,
                     style: GoogleFonts.outfit(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -302,16 +355,17 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: Text("Please sign in")));
+      return Scaffold(body: Center(child: Text(l10n.pleaseSignInMessage)));
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "To-Do List",
+          l10n.toDoListTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
@@ -321,7 +375,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               decoration: InputDecoration(
-                hintText: "Search tasks...",
+                hintText: l10n.searchTasksHint,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -336,12 +390,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: _categories
+              children: _categoryCodes
                   .map(
                     (cat) => Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: ChoiceChip(
-                        label: Text(cat),
+                        label: Text(_categoryDisplayName(l10n, cat)),
                         selected: _selectedCategory == cat,
                         onSelected: (selected) =>
                             setState(() => _selectedCategory = cat),
@@ -376,7 +430,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                 final groups = _groupTasks(filteredTasks);
 
                 if (filteredTasks.isEmpty) {
-                  return const Center(child: Text("No tasks found"));
+                  return Center(child: Text(l10n.noTasksFound));
                 }
 
                 return ListView(
@@ -391,7 +445,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  entry.key,
+                                  _taskGroupDisplayName(l10n, entry.key),
                                   style: GoogleFonts.outfit(
                                     color: entry.key == "Overdue"
                                         ? Colors.red
@@ -408,7 +462,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                             ),
                           ),
                           const Divider(thickness: 1.5),
-                          ...entry.value.map((task) => _buildTaskTile(task)),
+                          ...entry.value.map((task) => _buildTaskTile(task, l10n)),
                           const SizedBox(height: 16),
                         ];
                       })
@@ -460,7 +514,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     return grouped;
   }
 
-  Widget _buildTaskTile(TodoTask task) {
+  Widget _buildTaskTile(TodoTask task, AppLocalizations l10n) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.only(bottom: 12),
@@ -493,7 +547,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
         ),
         subtitle: task.deadline != null
             ? Text(
-                "Deadline: ${DateFormat('MMM d, y').format(task.deadline!)}",
+                l10n.deadlineDisplay(DateFormat('MMM d, y').format(task.deadline!)),
                 style: TextStyle(
                   fontSize: 12,
                   color: task.deadline!.isBefore(DateTime.now()) && !task.isDone
@@ -501,9 +555,9 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                       : Colors.grey,
                 ),
               )
-            : const Text(
-                "No Deadline",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+            : Text(
+                l10n.noDeadlineLabel,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
         children: [
           Padding(
@@ -518,9 +572,9 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildInfoTag(task.category, Colors.teal),
+                    _buildInfoTag(_categoryDisplayName(l10n, task.category), Colors.teal),
                     _buildInfoTag(
-                      task.priority,
+                      _priorityDisplayName(l10n, task.priority),
                       _getPriorityColor(task.priority),
                     ),
                   ],
@@ -532,7 +586,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  "Progress: ${(task.progress * 100).toInt()}%",
+                  l10n.taskProgressLabel((task.progress * 100).toInt()),
                   style: const TextStyle(fontSize: 12),
                 ),
                 Align(

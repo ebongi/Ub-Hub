@@ -5,6 +5,7 @@ import 'package:go_study/services/bot_knowledge.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
@@ -31,11 +32,12 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "UB Knowledge Base",
+          l10n.ubKnowledgeBaseTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
@@ -58,12 +60,12 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No UB knowledge added yet",
+                    l10n.noUbKnowledgeYet,
                     style: GoogleFonts.outfit(color: Colors.grey),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Add university facts for the bot to learn!",
+                    l10n.addUniversityFactsSubtitle,
                     style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -121,7 +123,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
                     ),
                   )
                 : const Icon(Icons.picture_as_pdf_rounded),
-            label: Text(_isUploading ? "Processing..." : "Upload UB PDF"),
+            label: Text(_isUploading ? l10n.processingLabel : l10n.uploadUbPdfButton),
             backgroundColor: Colors.orange,
           ),
           const SizedBox(height: 12),
@@ -129,7 +131,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
             heroTag: "manual_add",
             onPressed: _showAddKnowledgeDialog,
             icon: const Icon(Icons.add_business_rounded),
-            label: const Text("Add UB Info"),
+            label: Text(l10n.addUbInfoButton),
           ),
         ],
       ),
@@ -137,6 +139,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
   }
 
   Future<void> _pickAndProcessPdf() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
@@ -163,18 +166,18 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
       final bool? isGlobal = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text("Knowledge Scope"),
-          content: const Text(
-            "Should this information be available to all students (Global) or just you (Personal)?",
+          title: Text(l10n.knowledgeScopeTitle),
+          content: Text(
+            l10n.knowledgeScopeBody,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text("Personal"),
+              child: Text(l10n.personalOption),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text("Global"),
+              child: Text(l10n.globalOption),
             ),
           ],
         ),
@@ -188,7 +191,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
       // Create a knowledge snippet
       final k = BotKnowledge(
         userId: _currentUser!.id,
-        title: "PDF: ${result.files.single.name}",
+        title: l10n.pdfTitlePrefix(result.files.single.name),
         content: text,
         isGlobal: isGlobal,
         createdAt: DateTime.now(),
@@ -198,7 +201,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
       if (mounted) {
         ErrorHandler.showSuccessSnackBar(
           context,
-          "PDF processed and added to knowledge base!",
+          l10n.pdfProcessedMessage,
         );
       }
     } catch (e) {
@@ -214,39 +217,40 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     bool isGlobal = false;
+    final l10n = AppLocalizations.of(context)!;
 
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Add UB Knowledge",
+      barrierLabel: l10n.addUbKnowledgeBarrierLabel,
       child: StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("New University Info"),
+          title: Text(l10n.newUniversityInfoTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               PremiumTextField(
                 controller: titleController,
-                label: "Topic (e.g. Admission)",
-                hint: "e.g. Faculty of Arts",
+                label: l10n.topicLabel,
+                hint: l10n.topicHintExample,
                 icon: Icons.school_rounded,
               ),
               const SizedBox(height: 12),
               PremiumTextField(
                 controller: contentController,
-                label: "Details",
-                hint: "Provide university-specific info...",
+                label: l10n.detailsLabel,
+                hint: l10n.provideUniversityInfoHint,
                 icon: Icons.info_outline_rounded,
                 maxLines: 5,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text(
-                  "Make Global",
-                  style: TextStyle(fontSize: 14),
+                title: Text(
+                  l10n.makeGlobalLabel,
+                  style: const TextStyle(fontSize: 14),
                 ),
-                subtitle: const Text(
-                  "Visible to all users",
-                  style: TextStyle(fontSize: 10),
+                subtitle: Text(
+                  l10n.visibleToAllUsersSubtitle,
+                  style: const TextStyle(fontSize: 10),
                 ),
                 value: isGlobal,
                 onChanged: (val) => setDialogState(() => isGlobal = val),
@@ -256,10 +260,10 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(l10n.cancel),
             ),
             PremiumSubmitButton(
-              label: "Save",
+              label: l10n.saveButton,
               isLoading: false,
               onPressed: () async {
                 if (titleController.text.isEmpty ||

@@ -4,6 +4,7 @@ import 'package:go_study/services/notification_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class Notifications extends StatefulWidget {
   const Notifications({super.key});
@@ -59,9 +60,10 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Future<void> _clearAll() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showPremiumGeneralDialog<bool>(
       context: context,
-      barrierLabel: "Clear All Notifications",
+      barrierLabel: l10n.clearAllNotificationsTitle,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -73,9 +75,9 @@ class _NotificationsState extends State<Notifications> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const PremiumDialogHeader(
-              title: "Clear All Notifications",
-              subtitle: "This action cannot be undone",
+            PremiumDialogHeader(
+              title: l10n.clearAllNotificationsTitle,
+              subtitle: l10n.deleteChatDialogSubtitle,
               icon: Icons.delete_sweep_rounded,
             ),
             Padding(
@@ -83,7 +85,7 @@ class _NotificationsState extends State<Notifications> {
               child: Column(
                 children: [
                   Text(
-                    "Are you sure you want to delete all notifications? This will permanently remove your recent activity history.",
+                    l10n.confirmClearAllNotificationsBody,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: 15,
@@ -99,7 +101,7 @@ class _NotificationsState extends State<Notifications> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -111,7 +113,7 @@ class _NotificationsState extends State<Notifications> {
                       Expanded(
                         flex: 2,
                         child: PremiumSubmitButton(
-                          label: "Clear All",
+                          label: l10n.clearAllButtonShort,
                           isLoading: false,
                           onPressed: () => Navigator.pop(context, true),
                         ),
@@ -134,12 +136,13 @@ class _NotificationsState extends State<Notifications> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       // backgroundColor: ,
       appBar: AppBar(
         title: Text(
-          "Notifications",
+          l10n.notificationsTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -150,7 +153,7 @@ class _NotificationsState extends State<Notifications> {
           IconButton(
             icon: const Icon(Icons.delete_sweep_rounded),
             onPressed: _clearAll,
-            tooltip: "Clear All",
+            tooltip: l10n.clearAllButtonShort,
           ),
         ],
       ),
@@ -173,11 +176,11 @@ class _NotificationsState extends State<Notifications> {
               children: [
                 SwitchListTile(
                   title: Text(
-                    "Push Notifications",
+                    l10n.pushNotificationsTitle,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    "Receive alerts for new courses",
+                    l10n.receiveAlertsNewCoursesSubtitle,
                     style: GoogleFonts.outfit(fontSize: 12),
                   ),
                   value: _pushEnabled,
@@ -185,11 +188,11 @@ class _NotificationsState extends State<Notifications> {
                 ),
                 SwitchListTile(
                   title: Text(
-                    "Email Updates",
+                    l10n.emailUpdatesTitle,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    "Receive digest emails",
+                    l10n.receiveDigestEmailsSubtitle,
                     style: GoogleFonts.outfit(fontSize: 12),
                   ),
                   value: _emailEnabled,
@@ -197,11 +200,11 @@ class _NotificationsState extends State<Notifications> {
                 ),
                 SwitchListTile(
                   title: Text(
-                    "Study Reminders",
+                    l10n.studyRemindersTitle,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    "Daily reminder to stay on track",
+                    l10n.dailyReminderSubtitle,
                     style: GoogleFonts.outfit(fontSize: 12),
                   ),
                   value: _studyRemindersEnabled,
@@ -213,7 +216,7 @@ class _NotificationsState extends State<Notifications> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Recent Activity",
+                        l10n.recentActivityTitle,
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -223,7 +226,7 @@ class _NotificationsState extends State<Notifications> {
                       TextButton(
                         onPressed: _clearAll,
                         child: Text(
-                          "Clear All",
+                          l10n.clearAllButtonShort,
                           style: GoogleFonts.outfit(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
@@ -276,7 +279,7 @@ class _NotificationsState extends State<Notifications> {
                           ),
                         );
                       }
-                      return Center(child: Text('Error: ${snapshot.error}'));
+                      return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
                     }
 
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -284,8 +287,8 @@ class _NotificationsState extends State<Notifications> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text("No notifications found"),
+                      return Center(
+                        child: Text(l10n.noNotificationsFound),
                       );
                     }
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/services/profile.dart';
@@ -19,6 +21,7 @@ import 'package:go_study/Screens/Shared/ai_usage_gate.dart';
 import 'package:go_study/services/gemini_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/quiz_view_screen.dart';
 
 class PDFViewerScreen extends StatefulWidget {
   final String url;
@@ -43,6 +46,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   PdfTextSearchResult _searchResult = PdfTextSearchResult();
 
   bool _isSummarizing = false;
+  bool _isGeneratingQuiz = false;
   bool _isSearchOpened = false;
   int _currentPage = 1;
   int _totalPages = 0;
@@ -98,6 +102,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   }
 
   void _showSummarySheet(String summary) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -117,9 +122,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
             ),
             child: Column(
               children: [
-                const PremiumDialogHeader(
-                  title: "Quick Review",
-                  subtitle: "AI-generated document summary",
+                PremiumDialogHeader(
+                  title: l10n.quickReviewTitle,
+                  subtitle: l10n.aiGeneratedSummarySubtitle,
                   icon: Icons.auto_awesome_rounded,
                 ),
                 Expanded(
@@ -154,7 +159,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: PremiumSubmitButton(
-                    label: "Got it",
+                    label: l10n.gotItButton,
                     isLoading: false,
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -199,7 +204,147 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     );
   }
 
+  Future<void> _predictQuestions() async {
+    QuestionDifficulty selectedDifficulty = QuestionDifficulty.intermediate;
+    final l10n = AppLocalizations.of(context)!;
+
+    final difficulty = await showPremiumGeneralDialog<QuestionDifficulty>(
+      context: context,
+      barrierLabel: l10n.predictQuestionsBarrierLabel,
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PremiumDialogHeader(
+                    title: l10n.predictExamQuestionsTitle,
+                    subtitle: l10n.generatePracticeQuizSubtitle,
+                    icon: Icons.quiz_rounded,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.chooseDifficultyLevel,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SegmentedButton<QuestionDifficulty>(
+                          segments: [
+                            for (final d in QuestionDifficulty.values)
+                              ButtonSegment(value: d, label: Text(d.displayName)),
+                          ],
+                          selected: {selectedDifficulty},
+                          onSelectionChanged: (newSelection) {
+                            setDialogState(() {
+                              selectedDifficulty = newSelection.first;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                        PremiumSubmitButton(
+                          label: l10n.generateQuizButton,
+                          isLoading: false,
+                          onPressed: () =>
+                              Navigator.pop(context, selectedDifficulty),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            l10n.cancel,
+                            style: GoogleFonts.outfit(color: Colors.redAccent),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (difficulty == null || !mounted) return;
+
+    final userModel = Provider.of<UserModel>(context, listen: false);
+    final profile = UserProfile(
+      id: userModel.uid ?? '',
+      name: userModel.name,
+      aiCredits: userModel.aiCredits,
+      subscriptionTier: userModel.subscriptionTier,
+      subscriptionExpiry: userModel.subscriptionExpiry,
+      role: userModel.role,
+    );
+
+    final canProceed = await AIUsageGate.checkAndShow(context, profile);
+    if (!canProceed) return;
+
+    setState(() => _isGeneratingQuiz = true);
+
+    try {
+      final response = await http.get(Uri.parse(widget.url));
+      if (response.statusCode == 200) {
+        final result = await _aiService.generateQuiz(
+          response.bodyBytes,
+          difficulty: difficulty,
+        );
+
+        if (result == "OUT_OF_CREDITS") {
+          setState(() => _isGeneratingQuiz = false);
+          if (mounted) AIUsageGate.checkAndShow(context, profile);
+          return;
+        }
+
+        Map<String, dynamic> quizData;
+        try {
+          quizData = jsonDecode(result) as Map<String, dynamic>;
+        } catch (_) {
+          throw Exception("Couldn't generate quiz questions. Please try again.");
+        }
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => QuizViewScreen(quizData: quizData),
+            ),
+          );
+        }
+      } else {
+        throw Exception(
+          "Failed to download PDF (Status: ${response.statusCode})",
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.showErrorSnackBar(context, e);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingQuiz = false);
+      }
+    }
+  }
+
   void _showBookmarksSheet() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -214,9 +359,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PremiumDialogHeader(
-                title: "Table of Contents",
-                subtitle: "Navigate through the document",
+              PremiumDialogHeader(
+                title: l10n.tableOfContentsTitle,
+                subtitle: l10n.navigateThroughDocumentSubtitle,
                 icon: Icons.bookmarks_rounded,
               ),
               if (_bookmarks.isEmpty)
@@ -232,7 +377,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "No bookmarks found in this document",
+                          l10n.noBookmarksFoundMessage,
                           style: GoogleFonts.outfit(
                             color: isDark ? Colors.white38 : Colors.grey[500],
                             fontSize: 14,
@@ -292,6 +437,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -303,7 +449,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                 autofocus: true,
                 style: GoogleFonts.outfit(fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: "Search in document...",
+                  hintText: l10n.searchInDocumentHint,
                   hintStyle: GoogleFonts.outfit(color: theme.hintColor),
                   border: InputBorder.none,
                 ),
@@ -343,7 +489,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
             icon: Icon(
               _isSearchOpened ? Icons.close_rounded : Icons.search_rounded,
             ),
-            tooltip: "Search",
+            tooltip: l10n.searchTooltip,
           ),
           IconButton(
             onPressed: _isSummarizing ? null : _summarizeDocument,
@@ -354,12 +500,12 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_awesome_rounded, color: Colors.blue),
-            tooltip: "Quick Review",
+            tooltip: l10n.quickReviewTitle,
           ),
           IconButton(
             onPressed: _showBookmarksSheet,
             icon: const Icon(Icons.bookmarks_rounded),
-            tooltip: "Table of Contents",
+            tooltip: l10n.tableOfContentsTitle,
           ),
           IconButton(
             onPressed: _showChatSheet,
@@ -367,12 +513,23 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               Icons.chat_bubble_outline_rounded,
               color: Colors.blueAccent,
             ),
-            tooltip: "Chat with PDF",
+            tooltip: l10n.chatWithPdfTooltip,
+          ),
+          IconButton(
+            onPressed: _isGeneratingQuiz ? null : _predictQuestions,
+            icon: _isGeneratingQuiz
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.quiz_rounded, color: Colors.deepPurple),
+            tooltip: l10n.predictQuestionsBarrierLabel,
           ),
           IconButton(
             onPressed: _downloadDocument,
             icon: const Icon(Icons.download_rounded),
-            tooltip: "Download",
+            tooltip: l10n.downloadTooltip,
           ),
           const SizedBox(width: 8),
         ],
@@ -574,10 +731,11 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _messages.add({
             "role": "ai",
-            "content": "Error: ${ErrorHandler.getFriendlyMessage(e)}",
+            "content": l10n.errorLoadingMessages(ErrorHandler.getFriendlyMessage(e)),
           });
         });
       }
@@ -592,13 +750,14 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Chat with PDF",
+          l10n.chatWithPdfTooltip,
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -692,7 +851,7 @@ class _PDFChatScreenState extends State<PDFChatScreen> {
                     controller: _messageController,
                     style: GoogleFonts.outfit(),
                     decoration: InputDecoration(
-                      hintText: "Ask anything about this document...",
+                      hintText: l10n.askAnythingAboutDocumentHint,
                       hintStyle: GoogleFonts.outfit(fontSize: 14),
                       filled: true,
                       fillColor: isDark ? Colors.white10 : Colors.grey[100],

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/home.dart'
     show DepartmentUIData;
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/department.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -58,6 +59,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final departments = Provider.of<List<Department>?>(context);
     final userModel = Provider.of<UserModel>(context);
     final canCreate = userModel.role == UserRole.admin;
@@ -93,7 +95,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
-              title: const Text('All Departments'),
+              title: Text(l10n.allDepartmentsTitle),
               floating: true,
               pinned: true,
               snap: false,
@@ -110,7 +112,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Search for a department...',
+                        hintText: l10n.searchForDepartmentHint,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -276,7 +278,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
           ? FloatingActionButton.extended(
               onPressed: _addDepartment,
               icon: const Icon(Icons.add_rounded),
-              label: const Text("New Dept"),
+              label: Text(l10n.newDeptButton),
               backgroundColor: theme.colorScheme.primaryContainer,
               foregroundColor: theme.colorScheme.onPrimaryContainer,
             )

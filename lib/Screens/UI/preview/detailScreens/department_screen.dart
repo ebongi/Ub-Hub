@@ -7,6 +7,7 @@ import 'package:go_study/Screens/UI/preview/ComputerCourses/add_course_dialog.da
 import 'package:go_study/Screens/UI/preview/detailScreens/course_detail_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/course_material.dart';
 
 import 'package:go_study/services/course_model.dart';
@@ -99,6 +100,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
@@ -127,20 +129,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: const Text("Delete Department?"),
+                            title: Text(l10n.deleteDepartmentDialogTitle),
                             content: Text(
-                              "Are you sure you want to delete ${widget.departmentName}? This will delete all courses and materials within it. This action cannot be undone.",
+                              l10n.confirmDeleteDepartmentBody(widget.departmentName),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel"),
+                                child: Text(l10n.cancel),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
-                                  "Delete",
-                                  style: TextStyle(color: Colors.red),
+                                child: Text(
+                                  l10n.deleteButton,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               ),
                             ],
@@ -152,26 +154,26 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           );
                           if (mounted) {
                             Navigator.pop(context, true);
-                            ErrorHandler.showSuccessSnackBar(context, "Department deleted");
+                            ErrorHandler.showSuccessSnackBar(context, l10n.departmentDeletedMessage);
                           }
 
                         }
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.delete_outline_rounded,
                               color: Colors.red,
                               size: 20,
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
-                              "Delete Department",
-                              style: TextStyle(color: Colors.red),
+                              l10n.deleteDepartmentMenuItem,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ],
                         ),
@@ -219,26 +221,26 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     fontWeight: FontWeight.w500,
                     fontSize: context.dynamicText(13),
                   ),
-                  tabs: const [
+                  tabs: [
                     Tab(
-                      text: "About",
-                      icon: Icon(Icons.info_rounded, size: 20),
+                      text: l10n.aboutTabLabel,
+                      icon: const Icon(Icons.info_rounded, size: 20),
                     ),
                     Tab(
-                      text: "Courses",
-                      icon: Icon(Icons.school_rounded, size: 20),
+                      text: l10n.coursesTabLabel,
+                      icon: const Icon(Icons.school_rounded, size: 20),
                     ),
                     Tab(
-                      text: "Docs",
-                      icon: Icon(Icons.description_rounded, size: 20),
+                      text: l10n.docsTabLabel,
+                      icon: const Icon(Icons.description_rounded, size: 20),
                     ),
                     Tab(
-                      text: "PQ",
-                      icon: Icon(Icons.history_edu_rounded, size: 20),
+                      text: l10n.pqBadge,
+                      icon: const Icon(Icons.history_edu_rounded, size: 20),
                     ),
                     Tab(
-                      text: "Chat",
-                      icon: Icon(Icons.forum_rounded, size: 20),
+                      text: l10n.chatTabLabel,
+                      icon: const Icon(Icons.forum_rounded, size: 20),
                     ),
                   ],
                 ),
@@ -256,8 +258,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             _buildPastQuestionsTab(),
             ChatScreen(
               roomId: widget.departmentId,
-              title: "${widget.departmentName} Group",
-              subtitle: "Departmental Study Group",
+              title: l10n.departmentGroupTitle(widget.departmentName),
+              subtitle: l10n.departmentalStudyGroupSubtitle,
             ),
           ],
         ),
@@ -268,7 +270,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           ? FloatingActionButton.extended(
               onPressed: _showUploadSelection,
               icon: const Icon(Icons.add_rounded),
-              label: const Text("Upload"),
+              label: Text(l10n.uploadButton),
               backgroundColor: colorScheme.primaryContainer,
               foregroundColor: colorScheme.onPrimaryContainer,
             )
@@ -278,6 +280,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   Widget _buildAboutTab() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
@@ -318,7 +321,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "About Department",
+                        l10n.aboutDepartmentHeader,
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -340,7 +343,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            "Description",
+            l10n.descriptionHeader,
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -349,7 +352,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            "Details and descriptions about this department will appear here. Students can find general information, faculty details, and more.",
+            l10n.departmentDescriptionPlaceholder,
             style: GoogleFonts.outfit(
               fontSize: 15,
               color: colorScheme.onSurfaceVariant,
@@ -362,6 +365,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildCoursesTab() {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<Course>>(
       stream: _courseStream,
       builder: (context, snapshot) {
@@ -370,7 +374,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           return const CourseListShimmer();
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
         }
 
         final serverCourses = snapshot.data ?? [];
@@ -382,7 +386,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         final allCourses = [..._optimisticCourses, ...serverCourses];
 
         if (allCourses.isEmpty) {
-          return _buildEmptyState("No courses found!", _addCourse);
+          return _buildEmptyState(l10n.noCoursesFoundMessage, _addCourse);
         }
 
         final level200 = allCourses.where((c) => c.level == '200').toList();
@@ -396,28 +400,28 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           padding: const EdgeInsets.all(16),
           children: [
             if (level200.isNotEmpty) ...[
-              _buildLevelHeader("Level 200"),
+              _buildLevelHeader(l10n.levelHeader('200')),
               ...level200.asMap().entries.map(
                 (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
               ),
             ],
             if (level300.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildLevelHeader("Level 300"),
+              _buildLevelHeader(l10n.levelHeader('300')),
               ...level300.asMap().entries.map(
                 (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
               ),
             ],
             if (level400.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildLevelHeader("Level 400"),
+              _buildLevelHeader(l10n.levelHeader('400')),
               ...level400.asMap().entries.map(
                 (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
               ),
             ],
             if (others.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildLevelHeader("Other Courses"),
+              _buildLevelHeader(l10n.otherCoursesHeader),
               ...others.asMap().entries.map(
                 (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
               ),
@@ -445,6 +449,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   Widget _buildCourseTile(Course course, {double delay = 0}) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final isPending = course.id.startsWith('temp_');
@@ -520,20 +525,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: const Text("Delete Course?"),
+                            title: Text(l10n.deleteCourseDialogTitle),
                             content: Text(
-                              "Are you sure you want to delete ${course.name}? This cannot be undone.",
+                              l10n.confirmDeleteMaterialBody(course.name),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel"),
+                                child: Text(l10n.cancel),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
-                                  "Delete",
-                                  style: TextStyle(color: Colors.red),
+                                child: Text(
+                                  l10n.deleteButton,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               ),
                             ],
@@ -543,26 +548,26 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           await _dbService.deleteCourse(course.id);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Course deleted")),
+                              SnackBar(content: Text(l10n.courseDeletedMessage)),
                             );
                           }
                         }
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.delete_outline_rounded,
                               color: Colors.red,
                               size: 20,
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
-                              "Delete Course",
-                              style: TextStyle(color: Colors.red),
+                              l10n.deleteCourseMenuItem,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ],
                         ),
@@ -570,7 +575,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     ],
                   )
                 : IconButton(
-                    tooltip: "Course Materials",
+                    tooltip: l10n.courseMaterialsTooltip,
                     icon: Icon(
                       Icons.arrow_forward_rounded,
                       size: 18,
@@ -611,7 +616,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Text(
-            "No materials yet",
+            AppLocalizations.of(context)!.noMaterialsYetShort,
             style: GoogleFonts.outfit(
               fontSize: 13,
               fontStyle: FontStyle.italic,
@@ -649,7 +654,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             .toList();
 
         if (materials.isEmpty) {
-          return _buildEmptyState("No resources available", () {});
+          return _buildEmptyState(AppLocalizations.of(context)!.noResourcesAvailableMessage, () {});
         }
 
         return ListView.builder(
@@ -686,7 +691,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             .toList();
 
         if (questions.isEmpty) {
-          return _buildEmptyState("No past questions available", () {});
+          return _buildEmptyState(AppLocalizations.of(context)!.noPastQuestionsAvailableMessage, () {});
         }
 
         return ListView.builder(
@@ -755,7 +760,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         ),
                       ),
                       subtitle: Text(
-                        "Past Question • ${relatedAnswers.length} Answers",
+                        AppLocalizations.of(context)!.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: isDark ? Colors.white70 : Colors.black54,
@@ -774,7 +779,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Text(
-                              "No answers uploaded yet",
+                              AppLocalizations.of(context)!.noAnswersUploadedYet,
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 fontStyle: FontStyle.italic,
@@ -799,7 +804,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 ),
                               ),
                               subtitle: Text(
-                                "Verified Answer • ${FapshiService.getAnswerDownloadFee().toInt()} XAF",
+                                AppLocalizations.of(context)!.verifiedAnswerFeeSubtitle(FapshiService.getAnswerDownloadFee().toInt()),
                                 style: const TextStyle(fontSize: 11),
                               ),
                               trailing: IconButton(
@@ -826,20 +831,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildCategoryBadge(String category) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     String label;
     switch (category) {
       case 'past_question':
         color = Colors.orange;
-        label = "PQ";
+        label = l10n.pqBadge;
         break;
       case 'answer':
         color = Colors.green;
-        label = "ANS";
+        label = l10n.ansBadge;
         break;
       default:
         color = Colors.blue;
-        label = "DOC";
+        label = l10n.docBadge;
     }
 
     return Container(
@@ -861,6 +867,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildMaterialTile(CourseMaterial material) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
     final isPending = material.id.isEmpty || material.id.startsWith('temp_');
@@ -930,20 +937,20 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("Delete Material?"),
+                        title: Text(l10n.deleteMaterialDialogTitle),
                         content: Text(
-                          "Are you sure you want to delete ${material.title}? This cannot be undone.",
+                          l10n.confirmDeleteMaterialBody(material.title),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text("Cancel"),
+                            child: Text(l10n.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text(
-                              "Delete",
-                              style: TextStyle(color: Colors.red),
+                            child: Text(
+                              l10n.deleteButton,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ),
                         ],
@@ -953,7 +960,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                       await _dbService.deleteMaterial(material.id);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Material deleted")),
+                          SnackBar(content: Text(l10n.materialDeletedMessage)),
                         );
                       }
                     }
@@ -962,27 +969,27 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'download',
                     child: Row(
                       children: [
-                        Icon(Icons.download_rounded, size: 20),
-                        SizedBox(width: 8),
-                        Text("Download"),
+                        const Icon(Icons.download_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        Text(l10n.downloadMenuItem),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.delete_outline_rounded,
                           color: Colors.red,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
-                        Text("Delete", style: TextStyle(color: Colors.red)),
+                        const SizedBox(width: 8),
+                        Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -1014,6 +1021,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Future<void> _handleDownload(CourseMaterial material) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_userProfile != null &&
         SubscriptionService.canDownloadForFree(_userProfile!)) {
       await _secureForOffline(material);
@@ -1049,7 +1057,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     await showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Download",
+      barrierLabel: l10n.downloadTooltip,
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);
@@ -1066,9 +1074,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PremiumDialogHeader(
-                    title: "Download Material",
-                    subtitle: "Secure access to study resources",
+                  PremiumDialogHeader(
+                    title: l10n.downloadMaterialTitle,
+                    subtitle: l10n.secureAccessSubtitle,
                     icon: Icons.download_for_offline_rounded,
                   ),
                   Padding(
@@ -1093,7 +1101,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               ),
                             ),
                             child: Text(
-                              "To download \"${material.title}\" (${material.materialCategory.replaceAll('_', ' ')}), a fee of ${fee.toInt()} XAF is required.",
+                              l10n.downloadFeeNotice(material.title, material.materialCategory.replaceAll('_', ' '), fee.toInt()),
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 height: 1.5,
@@ -1105,13 +1113,13 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           const SizedBox(height: 24),
                           PremiumTextField(
                             controller: phoneController,
-                            label: "Payment Phone",
-                            hint: "6xxxxxxxx (MTN/Orange)",
+                            label: l10n.paymentPhoneLabel,
+                            hint: l10n.paymentPhoneHint,
                             icon: Icons.phone_android_rounded,
                             keyboardType: TextInputType.phone,
                             enabled: !isProcessing,
                             validator: (v) =>
-                                v == null || v.isEmpty ? "Required" : null,
+                                v == null || v.isEmpty ? l10n.requiredValidator : null,
                           ),
                           const SizedBox(height: 32),
                           Row(
@@ -1130,7 +1138,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                       ? null
                                       : () => Navigator.pop(context),
                                   child: Text(
-                                    "Cancel",
+                                    l10n.cancel,
                                     style: GoogleFonts.outfit(
                                       color: Colors.grey,
                                       fontWeight: FontWeight.bold,
@@ -1142,7 +1150,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               Expanded(
                                 flex: 2,
                                 child: PremiumSubmitButton(
-                                  label: "Pay & Download",
+                                  label: l10n.payAndDownloadButton,
                                   isLoading: isProcessing,
                                   onPressed: () async {
                                     if (!formKey.currentState!.validate()) {
@@ -1268,7 +1276,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       );
       if (mounted) {
         ErrorHandler.showSuccessSnackBar(
-            context, "Material secured for offline access! \u{1F512}");
+            context, AppLocalizations.of(context)!.materialSecuredOfflineMessage);
       }
 
     } catch (e) {
@@ -1291,6 +1299,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildEmptyState(String message, VoidCallback onAction) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: SingleChildScrollView(
@@ -1323,7 +1332,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              "Be the first to contribute to this department's resources!",
+              l10n.beFirstToContributeMessage,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 14,
@@ -1336,7 +1345,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               FilledButton.icon(
                 onPressed: _showUploadSelection,
                 icon: const Icon(Icons.add_rounded),
-                label: const Text("Add New"),
+                label: Text(l10n.addNewButton),
               ),
           ],
         ),
@@ -1345,9 +1354,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   void _showUploadSelection() {
+    final l10n = AppLocalizations.of(context)!;
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
-          context, 'Only contributors and admins can upload content.');
+          context, l10n.onlyContributorsCanUploadMessage);
       return;
     }
 
@@ -1385,7 +1395,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 if (_userProfile?.role == UserRole.admin)
                   ListTile(
                     leading: Icon(Icons.school_rounded, color: colorScheme.primary),
-                    title: const Text("Add New Course"),
+                    title: Text(l10n.addNewCourseMenuItem),
                     onTap: () {
                       Navigator.pop(context);
                       _addCourse();
@@ -1396,7 +1406,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     Icons.folder_shared_rounded,
                     color: colorScheme.primary,
                   ),
-                  title: const Text("Upload Department Resource"),
+                  title: Text(l10n.uploadDepartmentResourceMenuItem),
                   onTap: () {
                     Navigator.pop(context);
                     _showAddMaterialDialog(isDepartment: true);
@@ -1404,7 +1414,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 ),
                 ListTile(
                   leading: Icon(Icons.note_add_rounded, color: colorScheme.primary),
-                  title: const Text("Upload Course Material"),
+                  title: Text(l10n.uploadCourseMaterialMenuItem),
                   onTap: () async {
                     Navigator.pop(context);
                     final courses = await _dbService
@@ -1412,7 +1422,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         .first;
                     if (courses.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Add a course first!")),
+                        SnackBar(content: Text(l10n.addCourseFirstMessage)),
                       );
                       return;
                     }
@@ -1425,7 +1435,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     Icons.history_edu_rounded,
                     color: Colors.orange,
                   ),
-                  title: const Text("Upload Past Question"),
+                  title: Text(l10n.uploadPastQuestionMenuItem),
                   onTap: () async {
                     Navigator.pop(context);
                     final courses = await _dbService
@@ -1449,7 +1459,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     Icons.check_circle_rounded,
                     color: Colors.green,
                   ),
-                  title: const Text("Upload Answer"),
+                  title: Text(l10n.uploadAnswerMenuItem),
                   onTap: () async {
                     Navigator.pop(context);
                     final courses = await _dbService
@@ -1479,9 +1489,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     String? category,
     String? linkedId,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Select Course",
+      barrierLabel: l10n.selectCourseTitle,
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);
@@ -1499,9 +1510,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PremiumDialogHeader(
-                    title: "Select Course",
-                    subtitle: "Which course is this for?",
+                  PremiumDialogHeader(
+                    title: l10n.selectCourseTitle,
+                    subtitle: l10n.whichCourseSubtitle,
                     icon: Icons.book_rounded,
                   ),
                   Flexible(
@@ -1543,7 +1554,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             ),
                           ),
                           subtitle: Text(
-                            "Level ${course.level} • ${course.code}",
+                            l10n.courseLevelCodeSubtitle(course.level ?? '', course.code),
                             style: GoogleFonts.outfit(fontSize: 12),
                           ),
                           onTap: () {
@@ -1564,7 +1575,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(
-                        "Cancel",
+                        l10n.cancel,
                         style: GoogleFonts.outfit(
                           color: Colors.grey,
                           fontWeight: FontWeight.bold,
@@ -1588,6 +1599,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     String? initialQuestionId,
   }) {
     if (!(_userProfile?.canUploadMaterial ?? false)) return;
+    final l10n = AppLocalizations.of(context)!;
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -1597,7 +1609,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Add Material",
+      barrierLabel: l10n.addMaterialTitle,
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);
@@ -1616,10 +1628,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     PremiumDialogHeader(
-                      title: isDepartment ? "Dept Resource" : "Add Material",
+                      title: isDepartment ? l10n.deptResourceTitle : l10n.addMaterialTitle,
                       subtitle: isDepartment
-                          ? "Share faculty-wide documents"
-                          : "Add resources for ${course?.name ?? 'Course'}",
+                          ? l10n.shareFacultyWideDocsSubtitle
+                          : l10n.addResourcesForCourseSubtitle(course?.name ?? l10n.courseFallback),
                       icon: isDepartment
                           ? Icons.folder_shared_rounded
                           : Icons.note_add_rounded,
@@ -1655,7 +1667,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        "Course: ${course.name}",
+                                        l10n.courseLabelPrefix(course.name),
                                         style: GoogleFonts.outfit(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13,
@@ -1668,21 +1680,21 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               ),
                             PremiumDropdownField<String>(
                               value: selectedCategory,
-                              label: "Category",
-                              hint: "Select category",
+                              label: l10n.categoryLabel,
+                              hint: l10n.selectCategoryHint,
                               icon: Icons.category_rounded,
-                              items: const [
+                              items: [
                                 DropdownMenuItem(
                                   value: 'regular',
-                                  child: Text("General"),
+                                  child: Text(l10n.generalOption),
                                 ),
                                 DropdownMenuItem(
                                   value: 'past_question',
-                                  child: Text("Past Question"),
+                                  child: Text(l10n.pastQuestionOption),
                                 ),
                                 DropdownMenuItem(
                                   value: 'answer',
-                                  child: Text("Answer"),
+                                  child: Text(l10n.answerOption),
                                 ),
                               ],
                               onChanged: (v) {
@@ -1722,8 +1734,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                           [];
                                       return PremiumDropdownField<String>(
                                         value: selectedQuestionId,
-                                        label: "Link to Question",
-                                        hint: "Select the question",
+                                        label: l10n.linkToQuestionLabel,
+                                        hint: l10n.selectTheQuestionHint,
                                         icon: Icons.link_rounded,
                                         items: questions.map((q) {
                                           final c = coursesList
@@ -1746,7 +1758,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                         validator: (v) =>
                                             selectedCategory == 'answer' &&
                                                 v == null
-                                            ? "Required"
+                                            ? l10n.requiredValidator
                                             : null,
                                       );
                                     },
@@ -1757,17 +1769,17 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             const SizedBox(height: 16),
                             PremiumTextField(
                               controller: titleController,
-                              label: "Title",
-                              hint: "e.g. Exam Prep Notes",
+                              label: l10n.titleLabel,
+                              hint: l10n.resourceTitleHintExample,
                               icon: Icons.title_rounded,
                               validator: (v) =>
-                                  v == null || v.isEmpty ? "Required" : null,
+                                  v == null || v.isEmpty ? l10n.requiredValidator : null,
                             ),
                             const SizedBox(height: 16),
                             PremiumTextField(
                               controller: descriptionController,
-                              label: "Description (Optional)",
-                              hint: "Brief details about the resource",
+                              label: l10n.descriptionOptionalLabel,
+                              hint: l10n.briefResourceDetailsHint,
                               icon: Icons.notes_rounded,
                               maxLines: 2,
                             ),
@@ -1816,7 +1828,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     Text(
                                       result != null
                                           ? result!.files.single.name
-                                          : "Select Resource File",
+                                          : l10n.selectResourceFileLabel,
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.outfit(
                                         fontWeight: FontWeight.bold,
@@ -1828,8 +1840,8 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     ),
                                     Text(
                                       result != null
-                                          ? "Ready for upload"
-                                          : "PDF, DOC, or Images only",
+                                          ? l10n.readyForUploadLabel
+                                          : l10n.pdfDocImagesOnlyHint,
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
                                         color: isDark
@@ -1856,7 +1868,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     ),
                                     onPressed: () => Navigator.pop(context),
                                     child: Text(
-                                      "Cancel",
+                                      l10n.cancel,
                                       style: GoogleFonts.outfit(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
@@ -1868,7 +1880,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 Expanded(
                                   flex: 2,
                                   child: PremiumSubmitButton(
-                                    label: "Upload Resource",
+                                    label: l10n.uploadResourceButton,
                                     isLoading: false,
                                     onPressed: result == null
                                         ? null
@@ -1986,7 +1998,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ErrorHandler.showSuccessSnackBar(context, "Upload successful!");
+        ErrorHandler.showSuccessSnackBar(context, AppLocalizations.of(context)!.uploadSuccessfulMessage);
       }
     } catch (e) {
       if (mounted) {
@@ -1999,7 +2011,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   void _addCourse() {
     if (_userProfile?.role != UserRole.admin) {
       ErrorHandler.showErrorSnackBar(
-          context, 'Only administrators can add new courses.');
+          context, AppLocalizations.of(context)!.onlyAdminsCanAddCoursesMessage);
       return;
     }
 
@@ -2016,6 +2028,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   }
 
   Widget _buildUgcGuidelinesCard(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = theme.colorScheme.primary;
 
@@ -2041,7 +2054,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
               ),
               const SizedBox(width: 8),
               Text(
-                "Community Contribution Code",
+                l10n.communityContributionCodeTitle,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -2053,19 +2066,19 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           const SizedBox(height: 12),
           _buildGuidelineItem(
             Icons.done_all_rounded,
-            "Ensure content is readable, correct, and fit for study.",
+            l10n.guidelineReadableContent,
             theme,
           ),
           const SizedBox(height: 8),
           _buildGuidelineItem(
             Icons.find_in_page_rounded,
-            "Check if this resource is already uploaded.",
+            l10n.guidelineCheckDuplicate,
             theme,
           ),
           const SizedBox(height: 8),
           _buildGuidelineItem(
             Icons.school_rounded,
-            "Upload only academic and educational materials.",
+            l10n.guidelineAcademicOnly,
             theme,
           ),
         ],

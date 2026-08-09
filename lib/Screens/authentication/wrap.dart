@@ -69,6 +69,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 freeDownloadCount: profile.freeDownloadCount,
                 aiCredits: profile.aiCredits,
                 createdAt: profile.createdAt,
+                trialUsed: profile.trialUsed,
+                isTrialSubscription: profile.isTrialSubscription,
+                aiSubscriptionExpiry: profile.aiSubscriptionExpiry,
               );
             });
           },

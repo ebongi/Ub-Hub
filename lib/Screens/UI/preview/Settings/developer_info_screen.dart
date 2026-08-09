@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DeveloperInfoScreen extends StatefulWidget {
@@ -39,6 +40,7 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -48,7 +50,7 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "Developer Info",
+          l10n.developerInfoTitle,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : Colors.black87,
@@ -118,7 +120,7 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Lead Developer @ Jovial Laps",
+                    l10n.leadDeveloperAtJovialLaps,
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       color: theme.colorScheme.primary,
@@ -131,37 +133,37 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
             const SizedBox(height: 48),
 
             // Engineering Details
-            _buildSection(context, "Engineering Details", [
+            _buildSection(context, l10n.engineeringDetailsSection, [
               _buildInfoTile(
                 context,
                 Iconsax.info_circle,
-                "App Version",
+                l10n.appVersionLabel,
                 _version,
               ),
               _buildInfoTile(
                 context,
                 Iconsax.code,
-                "Build Number",
+                l10n.buildNumberLabel,
                 _buildNumber,
               ),
-              _buildInfoTile(context, Iconsax.box, "Framework", "Flutter 3.4"),
+              _buildInfoTile(context, Iconsax.box, l10n.frameworkLabel, "Flutter 3.4"),
             ]),
             const SizedBox(height: 24),
 
             // Connect Section
-            _buildSection(context, "Connect", [
+            _buildSection(context, l10n.connectSection, [
               _buildLinkTile(
                 context,
                 Iconsax.global,
-                "GitHub",
+                l10n.githubLabel,
                 "ebongi",
                 () => _launchURL("https://github.com/ebongi"),
               ),
               _buildLinkTile(
                 context,
                 Iconsax.link,
-                "LinkedIn",
-                "Professional Profile",
+                l10n.linkedinLabel,
+                l10n.professionalProfileSubtitle,
                 () => _launchURL(
                   "https://www.linkedin.com/in/ebong-sume-4b0816298",
                 ),
@@ -169,14 +171,14 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
               _buildLinkTile(
                 context,
                 Iconsax.message_text,
-                "Contact Email",
+                l10n.contactEmailLabel,
                 "sumeebong7@gmail.com",
                 () => _launchURL("mailto:sumeebong7@gmail.com"),
               ),
               _buildLinkTile(
                 context,
                 Iconsax.call,
-                "Direct Line",
+                l10n.directLineLabel,
                 "+237 682397481",
                 () => _launchURL("tel:682397481"),
               ),
@@ -184,7 +186,7 @@ class _DeveloperInfoScreenState extends State<DeveloperInfoScreen> {
 
             const SizedBox(height: 56),
             Text(
-              "Built with ❤️ for UB Students",
+              l10n.builtWithLoveForUbStudents,
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 color: Colors.grey.withOpacity(0.8),

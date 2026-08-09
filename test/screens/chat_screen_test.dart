@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -40,6 +42,13 @@ void main() {
     return ChangeNotifierProvider<UserModel>(
       create: (_) => UserModel(name: 'Test User'),
       child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: ChatScreen(
           chatService: mockChatService,
           currentUserId: 'test_user_id',

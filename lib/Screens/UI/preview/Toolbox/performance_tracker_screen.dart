@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/grade_model.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
@@ -43,6 +44,27 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
   double _targetGPA = 3.5;
   int _plannedCredits = 15;
 
+  // Stable codes stored on UserGrade — never translated. Only their
+  // displayed labels (via _semesterDisplayName) are localized.
+  static const List<String> _semesterCodes = [
+    "First Semester",
+    "Second Semester",
+    "Resit",
+  ];
+
+  String _semesterDisplayName(AppLocalizations l10n, String? code) {
+    switch (code) {
+      case "First Semester":
+        return l10n.firstSemester;
+      case "Second Semester":
+        return l10n.secondSemester;
+      case "Resit":
+        return l10n.academicLevelResit;
+      default:
+        return code ?? l10n.unknownSemester;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -80,11 +102,12 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Performance Tracker",
+          l10n.performanceTrackerTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -95,8 +118,8 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
                   : Icons.auto_graph_rounded,
             ),
             tooltip: _isPredictionMode
-                ? "Switch to List"
-                : "Switch to Predictor",
+                ? l10n.switchToListTooltip
+                : l10n.switchToPredictorTooltip,
             onPressed: () =>
                 setState(() => _isPredictionMode = !_isPredictionMode),
           ),
@@ -114,12 +137,12 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSummaryCard(currentGPA, totalCredits, colorScheme),
+                _buildSummaryCard(currentGPA, totalCredits, colorScheme, l10n),
                 const SizedBox(height: 30),
                 if (_isPredictionMode)
-                  _buildPredictorView(currentGPA, totalCredits, colorScheme)
+                  _buildPredictorView(currentGPA, totalCredits, colorScheme, l10n)
                 else
-                  _buildGradesListView(colorScheme),
+                  _buildGradesListView(colorScheme, l10n),
               ],
             ),
           );
@@ -128,14 +151,15 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
       floatingActionButton: !_isPredictionMode
           ? FloatingActionButton.extended(
               onPressed: () => _showAddGradeDialog(),
-              label: const Text("Add Grade"),
+              label: Text(l10n.addGradeButton),
               icon: const Icon(Icons.add),
             )
           : null,
     );
   }
 
-  Widget _buildSummaryCard(double gpa, int credits, ColorScheme colorScheme) {
+  Widget _buildSummaryCard(
+      double gpa, int credits, ColorScheme colorScheme, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -148,13 +172,13 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStat(
-            "Current GPA",
+            l10n.currentGpaLabel,
             gpa.toStringAsFixed(2),
             colorScheme.primary,
           ),
           Container(width: 1, height: 40, color: colorScheme.outlineVariant),
           _buildStat(
-            "Total Credits",
+            l10n.totalCreditsLabel,
             credits.toString(),
             colorScheme.secondary,
           ),
@@ -187,6 +211,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
     double currentGPA,
     int currentCredits,
     ColorScheme colorScheme,
+    AppLocalizations l10n,
   ) {
     // Logic: (CurrentPoints + RequiredPoints) / (CurrentCredits + PlannedCredits) = TargetGPA
     // RequiredPoints = TargetGPA * (CurrentCredits + PlannedCredits) - CurrentPoints
@@ -203,10 +228,10 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
     Color adviceColor = colorScheme.primary;
 
     if (avgRequiredGrade > 4.0) {
-      advice = "Mathematically impossible this semester. Try a lower target.";
+      advice = l10n.adviceImpossibleTarget;
       adviceColor = Colors.red;
     } else if (avgRequiredGrade < 1.0) {
-      advice = "You're doing great! Even a low grade will maintain your goal.";
+      advice = l10n.adviceOnTrack;
       adviceColor = Colors.green;
     } else {
       String grade = "C";
@@ -218,26 +243,26 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
         grade = "B";
       else if (avgRequiredGrade >= 2.7)
         grade = "B-";
-      advice = "You need an average of $grade to reach $_targetGPA.";
+      advice = l10n.adviceNeedAverage(grade, _targetGPA.toString());
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Grade Predictor",
+          l10n.gradePredictorTitle,
           style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         _buildPredictorSlider(
-          "Target GPA",
+          l10n.targetGpaLabel,
           _targetGPA,
           1.0,
           4.0,
           (val) => setState(() => _targetGPA = val),
         ),
         _buildPredictorSlider(
-          "Planned Credits",
+          l10n.plannedCreditsLabel,
           _plannedCredits.toDouble(),
           1,
           30,
@@ -296,7 +321,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
     );
   }
 
-  Widget _buildGradesListView(ColorScheme colorScheme) {
+  Widget _buildGradesListView(ColorScheme colorScheme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -304,7 +329,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Semester Results",
+              l10n.semesterResultsTitle,
               style: GoogleFonts.outfit(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -312,7 +337,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
             ),
             if (_savedGrades.isNotEmpty)
               Text(
-                "${_savedGrades.length} Courses",
+                l10n.coursesCount(_savedGrades.length),
                 style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
               ),
           ],
@@ -323,7 +348,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
             child: Padding(
               padding: const EdgeInsets.all(40),
               child: Text(
-                "No grades saved yet. Use the '+' button to add your results.",
+                l10n.noGradesSavedYet,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(color: Colors.grey),
               ),
@@ -353,7 +378,8 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    "${grade.credits} Credits • ${grade.semester ?? 'Unknown Semester'}",
+                    l10n.creditsAndSemester(
+                        grade.credits, _semesterDisplayName(l10n, grade.semester)),
                     style: GoogleFonts.outfit(fontSize: 12),
                   ),
                   trailing: Container(
@@ -384,6 +410,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
   }
 
   void _showAddGradeDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     int credits = 3;
     String grade = 'A';
@@ -391,7 +418,7 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
 
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Add Result",
+      barrierLabel: l10n.addResultDialogTitle,
       child: StatefulBuilder(
         builder: (context, setDialogState) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -406,9 +433,9 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const PremiumDialogHeader(
-                    title: "Add Result",
-                    subtitle: "Record your academic success",
+                  PremiumDialogHeader(
+                    title: l10n.addResultDialogTitle,
+                    subtitle: l10n.addResultDialogSubtitle,
                     icon: Icons.grade_rounded,
                   ),
                   Padding(
@@ -417,15 +444,15 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
                       children: [
                         PremiumTextField(
                           controller: nameController,
-                          label: "Course Name",
-                          hint: "e.g. CSC 201",
+                          label: l10n.courseNameLabel,
+                          hint: l10n.courseNameHint,
                           icon: Icons.book_rounded,
                         ),
                         const SizedBox(height: 16),
                         PremiumDropdownField<int>(
                           value: credits,
-                          label: "Credits",
-                          hint: "Select credits",
+                          label: l10n.creditsLabel,
+                          hint: l10n.selectCreditsHint,
                           icon: Icons.numbers_rounded,
                           items: [1, 2, 3, 4, 6]
                               .map(
@@ -440,8 +467,8 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
                         const SizedBox(height: 16),
                         PremiumDropdownField<String>(
                           value: grade,
-                          label: "Grade",
-                          hint: "Select grade",
+                          label: l10n.gradeLabel,
+                          hint: l10n.selectGradeHint,
                           icon: Icons.star_rounded,
                           items: _gradePoints.keys
                               .map((e) =>
@@ -452,18 +479,18 @@ class _PerformanceTrackerScreenState extends State<PerformanceTrackerScreen> {
                         const SizedBox(height: 16),
                         PremiumDropdownField<String>(
                           value: semester,
-                          label: "Semester",
-                          hint: "Select semester",
+                          label: l10n.semesterLabel,
+                          hint: l10n.selectSemesterHint,
                           icon: Icons.calendar_today_rounded,
-                          items: ["First Semester", "Second Semester", "Resit"]
-                              .map((e) =>
-                                  DropdownMenuItem(value: e, child: Text(e)))
+                          items: _semesterCodes
+                              .map((e) => DropdownMenuItem(
+                                  value: e, child: Text(_semesterDisplayName(l10n, e))))
                               .toList(),
                           onChanged: (v) => setDialogState(() => semester = v!),
                         ),
                         const SizedBox(height: 32),
                         PremiumSubmitButton(
-                          label: "Save Result",
+                          label: l10n.saveResultButton,
                           isLoading: false,
                           onPressed: () async {
                             if (nameController.text.isEmpty) return;

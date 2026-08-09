@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 
 import 'package:html_unescape/html_unescape.dart';
@@ -31,6 +32,7 @@ class _QuestionsState extends State<Questions> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Scaffold(
         body: FutureBuilder<Map<String, dynamic>>(
@@ -42,7 +44,7 @@ class _QuestionsState extends State<Questions> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text("Loading..."),
+                    Text(l10n.loadingLabel),
                     SizedBox(height: 10),
                     CircularProgressIndicator(color: Colors.blue),
                   ],
@@ -70,7 +72,7 @@ class _QuestionsState extends State<Questions> {
                       ElevatedButton.icon(
                         onPressed: _loadQuestions,
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text("Try Again"),
+                        label: Text(l10n.tryAgainButton),
                       ),
                     ],
                   ),
@@ -78,7 +80,7 @@ class _QuestionsState extends State<Questions> {
               );
             } else if (!snapshot.hasData || snapshot.data!['results'] == null) {
 
-              return const Center(child: Text('No questions found.'));
+              return Center(child: Text(l10n.noQuestionsFound));
             }
 
             final results = snapshot.data!['results'] as List;
@@ -101,7 +103,7 @@ class _QuestionsState extends State<Questions> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      'Correct Answer: ${_unescape.convert(question['correct_answer'] as String)}',
+                      l10n.correctAnswerLabel(_unescape.convert(question['correct_answer'] as String)),
                       style: const TextStyle(color: Colors.green),
                     ),
                   ),
@@ -113,7 +115,7 @@ class _QuestionsState extends State<Questions> {
         floatingActionButton: FloatingActionButton.extended(
           backgroundColor: theme.primaryColor,
           onPressed: _loadQuestions,
-          label: const Text("Reload"),
+          label: Text(l10n.reloadButton),
           icon: Icon(Icons.refresh, color: Colors.blue.shade900),
         ),
       ),

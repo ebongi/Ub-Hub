@@ -7,6 +7,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/create_exam_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class ExamDetailScreen extends StatelessWidget {
   final ExamEvent exam;
@@ -15,6 +16,7 @@ class ExamDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final startStr = DateFormat('dd-MMM-yyyy HH:mm:ss').format(exam.startTime);
     final endStr = DateFormat('dd-MMM-yyyy HH:mm:ss').format(exam.endTime);
@@ -23,7 +25,7 @@ class ExamDetailScreen extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Events Calendar",
+          l10n.eventsCalendarTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -45,18 +47,18 @@ class ExamDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailItem("Event ID", exam.id.substring(0, 8).toUpperCase()),
-            _buildDetailItem("Event Name", exam.name),
-            _buildDetailItem("Event Category", exam.category),
+            _buildDetailItem(l10n.eventIdLabel, exam.id.substring(0, 8).toUpperCase()),
+            _buildDetailItem(l10n.eventNameLabel, exam.name),
+            _buildDetailItem(l10n.eventCategoryLabel, exam.category),
             _buildDetailItem(
-              "Description",
-              exam.description ?? "No description provided.",
+              l10n.descriptionLabel,
+              exam.description ?? l10n.noDescriptionProvided,
             ),
-            _buildDetailItem("Venue", exam.venue ?? "TBD"),
-            _buildDetailItem("Event Start Time", startStr),
-            _buildDetailItem("Event End Time", endStr),
+            _buildDetailItem(l10n.venueLabel, exam.venue ?? l10n.tbdValue),
+            _buildDetailItem(l10n.eventStartTimeLabel, startStr),
+            _buildDetailItem(l10n.eventEndTimeLabel, endStr),
             _buildDetailItem(
-              "Event Status",
+              l10n.eventStatusLabel,
               exam.status.toUpperCase(),
               color: Colors.green,
             ),
@@ -64,7 +66,7 @@ class ExamDetailScreen extends StatelessWidget {
             if (exam.imageUrl != null) ...[
               const SizedBox(height: 24),
               Text(
-                "Event Image",
+                l10n.eventImageLabel,
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   color: Colors.grey,
@@ -91,7 +93,7 @@ class ExamDetailScreen extends StatelessWidget {
               child: TextButton(
                 onPressed: () {},
                 child: Text(
-                  "Add Comment",
+                  l10n.addCommentButton,
                   style: GoogleFonts.outfit(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -134,9 +136,10 @@ class ExamDetailScreen extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Delete Event",
+      barrierLabel: l10n.deleteEventTitle,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -148,9 +151,9 @@ class ExamDetailScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const PremiumDialogHeader(
-              title: "Delete Event",
-              subtitle: "This action cannot be undone",
+            PremiumDialogHeader(
+              title: l10n.deleteEventTitle,
+              subtitle: l10n.deleteChatDialogSubtitle,
               icon: Icons.delete_forever_rounded,
             ),
             Padding(
@@ -158,7 +161,7 @@ class ExamDetailScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    "Are you sure you want to delete this event? All associated data will be permanently removed.",
+                    l10n.confirmDeleteEventBody,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: 15,
@@ -174,7 +177,7 @@ class ExamDetailScreen extends StatelessWidget {
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -186,7 +189,7 @@ class ExamDetailScreen extends StatelessWidget {
                       Expanded(
                         flex: 2,
                         child: PremiumSubmitButton(
-                          label: "Delete Now",
+                          label: l10n.deleteNowButton,
                           isLoading: false,
                           onPressed: () async {
                             final user =

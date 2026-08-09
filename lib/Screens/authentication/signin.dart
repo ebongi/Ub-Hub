@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
 
 // ── Design tokens ────────────────────────────────────────────────────────────
@@ -258,11 +259,12 @@ class _SignInHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Welcome back',
+          l10n.signInWelcomeBack,
           style: GoogleFonts.outfit(
             fontSize: 30,
             fontWeight: FontWeight.w800,
@@ -273,7 +275,7 @@ class _SignInHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Sign in to continue your academic journey.',
+          l10n.signInSubtitle,
           style: GoogleFonts.outfit(
             fontSize: 14.5,
             color: _bodyColor(isDark),
@@ -308,6 +310,7 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -330,15 +333,15 @@ class _FormCard extends StatelessWidget {
             duration: const Duration(milliseconds: 350),
             delay: const Duration(milliseconds: 50),
             child: _EduField(
-              label: 'Email address',
-              hint: 'you@university.edu',
+              label: l10n.emailAddressLabel,
+              hint: l10n.emailAddressHint,
               icon: Icons.alternate_email_rounded,
               controller: emailController,
               isDark: isDark,
               keyboardType: TextInputType.emailAddress,
               validator: (v) {
                 if (v == null || v.isEmpty) {
-                  return 'Please enter your email';
+                  return l10n.pleaseEnterEmail;
                 }
                 return null;
               },
@@ -352,7 +355,7 @@ class _FormCard extends StatelessWidget {
             duration: const Duration(milliseconds: 350),
             delay: const Duration(milliseconds: 120),
             child: _EduField(
-              label: 'Password',
+              label: l10n.passwordLabel,
               hint: '••••••••',
               icon: Icons.lock_outline_rounded,
               controller: passwordController,
@@ -369,7 +372,7 @@ class _FormCard extends StatelessWidget {
                 ),
               ),
               validator: (v) =>
-                  v == null || v.length < 6 ? 'Minimum 6 characters' : null,
+                  v == null || v.length < 6 ? l10n.minimumSixCharacters : null,
             ),
           ),
 
@@ -389,7 +392,7 @@ class _FormCard extends StatelessWidget {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
-                  'Forgot password?',
+                  l10n.forgotPassword,
                   style: GoogleFonts.outfit(
                     fontSize: 13,
                     color: _indigo,
@@ -407,7 +410,7 @@ class _FormCard extends StatelessWidget {
             duration: const Duration(milliseconds: 350),
             delay: const Duration(milliseconds: 230),
             child: _PrimaryButton(
-              label: 'Sign In',
+              label: l10n.signInButton,
               isLoading: isLoading,
               onPressed: onSignIn,
             ),
@@ -576,6 +579,7 @@ class _SignInFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // OR divider
@@ -590,7 +594,7 @@ class _SignInFooter extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
-                'OR',
+                l10n.orDivider,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
                   color: _bodyColor(isDark),
@@ -616,7 +620,7 @@ class _SignInFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "Don't have an account?",
+                l10n.noAccountPrompt,
                 style: GoogleFonts.outfit(
                   color: _bodyColor(isDark),
                   fontSize: 14.5,
@@ -626,7 +630,7 @@ class _SignInFooter extends StatelessWidget {
               GestureDetector(
                 onTap: () => onToggle(),
                 child: Text(
-                  'Sign Up',
+                  l10n.signUpLink,
                   style: GoogleFonts.outfit(
                     color: _indigo,
                     fontWeight: FontWeight.w700,

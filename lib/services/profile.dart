@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 enum UserRole {
   viewer,
@@ -59,6 +60,9 @@ class UserProfile {
   final String? institutionId;
   final String? bio;
   final String? department;
+  final bool trialUsed;
+  final bool isTrialSubscription;
+  final DateTime? aiSubscriptionExpiry;
 
   UserProfile({
     required this.id,
@@ -77,6 +81,9 @@ class UserProfile {
     this.institutionId,
     this.bio,
     this.department,
+    this.trialUsed = false,
+    this.isTrialSubscription = false,
+    this.aiSubscriptionExpiry,
   });
 
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
@@ -111,6 +118,11 @@ class UserProfile {
       institutionId: json['institution_id'],
       bio: json['bio'],
       department: json['department'],
+      trialUsed: json['trial_used'] ?? false,
+      isTrialSubscription: json['subscription_is_trial'] ?? false,
+      aiSubscriptionExpiry: json['ai_subscription_expiry'] != null
+          ? DateTime.parse(json['ai_subscription_expiry'])
+          : null,
     );
   }
 
@@ -132,16 +144,31 @@ class UserProfile {
       'institution_id': institutionId,
       'bio': bio,
       'department': department,
+      'trial_used': trialUsed,
+      'subscription_is_trial': isTrialSubscription,
+      'ai_subscription_expiry': aiSubscriptionExpiry?.toIso8601String(),
     };
   }
 
   bool get isSubscribed => true; // Always treat as subscribed/active in free community beta
 
-  bool get isTrialActive => false; // Disable trial countdowns entirely for free version
+  /// True while the current App Plan period (subscription_tier/subscription_expiry)
+  /// is the free trial month, rather than a paid period.
+  bool get isTrialActive =>
+      isTrialSubscription &&
+      subscriptionExpiry != null &&
+      subscriptionExpiry!.isAfter(DateTime.now());
 
-  int get trialDaysRemaining => 0;
+  int get trialDaysRemaining {
+    if (!isTrialActive) return 0;
+    return subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+  }
 
-  String get trialTimeLeft => "Unlimited";
+  String trialTimeLeft(AppLocalizations l10n) {
+    if (!isTrialActive) return l10n.unlimitedLabel;
+    final days = trialDaysRemaining;
+    return days > 0 ? l10n.daysRemainingLabel(days) : l10n.endingTodayLabel;
+  }
 
   bool get hasUnlimitedDownloads => true; // Everyone gets unlimited downloads
 
@@ -153,18 +180,20 @@ class UserProfile {
   /// In the free community version, access is granted unconditionally to all users.
   bool get hasAccess => true;
 
+  /// True while a separately-purchased Unlimited AI subscription is active.
+  /// Independent of the App Plan's subscriptionTier/subscriptionExpiry, so
+  /// the App Plan's free trial month never grants free AI.
+  bool get hasUnlimitedAI =>
+      aiSubscriptionExpiry != null && aiSubscriptionExpiry!.isAfter(DateTime.now());
+
   /// AI Access Logic
   bool get canUseAI {
     // Admins have unlimited access
     if (role == UserRole.admin) return true;
-    
-    // Check for active unlimited subscription
-    if (subscriptionTier != SubscriptionTier.free) {
-      if (subscriptionExpiry != null && subscriptionExpiry!.isAfter(DateTime.now())) {
-        return true;
-      }
-    }
-    
+
+    // Check for an active, separately-purchased Unlimited AI subscription
+    if (hasUnlimitedAI) return true;
+
     // Otherwise check credits
     return aiCredits > 0;
   }

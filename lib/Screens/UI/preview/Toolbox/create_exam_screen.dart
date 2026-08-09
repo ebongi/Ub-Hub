@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CreateExamScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
 
   bool _isLoading = false;
 
-  final List<String> _categories = [
+  static const List<String> _categories = [
     'Midterm',
     'Final',
     'Quiz',
@@ -36,6 +37,25 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
     'Practical',
     'Presentation',
   ];
+
+  String _categoryDisplayName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case 'Midterm':
+        return l10n.categoryMidterm;
+      case 'Final':
+        return l10n.categoryFinal;
+      case 'Quiz':
+        return l10n.categoryQuiz;
+      case 'Assignment':
+        return l10n.categoryAssignment;
+      case 'Practical':
+        return l10n.categoryPractical;
+      case 'Presentation':
+        return l10n.categoryPresentation;
+      default:
+        return code;
+    }
+  }
 
   @override
   void initState() {
@@ -100,6 +120,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
 
   Future<void> _saveExam() async {
     if (_formKey.currentState!.validate()) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() => _isLoading = true);
 
       final start = DateTime(
@@ -143,9 +164,11 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
         // Schedule notification for the exam
         await NotificationService().scheduleNotification(
           id: examEvent.hashCode,
-          title: "Upcoming Exam: ${examEvent.name}",
-          body:
-              "Venue: ${examEvent.venue ?? 'TBD'} @ ${DateFormat('HH:mm').format(examEvent.startTime)}",
+          title: l10n.upcomingExamNotificationTitle(examEvent.name),
+          body: l10n.examVenueTimeNotificationBody(
+            examEvent.venue ?? l10n.tbdValue,
+            DateFormat('HH:mm').format(examEvent.startTime),
+          ),
           scheduledDate: examEvent.startTime.subtract(
             const Duration(minutes: 30),
           ), // 30 mins before
@@ -167,12 +190,13 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          widget.exam == null ? "Create New Event" : "Edit Event",
+          widget.exam == null ? l10n.createNewEventTitle : l10n.editEventTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
@@ -188,28 +212,31 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildDropdownField(
-                label: "Event Category",
+                l10n: l10n,
+                label: l10n.eventCategoryLabel,
                 value: _category,
                 items: _categories,
                 onChanged: (val) => setState(() => _category = val!),
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: "Event Name",
+                l10n: l10n,
+                label: l10n.eventNameLabel,
                 controller: _nameController,
-                hint: "e.g. Computer Science Final",
+                hint: l10n.eventNameHintExample,
                 required: true,
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: "Venue",
+                l10n: l10n,
+                label: l10n.venueLabel,
                 controller: _venueController,
-                hint: "e.g. Amphi 700",
+                hint: l10n.venueHintExample,
                 required: true,
               ),
               const SizedBox(height: 20),
               _buildDateTimePicker(
-                label: "Event Start Time",
+                label: l10n.eventStartTimeLabel,
                 date: _startDate,
                 time: _startTime,
                 onDateTap: () => _selectDate(context, true),
@@ -217,7 +244,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
               ),
               const SizedBox(height: 20),
               _buildDateTimePicker(
-                label: "Event End Time",
+                label: l10n.eventEndTimeLabel,
                 date: _endDate,
                 time: _endTime,
                 onDateTap: () => _selectDate(context, false),
@@ -225,9 +252,10 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: "Event Description",
+                l10n: l10n,
+                label: l10n.eventDescriptionLabel,
                 controller: _descriptionController,
-                hint: "Add any additional details...",
+                hint: l10n.addAdditionalDetailsHint,
                 maxLines: 3,
               ),
               const SizedBox(height: 40),
@@ -247,7 +275,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          "Submit",
+                          l10n.submitButton,
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -263,6 +291,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   }
 
   Widget _buildTextField({
+    required AppLocalizations l10n,
     required String label,
     required TextEditingController controller,
     String? hint,
@@ -291,7 +320,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
             ),
           ),
           validator: required
-              ? (value) => value == null || value.isEmpty ? "Required" : null
+              ? (value) => value == null || value.isEmpty ? l10n.requiredValidator : null
               : null,
         ),
       ],
@@ -299,6 +328,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   }
 
   Widget _buildDropdownField({
+    required AppLocalizations l10n,
     required String label,
     required String value,
     required List<String> items,
@@ -315,7 +345,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
               .map(
                 (e) => DropdownMenuItem(
                   value: e,
-                  child: Text(e, style: GoogleFonts.outfit()),
+                  child: Text(_categoryDisplayName(l10n, e), style: GoogleFonts.outfit()),
                 ),
               )
               .toList(),

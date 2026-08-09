@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
@@ -64,10 +65,11 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
             } else {
               _timer?.cancel();
               _isRunning = false;
+              final l10n = AppLocalizations.of(context)!;
               NotificationService().showAlert(
                 id: 888,
-                title: "Focus Complete!",
-                body: "Great job! Take a short break.",
+                title: l10n.focusCompleteNotifTitle,
+                body: l10n.focusCompleteNotifBody,
               );
             }
           });
@@ -118,6 +120,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(
         context,
@@ -127,7 +130,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          "Focus Mode",
+          l10n.focusModeTitle,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).textTheme.titleLarge?.color,
@@ -138,7 +141,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
           IconButton(
             onPressed: _showSettings,
             icon: const Icon(Icons.tune_rounded),
-            tooltip: "Settings",
+            tooltip: l10n.settingsTooltip,
           ),
           const SizedBox(width: 8),
         ],
@@ -266,7 +269,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _isRunning ? "FOCUSING" : "IDLE",
+                              _isRunning ? l10n.focusStatusFocusing : l10n.focusStatusIdle,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 letterSpacing: 4,
@@ -316,7 +319,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                       icon: _isRunning
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded,
-                      label: _isRunning ? "PAUSE" : "ENGAGE",
+                      label: _isRunning ? l10n.focusPause : l10n.focusEngage,
                       isPrimary: true,
                     ),
                     const SizedBox(width: 24),
@@ -324,7 +327,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen>
                       context,
                       onPressed: _resetTimer,
                       icon: Icons.refresh_rounded,
-                      label: "RESET",
+                      label: l10n.focusReset,
                       isPrimary: false,
                     ),
                   ],
@@ -419,6 +422,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -452,7 +456,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Customize Timer",
+                l10n.customizeTimerTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -469,7 +473,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
           ),
           const SizedBox(height: 32),
           Text(
-            "QUICK PRESETS",
+            l10n.quickPresetsLabel,
             style: GoogleFonts.outfit(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -492,7 +496,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "CUSTOM DURATION",
+                l10n.customDurationLabel,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -501,7 +505,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
                 ),
               ),
               Text(
-                "$_duration min",
+                l10n.durationMinutes(_duration),
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -532,7 +536,7 @@ class _FocusSettingsSheetState extends State<_FocusSettingsSheet> {
           ),
           const SizedBox(height: 40),
           PremiumSubmitButton(
-            label: "Apply & Close",
+            label: l10n.applyAndClose,
             isLoading: false,
             onPressed: () => Navigator.pop(context),
           ),

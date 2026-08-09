@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -105,13 +106,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Find Friends',
+          l10n.findFriendsTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -126,7 +128,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               onChanged: _search,
               style: GoogleFonts.outfit(fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'Search by name…',
+                hintText: l10n.searchByNameHint,
                 hintStyle: GoogleFonts.outfit(
                   color: theme.colorScheme.onSurface.withOpacity(0.4),
                 ),
@@ -162,8 +164,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       const SizedBox(height: 16),
                       Text(
                         _searchController.text.isEmpty
-                            ? 'Search for students to add'
-                            : 'No users found',
+                            ? l10n.searchForStudentsToAdd
+                            : l10n.noUsersFound,
                         style: GoogleFonts.outfit(
                           color: theme.colorScheme.onSurface.withOpacity(0.4),
                           fontSize: 16,
@@ -206,11 +208,12 @@ class _UserSearchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Widget actionWidget;
     switch (status) {
       case 'accepted':
         actionWidget = Chip(
-          label: Text('Friends',
+          label: Text(l10n.friendsStatusChip,
               style: GoogleFonts.outfit(
                   fontSize: 12, color: Colors.green[700])),
           backgroundColor: Colors.green.withOpacity(0.1),
@@ -220,7 +223,7 @@ class _UserSearchTile extends StatelessWidget {
         break;
       case 'pending_sent':
         actionWidget = Chip(
-          label: Text('Pending',
+          label: Text(l10n.pendingStatusChip,
               style: GoogleFonts.outfit(
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withOpacity(0.5))),
@@ -231,7 +234,7 @@ class _UserSearchTile extends StatelessWidget {
         break;
       case 'pending_received':
         actionWidget = Chip(
-          label: Text('Requested you',
+          label: Text(l10n.requestedYouStatusChip,
               style: GoogleFonts.outfit(
                   fontSize: 12, color: theme.colorScheme.primary)),
           backgroundColor: theme.colorScheme.primary.withOpacity(0.08),
@@ -243,7 +246,7 @@ class _UserSearchTile extends StatelessWidget {
         actionWidget = FilledButton.icon(
           onPressed: onAddFriend,
           icon: const Icon(Icons.person_add_rounded, size: 16),
-          label: Text('Add', style: GoogleFonts.outfit(fontSize: 13)),
+          label: Text(l10n.addFriendButton, style: GoogleFonts.outfit(fontSize: 13)),
           style: FilledButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
             foregroundColor: Colors.white,
@@ -280,7 +283,7 @@ class _UserSearchTile extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                user.name ?? 'Unknown',
+                user.name ?? l10n.unknownUserName,
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

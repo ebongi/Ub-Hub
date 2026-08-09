@@ -2,8 +2,11 @@ import 'package:go_study/services/message_provider.dart';
 import 'package:rive/rive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/authentication/wrap.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/locale_provider.dart';
 import 'package:go_study/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/core/supabase_config.dart';
@@ -51,6 +54,9 @@ void main() async {
       ? Color(accentColorValue)
       : Colors.blue;
 
+  final localeCode = prefs.getString('locale_language_code');
+  final initialLocale = localeCode != null ? Locale(localeCode) : null;
+
   runApp(
     MultiProvider(
       providers: [
@@ -61,6 +67,9 @@ void main() async {
             initialMode: initialThemeMode,
             initialColor: initialAccentColor,
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => LocaleProvider(initialLocale: initialLocale),
         ),
         StreamProvider<sb.User?>(
           create: (_) => sb.Supabase.instance.client.auth.onAuthStateChange.map(
@@ -80,8 +89,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    return Consumer2<ThemeProvider, LocaleProvider>(
+      builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
           title: "GO Study",
@@ -89,6 +98,14 @@ class MyApp extends StatelessWidget {
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.themeMode,
+          locale: localeProvider.locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
           routes: {
             '/auth': (context) => const AuthWrapper(),
             '/onboarding': (context) => const OnboardingScreen(),

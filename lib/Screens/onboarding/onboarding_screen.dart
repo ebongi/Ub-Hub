@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -13,34 +14,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingPageData> _pages = const [
+  List<_OnboardingPageData> _pages(AppLocalizations l10n) => [
     _OnboardingPageData(
       image: 'assets/images/college project-rafiki.png',
-      title: "Let's get\nStarted",
-      body:
-          'Set up your academic journey in a structured space built for students, departments, and shared study resources.',
-      accent: Color(0xFFE11D48),
+      title: l10n.onboardingPage1Title,
+      body: l10n.onboardingPage1Body,
+      accent: const Color(0xFFE11D48),
     ),
     _OnboardingPageData(
       image: 'assets/images/Teaching-rafiki.png',
-      title: 'Get to\nKnow',
-      body:
-          'Find your institution, explore its schools and departments, and move quickly into the right courses and materials.',
-      accent: Color(0xFF0EA5E9),
+      title: l10n.onboardingPage2Title,
+      body: l10n.onboardingPage2Body,
+      accent: const Color(0xFF0EA5E9),
     ),
     _OnboardingPageData(
       image: 'assets/images/college students-rafiki.png',
-      title: 'Study\nTogether',
-      body:
-          'Use department pages, group chat, notes, and shared content to collaborate with classmates without friction.',
-      accent: Color(0xFF7C3AED),
+      title: l10n.onboardingPage3Title,
+      body: l10n.onboardingPage3Body,
+      accent: const Color(0xFF7C3AED),
     ),
     _OnboardingPageData(
       image: 'assets/images/Learning-rafiki.png',
-      title: 'Learn\nSmarter',
-      body:
-          'Track tasks, prepare for exams, use AI support, and stay organized with tools designed for an academic workflow.',
-      accent: Color(0xFF16A34A),
+      title: l10n.onboardingPage4Title,
+      body: l10n.onboardingPage4Body,
+      accent: const Color(0xFF16A34A),
     ),
   ];
 
@@ -62,7 +59,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next() {
-    if (_currentPage == _pages.length - 1) {
+    final l10n = AppLocalizations.of(context)!;
+    if (_currentPage == _pages(l10n).length - 1) {
       _finishOnboarding();
       return;
     }
@@ -84,7 +82,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final page = _pages[_currentPage];
+    final l10n = AppLocalizations.of(context)!;
+    final pages = _pages(l10n);
+    final page = pages[_currentPage];
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFFF7F7F7) : Colors.white,
@@ -124,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           foregroundColor: Colors.black87,
                         ),
                         child: Text(
-                          'Skip',
+                          l10n.onboardingSkip,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -137,12 +137,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
-                      itemCount: _pages.length,
+                      itemCount: pages.length,
                       onPageChanged: (index) {
                         setState(() => _currentPage = index);
                       },
                       itemBuilder: (context, index) {
-                        final data = _pages[index];
+                        final data = pages[index];
                         return _OnboardingPage(data: data, isDark: isDark);
                       },
                     ),
@@ -152,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       _PageDots(
                         currentIndex: _currentPage,
-                        count: _pages.length,
+                        count: pages.length,
                       ),
                       const Spacer(),
                       _NavButton(

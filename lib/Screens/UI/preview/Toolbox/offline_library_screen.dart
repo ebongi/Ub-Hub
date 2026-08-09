@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/course_material.dart';
@@ -66,11 +67,12 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Offline Library",
+          l10n.offlineLibraryTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
@@ -84,7 +86,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
           }
 
           if (_offlineMaterials.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(l10n);
           }
 
           return ListView.builder(
@@ -92,7 +94,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
             itemCount: _offlineMaterials.length,
             itemBuilder: (context, index) {
               final material = _offlineMaterials[index];
-              return _buildMaterialCard(material, colorScheme);
+              return _buildMaterialCard(material, colorScheme, l10n);
             },
           );
         },
@@ -100,7 +102,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -112,12 +114,12 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "Your offline library is empty.",
+            l10n.offlineLibraryEmptyTitle,
             style: GoogleFonts.outfit(color: Colors.grey, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
-            "Download materials to access them without data.",
+            l10n.offlineLibraryEmptyBody,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(color: Colors.grey[400], fontSize: 12),
           ),
@@ -126,7 +128,8 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
     );
   }
 
-  Widget _buildMaterialCard(CourseMaterial material, ColorScheme colorScheme) {
+  Widget _buildMaterialCard(
+      CourseMaterial material, ColorScheme colorScheme, AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -150,19 +153,19 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          "${material.materialCategory} • Local Copy",
+          l10n.localCopySuffix(material.materialCategory),
           style: GoogleFonts.outfit(fontSize: 12),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-          onPressed: () => _confirmDelete(material),
+          onPressed: () => _confirmDelete(material, l10n),
         ),
-        onTap: () => _openOfflineMaterial(material),
+        onTap: () => _openOfflineMaterial(material, l10n),
       ),
     );
   }
 
-  Future<void> _openOfflineMaterial(CourseMaterial material) async {
+  Future<void> _openOfflineMaterial(CourseMaterial material, AppLocalizations l10n) async {
     try {
       final decryptedFile = await _storageService.decryptAndGetFile(
         material.id,
@@ -183,8 +186,8 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
         } else {
           // Handle other file types...
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Format not supported for offline viewing yet"),
+            SnackBar(
+              content: Text(l10n.offlineFormatNotSupported),
             ),
           );
         }
@@ -198,10 +201,10 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
     }
   }
 
-  void _confirmDelete(CourseMaterial material) {
+  void _confirmDelete(CourseMaterial material, AppLocalizations l10n) {
     showPremiumGeneralDialog(
       context: context,
-      barrierLabel: "Delete Offline Copy",
+      barrierLabel: l10n.deleteOfflineCopyTitle,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -213,9 +216,9 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const PremiumDialogHeader(
-              title: "Delete Offline Copy?",
-              subtitle: "Remove from device",
+            PremiumDialogHeader(
+              title: l10n.deleteOfflineCopyTitle,
+              subtitle: l10n.removeFromDeviceSubtitle,
               icon: Icons.cloud_off_rounded,
             ),
             Padding(
@@ -223,7 +226,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
               child: Column(
                 children: [
                   Text(
-                    "This will remove the secured copy of '${material.title}' from your device. You can re-download it anytime you're online.",
+                    l10n.deleteOfflineCopyBody(material.title),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontSize: 15,
@@ -239,7 +242,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            "Cancel",
+                            l10n.cancel,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -251,7 +254,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
                       Expanded(
                         flex: 2,
                         child: PremiumSubmitButton(
-                          label: "Delete Now",
+                          label: l10n.deleteNowButton,
                           isLoading: false,
                           onPressed: () async {
                             await _storageService.deleteOffline(material.id);

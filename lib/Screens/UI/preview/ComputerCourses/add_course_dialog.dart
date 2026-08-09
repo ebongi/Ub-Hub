@@ -4,6 +4,7 @@ import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 
@@ -22,10 +23,11 @@ Future<void> showAddCourseDialog(
   final addCourseKey = GlobalKey<FormState>();
   String? selectedLevel;
   bool isSubmitting = false;
+  final l10n = AppLocalizations.of(context)!;
 
   return showPremiumGeneralDialog(
     context: context,
-    barrierLabel: "Add Course",
+    barrierLabel: l10n.addCourseTitle,
     child: StatefulBuilder(
       builder: (context, setDialogState) {
         final theme = Theme.of(context);
@@ -43,9 +45,9 @@ Future<void> showAddCourseDialog(
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PremiumDialogHeader(
-                title: "Add Course",
-                subtitle: "Organize your academic content",
+              PremiumDialogHeader(
+                title: l10n.addCourseTitle,
+                subtitle: l10n.organizeAcademicContentSubtitle,
                 icon: Icons.book_rounded,
               ),
               Flexible(
@@ -58,40 +60,40 @@ Future<void> showAddCourseDialog(
                       children: [
                         PremiumTextField(
                           controller: courseNameController,
-                          label: "Course Name",
-                          hint: "e.g. Data Structures",
+                          label: l10n.courseNameLabel,
+                          hint: l10n.courseNameHintExample,
                           icon: Icons.title_rounded,
                           enabled: true,
                           validator: (value) => value == null || value.isEmpty
-                              ? 'Please enter a course name'
+                              ? l10n.pleaseEnterCourseName
                               : null,
                         ),
                         const SizedBox(height: 18),
                         PremiumTextField(
                           controller: courseCodeController,
-                          label: "Course Code",
-                          hint: "e.g. CS201",
+                          label: l10n.courseCodeLabel,
+                          hint: l10n.courseCodeHintExample,
                           icon: Icons.code_rounded,
                           enabled: true,
                           validator: (value) => value == null || value.isEmpty
-                              ? 'Please enter a course code'
+                              ? l10n.pleaseEnterCourseCode
                               : null,
                         ),
                         const SizedBox(height: 18),
                         PremiumDropdownField<String>(
                           value: selectedLevel,
-                          label: "Level",
-                          hint: "Select academic level",
+                          label: l10n.levelLabel,
+                          hint: l10n.selectAcademicLevelHint,
                           icon: Icons.layers_rounded,
                           enabled: true,
-                          items: const [
-                            DropdownMenuItem(value: "200", child: Text("Level 200")),
-                            DropdownMenuItem(value: "300", child: Text("Level 300")),
-                            DropdownMenuItem(value: "400", child: Text("Level 400")),
+                          items: [
+                            DropdownMenuItem(value: "200", child: Text(l10n.levelHeader('200'))),
+                            DropdownMenuItem(value: "300", child: Text(l10n.levelHeader('300'))),
+                            DropdownMenuItem(value: "400", child: Text(l10n.levelHeader('400'))),
                           ],
                           onChanged: (value) => setDialogState(() => selectedLevel = value),
                           validator: (value) =>
-                              value == null ? 'Please select a level' : null,
+                              value == null ? l10n.pleaseSelectLevel : null,
                         ),
                       ],
                     ),
@@ -110,7 +112,7 @@ Future<void> showAddCourseDialog(
                               borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: () => Navigator.pop(context),
-                        child: Text("Cancel",
+                        child: Text(l10n.cancel,
                             style: GoogleFonts.outfit(
                                 color: Colors.redAccent,
                                 fontWeight: FontWeight.bold)),
@@ -120,14 +122,14 @@ Future<void> showAddCourseDialog(
                     Expanded(
                       flex: 2,
                       child: PremiumSubmitButton(
-                        label: "Add Course",
+                        label: l10n.addCourseTitle,
                         isLoading: isSubmitting,
 
                         onPressed: () async {
                           if (addCourseKey.currentState!.validate()) {
                             if (userModel.uid == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('User not authenticated')),
+                                SnackBar(content: Text(l10n.userNotAuthenticatedMessage)),
                               );
                               return;
                             }

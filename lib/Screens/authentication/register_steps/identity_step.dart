@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 
 class IdentityStep extends StatelessWidget {
@@ -17,6 +18,7 @@ class IdentityStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: formKey,
       child: SingleChildScrollView(
@@ -25,40 +27,38 @@ class IdentityStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             RegistrationPageHeader(
-              title: 'Identity',
-              description:
-                  'Add your real name and contact details so the community can identify you.',
+              title: l10n.identityStepTitle,
+              description: l10n.identityStepDescription,
               icon: Icons.badge_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 18),
             RegistrationSectionFocus(
-              title: 'Personal identity',
-              subtitle:
-                  'This section makes your profile recognizable to classmates and admins.',
+              title: l10n.personalIdentityTitle,
+              subtitle: l10n.personalIdentitySubtitle,
               icon: Icons.person_pin_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 20),
             RegistrationField(
-              label: 'Full Legal Name',
-              hint: 'First and Last Name',
+              label: l10n.fullLegalNameLabel,
+              hint: l10n.firstLastNameHint,
               icon: Icons.person_outline_rounded,
               controller: nameController,
               isDark: isDark,
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Full name is required' : null,
+                  v == null || v.isEmpty ? l10n.fullNameRequired : null,
             ),
             const SizedBox(height: 24),
             RegistrationField(
-              label: 'Phone Contact',
+              label: l10n.phoneContactLabel,
               hint: '+237 ...',
               icon: Icons.phone_android_rounded,
               controller: phoneController,
               isDark: isDark,
               keyboardType: TextInputType.phone,
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Phone number is required' : null,
+                  v == null || v.isEmpty ? l10n.phoneRequired : null,
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -8,7 +9,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Privacy Policy", style: GoogleFonts.outfit()),
+        title: Text(AppLocalizations.of(context)!.privacyPolicyTitle, style: GoogleFonts.outfit()),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

@@ -6,6 +6,7 @@ import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<void> showSupportDialog(BuildContext context) async {
@@ -18,10 +19,11 @@ Future<void> showSupportDialog(BuildContext context) async {
   final dbService = DatabaseService(uid: currentUser?.id);
 
   bool isLoading = false;
+  final l10n = AppLocalizations.of(context)!;
 
   await showPremiumGeneralDialog(
     context: context,
-    barrierLabel: "Support Developer",
+    barrierLabel: l10n.supportDeveloperBarrierLabel,
     child: StatefulBuilder(
       builder: (context, setDialogState) {
         final theme = Theme.of(context);
@@ -38,9 +40,9 @@ Future<void> showSupportDialog(BuildContext context) async {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PremiumDialogHeader(
-                title: "Support the Developer",
-                subtitle: "Help keep the project alive and growing",
+              PremiumDialogHeader(
+                title: l10n.supportTheDeveloperTitle,
+                subtitle: l10n.helpKeepProjectAliveSubtitle,
                 icon: Icons.favorite_rounded,
               ),
               Flexible(
@@ -52,7 +54,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "Your support helps us maintain the infrastructure and add new features. Any amount is appreciated! ❤️",
+                          l10n.supportDialogBody,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
@@ -62,18 +64,18 @@ Future<void> showSupportDialog(BuildContext context) async {
                         const SizedBox(height: 24),
                         PremiumTextField(
                           controller: amountController,
-                          label: "Amount (XAF)",
-                          hint: "e.g. 500",
+                          label: l10n.amountXafLabel,
+                          hint: l10n.amountHintExample,
                           icon: Icons.money_rounded,
                           keyboardType: TextInputType.number,
                           enabled: !isLoading,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter an amount';
+                              return l10n.pleaseEnterAmount;
                             }
                             final amount = double.tryParse(value);
                             if (amount == null || amount <= 0) {
-                              return 'Please enter a valid amount';
+                              return l10n.pleaseEnterValidAmount;
                             }
                             return null;
                           },
@@ -81,17 +83,17 @@ Future<void> showSupportDialog(BuildContext context) async {
                         const SizedBox(height: 18),
                         PremiumTextField(
                           controller: phoneController,
-                          label: "Payment Phone",
-                          hint: "6xxxxxxxx",
+                          label: l10n.paymentPhoneLabel,
+                          hint: l10n.phoneNumberHintPlain,
                           icon: Icons.phone_android_rounded,
                           keyboardType: TextInputType.phone,
                           enabled: !isLoading,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Phone number required';
+                              return l10n.phoneNumberRequired;
                             }
                             if (!FapshiService.isValidPhoneNumber(value)) {
-                              return 'Enter a valid Cameroon phone number';
+                              return l10n.enterValidCameroonPhone;
                             }
                             return null;
                           },
@@ -113,7 +115,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                               borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: isLoading ? null : () => Navigator.pop(context),
-                        child: Text("Cancel",
+                        child: Text(l10n.cancel,
                             style: GoogleFonts.outfit(
                                 color: Colors.redAccent,
                                 fontWeight: FontWeight.bold)),
@@ -123,7 +125,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                     Expanded(
                       flex: 2,
                       child: PremiumSubmitButton(
-                        label: "Support",
+                        label: l10n.supportButton,
                         isLoading: isLoading,
                         onPressed: () async {
                           if (!supportKey.currentState!.validate()) return;
@@ -210,9 +212,9 @@ Future<void> showSupportDialog(BuildContext context) async {
                             if (context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   content: Text(
-                                    'Thank you for your generous support! ❤️',
+                                    l10n.thankYouForSupportMessage,
                                   ),
                                   backgroundColor: Colors.green,
                                 ),

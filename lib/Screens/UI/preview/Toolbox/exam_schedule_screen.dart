@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/create_exam_screen.dart';
@@ -13,11 +14,12 @@ class ExamScheduleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text("Please sign in to view your schedule.")),
+      return Scaffold(
+        body: Center(child: Text(l10n.examSchedulePleaseSignIn)),
       );
     }
 
@@ -27,7 +29,7 @@ class ExamScheduleScreen extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "All Events List",
+          l10n.allEventsListTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -59,7 +61,7 @@ class ExamScheduleScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No events scheduled yet.",
+                    l10n.noEventsScheduled,
                     style: GoogleFonts.outfit(fontSize: 18, color: Colors.grey),
                   ),
                 ],
@@ -72,7 +74,7 @@ class ExamScheduleScreen extends StatelessWidget {
             itemCount: exams.length,
             itemBuilder: (context, index) {
               final exam = exams[index];
-              return _buildExamCard(context, exam);
+              return _buildExamCard(context, exam, l10n);
             },
           );
         },
@@ -88,7 +90,7 @@ class ExamScheduleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExamCard(BuildContext context, ExamEvent exam) {
+  Widget _buildExamCard(BuildContext context, ExamEvent exam, AppLocalizations l10n) {
     final startStr = DateFormat('dd-MMM-yyyy HH:mm').format(exam.startTime);
 
     return GestureDetector(
@@ -122,7 +124,7 @@ class ExamScheduleScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildInfoRow(Icons.category_outlined, exam.category),
               const SizedBox(height: 12),
-              _buildInfoRow(Icons.location_on_outlined, exam.venue ?? "TBD"),
+              _buildInfoRow(Icons.location_on_outlined, exam.venue ?? l10n.tbd),
               const SizedBox(height: 12),
               _buildInfoRow(Icons.access_time_rounded, startStr),
             ],

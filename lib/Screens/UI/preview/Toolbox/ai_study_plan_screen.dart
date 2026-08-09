@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:go_study/services/gemini_service.dart';
@@ -89,11 +90,12 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "AI Study Plan",
+          l10n.aiStudyPlanTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -101,7 +103,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
               onPressed: _generatePlan,
-              tooltip: "Regenerate Plan",
+              tooltip: l10n.regeneratePlanTooltip,
             ),
         ],
       ),
@@ -113,19 +115,19 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
                   const CircularProgressIndicator(),
                   const SizedBox(height: 20),
                   Text(
-                    "AI is analyzing your schedule...",
+                    l10n.aiAnalyzingSchedule,
                     style: GoogleFonts.outfit(color: Colors.grey),
                   ),
                 ],
               ),
             )
           : _studyPlan == null
-          ? _buildInitialState(theme)
-          : _buildPlanView(theme),
+          ? _buildInitialState(theme, l10n)
+          : _buildPlanView(theme, l10n),
     );
   }
 
-  Widget _buildInitialState(ThemeData theme) {
+  Widget _buildInitialState(ThemeData theme, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -138,7 +140,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            "Ready for a Smarter Study Session?",
+            l10n.readyForSmarterStudyTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 22,
@@ -147,7 +149,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "I'll analyze your pending tasks and upcoming exams to create a balanced routine just for you.",
+            l10n.readyForSmarterStudyBody,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(color: Colors.grey),
           ),
@@ -155,7 +157,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
           ElevatedButton.icon(
             onPressed: _generatePlan,
             icon: const Icon(Icons.bolt_rounded),
-            label: const Text("GENERATE MY PLAN"),
+            label: Text(l10n.generateMyPlanButton),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
@@ -176,7 +178,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
     );
   }
 
-  Widget _buildPlanView(ThemeData theme) {
+  Widget _buildPlanView(ThemeData theme, AppLocalizations l10n) {
     return Column(
       children: [
         Expanded(
@@ -193,7 +195,7 @@ class _AIStudyPlanScreenState extends State<AIStudyPlanScreen> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "This plan is AI-generated and for guidance only.",
+            l10n.aiPlanDisclaimer,
             style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
           ),
         ),

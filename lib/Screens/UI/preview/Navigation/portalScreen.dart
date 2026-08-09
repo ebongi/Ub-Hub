@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,7 +17,17 @@ class _PortalscreenState extends State<Portalscreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   double _progress = 0;
-  String _currentTitle = "Student Portal";
+  String _currentTitle = "";
+  bool _titleInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_titleInitialized) {
+      _titleInitialized = true;
+      _currentTitle = AppLocalizations.of(context)!.studentPortalTitle;
+    }
+  }
 
   @override
   void initState() {
@@ -110,6 +121,7 @@ class _PortalscreenState extends State<Portalscreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -141,7 +153,7 @@ class _PortalscreenState extends State<Portalscreen> {
             ),
             if (_isLoading)
               Text(
-                "Syncing Academic Data...",
+                l10n.syncingAcademicDataLabel,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
                   color: Colors.grey,
@@ -207,6 +219,7 @@ class _PortalscreenState extends State<Portalscreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
+        final l10n = AppLocalizations.of(context)!;
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           decoration: BoxDecoration(
@@ -227,20 +240,20 @@ class _PortalscreenState extends State<Portalscreen> {
               ),
               _buildMenuItem(
                 icon: Iconsax.refresh,
-                label: "Reload Page",
+                label: l10n.reloadPageMenuItem,
                 onTap: () => _controller.reload(),
               ),
               _buildMenuItem(
                 icon: Iconsax.copy,
-                label: "Copy Portal Link",
+                label: l10n.copyPortalLinkMenuItem,
                 onTap: () async {
                   final url = await _controller.currentUrl();
                   if (url != null) {
                     await Clipboard.setData(ClipboardData(text: url));
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Link copied to clipboard"),
+                        SnackBar(
+                          content: Text(l10n.linkCopiedToClipboard),
                         ),
                       );
                     }
@@ -249,7 +262,7 @@ class _PortalscreenState extends State<Portalscreen> {
               ),
               _buildMenuItem(
                 icon: Iconsax.global,
-                label: "Open in External Browser",
+                label: l10n.openInExternalBrowserMenuItem,
                 onTap: () async {
                   final url = await _controller.currentUrl();
                   if (url != null) _launchExternalUrl(url);

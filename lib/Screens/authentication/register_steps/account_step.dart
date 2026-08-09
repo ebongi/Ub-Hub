@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 
 class AccountStep extends StatelessWidget {
@@ -32,6 +33,7 @@ class AccountStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final password = passwordController.text;
     final strength = _strengthOf(password);
+    final l10n = AppLocalizations.of(context)!;
 
     return Form(
       key: formKey,
@@ -41,43 +43,41 @@ class AccountStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             RegistrationPageHeader(
-              title: 'Account',
-              description:
-                  'Secure your academic profile with a strong email and password.',
+              title: l10n.accountStepTitle,
+              description: l10n.accountStepDescription,
               icon: Icons.lock_person_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 18),
             RegistrationSectionFocus(
-              title: 'Account credentials',
-              subtitle:
-                  'This section protects your portal access and your study records.',
+              title: l10n.accountCredentialsTitle,
+              subtitle: l10n.accountCredentialsSubtitle,
               icon: Icons.shield_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 20),
             RegistrationField(
-              label: 'Academic Email',
-              hint: 'student@university.edu',
+              label: l10n.academicEmailLabel,
+              hint: l10n.academicEmailHint,
               icon: Icons.alternate_email_rounded,
               controller: emailController,
               isDark: isDark,
               keyboardType: TextInputType.emailAddress,
               validator: (v) {
                 final email = v?.trim() ?? '';
-                if (email.isEmpty) return 'Please enter your email';
+                if (email.isEmpty) return l10n.pleaseEnterEmail;
                 if (!RegExp(
                   r"^[a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
                 ).hasMatch(email)) {
-                  return 'Please enter a valid email';
+                  return l10n.pleaseEnterValidEmail;
                 }
                 return null;
               },
             ),
             const SizedBox(height: 20),
             RegistrationField(
-              label: 'Secure Password',
-              hint: 'Enter strong password',
+              label: l10n.securePasswordLabel,
+              hint: l10n.enterStrongPasswordHint,
               icon: Icons.lock_outline_rounded,
               controller: passwordController,
               isDark: isDark,
@@ -95,16 +95,16 @@ class AccountStep extends StatelessWidget {
               ),
               validator: (v) {
                 final value = v ?? '';
-                if (value.isEmpty) return 'Password is required';
-                if (value.length < 8) return 'Minimum 8 characters';
+                if (value.isEmpty) return l10n.passwordRequired;
+                if (value.length < 8) return l10n.minimumEightCharacters;
                 if (!value.contains(RegExp(r'[A-Z]'))) {
-                  return 'Add at least one uppercase letter';
+                  return l10n.addUppercaseLetter;
                 }
                 if (!value.contains(RegExp(r'[0-9]'))) {
-                  return 'Add at least one digit';
+                  return l10n.addDigit;
                 }
                 if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-                  return 'Add a special character';
+                  return l10n.addSpecialCharacter;
                 }
                 return null;
               },
@@ -118,8 +118,8 @@ class AccountStep extends StatelessWidget {
             ],
             const SizedBox(height: 20),
             RegistrationField(
-              label: 'Confirm Password',
-              hint: 'Repeat password',
+              label: l10n.confirmPasswordLabel,
+              hint: l10n.repeatPasswordHint,
               icon: Icons.lock_reset_rounded,
               controller: confirmPasswordController,
               isDark: isDark,
@@ -135,7 +135,7 @@ class AccountStep extends StatelessWidget {
                 ),
               ),
               validator: (v) {
-                if (v != passwordController.text) return 'Passwords do not match';
+                if (v != passwordController.text) return l10n.passwordsDoNotMatch;
                 return null;
               },
             ),
@@ -166,6 +166,7 @@ class _StrengthMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final segments = (strength * 4).round().clamp(0, 4);
     final strengthColor = segments == 0 ? regBodyColor(isDark) : _getColor(segments);
     final emptyColor = regBorderColor(isDark);
@@ -184,7 +185,7 @@ class _StrengthMeter extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Password Security',
+                l10n.passwordSecurityLabel,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -192,7 +193,7 @@ class _StrengthMeter extends StatelessWidget {
                 ),
               ),
               Text(
-                _label(segments),
+                _label(l10n, segments),
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -220,7 +221,7 @@ class _StrengthMeter extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Use a mix of uppercase letters, numbers, and symbols.',
+            l10n.passwordStrengthHint,
             style: GoogleFonts.outfit(
               fontSize: 11.5,
               color: regBodyColor(isDark),
@@ -231,16 +232,16 @@ class _StrengthMeter extends StatelessWidget {
     );
   }
 
-  String _label(int segments) {
+  String _label(AppLocalizations l10n, int segments) {
     switch (segments) {
       case 1:
-        return 'Weak';
+        return l10n.passwordStrengthWeak;
       case 2:
-        return 'Fair';
+        return l10n.passwordStrengthFair;
       case 3:
-        return 'Good';
+        return l10n.passwordStrengthGood;
       case 4:
-        return 'Strong';
+        return l10n.passwordStrengthStrong;
       default:
         return '—';
     }

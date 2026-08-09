@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/knowledge_bot_service.dart';
@@ -28,17 +29,26 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
   final _botService = KnowledgeBotService();
   final _currentUser = Supabase.instance.client.auth.currentUser;
   List<BotKnowledge> _knowledgeBase = [];
+  bool _welcomeMessageAdded = false;
 
   @override
   void initState() {
     super.initState();
     _dbService = DatabaseService(uid: _currentUser?.id);
     _loadKnowledge();
-    _messages.add({
-      'id': 'welcome',
-      'text': "Welcome to the University of Buea Support Center! I am your UB Support Bot. How can I help you with university-related inquiries today?",
-      'isBot': true,
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_welcomeMessageAdded) {
+      _welcomeMessageAdded = true;
+      _messages.add({
+        'id': 'welcome',
+        'text': AppLocalizations.of(context)!.supportBotWelcomeMessage,
+        'isBot': true,
+      });
+    }
   }
 
   void _loadKnowledge() {
@@ -132,14 +142,15 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     } catch (e) {
       debugPrint("Streaming Error: $e");
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final index = _messages.indexWhere((m) => m['id'] == botMsgId);
         if (index != -1 && _messages[index]['text'].toString().isEmpty) {
           setState(() {
-            _messages[index]['text'] = "I'm sorry, I'm having trouble connecting right now. Please check your internet or try again later.";
+            _messages[index]['text'] = l10n.supportBotConnectionTrouble;
             _isLoading = false;
           });
         }
-        _showError("Connection interrupted.");
+        _showError(l10n.connectionInterrupted);
       }
     }
 
@@ -173,6 +184,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -180,11 +192,11 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "UB Support Bot",
+              l10n.homeToolSupportBot,
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
             Text(
-              "University of Buea Assistant",
+              l10n.universityOfBueaAssistant,
               style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -196,7 +208,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
               context,
               MaterialPageRoute(builder: (_) => const KnowledgeManagerScreen()),
             ),
-            tooltip: "Manage Knowledge",
+            tooltip: l10n.manageKnowledgeTooltip,
           ),
         ],
       ),
@@ -227,7 +239,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
                 padding: EdgeInsets.all(8.0),
                 child: LinearProgressIndicator(minHeight: 2),
               ),
-            _buildInputArea(theme, isDark),
+            _buildInputArea(theme, isDark, l10n),
           ],
         ),
       ),
@@ -289,7 +301,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     );
   }
 
-  Widget _buildInputArea(ThemeData theme, bool isDark) {
+  Widget _buildInputArea(ThemeData theme, bool isDark, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -303,7 +315,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
               controller: _inputController,
               onSubmitted: (_) => _sendMessage(),
               decoration: InputDecoration(
-                hintText: "Ask based on your data...",
+                hintText: l10n.askBasedOnDataHint,
                 hintStyle: GoogleFonts.outfit(fontSize: 14),
                 filled: true,
                 fillColor: isDark ? Colors.white10 : Colors.grey[100],

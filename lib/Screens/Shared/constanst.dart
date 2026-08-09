@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/core/responsive.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 // Custom widget for image customization
 Widget buildImage({String? path}) {
@@ -47,6 +48,9 @@ class UserModel extends ChangeNotifier {
   int _freeDownloadCount;
   int _aiCredits;
   DateTime? _createdAt;
+  bool _trialUsed;
+  bool _isTrialSubscription;
+  DateTime? _aiSubscriptionExpiry;
 
   UserModel({
     String? uid,
@@ -66,6 +70,9 @@ class UserModel extends ChangeNotifier {
     int freeDownloadCount = 0,
     int aiCredits = 5,
     DateTime? createdAt,
+    bool trialUsed = false,
+    bool isTrialSubscription = false,
+    DateTime? aiSubscriptionExpiry,
   }) : _uid = uid,
        _name = name,
        _email = email,
@@ -82,7 +89,10 @@ class UserModel extends ChangeNotifier {
        _subscriptionExpiry = subscriptionExpiry,
        _freeDownloadCount = freeDownloadCount,
        _aiCredits = aiCredits,
-       _createdAt = createdAt;
+       _createdAt = createdAt,
+       _trialUsed = trialUsed,
+       _isTrialSubscription = isTrialSubscription,
+       _aiSubscriptionExpiry = aiSubscriptionExpiry;
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
@@ -101,22 +111,42 @@ class UserModel extends ChangeNotifier {
   int get freeDownloadCount => _freeDownloadCount;
   int get aiCredits => _aiCredits;
   DateTime? get createdAt => _createdAt;
+  bool get trialUsed => _trialUsed;
+  bool get isTrialSubscription => _isTrialSubscription;
+  DateTime? get aiSubscriptionExpiry => _aiSubscriptionExpiry;
+
+  /// True while a separately-purchased Unlimited AI subscription is active.
+  /// Independent of subscriptionTier/subscriptionExpiry (the App Plan), so
+  /// the App Plan's free trial month never grants free AI.
+  bool get hasUnlimitedAI =>
+      _aiSubscriptionExpiry != null && _aiSubscriptionExpiry!.isAfter(DateTime.now());
 
   bool get canUseAI {
     if (role == UserRole.admin) return true;
-    if (subscriptionTier != SubscriptionTier.free) {
-      if (subscriptionExpiry != null && subscriptionExpiry!.isAfter(DateTime.now())) {
-        return true;
-      }
-    }
+    if (hasUnlimitedAI) return true;
     return _aiCredits > 0;
   }
 
-  bool get isTrialActive => false; // Disable trial countdowns entirely for free version
+  /// True while the current App Plan period (subscriptionTier/subscriptionExpiry)
+  /// is the free trial month, rather than a paid period.
+  bool get isTrialActive =>
+      _isTrialSubscription &&
+      _subscriptionExpiry != null &&
+      _subscriptionExpiry!.isAfter(DateTime.now());
 
   bool get hasAccess => true; // Always allow access in free version
 
-  String get trialTimeLeft => "Unlimited";
+  int get trialDaysRemaining {
+    if (!isTrialActive) return 0;
+    return _subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+  }
+
+  String trialTimeLeft(AppLocalizations l10n) {
+    if (!isTrialActive) return l10n.unlimitedLabel;
+    final days = trialDaysRemaining;
+    return days > 0 ? l10n.daysRemainingLabel(days) : l10n.endingTodayLabel;
+  }
+
   void setName(String name) {
     _name = name;
     notifyListeners();
@@ -150,6 +180,9 @@ class UserModel extends ChangeNotifier {
     int? freeDownloadCount,
     int? aiCredits,
     DateTime? createdAt,
+    bool? trialUsed,
+    bool? isTrialSubscription,
+    DateTime? aiSubscriptionExpiry,
   }) {
     if (uid != null) _uid = uid;
     if (name != null) _name = name;
@@ -168,6 +201,9 @@ class UserModel extends ChangeNotifier {
     if (freeDownloadCount != null) _freeDownloadCount = freeDownloadCount;
     if (aiCredits != null) _aiCredits = aiCredits;
     if (createdAt != null) _createdAt = createdAt;
+    if (trialUsed != null) _trialUsed = trialUsed;
+    if (isTrialSubscription != null) _isTrialSubscription = isTrialSubscription;
+    if (aiSubscriptionExpiry != null) _aiSubscriptionExpiry = aiSubscriptionExpiry;
     notifyListeners();
   }
 }

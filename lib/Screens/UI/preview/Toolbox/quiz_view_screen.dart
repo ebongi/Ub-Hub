@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class QuizViewScreen extends StatefulWidget {
   final Map<String, dynamic> quizData;
@@ -54,11 +55,12 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (_questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Quiz")),
-        body: const Center(child: Text("No questions found in this quiz.")),
+        appBar: AppBar(title: Text(l10n.quizTitle)),
+        body: Center(child: Text(l10n.noQuestionsInQuiz)),
       );
     }
 
@@ -66,16 +68,16 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
       appBar: AppBar(
         title: Text(
           _quizCompleted
-              ? "Results"
-              : "Question ${_currentIndex + 1}/${_questions.length}",
+              ? l10n.resultsTitle
+              : l10n.questionCounterTitle(_currentIndex + 1, _questions.length),
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _quizCompleted ? _buildResults(theme) : _buildQuizBody(theme),
+      body: _quizCompleted ? _buildResults(theme, l10n) : _buildQuizBody(theme, l10n),
     );
   }
 
-  Widget _buildQuizBody(ThemeData theme) {
+  Widget _buildQuizBody(ThemeData theme, AppLocalizations l10n) {
     final currentQuestion = _questions[_currentIndex];
     final List<dynamic> options = currentQuestion['options'] ?? [];
 
@@ -109,7 +111,7 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
                 borderRadius: BorderRadius.circular(15),
               ),
             ),
-            child: const Text("SUBMIT ANSWER"),
+            child: Text(l10n.submitAnswerButton),
           ),
         ],
       ),
@@ -170,7 +172,7 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
     );
   }
 
-  Widget _buildResults(ThemeData theme) {
+  Widget _buildResults(ThemeData theme, AppLocalizations l10n) {
     double percentage = (_score / _questions.length) * 100;
 
     return Padding(
@@ -188,7 +190,7 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            percentage >= 50 ? "Great Job!" : "Keep Studying!",
+            percentage >= 50 ? l10n.greatJobTitle : l10n.keepStudyingTitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 28,
@@ -197,13 +199,13 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "You scored $_score out of ${_questions.length}",
+            l10n.youScoredOutOfLabel(_score, _questions.length),
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(fontSize: 20, color: Colors.grey),
           ),
           const SizedBox(height: 12),
           Text(
-            "${percentage.toInt()}% Accuracy",
+            l10n.accuracyPercentLabel(percentage.toInt()),
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 24,
@@ -220,7 +222,7 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
                 borderRadius: BorderRadius.circular(15),
               ),
             ),
-            child: const Text("BACK TO GENERATOR"),
+            child: Text(l10n.backToGeneratorButton),
           ),
         ],
       ),

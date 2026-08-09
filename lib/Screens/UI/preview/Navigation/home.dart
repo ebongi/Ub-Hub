@@ -10,6 +10,7 @@ import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/portalScreen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/rating.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/ai_study_plan_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/exam_schedule_screen.dart';
@@ -17,6 +18,7 @@ import 'package:go_study/Screens/UI/preview/Toolbox/focus_timer_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/marketplace_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/performance_tracker_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/task_manager_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
@@ -27,6 +29,7 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_chat_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -73,6 +76,7 @@ class _HomeState extends State<Home> {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
     _checkStudyReminders();
+    _maybeShowRatingPrompt();
 
     _loadRecentActivity();
 
@@ -109,9 +113,9 @@ class _HomeState extends State<Home> {
 
   // No longer needed, using Provider instead
 
-  final List<ToolItem> toolboxItems = [
+  List<ToolItem> _toolboxItems(AppLocalizations l10n) => [
     ToolItem(
-      name: "AI Study",
+      name: l10n.homeToolAiStudy,
       icon: Icons.auto_awesome_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFF4285F4),
@@ -119,7 +123,7 @@ class _HomeState extends State<Home> {
       widget: const AIStudyPlanScreen(),
     ),
     ToolItem(
-      name: "Exam Schedule",
+      name: l10n.homeToolExamSchedule,
       icon: Icons.calendar_month_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFEA4335),
@@ -127,7 +131,15 @@ class _HomeState extends State<Home> {
       widget: const ExamScheduleScreen(),
     ),
     ToolItem(
-      name: "Library",
+      name: l10n.homeToolPerformance,
+      icon: Icons.bar_chart_rounded,
+      backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFFFF6D00),
+      // Deep Orange
+      widget: const PerformanceTrackerScreen(),
+    ),
+    ToolItem(
+      name: l10n.homeToolLibrary,
       icon: Icons.local_library_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFF34A853),
@@ -135,7 +147,7 @@ class _HomeState extends State<Home> {
       widget: const OfflineLibraryScreen(),
     ),
     ToolItem(
-      name: "News",
+      name: l10n.homeToolNews,
       icon: Icons.newspaper_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFFBBC05),
@@ -143,7 +155,7 @@ class _HomeState extends State<Home> {
       widget: const NewsFeedScreen(),
     ),
     ToolItem(
-      name: "Marketplace",
+      name: l10n.homeToolMarketplace,
       icon: Icons.storefront_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFF9334E6),
@@ -151,7 +163,7 @@ class _HomeState extends State<Home> {
       widget: const MarketplaceScreen(),
     ),
     ToolItem(
-      name: "Task Manager",
+      name: l10n.homeToolTaskManager,
       icon: Icons.checklist_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFF24C1E0),
@@ -159,7 +171,7 @@ class _HomeState extends State<Home> {
       widget: const TaskManagerScreen(),
     ),
     ToolItem(
-      name: "Focus Timer",
+      name: l10n.homeToolFocusTimer,
       icon: Icons.timer_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFF3F51B5),
@@ -167,14 +179,14 @@ class _HomeState extends State<Home> {
       widget: const FocusTimerScreen(),
     ),
     ToolItem(
-      name: "Transcripts",
+      name: l10n.homeToolTranscripts,
       icon: Icons.description_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFE53935),
       widget: const TranscriptScreen(),
     ),
     ToolItem(
-      name: "PORTAL",
+      name: l10n.homeToolPortal,
       icon: Icons.school_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFA308BAF),
@@ -182,11 +194,10 @@ class _HomeState extends State<Home> {
     ),
 
     ToolItem(
-      name: "UB Support Bot",
+      name: l10n.homeToolSupportBot,
       icon: Icons.psychology_rounded,
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFEA4335),
-      comingSoon: true,
       widget: const KnowledgeBotChatScreen(),
     ),
   ];
@@ -209,9 +220,27 @@ class _HomeState extends State<Home> {
     }
   }
 
+  static const int _kRatingPromptAppOpenThreshold = 5;
+
+  Future<void> _maybeShowRatingPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('rating_prompt_shown') ?? false) return;
+
+    final openCount = (prefs.getInt('app_open_count') ?? 0) + 1;
+    await prefs.setInt('app_open_count', openCount);
+
+    if (openCount >= _kRatingPromptAppOpenThreshold && mounted) {
+      await prefs.setBool('rating_prompt_shown', true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) showRatingDialog(context);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -241,7 +270,7 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                const ViewSection(title: "Departments & Faculties"),
+                ViewSection(title: l10n.sectionDepartmentsFaculties),
                 Consumer<List<Department>?>(
                   builder: (context, departments, child) {
                     if (departments == null) {
@@ -254,10 +283,10 @@ class _HomeState extends State<Home> {
                     }
 
                     if (departments.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: Text("No departments available yet."),
+                          padding: const EdgeInsets.all(32.0),
+                          child: Text(l10n.noDepartmentsAvailable),
                         ),
                       );
                     }
@@ -305,8 +334,8 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                const ViewSection(title: "TOOLS"),
-                ToolboxSection(items: toolboxItems, userProfile: _userProfile),
+                ViewSection(title: l10n.sectionTools),
+                ToolboxSection(items: _toolboxItems(l10n), userProfile: _userProfile),
                 const SizedBox(height: 20), // Padding for FAB
               ]),
             ),
@@ -324,7 +353,7 @@ class _HomeState extends State<Home> {
                 width: 50,
                 child: FloatingActionButton(
                   heroTag: "chatFAB",
-                  tooltip: "Global Chat",
+                  tooltip: l10n.globalChatTooltip,
                   backgroundColor: theme.colorScheme.secondary,
                   onPressed: () {
                     messageProvider.setChatOpen(true);
@@ -714,7 +743,7 @@ class DepartmentSection extends StatelessWidget {
                             Row(
                               children: [
                                 Text(
-                                  "Explore Resources",
+                                  AppLocalizations.of(context)!.exploreResources,
                                   style: GoogleFonts.outfit(
                                     color: Colors.white.withOpacity(0.8),
                                     fontSize: 14,
@@ -771,20 +800,21 @@ class _IntroWidgetState extends State<IntroWidget> {
     _quote = QuoteService.getRandomQuote();
   }
 
-  String _getGreeting() {
+  String _getGreeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return l10n.greetingMorning;
+    if (hour < 17) return l10n.greetingAfternoon;
+    return l10n.greetingEvening;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     final trialActive = widget.userProfile?.isTrialActive ?? false;
-    final trialTime = widget.userProfile?.trialTimeLeft ?? "";
-    final firstName = widget.userProfile?.name?.split(' ').first ?? "Scholar";
+    final trialTime = widget.userProfile?.trialTimeLeft(l10n) ?? "";
+    final firstName = widget.userProfile?.name?.split(' ').first ?? l10n.scholarFallbackName;
 
     return Column(
       children: [
@@ -808,7 +838,7 @@ class _IntroWidgetState extends State<IntroWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${_getGreeting()}, $firstName",
+                      "${_getGreeting(l10n)}, $firstName",
                       style: GoogleFonts.outfit(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -867,7 +897,7 @@ class _IntroWidgetState extends State<IntroWidget> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              "Trial: $trialTime",
+                              l10n.homeTrialLabel(trialTime),
                               style: GoogleFonts.outfit(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -970,7 +1000,7 @@ class _IntroWidgetState extends State<IntroWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Resume Learning",
+                                  AppLocalizations.of(context)!.resumeLearningLabel,
                                   style: GoogleFonts.outfit(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -1075,7 +1105,7 @@ class AppBarUser extends StatelessWidget {
                 builder: (context, value, child) => Text(
                   value.name != null && value.name!.isNotEmpty
                       ? value.name!.toUpperCase()
-                      : 'Student',
+                      : AppLocalizations.of(context)!.studentFallbackName,
                   style: GoogleFonts.podkova(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1085,7 +1115,7 @@ class AppBarUser extends StatelessWidget {
               ),
               Consumer<UserModel>(
                 builder: (context, value, child) => Text(
-                  value.institutionName ?? "Unified Academic Portal",
+                  value.institutionName ?? AppLocalizations.of(context)!.unifiedAcademicPortal,
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -1187,6 +1217,7 @@ class NoInternetWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: Container(
@@ -1220,7 +1251,7 @@ class NoInternetWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "No Connection",
+              l10n.noConnectionTitle,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 18,
@@ -1230,7 +1261,7 @@ class NoInternetWidget extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              "Please check your internet and try again.",
+              l10n.noConnectionBody,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 14,
@@ -1257,7 +1288,7 @@ class NoInternetWidget extends StatelessWidget {
                   children: [
                     const Icon(Icons.refresh_rounded, size: 18),
                     const SizedBox(width: 8),
-                    const Text("Retry"),
+                    Text(l10n.retryButton),
                   ],
                 ),
               ),

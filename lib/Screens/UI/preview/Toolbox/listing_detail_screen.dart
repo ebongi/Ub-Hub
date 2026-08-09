@@ -6,6 +6,7 @@ import 'package:go_study/services/friends_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/private_chat_screen.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ListingDetailScreen extends StatelessWidget {
@@ -22,6 +23,7 @@ class ListingDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMe = listing.vendorId == currentUserId;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -88,7 +90,7 @@ class ListingDetailScreen extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 24),
                   Text(
-                    "Description",
+                    l10n.descriptionLabel,
                     style: GoogleFonts.outfit(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -96,7 +98,7 @@ class ListingDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    listing.description ?? "No description provided.",
+                    listing.description ?? l10n.noDescriptionProvided,
                     style: GoogleFonts.outfit(
                       color: isDark ? Colors.white70 : Colors.grey[700],
                       fontSize: 16,
@@ -108,14 +110,14 @@ class ListingDetailScreen extends StatelessWidget {
                     Column(
                       children: [
                         PremiumSubmitButton(
-                          label: "Message Seller",
+                          label: l10n.messageSellerButton,
                           isLoading: false,
                           onPressed: () => _messageSeller(context),
                         ),
                         if (listing.itemType == 'digital') ...[
                           const SizedBox(height: 12),
                           PremiumSubmitButton(
-                            label: "Buy Now",
+                            label: l10n.buyNowButton,
                             isLoading: false,
                             onPressed: () => _handleDigitalPurchase(context),
                           ),
@@ -205,7 +207,6 @@ class ListingDetailScreen extends StatelessWidget {
           builder: (_) => PrivateChatScreen(
             friend: vendor,
             myId: currentUserId,
-            friendsService: FriendsService(),
           ),
         ),
       );
@@ -215,7 +216,7 @@ class ListingDetailScreen extends StatelessWidget {
   void _handleDigitalPurchase(BuildContext context) {
     ErrorHandler.showErrorSnackBar(
       context,
-      "Purchase flow for specific listings is coming soon!",
+      AppLocalizations.of(context)!.digitalPurchaseComingSoonMessage,
     );
   }
 }

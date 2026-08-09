@@ -1,16 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _kPlayStoreUrl =
+    "https://play.google.com/store/apps/details?id=com.ebongsume.gostudy";
+
+Future<void> _launchStoreListing(BuildContext context) async {
+  final uri = Uri.parse(_kPlayStoreUrl);
+  try {
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw "Could not open the Play Store";
+    }
+  } catch (e) {
+    if (context.mounted) ErrorHandler.showErrorSnackBar(context, e);
+  }
+}
 
 // Since this is just a dialog logic, we can make it a function or a simple widget
 Future<void> showRatingDialog(BuildContext context) async {
   return showPremiumGeneralDialog(
     context: context,
-    barrierLabel: "Rate Us",
+    barrierLabel: AppLocalizations.of(context)!.rateUsBarrierLabel,
     child: Builder(
       builder: (context) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
+        final l10n = AppLocalizations.of(context)!;
 
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -23,9 +43,9 @@ Future<void> showRatingDialog(BuildContext context) async {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PremiumDialogHeader(
-                title: "Rate Us!",
-                subtitle: "Help us improve Ub-Hub",
+              PremiumDialogHeader(
+                title: l10n.rateUsTitle,
+                subtitle: l10n.helpUsImproveSubtitle,
                 icon: Icons.star_rounded,
               ),
               Padding(
@@ -33,7 +53,7 @@ Future<void> showRatingDialog(BuildContext context) async {
                 child: Column(
                   children: [
                     Text(
-                      "If you enjoy using Ub-Hub, please take a moment to rate us. Your feedback is invaluable!",
+                      l10n.rateUsBody,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 15,
@@ -51,7 +71,7 @@ Future<void> showRatingDialog(BuildContext context) async {
                                   borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: () => Navigator.pop(context),
-                            child: Text("Later",
+                            child: Text(l10n.laterButton,
                                 style: GoogleFonts.outfit(
                                     color: isDark ? Colors.white38 : Colors.grey[500],
                                     fontWeight: FontWeight.bold)),
@@ -61,16 +81,11 @@ Future<void> showRatingDialog(BuildContext context) async {
                         Expanded(
                           flex: 2,
                           child: PremiumSubmitButton(
-                            label: "Rate Now",
+                            label: l10n.rateNowButton,
                             isLoading: false,
                             onPressed: () {
                               Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Thank you for your rating! ⭐"),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              _launchStoreListing(context);
                             },
                           ),
                         ),

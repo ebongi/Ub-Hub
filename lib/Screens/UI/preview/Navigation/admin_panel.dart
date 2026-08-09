@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
@@ -58,28 +59,29 @@ class _AdminPanelState extends State<AdminPanel> {
     UserProfile user,
     UserRole role,
   ) async {
-    final roleLabel = role == UserRole.admin ? 'Admin' : 'Contributor';
+    final l10n = AppLocalizations.of(context)!;
+    final roleLabel = role == UserRole.admin ? l10n.roleLabelAdmin : l10n.roleLabelContributor;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Promote to $roleLabel',
+          l10n.promoteToRoleTitle(roleLabel),
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Promote ${user.name ?? 'this user'} to $roleLabel?',
+          l10n.promoteUserConfirmBody(user.name ?? l10n.thisUserFallback, roleLabel),
           style: GoogleFonts.outfit(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: GoogleFonts.outfit()),
+            child: Text(l10n.cancel, style: GoogleFonts.outfit()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              'Promote',
+              l10n.promoteButton,
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
           ),
@@ -94,7 +96,7 @@ class _AdminPanelState extends State<AdminPanel> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${user.name ?? 'User'} is now a $roleLabel'),
+          content: Text(l10n.userIsNowRoleLabel(user.name ?? l10n.defaultUserName, roleLabel)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -114,13 +116,14 @@ class _AdminPanelState extends State<AdminPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Admin Dashboard',
+          l10n.adminDashboardTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
@@ -128,7 +131,7 @@ class _AdminPanelState extends State<AdminPanel> {
         centerTitle: true,
       ),
       body: userModel.role != UserRole.admin
-          ? const Center(child: Text('Admin access required.'))
+          ? Center(child: Text(l10n.adminAccessRequired))
           : CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -140,7 +143,7 @@ class _AdminPanelState extends State<AdminPanel> {
                       const _QuickActions(),
                       const SizedBox(height: 16),
                       Text(
-                        'Manage departments',
+                        l10n.manageDepartmentsTitle,
                         style: GoogleFonts.outfit(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -156,7 +159,7 @@ class _AdminPanelState extends State<AdminPanel> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Manage users',
+                        l10n.manageUsersTitle,
                         style: GoogleFonts.outfit(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
@@ -219,6 +222,7 @@ class _DashboardHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -235,7 +239,7 @@ class _DashboardHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Admin access',
+            l10n.adminAccessLabel,
             style: GoogleFonts.outfit(
               color: Colors.white.withOpacity(0.9),
               fontWeight: FontWeight.w700,
@@ -243,7 +247,7 @@ class _DashboardHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            userModel.name ?? 'Administrator',
+            userModel.name ?? l10n.administratorFallback,
             style: GoogleFonts.outfit(
               color: Colors.white,
               fontSize: 24,
@@ -255,14 +259,25 @@ class _DashboardHero extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _HeroPill(label: userModel.role.name.toUpperCase()),
-              _HeroPill(label: userModel.institutionName ?? 'Institution'),
-              _HeroPill(label: userModel.department ?? 'Department'),
+              _HeroPill(label: _roleDisplayName(l10n, userModel.role)),
+              _HeroPill(label: userModel.institutionName ?? l10n.institutionFallback),
+              _HeroPill(label: userModel.department ?? l10n.departmentLabel),
             ],
           ),
         ],
       ),
     );
+  }
+}
+
+String _roleDisplayName(AppLocalizations l10n, UserRole role) {
+  switch (role) {
+    case UserRole.admin:
+      return l10n.roleAdmin;
+    case UserRole.contributor:
+      return l10n.roleContributor;
+    case UserRole.viewer:
+      return l10n.roleViewer;
   }
 }
 
@@ -296,10 +311,11 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return _ActionCard(
       icon: Icons.person_rounded,
-      title: 'My Profile',
-      subtitle: 'Review your account',
+      title: l10n.myProfileTitle,
+      subtitle: l10n.reviewYourAccountSubtitle,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const Profile()),
@@ -316,6 +332,7 @@ class _DepartmentsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return StreamBuilder<List<Department>>(
       stream: db.getDepartments(),
@@ -340,7 +357,7 @@ class _DepartmentsSection extends StatelessWidget {
               ),
             ),
             child: Text(
-              'No departments available yet.',
+              l10n.noDepartmentsAvailableYet,
               style: GoogleFonts.outfit(
                 color: theme.hintColor,
                 fontWeight: FontWeight.w600,
@@ -390,6 +407,7 @@ class _DepartmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: onTap,
@@ -491,7 +509,7 @@ class _DepartmentCard extends StatelessWidget {
                   Text(
                     department.description.isNotEmpty
                         ? department.description
-                        : 'No description available.',
+                        : l10n.noDescriptionAvailable,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.outfit(
@@ -503,8 +521,8 @@ class _DepartmentCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     department.schoolId.isNotEmpty
-                        ? 'School: ${department.schoolId}'
-                        : 'School not set',
+                        ? l10n.schoolLabel(department.schoolId)
+                        : l10n.schoolNotSet,
                     style: GoogleFonts.outfit(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -584,6 +602,7 @@ class _SearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
@@ -594,7 +613,7 @@ class _SearchCard extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         decoration: InputDecoration(
-          hintText: 'Search name, matricule, or department',
+          hintText: l10n.searchNameMatriculeHint,
           prefixIcon: const Icon(Iconsax.search_normal),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -612,6 +631,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 44),
       child: Center(
@@ -624,7 +644,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              query.isEmpty ? 'Search for a user' : 'No users found',
+              query.isEmpty ? l10n.searchForUserLabel : l10n.noUsersFound,
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.w700,
                 color: theme.hintColor,
@@ -652,6 +672,7 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final role = user.role;
     final canPromoteToContributor = role == UserRole.viewer;
     final canPromoteToAdmin = role != UserRole.admin;
@@ -680,7 +701,7 @@ class _UserCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.name ?? 'Unknown User',
+                  user.name ?? l10n.unknownUserFallback,
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
@@ -688,7 +709,7 @@ class _UserCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  user.matricule ?? 'No matricule',
+                  user.matricule ?? l10n.noMatriculeFallback,
                   style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
                 ),
                 const SizedBox(height: 6),
@@ -696,7 +717,7 @@ class _UserCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 6,
                   children: [
-                    _RoleBadge(label: role.name.toUpperCase()),
+                    _RoleBadge(label: _roleDisplayName(l10n, role)),
                     if ((user.department ?? '').isNotEmpty)
                       _RoleBadge(label: user.department!),
                   ],
@@ -709,14 +730,14 @@ class _UserCard extends StatelessWidget {
             children: [
               if (canPromoteToContributor)
                 _MiniActionButton(
-                  label: 'Contributor',
+                  label: l10n.roleLabelContributor,
                   color: Colors.blue,
                   onTap: onPromoteToContributor,
                 ),
               if (canPromoteToAdmin) ...[
                 const SizedBox(height: 8),
                 _MiniActionButton(
-                  label: 'Admin',
+                  label: l10n.roleLabelAdmin,
                   color: Colors.indigo,
                   onTap: onPromoteToAdmin,
                 ),

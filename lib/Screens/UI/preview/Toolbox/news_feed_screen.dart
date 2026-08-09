@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/campus_models.dart';
 import 'package:go_study/services/news_scraper_service.dart';
@@ -99,27 +100,28 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "University News",
+          l10n.universityNewsTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             onPressed: _loadNews,
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: "Refresh News",
+            tooltip: l10n.refreshNewsTooltip,
           ),
         ],
       ),
       body: _isLoading
           ? const NewsCardShimmer()
           : _error != null && (_allNews == null || _allNews!.isEmpty)
-          ? _buildErrorState()
+          ? _buildErrorState(l10n)
           : _allNews == null || _allNews!.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(l10n)
           : RefreshIndicator(
               onRefresh: _loadNews,
               child: ListView.builder(
@@ -137,7 +139,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(AppLocalizations l10n) {
     return FutureBuilder<bool>(
       future: _isInternetConnected(),
       builder: (context, snapshot) {
@@ -158,7 +160,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  hasNoInternet ? "No Connection" : "Couldn't fetch news",
+                  hasNoInternet ? l10n.noConnectionTitle : l10n.couldntFetchNews,
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -167,8 +169,8 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 const SizedBox(height: 8),
                 Text(
                   hasNoInternet
-                      ? "Check your internet and try again."
-                      : "An unexpected error occurred. Please try again later.",
+                      ? l10n.noConnectionBody
+                      : l10n.unexpectedErrorTryLater,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     color: Colors.grey,
@@ -178,7 +180,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                 ElevatedButton.icon(
                   onPressed: _loadNews,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text("Retry"),
+                  label: Text(l10n.retryButton),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -197,7 +199,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -209,7 +211,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "No announcements yet.",
+            l10n.noAnnouncementsYet,
             style: GoogleFonts.outfit(color: Colors.grey),
           ),
         ],
@@ -400,7 +402,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                       ),
                       const SizedBox(height: 40),
                       PremiumSubmitButton(
-                        label: "Read Full Article",
+                        label: AppLocalizations.of(context)!.readFullArticle,
                         isLoading: false,
                         onPressed: () async {
                           final uri = Uri.parse(article.id);

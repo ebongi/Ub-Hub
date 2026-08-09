@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/profile.dart';
 
@@ -12,6 +13,7 @@ class PaywallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -63,7 +65,7 @@ class PaywallScreen extends StatelessWidget {
                   FadeInSlide(
                     delay: 200,
                     child: Text(
-                      "Trial Period Ended",
+                      l10n.trialPeriodEndedTitle,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 32,
@@ -79,7 +81,7 @@ class PaywallScreen extends StatelessWidget {
                   FadeInSlide(
                     delay: 400,
                     child: Text(
-                      "Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
+                      l10n.trialExpiredBody,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 16,
@@ -115,7 +117,7 @@ class PaywallScreen extends StatelessWidget {
                           elevation: 0,
                         ),
                         child: Text(
-                          "View Upgrade Plans",
+                          l10n.viewUpgradePlansButton,
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -133,7 +135,7 @@ class PaywallScreen extends StatelessWidget {
                     child: TextButton(
                       onPressed: () => Authentication().signUserOut(),
                       child: Text(
-                        "Sign Out",
+                        l10n.signOutTitle,
                         style: GoogleFonts.outfit(
                           color: Colors.redAccent,
                           fontWeight: FontWeight.w600,

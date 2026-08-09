@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/institution.dart';
@@ -24,10 +25,15 @@ class AcademicStep extends StatelessWidget {
   final ValueChanged<String?> onInstitutionChanged;
   final bool isDark;
 
-  static const _levels = ['200', '300', '400', 'Resit'];
+  static const _levelCodes = ['200', '300', '400', 'Resit'];
+
+  String _levelDisplayName(AppLocalizations l10n, String code) =>
+      code == 'Resit' ? l10n.academicLevelResit : code;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Form(
       key: formKey,
       child: SingleChildScrollView(
@@ -36,43 +42,41 @@ class AcademicStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             RegistrationPageHeader(
-              title: 'Academic',
-              description:
-                  'Connect your university, matricule, and study level to unlock the right resources.',
+              title: l10n.academicStepTitle,
+              description: l10n.academicStepDescription,
               icon: Icons.school_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 18),
             RegistrationSectionFocus(
-              title: 'Academic affiliation',
-              subtitle:
-                  'This links your account to the correct educational track.',
+              title: l10n.academicAffiliationTitle,
+              subtitle: l10n.academicAffiliationSubtitle,
               icon: Icons.account_balance_outlined,
               isDark: isDark,
             ),
             const SizedBox(height: 20),
             RegistrationField(
-              label: 'Student Matricule',
-              hint: 'Official University ID',
+              label: l10n.studentMatriculeLabel,
+              hint: l10n.officialUniversityIdHint,
               icon: Icons.badge_outlined,
               controller: matriculeController,
               isDark: isDark,
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Matricule is required' : null,
+                  v == null || v.isEmpty ? l10n.matriculeRequired : null,
             ),
             const SizedBox(height: 24),
             RegistrationDropdown<String>(
-              label: 'Current Academic Level',
-              hint: 'Select your level',
+              label: l10n.currentAcademicLevelLabel,
+              hint: l10n.selectYourLevelHint,
               icon: Icons.trending_up_rounded,
               value: selectedLevel,
               isDark: isDark,
-              items: _levels
+              items: _levelCodes
                   .map(
-                    (item) => DropdownMenuItem<String>(
-                      value: item,
+                    (code) => DropdownMenuItem<String>(
+                      value: code,
                       child: Text(
-                        item,
+                        _levelDisplayName(l10n, code),
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           color: regHeadingColor(isDark),
@@ -83,7 +87,7 @@ class AcademicStep extends StatelessWidget {
                   .toList(),
               onChanged: onLevelChanged,
               validator: (val) =>
-                  val == null || val.isEmpty ? 'Please select your level' : null,
+                  val == null || val.isEmpty ? l10n.pleaseSelectLevel : null,
             ),
             const SizedBox(height: 24),
             StreamBuilder<List<Institution>>(
@@ -91,8 +95,8 @@ class AcademicStep extends StatelessWidget {
               builder: (context, snapshot) {
                 final institutions = snapshot.data ?? [];
                 return RegistrationDropdown<String>(
-                  label: 'Assigned Institution',
-                  hint: 'Select your University',
+                  label: l10n.assignedInstitutionLabel,
+                  hint: l10n.selectYourUniversityHint,
                   icon: Icons.account_balance_rounded,
                   value: selectedInstitutionId ?? '',
                   isDark: isDark,
@@ -114,7 +118,7 @@ class AcademicStep extends StatelessWidget {
                       .toList(),
                   onChanged: onInstitutionChanged,
                   validator: (val) => val == null || val.isEmpty
-                      ? 'Please select your university'
+                      ? l10n.pleaseSelectUniversity
                       : null,
                 );
               },
