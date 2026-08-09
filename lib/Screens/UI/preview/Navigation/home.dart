@@ -413,15 +413,22 @@ class ToolboxSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final crossAxisCount = context.isMobile ? 3 : (context.isTablet ? 4 : 6);
+    // More columns than before so each cell is smaller, and childAspectRatio
+    // (not a fixed mainAxisExtent) so cell height scales with the cell's
+    // own computed width — i.e. with actual screen width — instead of
+    // every phone in a bucket getting the same fixed-height cell.
+    final crossAxisCount = context.isMobile ? 4 : (context.isTablet ? 5 : 7);
+    final childAspectRatio = context.isMobile
+        ? 0.92
+        : (context.isTablet ? 0.95 : 1.0);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisExtent: context.isMobile ? 110 : 130, // Proportional height
-        mainAxisSpacing: 10,
+        crossAxisSpacing: 8,
+        childAspectRatio: childAspectRatio,
+        mainAxisSpacing: 8,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -444,7 +451,7 @@ class ToolboxSection extends StatelessWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(18),
                 color: isDark
                     ? theme.colorScheme.surfaceContainerLow
                     : Colors.white,
@@ -459,7 +466,7 @@ class ToolboxSection extends StatelessWidget {
                   if (tool.comingSoon)
                     Positioned.fill(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(18),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
                           child: Container(
@@ -473,7 +480,7 @@ class ToolboxSection extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(9),
                           decoration: BoxDecoration(
                             color: tool.brandColor.withOpacity(
                               isDark ? 0.15 : 0.1,
@@ -482,20 +489,20 @@ class ToolboxSection extends StatelessWidget {
                           ),
                           child: Icon(
                             tool.icon,
-                            size: 28,
+                            size: 20,
                             color: tool.brandColor,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0),
                           child: Text(
                             tool.name,
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.outfit(
-                              fontSize: 13,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: tool.comingSoon
                                   ? (isDark ? Colors.white54 : Colors.black45)
@@ -508,11 +515,11 @@ class ToolboxSection extends StatelessWidget {
                   ),
                   if (tool.comingSoon)
                     Positioned(
-                      top: 10,
-                      right: 10,
+                      top: 8,
+                      right: 8,
                       child: Icon(
                         Icons.lock_clock_rounded,
-                        size: 14,
+                        size: 12,
                         color: Colors.grey.withOpacity(0.7),
                       ),
                     ),
@@ -613,10 +620,19 @@ class DepartmentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final cardWidth = context.isMobile ? 280.0 : 320.0;
+    // Proportional to actual screen width (not just a mobile/tablet flag),
+    // so a small phone gets a noticeably smaller card than a large one
+    // instead of the same fixed size — with a per-bucket clamp so tablet
+    // and desktop don't scale the card up indefinitely.
+    final cardWidth = context.isMobile
+        ? context.widthPct(58).clamp(160.0, 220.0)
+        : context.isTablet
+        ? context.widthPct(32).clamp(220.0, 260.0)
+        : 260.0;
+    final cardHeight = cardWidth * 0.78;
 
     return Container(
-      height: context.isMobile ? 240 : 280,
+      height: cardHeight,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -629,7 +645,7 @@ class DepartmentSection extends StatelessWidget {
             delay: index * 0.1,
             child: Container(
               width: cardWidth,
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 12),
               child: ScaleButton(
                 onTap: () async {
                   final result = await Navigator.push(
@@ -648,7 +664,7 @@ class DepartmentSection extends StatelessWidget {
                 child: Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(20),
                     color: isDark
                         ? theme.colorScheme.surfaceContainerLow
                         : Colors.white,
@@ -703,16 +719,16 @@ class DepartmentSection extends StatelessWidget {
                       ),
                       // Content
                       Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Icon Badge
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: Colors.white.withOpacity(0.2),
                                 ),
@@ -723,22 +739,24 @@ class DepartmentSection extends StatelessWidget {
                                   Colors.white,
                                   BlendMode.srcIn,
                                 ),
-                                width: 24,
-                                height: 24,
+                                width: 18,
+                                height: 18,
                               ),
                             ),
                             const Spacer(),
                             // Department Name
                             Text(
                               department.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.outfit(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                height: 1.1,
+                                height: 1.15,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             // Action Label
                             Row(
                               children: [
@@ -746,14 +764,14 @@ class DepartmentSection extends StatelessWidget {
                                   AppLocalizations.of(context)!.exploreResources,
                                   style: GoogleFonts.outfit(
                                     color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 4),
                                 Icon(
                                   Icons.arrow_forward_rounded,
-                                  size: 14,
+                                  size: 12,
                                   color: Colors.white.withOpacity(0.8),
                                 ),
                               ],
