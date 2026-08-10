@@ -758,6 +758,24 @@ abstract class AppLocalizations {
   /// **'Sponsor development or volunteer to help'**
   String get supportGoStudySubtitle;
 
+  /// No description provided for @supportOptionsDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you\'d like to support development.'**
+  String get supportOptionsDialogBody;
+
+  /// No description provided for @chatOnWhatsAppButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat on WhatsApp'**
+  String get chatOnWhatsAppButton;
+
+  /// No description provided for @donateViaAppButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Donate via App'**
+  String get donateViaAppButton;
+
   /// No description provided for @sendFeedbackTitle.
   ///
   /// In en, this message translates to:

@@ -368,6 +368,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Sponsorisez le développement ou proposez votre aide';
 
   @override
+  String get supportOptionsDialogBody =>
+      'Choisissez comment vous souhaitez soutenir le développement.';
+
+  @override
+  String get chatOnWhatsAppButton => 'Discuter sur WhatsApp';
+
+  @override
+  String get donateViaAppButton => 'Faire un don via l\'application';
+
+  @override
   String get sendFeedbackTitle => 'Envoyer un avis';
 
   @override

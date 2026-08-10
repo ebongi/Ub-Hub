@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/profile.dart';
@@ -27,9 +28,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   );
   bool _isProcessing = false;
   SubscriptionTier? _processingTier;
-  bool _isProcessingContributor = false;
   bool _isProcessingTrial = false;
-  String? _statusMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -109,58 +108,61 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
             const SizedBox(height: 24),
             // --- FAPSHI SANDBOX TEST MODE (100 XAF) ---
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber, width: 1.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.fapshiTestModeLabel,
-                        style: GoogleFonts.outfit(
-                          color: Colors.amber[800],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+            // Debug-only: this hits Fapshi's sandbox, not a real product
+            // tier. Was previously visible to production users too.
+            if (kDebugMode)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.fapshiTestModeLabel,
+                          style: GoogleFonts.outfit(
+                            color: Colors.amber[800],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const Icon(Icons.bug_report_outlined, color: Colors.amber),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.fapshiTestModeBody,
+                      style: GoogleFonts.outfit(fontSize: 13, color: theme.colorScheme.onSurface),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _isProcessing
+                          ? null
+                          : () => _handlePurchaseCredits(100.0, 10, l10n.testCreditsPackTitle),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(double.infinity, 44),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      const Icon(Icons.bug_report_outlined, color: Colors.amber),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.fapshiTestModeBody,
-                    style: GoogleFonts.outfit(fontSize: 13, color: theme.colorScheme.onSurface),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _isProcessing
-                        ? null
-                        : () => _handlePurchaseCredits(100.0, 10, l10n.testCreditsPackTitle),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size(double.infinity, 44),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      child: Text(
+                        l10n.pay100XafTestButton,
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    child: Text(
-                      l10n.pay100XafTestButton,
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // Credit Packs
             _buildCreditPack(
@@ -671,18 +673,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = l10n.completePaymentInBrowserShort);
         } else {
           throw "Could not open payment link";
         }
-      } else {
-        setState(() => _statusMessage = l10n.waitingForApprovalMessage);
       }
 
-      final status = await FapshiService.waitForSuccessfulPayment(
-        paymentId,
-        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
-      );
+      final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await _db.addAICredits(credits);
@@ -700,114 +696,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _statusMessage = null;
-        });
+        setState(() => _isProcessing = false);
       }
     }
-  }
-
-  Widget _buildContributorCard(BuildContext context, ThemeData theme) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.secondary, theme.colorScheme.tertiary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              l10n.contributorBadge,
-              style: GoogleFonts.outfit(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.beACreatorTitle,
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.contributorUploadBody,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: widget.userProfile?.role == UserRole.contributor || widget.userProfile?.role == UserRole.admin
-                ? null
-                : () => _handleContributorUpgrade(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.secondary,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 0,
-            ),
-            child: _isProcessingContributor
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (_statusMessage != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          _statusMessage!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                  color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ],
-                  )
-                : Text(
-                    widget.userProfile?.role == UserRole.contributor || widget.userProfile?.role == UserRole.admin
-                        ? l10n.includedWithAdminContributor
-                        : l10n.oneTimePayment5000Xaf,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _handlePurchase(
@@ -920,18 +811,12 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = l10n.completePaymentBrowserTip);
         } else {
           throw "Could not open payment link";
         }
-      } else {
-        setState(() => _statusMessage = l10n.checkPhoneMomoPromptTip);
       }
 
-      final status = await FapshiService.waitForSuccessfulPayment(
-        paymentId,
-        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
-      );
+      final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
         await onSuccess();
@@ -957,152 +842,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         setState(() {
           _isProcessing = false;
           _processingTier = null;
-          _statusMessage = null;
         });
       }
     }
   }
 
-  Future<void> _handleContributorUpgrade() async {
-    final phoneController = TextEditingController();
-    final l10n = AppLocalizations.of(context)!;
-
-    final proceed = await showPremiumGeneralDialog<bool>(
-      context: context,
-      barrierLabel: l10n.upgradeToContributorTitle,
-      child: StatefulBuilder(
-        builder: (context, setDialogState) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-          return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-            surfaceTintColor: Colors.transparent,
-            contentPadding: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PremiumDialogHeader(
-                    title: l10n.upgradeToContributorTitle,
-                    subtitle: l10n.unlockEverythingForeverSubtitle,
-                    icon: Icons.stars_rounded,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.contributorUpgradeTermsBody,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            color: isDark ? Colors.white70 : Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        PremiumTextField(
-                          controller: phoneController,
-                          label: l10n.momoOmNumberLabel,
-                          hint: l10n.phoneNumberHintUppercase,
-                          icon: Icons.phone_android_rounded,
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 32),
-                        PremiumSubmitButton(
-                          label: l10n.payNowButton,
-                          isLoading: false,
-                          onPressed: () => Navigator.pop(context, true),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            l10n.cancel,
-                            style: GoogleFonts.outfit(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-
-    if (proceed == true && phoneController.text.isNotEmpty) {
-      _processContributorPayment(phoneController.text.trim());
-    }
-  }
-
-  Future<void> _processContributorPayment(String phone) async {
-    setState(() {
-      _isProcessing = true;
-      _isProcessingContributor = true;
-    });
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final response = await FapshiService.collectPayment(
-        amount: 5000.0,
-        phoneNumber: FapshiService.formatPhoneNumber(phone),
-        description: "Contributor Upgrade",
-      );
-
-      final paymentId = response['paymentId'] ?? response['id'];
-      final redirectUrl = response['redirectUrl'];
-
-      if (redirectUrl != null) {
-        final uri = Uri.parse(redirectUrl);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          setState(() => _statusMessage = l10n.completePaymentBrowserTip);
-        } else {
-          throw "Could not open payment link";
-        }
-      } else {
-        setState(() => _statusMessage = l10n.checkPhoneMomoPromptTip);
-      }
-
-      final status = await FapshiService.waitForSuccessfulPayment(
-        paymentId,
-        onStatusUpdate: (msg) => setState(() => _statusMessage = msg),
-      );
-
-      if (status == PaymentStatus.success) {
-        await _db.upgradeUserToContributor();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.youAreNowContributorMessage)),
-          );
-          Navigator.pop(context);
-        }
-      } else if (status == PaymentStatus.cancelled) {
-        throw "Payment was cancelled";
-      } else {
-        throw "Payment timed out or failed. Please try again.";
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-          _isProcessingContributor = false;
-          _statusMessage = null;
-        });
-      }
-    }
-  }
 }

@@ -386,23 +386,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSupportOptions(BuildContext context, UserModel userModel) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          "Support Go Study",
+          l10n.supportGoStudyTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          "Choose how you'd like to support development.",
+          l10n.supportOptionsDialogBody,
           style: GoogleFonts.outfit(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              "Cancel",
+              l10n.cancel,
               style: GoogleFonts.outfit(
                 color: Colors.grey,
                 fontWeight: FontWeight.w600,
@@ -415,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _supportPlatformViaWhatsApp(context, userModel);
             },
             child: Text(
-              "Chat on WhatsApp",
+              l10n.chatOnWhatsAppButton,
               style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
             ),
           ),
@@ -425,7 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               showSupportDialog(context);
             },
             child: Text(
-              "Donate via App",
+              l10n.donateViaAppButton,
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.primary,

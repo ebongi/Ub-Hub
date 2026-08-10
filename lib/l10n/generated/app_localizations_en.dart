@@ -362,6 +362,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sponsor development or volunteer to help';
 
   @override
+  String get supportOptionsDialogBody =>
+      'Choose how you\'d like to support development.';
+
+  @override
+  String get chatOnWhatsAppButton => 'Chat on WhatsApp';
+
+  @override
+  String get donateViaAppButton => 'Donate via App';
+
+  @override
   String get sendFeedbackTitle => 'Send Feedback';
 
   @override
