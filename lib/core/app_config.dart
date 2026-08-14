@@ -4,11 +4,10 @@ class AppConfig {
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
-
-  static String get fapshiApiUser => dotenv.env['FAPSHI_API_USER'] ?? '';
-  static String get fapshiApiKey => dotenv.env['FAPSHI_API_KEY'] ?? '';
-  static String get fapshiEnv => dotenv.env['FAPSHI_ENV'] ?? 'sandbox';
+  // Gemini and Fapshi credentials are intentionally NOT read here anymore —
+  // they live only in the gemini-proxy/fapshi-proxy Supabase Edge Function
+  // secrets now. A client-side getter for them would just be an invitation
+  // to reintroduce the exposure this was fixed to close.
 
   static String get firebaseApiKeyAndroid =>
       dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '';

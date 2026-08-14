@@ -8,15 +8,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:io';
 
-/// Service for handling Fapshi integration (Direct Pay)
+/// Service for handling Fapshi integration (Direct Pay). All calls go
+/// through the `fapshi-proxy` Supabase Edge Function rather than Fapshi's
+/// API directly — the real merchant apiUser/apiKey live only in the Edge
+/// Function's environment, never in this client (which previously sent
+/// them in plaintext headers from every installed APK).
 class FapshiService {
-  
-  static String get _baseUrl {
-    final env = AppConfig.fapshiEnv.toLowerCase();
-    if (env == 'production' || env == 'prod' || env == 'live') {
-      return 'https://live.fapshi.com';
-    }
-    return 'https://sandbox.fapshi.com';
+  static Uri get _proxyUri =>
+      Uri.parse('${AppConfig.supabaseUrl}/functions/v1/fapshi-proxy');
+
+  static Map<String, String> get _proxyHeaders {
+    final session = Supabase.instance.client.auth.currentSession;
+    return {
+      'Content-Type': 'application/json',
+      'apikey': AppConfig.supabaseAnonKey,
+      if (session != null) 'Authorization': 'Bearer ${session.accessToken}',
+    };
   }
 
   /// Collect payment using Fapshi Direct Pay (USSD Push)
@@ -27,24 +34,14 @@ class FapshiService {
     String? description,
   }) async {
     try {
-      final apiUser = AppConfig.fapshiApiUser.trim();
-      final apiKey = AppConfig.fapshiApiKey.trim();
-
-      if (apiUser.isEmpty || apiKey.isEmpty) {
-        throw Exception('Fapshi credentials (API User or API Key) are missing.');
-      }
-
       final formattedPhone = formatPhoneNumber(phoneNumber);
       final externalId = generatePaymentRef();
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/direct-pay'),
-        headers: {
-          'Content-Type': 'application/json',
-          'apiuser': apiUser,
-          'apikey': apiKey,
-        },
+        _proxyUri,
+        headers: _proxyHeaders,
         body: jsonEncode({
+          'action': 'direct-pay',
           'amount': amount.toInt(),
           'phone': formattedPhone,
           'email': email ?? 'customer@gostudy.app',
@@ -95,17 +92,11 @@ class FapshiService {
     String? description,
   }) async {
     try {
-      final apiUser = AppConfig.fapshiApiUser.trim();
-      final apiKey = AppConfig.fapshiApiKey.trim();
-
       final response = await http.post(
-        Uri.parse('$_baseUrl/initiate-pay'),
-        headers: {
-          'Content-Type': 'application/json',
-          'apiuser': apiUser,
-          'apikey': apiKey,
-        },
+        _proxyUri,
+        headers: _proxyHeaders,
         body: jsonEncode({
+          'action': 'initiate-pay',
           'amount': amount.toInt(),
           'phone': formatPhoneNumber(phoneNumber),
           'email': email ?? 'customer@gostudy.app',
@@ -136,15 +127,10 @@ class FapshiService {
   /// Check the status of a payment
   static Future<PaymentStatus> checkPaymentStatus(String transId) async {
     try {
-      final apiUser = AppConfig.fapshiApiUser.trim();
-      final apiKey = AppConfig.fapshiApiKey.trim();
-
-      final response = await http.get(
-        Uri.parse('$_baseUrl/payment-status/$transId'),
-        headers: {
-          'apiuser': apiUser,
-          'apikey': apiKey,
-        },
+      final response = await http.post(
+        _proxyUri,
+        headers: _proxyHeaders,
+        body: jsonEncode({'action': 'payment-status', 'transId': transId}),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

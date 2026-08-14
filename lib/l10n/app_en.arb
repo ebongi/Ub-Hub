@@ -139,6 +139,17 @@
   "aboutTitle": "About",
   "aboutSubtitle": "Learn more about the application ",
   "logout": "Logout",
+  "deleteAccountButton": "Delete Account",
+  "deleteAccountDialogTitle": "Delete your account?",
+  "deleteAccountDialogBody": "This permanently deletes your account and all your data — profile, tasks, grades, exams, payment history, and chat history. This cannot be undone.",
+  "deleteAccountTypeToConfirm": "Type DELETE to confirm.",
+  "deleteAccountConfirmButton": "Delete Forever",
+  "deleteAccountFailed": "Couldn't delete your account: {error}",
+  "@deleteAccountFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "appLanguageTitle": "Language",
   "appLanguageSubtitle": "Choose your preferred app language",
   "languageSystemDefault": "System Default",
@@ -156,6 +167,48 @@
   "homeToolTranscripts": "Transcripts",
   "homeToolPortal": "PORTAL",
   "homeToolSupportBot": "UB Support Bot",
+  "homeToolOfflineAi": "Offline AI",
+
+  "gemmaChatTitle": "Offline AI Chat",
+  "gemmaChatDownloadTitle": "Chat offline, for free",
+  "gemmaChatDownloadBody": "Download a one-time AI model (~530 MB) to chat with an AI tutor with no internet connection and no AI credits used. Wi-Fi is recommended.",
+  "gemmaChatDownloadButton": "Download",
+  "gemmaChatDownloadProgressPercent": "{percent}%",
+  "@gemmaChatDownloadProgressPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "gemmaChatDownloadCancelButton": "Cancel",
+  "gemmaChatDownloadFailedBody": "Download failed: {error}",
+  "@gemmaChatDownloadFailedBody": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "gemmaChatRetryButton": "Retry",
+  "gemmaChatRemoveModelTitle": "Remove offline AI?",
+  "gemmaChatRemoveModelBody": "This deletes the downloaded model from your device. You can download it again anytime.",
+  "gemmaChatRemoveButton": "Remove",
+  "gemmaChatRemoveMenuLabel": "Remove downloaded model",
+  "gemmaChatEmptyStateTitle": "Ask me anything, offline",
+  "gemmaChatEmptyStateBody": "No internet needed. No credits used.",
+  "gemmaChatInputHint": "Message offline AI…",
+  "gemmaChatUnavailableTitle": "Not available on this device",
+  "gemmaChatUnavailableBody": "Offline AI currently requires Android. iOS support is planned.",
+  "gemmaChatInfoDialogTitle": "Before you download",
+  "gemmaChatInfoDialogConfirm": "I understand, download",
+  "gemmaChatInfoStorageTitle": "Storage",
+  "gemmaChatInfoStorageBody": "Uses about 530 MB of your phone's storage, permanently, until you remove it from this screen.",
+  "gemmaChatInfoRamTitle": "Memory (RAM)",
+  "gemmaChatInfoRamBody": "Needs extra memory while you're chatting — works best on phones with at least 4 GB of RAM. Older or low-RAM phones may slow down while offline AI is in use.",
+  "gemmaChatInfoPerformanceTitle": "Performance",
+  "gemmaChatInfoPerformanceBody": "Responses are generated on your phone's own processor, so replies can be slower than the online AI tutor and may use more battery while chatting.",
+  "gemmaChatInfoAccuracyTitle": "Accuracy",
+  "gemmaChatInfoAccuracyBody": "This is a smaller, lighter AI model built to run offline. Its answers can sometimes be incomplete or incorrect — always double-check anything important.",
+  "gemmaChatInfoDeviceTitle": "Is your phone ready?",
+  "gemmaChatInfoDeviceBody": "Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app's performance.",
+
   "sectionDepartmentsFaculties": "Departments & Faculties",
   "sectionTools": "TOOLS",
   "noDepartmentsAvailable": "No departments available yet.",
@@ -746,6 +799,20 @@
     "placeholders": { "percent": { "type": "int" } }
   },
   "backToGeneratorButton": "BACK TO GENERATOR",
+  "materialsTabLabel": "Materials",
+  "practiceTabLabel": "Practice",
+  "selectLevelLabel": "Select a level",
+  "startLessonButton": "Start Lesson",
+  "checkAnswerButton": "Check",
+  "continueButton": "Continue",
+  "doneButton": "Done",
+  "correctAnswerLabel": "Correct answer: {answer}",
+  "@correctAnswerLabel": {
+    "placeholders": { "answer": { "type": "String" } }
+  },
+  "matchingInstructionLabel": "Tap a word on the left, then its match on the right.",
+  "frenchForEnglishSpeakersTitle": "French for English Speakers",
+  "englishForFrenchSpeakersTitle": "English for French Speakers",
   "supportDeveloperBarrierLabel": "Support Developer",
   "supportTheDeveloperTitle": "Support the Developer",
   "helpKeepProjectAliveSubtitle": "Help keep the project alive and growing",

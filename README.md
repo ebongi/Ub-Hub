@@ -93,7 +93,7 @@ Before you begin, ensure you have the following:
 
 ## 📱 Screenshots
 
-| Onboarding | Dashboard | AI Assistant | Chat |
+| Departments | Dashboard | AI Assistant | Chat |
 |:---:|:---:|:---:|:---:|
 | <img src="flutter_01.png" width="200"/> | <img src="flutter_02.png" width="200"/> | <img src="flutter_03.png" width="200"/> | <img src="flutter_04.png" width="200"/> |
 

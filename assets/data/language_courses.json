@@ -1,0 +1,3038 @@
+[
+  {
+    "id": "fre_a1_01",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct article.",
+    "sourceText": "___ maison est grande.",
+    "targetAnswer": "La",
+    "data": {
+      "options": [
+        "Le",
+        "La",
+        "Les",
+        "L'"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Maison' (house) is a feminine noun in French, so it takes the feminine singular article 'la'."
+    }
+  },
+  {
+    "id": "fre_a1_02",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Conjugate the verb 'être' (to be) correctly.",
+    "sourceText": "Je ___ étudiant.",
+    "targetAnswer": "suis",
+    "data": {
+      "options": [
+        "es",
+        "est",
+        "suis",
+        "sommes"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Être' is irregular. The first-person singular form is 'suis' (je suis)."
+    }
+  },
+  {
+    "id": "fre_a1_03",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Conjugate the verb 'avoir' (to have) correctly.",
+    "sourceText": "Tu ___ un chat.",
+    "targetAnswer": "as",
+    "data": {
+      "options": [
+        "ai",
+        "as",
+        "a",
+        "avons"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Avoir' is irregular. The second-person singular form is 'as' (tu as)."
+    }
+  },
+  {
+    "id": "fre_a1_04",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly agreed form of the adjective.",
+    "sourceText": "La robe est ___.",
+    "targetAnswer": "blanche",
+    "data": {
+      "options": [
+        "blanc",
+        "blanche",
+        "blancs",
+        "blanches"
+      ]
+    },
+    "metadata": {
+      "explanation": "Adjectives agree in gender and number with the noun they describe. Since 'robe' is feminine singular, the masculine 'blanc' becomes 'blanche'."
+    }
+  },
+  {
+    "id": "fre_a1_05",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct subject pronoun.",
+    "sourceText": "___ parlons français.",
+    "targetAnswer": "Nous",
+    "data": {
+      "options": [
+        "Il",
+        "Elle",
+        "Nous",
+        "Vous"
+      ]
+    },
+    "metadata": {
+      "explanation": "The verb ending '-ons' corresponds to the subject pronoun 'nous' (we)."
+    }
+  },
+  {
+    "id": "fre_a1_06",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the adverb that correctly intensifies the phrase.",
+    "sourceText": "Elle parle ___ bien français.",
+    "targetAnswer": "très",
+    "data": {
+      "options": [
+        "très",
+        "beaucoup",
+        "souvent",
+        "déjà"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Très' (very) intensifies an adjective or adverb like 'bien' and is placed directly before it. It does not change form for gender or number."
+    }
+  },
+  {
+    "id": "fre_a1_07",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English words to their French translations.",
+    "sourceText": "Common nouns: animals & home",
+    "targetAnswer": "cat → chat, dog → chien, house → maison, book → livre",
+    "data": {
+      "pairs": [
+        {
+          "source": "cat",
+          "target": "chat"
+        },
+        {
+          "source": "dog",
+          "target": "chien"
+        },
+        {
+          "source": "house",
+          "target": "maison"
+        },
+        {
+          "source": "book",
+          "target": "livre"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Chat', 'chien', and 'livre' are masculine (le chat, le chien, le livre), while 'maison' is feminine (la maison)."
+    }
+  },
+  {
+    "id": "fre_a1_08",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English verbs to their French infinitives.",
+    "sourceText": "Common verbs",
+    "targetAnswer": "to eat → manger, to drink → boire, to speak → parler, to go → aller",
+    "data": {
+      "pairs": [
+        {
+          "source": "to eat",
+          "target": "manger"
+        },
+        {
+          "source": "to drink",
+          "target": "boire"
+        },
+        {
+          "source": "to speak",
+          "target": "parler"
+        },
+        {
+          "source": "to go",
+          "target": "aller"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Manger' and 'parler' are regular -er verbs, while 'boire' and 'aller' are irregular and must be memorized separately."
+    }
+  },
+  {
+    "id": "fre_a1_09",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English adjectives to their French translations.",
+    "sourceText": "Common colors & sizes",
+    "targetAnswer": "red → rouge, blue → bleu, big → grand, small → petit",
+    "data": {
+      "pairs": [
+        {
+          "source": "red",
+          "target": "rouge"
+        },
+        {
+          "source": "blue",
+          "target": "bleu"
+        },
+        {
+          "source": "big",
+          "target": "grand"
+        },
+        {
+          "source": "small",
+          "target": "petit"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "These adjectives shown are masculine forms (grand, petit, bleu). Remember to add '-e' for feminine nouns: grande, petite, bleue."
+    }
+  },
+  {
+    "id": "fre_a1_10",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word that means 'apple'.",
+    "sourceText": "Je mange une ___.",
+    "targetAnswer": "pomme",
+    "data": {
+      "options": [
+        "pomme",
+        "poire",
+        "banane",
+        "fraise"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Pomme' is a feminine noun meaning apple: une pomme."
+    }
+  },
+  {
+    "id": "fre_a1_11",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word that means 'today'.",
+    "sourceText": "___, il fait beau.",
+    "targetAnswer": "aujourd'hui",
+    "data": {
+      "options": [
+        "aujourd'hui",
+        "demain",
+        "hier",
+        "toujours"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Aujourd'hui' means 'today' and is commonly placed at the start of a sentence."
+    }
+  },
+  {
+    "id": "fre_a1_12",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "I am a student.",
+    "targetAnswer": "Je suis étudiant.",
+    "data": {
+      "wordBank": [
+        "Je",
+        "suis",
+        "étudiant",
+        "tu",
+        "es",
+        "étudiante"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Étudiant' is the masculine form; use 'étudiante' only when the subject is a female student."
+    }
+  },
+  {
+    "id": "fre_a1_13",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "She has a small dog.",
+    "targetAnswer": "Elle a un petit chien.",
+    "data": {
+      "wordBank": [
+        "Elle",
+        "a",
+        "un",
+        "petit",
+        "chien",
+        "une",
+        "grande",
+        "chatte"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Chien' is masculine, so it takes the article 'un' and the masculine adjective form 'petit'."
+    }
+  },
+  {
+    "id": "fre_a1_14",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "We speak French well.",
+    "targetAnswer": "Nous parlons bien français.",
+    "data": {
+      "wordBank": [
+        "Nous",
+        "parlons",
+        "bien",
+        "français",
+        "parle",
+        "mal",
+        "anglais"
+      ]
+    },
+    "metadata": {
+      "explanation": "The verb 'parler' with the subject 'nous' takes the ending '-ons': nous parlons."
+    }
+  },
+  {
+    "id": "fre_a1_15",
+    "track": "FR_FOR_EN",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence correctly.",
+    "sourceText": "Mon frère ___ dans une grande maison.",
+    "targetAnswer": "habite",
+    "data": {
+      "options": [
+        "habite",
+        "habites",
+        "habitent",
+        "habitons"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Habiter' is a regular -er verb; the third-person singular form is 'habite' (il/elle habite). 'Maison' is feminine, hence 'une grande maison'."
+    }
+  },
+  {
+    "id": "fre_a2_01",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct passé composé form.",
+    "sourceText": "Hier, j' ___ un film.",
+    "targetAnswer": "ai regardé",
+    "data": {
+      "options": [
+        "ai regardé",
+        "as regardé",
+        "a regardé",
+        "avons regardé"
+      ]
+    },
+    "metadata": {
+      "explanation": "The passé composé uses 'avoir' + past participle for most verbs. The first-person singular form is 'j'ai regardé'."
+    }
+  },
+  {
+    "id": "fre_a2_02",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct passé composé form.",
+    "sourceText": "Elle ___ à la piscine hier.",
+    "targetAnswer": "est allée",
+    "data": {
+      "options": [
+        "a allé",
+        "est allée",
+        "est allé",
+        "a allée"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Aller' uses 'être' as its auxiliary, and the past participle agrees with a feminine subject: 'elle est allée'."
+    }
+  },
+  {
+    "id": "fre_a2_03",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct possessive adjective.",
+    "sourceText": "C'est ___ sœur.",
+    "targetAnswer": "ma",
+    "data": {
+      "options": [
+        "mon",
+        "ma",
+        "mes",
+        "ton"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Sœur' is feminine singular, so the possessive adjective is 'ma', not 'mon' (masculine) or 'mes' (plural)."
+    }
+  },
+  {
+    "id": "fre_a2_04",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the word that means 'more' to complete the comparison.",
+    "sourceText": "Paris est ___ grande que Lyon.",
+    "targetAnswer": "plus",
+    "data": {
+      "options": [
+        "plus",
+        "moins",
+        "aussi",
+        "si"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Plus...que' expresses 'more...than' in comparisons: plus grande que (bigger than). 'Grande' agrees with the feminine noun 'Paris' (as a city name)."
+    }
+  },
+  {
+    "id": "fre_a2_05",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Conjugate the reflexive verb 'se lever' correctly.",
+    "sourceText": "Je ___ tôt le matin.",
+    "targetAnswer": "me lève",
+    "data": {
+      "options": [
+        "me lève",
+        "te lèves",
+        "se lève",
+        "nous levons"
+      ]
+    },
+    "metadata": {
+      "explanation": "Reflexive verbs require a reflexive pronoun matching the subject: 'je me lève' (I get up)."
+    }
+  },
+  {
+    "id": "fre_a2_06",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the adverb that best completes the negative sentence.",
+    "sourceText": "Il ne mange ___ de légumes.",
+    "targetAnswer": "jamais",
+    "data": {
+      "options": [
+        "jamais",
+        "toujours",
+        "souvent",
+        "parfois"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Ne...jamais' forms the negative expression 'never'; the adverb 'jamais' pairs with 'ne' around the verb."
+    }
+  },
+  {
+    "id": "fre_a2_07",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English words to their French translations.",
+    "sourceText": "Daily routine nouns",
+    "targetAnswer": "breakfast → le petit-déjeuner, work → le travail, morning → le matin, evening → le soir",
+    "data": {
+      "pairs": [
+        {
+          "source": "breakfast",
+          "target": "le petit-déjeuner"
+        },
+        {
+          "source": "work",
+          "target": "le travail"
+        },
+        {
+          "source": "morning",
+          "target": "le matin"
+        },
+        {
+          "source": "evening",
+          "target": "le soir"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "All four nouns here are masculine (le petit-déjeuner, le travail, le matin, le soir)."
+    }
+  },
+  {
+    "id": "fre_a2_08",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English verbs to their French infinitives.",
+    "sourceText": "Daily routine verbs",
+    "targetAnswer": "to wake up → se réveiller, to shower → se doucher, to leave → partir, to return → rentrer",
+    "data": {
+      "pairs": [
+        {
+          "source": "to wake up",
+          "target": "se réveiller"
+        },
+        {
+          "source": "to shower",
+          "target": "se doucher"
+        },
+        {
+          "source": "to leave",
+          "target": "partir"
+        },
+        {
+          "source": "to return",
+          "target": "rentrer"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Se réveiller' and 'se doucher' are reflexive verbs, always paired with a reflexive pronoun (je me réveille, tu te douches)."
+    }
+  },
+  {
+    "id": "fre_a2_09",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English adjectives to their French translations.",
+    "sourceText": "Descriptive adjectives",
+    "targetAnswer": "tired → fatigué, happy → content, difficult → difficile, easy → facile",
+    "data": {
+      "pairs": [
+        {
+          "source": "tired",
+          "target": "fatigué"
+        },
+        {
+          "source": "happy",
+          "target": "content"
+        },
+        {
+          "source": "difficult",
+          "target": "difficile"
+        },
+        {
+          "source": "easy",
+          "target": "facile"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Fatigué' and 'content' change for feminine subjects (fatiguée, contente), while 'difficile' and 'facile' stay the same for both genders."
+    }
+  },
+  {
+    "id": "fre_a2_10",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word for 'week'.",
+    "sourceText": "Je travaille cinq jours par ___.",
+    "targetAnswer": "semaine",
+    "data": {
+      "options": [
+        "semaine",
+        "mois",
+        "année",
+        "jour"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Semaine' (week) is feminine: la semaine."
+    }
+  },
+  {
+    "id": "fre_a2_11",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word meaning 'often'.",
+    "sourceText": "Je vais ___ au marché.",
+    "targetAnswer": "souvent",
+    "data": {
+      "options": [
+        "souvent",
+        "jamais",
+        "hier",
+        "demain"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Souvent' means 'often' and is typically placed right after the conjugated verb."
+    }
+  },
+  {
+    "id": "fre_a2_12",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "I woke up early this morning.",
+    "targetAnswer": "Je me suis réveillé tôt ce matin.",
+    "data": {
+      "wordBank": [
+        "Je",
+        "me",
+        "suis",
+        "réveillé",
+        "tôt",
+        "ce",
+        "matin",
+        "réveillée",
+        "hier",
+        "soir"
+      ]
+    },
+    "metadata": {
+      "explanation": "Reflexive verbs in the passé composé always use 'être'; 'réveillé' agrees with a masculine subject (use 'réveillée' for a feminine subject)."
+    }
+  },
+  {
+    "id": "fre_a2_13",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "She is happier than her brother.",
+    "targetAnswer": "Elle est plus heureuse que son frère.",
+    "data": {
+      "wordBank": [
+        "Elle",
+        "est",
+        "plus",
+        "heureuse",
+        "que",
+        "son",
+        "frère",
+        "moins",
+        "heureux",
+        "sa"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Heureuse' is the feminine form of 'heureux', agreeing with 'elle'. 'Frère' is masculine, so it takes 'son', not 'sa'."
+    }
+  },
+  {
+    "id": "fre_a2_14",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "We never eat meat.",
+    "targetAnswer": "Nous ne mangeons jamais de viande.",
+    "data": {
+      "wordBank": [
+        "Nous",
+        "ne",
+        "mangeons",
+        "jamais",
+        "de",
+        "viande",
+        "souvent",
+        "des"
+      ]
+    },
+    "metadata": {
+      "explanation": "Negation with 'jamais' surrounds the verb: ne mangeons jamais. After a negation, 'de la viande' becomes just 'de viande'."
+    }
+  },
+  {
+    "id": "fre_a2_15",
+    "track": "FR_FOR_EN",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct past participle.",
+    "sourceText": "Nous avons ___ un bon film hier soir.",
+    "targetAnswer": "vu",
+    "data": {
+      "options": [
+        "vu",
+        "vue",
+        "vus",
+        "vues"
+      ]
+    },
+    "metadata": {
+      "explanation": "With 'avoir' as the auxiliary, the past participle stays invariable unless a preceding direct object requires agreement; here it remains 'vu'."
+    }
+  },
+  {
+    "id": "fre_b1_01",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Conjugate 'partir' (to leave) in the futur simple.",
+    "sourceText": "Demain, je ___ pour Paris.",
+    "targetAnswer": "partirai",
+    "data": {
+      "options": [
+        "partirai",
+        "partirais",
+        "pars",
+        "suis parti"
+      ]
+    },
+    "metadata": {
+      "explanation": "The futur simple of 'partir' keeps the infinitive as its stem plus the future endings: je partirai."
+    }
+  },
+  {
+    "id": "fre_b1_02",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct tense to describe an ongoing past habit.",
+    "sourceText": "Quand j'étais petit, je ___ souvent à la plage.",
+    "targetAnswer": "allais",
+    "data": {
+      "options": [
+        "allais",
+        "suis allé",
+        "irai",
+        "vais"
+      ]
+    },
+    "metadata": {
+      "explanation": "The imparfait describes repeated or ongoing past actions and states, unlike the passé composé, which marks a completed event."
+    }
+  },
+  {
+    "id": "fre_b1_03",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct relative pronoun.",
+    "sourceText": "Voici le livre ___ j'ai acheté.",
+    "targetAnswer": "que",
+    "data": {
+      "options": [
+        "qui",
+        "que",
+        "dont",
+        "où"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Que' replaces a direct object ('le livre') before a subject + verb; 'qui' would instead replace the subject of the clause."
+    }
+  },
+  {
+    "id": "fre_b1_04",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the adjective that correctly precedes the noun.",
+    "sourceText": "C'est une ___ maison.",
+    "targetAnswer": "belle",
+    "data": {
+      "options": [
+        "belle",
+        "moderne",
+        "spacieuse",
+        "confortable"
+      ]
+    },
+    "metadata": {
+      "explanation": "Short, common adjectives of beauty, age, goodness, and size (like 'beau/belle') precede the noun, while most descriptive adjectives (moderne, spacieuse) follow it. 'Belle' agrees with the feminine noun 'maison'."
+    }
+  },
+  {
+    "id": "fre_b1_05",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct direct object pronoun.",
+    "sourceText": "Tu vois Marie ? Oui, je ___ vois.",
+    "targetAnswer": "la",
+    "data": {
+      "options": [
+        "le",
+        "la",
+        "les",
+        "lui"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Marie' is feminine singular, replaced by the direct object pronoun 'la', placed before the verb."
+    }
+  },
+  {
+    "id": "fre_b1_06",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct adverb formed from 'lent' (slow).",
+    "sourceText": "Il conduit ___.",
+    "targetAnswer": "lentement",
+    "data": {
+      "options": [
+        "lentement",
+        "lentment",
+        "lente",
+        "lentemment"
+      ]
+    },
+    "metadata": {
+      "explanation": "Most French adverbs are formed by adding '-ment' to the feminine form of the adjective: lente → lentement."
+    }
+  },
+  {
+    "id": "fre_b1_07",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English words to their French translations.",
+    "sourceText": "Travel nouns",
+    "targetAnswer": "airport → l'aéroport, ticket → le billet, luggage → les bagages, passport → le passeport",
+    "data": {
+      "pairs": [
+        {
+          "source": "airport",
+          "target": "l'aéroport"
+        },
+        {
+          "source": "ticket",
+          "target": "le billet"
+        },
+        {
+          "source": "luggage",
+          "target": "les bagages"
+        },
+        {
+          "source": "passport",
+          "target": "le passeport"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Aéroport', 'billet', and 'passeport' are masculine; 'bagages' is masculine plural (les bagages)."
+    }
+  },
+  {
+    "id": "fre_b1_08",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English verbs to their French infinitives.",
+    "sourceText": "Opinion & decision verbs",
+    "targetAnswer": "to think → penser, to hope → espérer, to decide → décider, to choose → choisir",
+    "data": {
+      "pairs": [
+        {
+          "source": "to think",
+          "target": "penser"
+        },
+        {
+          "source": "to hope",
+          "target": "espérer"
+        },
+        {
+          "source": "to decide",
+          "target": "décider"
+        },
+        {
+          "source": "to choose",
+          "target": "choisir"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Choisir' belongs to the second conjugation group (-ir verbs), which follows different endings than -er verbs like 'penser' and 'décider'."
+    }
+  },
+  {
+    "id": "fre_b1_09",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English adjectives to their French translations.",
+    "sourceText": "Opinion adjectives",
+    "targetAnswer": "interesting → intéressant, boring → ennuyeux, surprising → surprenant, useful → utile",
+    "data": {
+      "pairs": [
+        {
+          "source": "interesting",
+          "target": "intéressant"
+        },
+        {
+          "source": "boring",
+          "target": "ennuyeux"
+        },
+        {
+          "source": "surprising",
+          "target": "surprenant"
+        },
+        {
+          "source": "useful",
+          "target": "utile"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Ennuyeux' becomes 'ennuyeuse' in the feminine; 'utile' stays the same for both genders."
+    }
+  },
+  {
+    "id": "fre_b1_10",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word for 'opportunity'.",
+    "sourceText": "C'est une bonne ___ pour toi.",
+    "targetAnswer": "occasion",
+    "data": {
+      "options": [
+        "occasion",
+        "danger",
+        "erreur",
+        "excuse"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Occasion' (feminine) commonly means 'opportunity' in French: une bonne occasion."
+    }
+  },
+  {
+    "id": "fre_b1_11",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French adverb meaning 'unfortunately'.",
+    "sourceText": "___, il ne pourra pas venir.",
+    "targetAnswer": "malheureusement",
+    "data": {
+      "options": [
+        "malheureusement",
+        "heureusement",
+        "rapidement",
+        "récemment"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Malheureusement' (unfortunately) often opens a sentence to express regret."
+    }
+  },
+  {
+    "id": "fre_b1_12",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "I will travel to France next year.",
+    "targetAnswer": "Je voyagerai en France l'année prochaine.",
+    "data": {
+      "wordBank": [
+        "Je",
+        "voyagerai",
+        "en",
+        "France",
+        "l'année",
+        "prochaine",
+        "voyage",
+        "dernière"
+      ]
+    },
+    "metadata": {
+      "explanation": "The futur simple 'voyagerai' expresses a planned future action. 'Année' is feminine, so the adjective is 'prochaine'."
+    }
+  },
+  {
+    "id": "fre_b1_13",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "The book that I am reading is interesting.",
+    "targetAnswer": "Le livre que je lis est intéressant.",
+    "data": {
+      "wordBank": [
+        "Le",
+        "livre",
+        "que",
+        "je",
+        "lis",
+        "est",
+        "intéressant",
+        "qui",
+        "intéressante"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Livre' is masculine, so the adjective stays 'intéressant'. 'Que' introduces the clause since 'livre' is the object of 'lis'."
+    }
+  },
+  {
+    "id": "fre_b1_14",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "She used to live in Paris.",
+    "targetAnswer": "Elle habitait à Paris.",
+    "data": {
+      "wordBank": [
+        "Elle",
+        "habitait",
+        "à",
+        "Paris",
+        "a habité",
+        "habite"
+      ]
+    },
+    "metadata": {
+      "explanation": "The imparfait 'habitait' expresses a past habitual state, matching the English 'used to live'."
+    }
+  },
+  {
+    "id": "fre_b1_15",
+    "track": "FR_FOR_EN",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct object pronoun.",
+    "sourceText": "Ces fleurs sont belles ; je vais ___ acheter.",
+    "targetAnswer": "les",
+    "data": {
+      "options": [
+        "les",
+        "le",
+        "la",
+        "leur"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Fleurs' is feminine plural, so the direct object pronoun is 'les', placed before the infinitive it governs."
+    }
+  },
+  {
+    "id": "fre_b2_01",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct subjunctive form.",
+    "sourceText": "Il faut que tu ___ tes devoirs.",
+    "targetAnswer": "fasses",
+    "data": {
+      "options": [
+        "fais",
+        "fasses",
+        "ferais",
+        "feras"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Il faut que' triggers the subjunctive mood; the irregular verb 'faire' becomes 'fasse/fasses' in the subjunctive."
+    }
+  },
+  {
+    "id": "fre_b2_02",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct conditional form for a polite request.",
+    "sourceText": "___-vous m'aider, s'il vous plaît ?",
+    "targetAnswer": "Pourriez",
+    "data": {
+      "options": [
+        "Pouvez",
+        "Pourriez",
+        "Pourrez",
+        "Pouviez"
+      ]
+    },
+    "metadata": {
+      "explanation": "The conditional 'pourriez' softens a request, making it polite: 'Pourriez-vous...?'"
+    }
+  },
+  {
+    "id": "fre_b2_03",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct pronoun to replace 'de Paris'.",
+    "sourceText": "Tu viens de Paris ? Oui, j' ___ viens.",
+    "targetAnswer": "en",
+    "data": {
+      "options": [
+        "y",
+        "en",
+        "le",
+        "lui"
+      ]
+    },
+    "metadata": {
+      "explanation": "The pronoun 'en' replaces phrases introduced by 'de', such as 'de Paris'."
+    }
+  },
+  {
+    "id": "fre_b2_04",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct form of 'beau' before a masculine noun starting with a vowel sound.",
+    "sourceText": "C'est un ___ homme.",
+    "targetAnswer": "bel",
+    "data": {
+      "options": [
+        "beau",
+        "bel",
+        "belle",
+        "beaux"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Beau' becomes 'bel' before a masculine singular noun starting with a vowel sound, for smoother pronunciation (un bel homme)."
+    }
+  },
+  {
+    "id": "fre_b2_05",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct indirect object pronoun.",
+    "sourceText": "Je ___ ai envoyé un message.",
+    "targetAnswer": "leur",
+    "data": {
+      "options": [
+        "les",
+        "leur",
+        "lui",
+        "eux"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Leur' replaces an indirect object introduced by 'à' referring to several people (à eux/elles)."
+    }
+  },
+  {
+    "id": "fre_b2_06",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly placed adverb.",
+    "sourceText": "Il a ___ fini son travail.",
+    "targetAnswer": "déjà",
+    "data": {
+      "options": [
+        "déjà",
+        "hier",
+        "longtemps",
+        "tard"
+      ]
+    },
+    "metadata": {
+      "explanation": "Common short adverbs like 'déjà' (already) are placed between the auxiliary 'avoir' and the past participle in compound tenses."
+    }
+  },
+  {
+    "id": "fre_b2_07",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English words to their French translations.",
+    "sourceText": "Professional nouns",
+    "targetAnswer": "career → la carrière, contract → le contrat, meeting → la réunion, deadline → l'échéance",
+    "data": {
+      "pairs": [
+        {
+          "source": "career",
+          "target": "la carrière"
+        },
+        {
+          "source": "contract",
+          "target": "le contrat"
+        },
+        {
+          "source": "meeting",
+          "target": "la réunion"
+        },
+        {
+          "source": "deadline",
+          "target": "l'échéance"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Carrière', 'réunion', and 'échéance' are feminine; 'contrat' is masculine."
+    }
+  },
+  {
+    "id": "fre_b2_08",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English verbs to their French infinitives.",
+    "sourceText": "Professional verbs",
+    "targetAnswer": "to achieve → accomplir, to negotiate → négocier, to convince → convaincre, to postpone → reporter",
+    "data": {
+      "pairs": [
+        {
+          "source": "to achieve",
+          "target": "accomplir"
+        },
+        {
+          "source": "to negotiate",
+          "target": "négocier"
+        },
+        {
+          "source": "to convince",
+          "target": "convaincre"
+        },
+        {
+          "source": "to postpone",
+          "target": "reporter"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Convaincre' is an irregular third-group verb, unlike the regular -er verbs 'négocier' and 'reporter'."
+    }
+  },
+  {
+    "id": "fre_b2_09",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the English adjectives to their French translations.",
+    "sourceText": "Nuanced personality adjectives",
+    "targetAnswer": "ambitious → ambitieux, reliable → fiable, demanding → exigeant, flexible → flexible",
+    "data": {
+      "pairs": [
+        {
+          "source": "ambitious",
+          "target": "ambitieux"
+        },
+        {
+          "source": "reliable",
+          "target": "fiable"
+        },
+        {
+          "source": "demanding",
+          "target": "exigeant"
+        },
+        {
+          "source": "flexible",
+          "target": "flexible"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Ambitieux' becomes 'ambitieuse' in the feminine; 'fiable' and 'flexible' stay the same for both genders."
+    }
+  },
+  {
+    "id": "fre_b2_10",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French word for 'awareness' in this context.",
+    "sourceText": "Il faut sensibiliser les gens à la ___ environnementale.",
+    "targetAnswer": "conscience",
+    "data": {
+      "options": [
+        "conscience",
+        "ignorance",
+        "habitude",
+        "décision"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Conscience' (feminine) means 'awareness' here, as in 'conscience environnementale'."
+    }
+  },
+  {
+    "id": "fre_b2_11",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the French adverb meaning 'nevertheless'.",
+    "sourceText": "Il pleuvait ; ___, nous sommes sortis.",
+    "targetAnswer": "néanmoins",
+    "data": {
+      "options": [
+        "néanmoins",
+        "donc",
+        "ainsi",
+        "enfin"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Néanmoins' (nevertheless) introduces a contrast with the preceding statement."
+    }
+  },
+  {
+    "id": "fre_b2_12",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "It is important that she comes to the meeting.",
+    "targetAnswer": "Il est important qu'elle vienne à la réunion.",
+    "data": {
+      "wordBank": [
+        "Il",
+        "est",
+        "important",
+        "qu'elle",
+        "vienne",
+        "à",
+        "la",
+        "réunion",
+        "vient",
+        "viendra"
+      ]
+    },
+    "metadata": {
+      "explanation": "The expression 'il est important que' requires the subjunctive: 'qu'elle vienne'. 'Réunion' is feminine, hence 'la réunion'."
+    }
+  },
+  {
+    "id": "fre_b2_13",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "If I had more time, I would travel more.",
+    "targetAnswer": "Si j'avais plus de temps, je voyagerais plus.",
+    "data": {
+      "wordBank": [
+        "Si",
+        "j'avais",
+        "plus",
+        "de",
+        "temps",
+        "je",
+        "voyagerais",
+        "plus",
+        "aurai",
+        "voyage"
+      ]
+    },
+    "metadata": {
+      "explanation": "This hypothetical uses the imparfait in the 'si' clause and the conditional in the result clause: si j'avais... je voyagerais."
+    }
+  },
+  {
+    "id": "fre_b2_14",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into French using the word bank.",
+    "sourceText": "He would have liked to see her again.",
+    "targetAnswer": "Il aurait aimé la revoir.",
+    "data": {
+      "wordBank": [
+        "Il",
+        "aurait",
+        "aimé",
+        "la",
+        "revoir",
+        "voudrait",
+        "voir",
+        "les"
+      ]
+    },
+    "metadata": {
+      "explanation": "The past conditional 'aurait aimé' expresses an unrealized wish about the past."
+    }
+  },
+  {
+    "id": "fre_b2_15",
+    "track": "FR_FOR_EN",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct subjunctive form of 'être'.",
+    "sourceText": "Je doute qu'il ___ à l'heure.",
+    "targetAnswer": "soit",
+    "data": {
+      "options": [
+        "soit",
+        "est",
+        "sera",
+        "était"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Douter que' expresses doubt and triggers the subjunctive; the irregular verb 'être' becomes 'soit' in the subjunctive."
+    }
+  },
+  {
+    "id": "eng_a1_01",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct plural form.",
+    "sourceText": "I have two ___.",
+    "targetAnswer": "books",
+    "data": {
+      "options": [
+        "book",
+        "books",
+        "bookes",
+        "book's"
+      ]
+    },
+    "metadata": {
+      "explanation": "English nouns typically form the plural by adding '-s'. Unlike in French (livre → livres), the pronunciation actually changes with the added '-s' sound."
+    }
+  },
+  {
+    "id": "eng_a1_02",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete with the correct form of 'to be'.",
+    "sourceText": "She ___ a teacher.",
+    "targetAnswer": "is",
+    "data": {
+      "options": [
+        "am",
+        "is",
+        "are",
+        "be"
+      ]
+    },
+    "metadata": {
+      "explanation": "'To be' is irregular: use 'is' with he/she/it. Note that French 'être' has a different form for every subject, but English only changes for a few (am/is/are)."
+    }
+  },
+  {
+    "id": "eng_a1_03",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete with the correct form of 'to have'.",
+    "sourceText": "They ___ a car.",
+    "targetAnswer": "have",
+    "data": {
+      "options": [
+        "has",
+        "have",
+        "having",
+        "haves"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Have' is used with I/you/we/they and all plural subjects; only 'he/she/it' takes 'has'."
+    }
+  },
+  {
+    "id": "eng_a1_04",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly translated sentence.",
+    "sourceText": "une grande maison",
+    "targetAnswer": "a big house",
+    "data": {
+      "options": [
+        "a house big",
+        "a big house",
+        "a house of big",
+        "big a house"
+      ]
+    },
+    "metadata": {
+      "explanation": "Unlike French, where many adjectives follow the noun (une maison grande would be wrong), English adjectives are placed before the noun: a big house."
+    }
+  },
+  {
+    "id": "eng_a1_05",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct subject pronoun.",
+    "sourceText": "___ are students.",
+    "targetAnswer": "We",
+    "data": {
+      "options": [
+        "He",
+        "She",
+        "We",
+        "It"
+      ]
+    },
+    "metadata": {
+      "explanation": "'We' is used for a group including the speaker, corresponding to the French pronoun 'nous'."
+    }
+  },
+  {
+    "id": "eng_a1_06",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly placed adverb of frequency.",
+    "sourceText": "He is ___ late.",
+    "targetAnswer": "always",
+    "data": {
+      "options": [
+        "always",
+        "every day",
+        "sometime",
+        "much"
+      ]
+    },
+    "metadata": {
+      "explanation": "Adverbs of frequency like 'always' are placed after the verb 'to be', unlike with action verbs, where they go before the verb."
+    }
+  },
+  {
+    "id": "eng_a1_07",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French words to their English translations.",
+    "sourceText": "Common nouns: animals & home",
+    "targetAnswer": "chat → cat, chien → dog, maison → house, livre → book",
+    "data": {
+      "pairs": [
+        {
+          "source": "chat",
+          "target": "cat"
+        },
+        {
+          "source": "chien",
+          "target": "dog"
+        },
+        {
+          "source": "maison",
+          "target": "house"
+        },
+        {
+          "source": "livre",
+          "target": "book"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "In French, 'chat', 'chien', and 'livre' are masculine (le chat, le chien, le livre) while 'maison' is feminine (la maison) — English nouns have no gender at all."
+    }
+  },
+  {
+    "id": "eng_a1_08",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French infinitives to their English translations.",
+    "sourceText": "Common verbs",
+    "targetAnswer": "manger → to eat, boire → to drink, parler → to speak, aller → to go",
+    "data": {
+      "pairs": [
+        {
+          "source": "manger",
+          "target": "to eat"
+        },
+        {
+          "source": "boire",
+          "target": "to drink"
+        },
+        {
+          "source": "parler",
+          "target": "to speak"
+        },
+        {
+          "source": "aller",
+          "target": "to go"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "English infinitives are always marked with 'to' (to eat, to speak) and never change form based on the subject in most tenses."
+    }
+  },
+  {
+    "id": "eng_a1_09",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French adjectives to their English translations.",
+    "sourceText": "Common colors & sizes",
+    "targetAnswer": "rouge → red, grand → big, petit → small, heureux → happy",
+    "data": {
+      "pairs": [
+        {
+          "source": "rouge",
+          "target": "red"
+        },
+        {
+          "source": "grand",
+          "target": "big"
+        },
+        {
+          "source": "petit",
+          "target": "small"
+        },
+        {
+          "source": "heureux",
+          "target": "happy"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "In French these adjectives change for gender (grande, petite, heureuse), but their English translations (big, small, happy) never change form."
+    }
+  },
+  {
+    "id": "eng_a1_10",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'pomme'.",
+    "sourceText": "I am eating an ___.",
+    "targetAnswer": "apple",
+    "data": {
+      "options": [
+        "apple",
+        "banana",
+        "pear",
+        "orange"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Apple' translates 'pomme'. Note the article 'an' is used instead of 'a' because 'apple' starts with a vowel sound."
+    }
+  },
+  {
+    "id": "eng_a1_11",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'aujourd'hui'.",
+    "sourceText": "___, the weather is nice.",
+    "targetAnswer": "today",
+    "data": {
+      "options": [
+        "today",
+        "tomorrow",
+        "yesterday",
+        "always"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Today' translates 'aujourd'hui', commonly placed at the start or end of the sentence."
+    }
+  },
+  {
+    "id": "eng_a1_12",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Je suis étudiant.",
+    "targetAnswer": "I am a student.",
+    "data": {
+      "wordBank": [
+        "I",
+        "am",
+        "a",
+        "student",
+        "student's",
+        "the",
+        "students"
+      ]
+    },
+    "metadata": {
+      "explanation": "English requires the indefinite article 'a' before a singular profession noun, unlike French, which omits it: je suis étudiant → I am a student."
+    }
+  },
+  {
+    "id": "eng_a1_13",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Elle a un petit chien.",
+    "targetAnswer": "She has a small dog.",
+    "data": {
+      "wordBank": [
+        "She",
+        "has",
+        "a",
+        "small",
+        "dog",
+        "dogs",
+        "big",
+        "have"
+      ]
+    },
+    "metadata": {
+      "explanation": "The verb 'to have' takes the form 'has' with 'she'. English adjectives like 'small' always come before the noun."
+    }
+  },
+  {
+    "id": "eng_a1_14",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Nous parlons bien anglais.",
+    "targetAnswer": "We speak English well.",
+    "data": {
+      "wordBank": [
+        "We",
+        "speak",
+        "English",
+        "well",
+        "good",
+        "speaks",
+        "French"
+      ]
+    },
+    "metadata": {
+      "explanation": "The adverb 'well' describes how the action is done and is placed at the end of the sentence, after the object. 'Good' is an adjective, not an adverb."
+    }
+  },
+  {
+    "id": "eng_a1_15",
+    "track": "EN_FOR_FR",
+    "level": "A1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence correctly.",
+    "sourceText": "My brother ___ in a big house.",
+    "targetAnswer": "lives",
+    "data": {
+      "options": [
+        "live",
+        "lives",
+        "living",
+        "lived"
+      ]
+    },
+    "metadata": {
+      "explanation": "With he/she/it subjects, regular present-tense verbs add '-s': he lives."
+    }
+  },
+  {
+    "id": "eng_a2_01",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct present continuous form.",
+    "sourceText": "I ___ dinner right now.",
+    "targetAnswer": "am cooking",
+    "data": {
+      "options": [
+        "cook",
+        "cooks",
+        "am cooking",
+        "cooking"
+      ]
+    },
+    "metadata": {
+      "explanation": "The present continuous (be + verb-ing) describes an action happening right now, similar to 'être en train de' in French."
+    }
+  },
+  {
+    "id": "eng_a2_02",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct past simple form.",
+    "sourceText": "Yesterday, I ___ a movie.",
+    "targetAnswer": "watched",
+    "data": {
+      "options": [
+        "watch",
+        "watched",
+        "watching",
+        "watches"
+      ]
+    },
+    "metadata": {
+      "explanation": "Regular verbs form the past simple by adding '-ed': watch → watched."
+    }
+  },
+  {
+    "id": "eng_a2_03",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct past simple form of 'to go'.",
+    "sourceText": "She ___ to the pool yesterday.",
+    "targetAnswer": "went",
+    "data": {
+      "options": [
+        "goed",
+        "went",
+        "gone",
+        "going"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Go' is irregular; its past simple form is 'went', not 'goed'."
+    }
+  },
+  {
+    "id": "eng_a2_04",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct possessive adjective.",
+    "sourceText": "This is ___ sister.",
+    "targetAnswer": "my",
+    "data": {
+      "options": [
+        "me",
+        "my",
+        "mine",
+        "I"
+      ]
+    },
+    "metadata": {
+      "explanation": "'My' is the possessive adjective used before a noun. Unlike French, English possessives never change for the gender of the noun (ma/mon both become 'my')."
+    }
+  },
+  {
+    "id": "eng_a2_05",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct comparative form.",
+    "sourceText": "This book is ___ than that one.",
+    "targetAnswer": "more interesting",
+    "data": {
+      "options": [
+        "more interesting",
+        "interestinger",
+        "most interesting",
+        "interesting"
+      ]
+    },
+    "metadata": {
+      "explanation": "Longer adjectives (2+ syllables) form the comparative with 'more', similar to French 'plus...que'."
+    }
+  },
+  {
+    "id": "eng_a2_06",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly placed adverb of frequency.",
+    "sourceText": "He ___ eats vegetables.",
+    "targetAnswer": "never",
+    "data": {
+      "options": [
+        "never",
+        "not ever",
+        "no",
+        "any"
+      ]
+    },
+    "metadata": {
+      "explanation": "Adverbs of frequency like 'never' are placed before the main verb, unlike French where 'ne...jamais' surrounds the verb."
+    }
+  },
+  {
+    "id": "eng_a2_07",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French words to their English translations.",
+    "sourceText": "Daily routine nouns",
+    "targetAnswer": "le petit-déjeuner → breakfast, le travail → work, le matin → morning, le soir → evening",
+    "data": {
+      "pairs": [
+        {
+          "source": "le petit-déjeuner",
+          "target": "breakfast"
+        },
+        {
+          "source": "le travail",
+          "target": "work"
+        },
+        {
+          "source": "le matin",
+          "target": "morning"
+        },
+        {
+          "source": "le soir",
+          "target": "evening"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "All four French nouns here are masculine (le petit-déjeuner, le travail, le matin, le soir); English nouns carry no gender."
+    }
+  },
+  {
+    "id": "eng_a2_08",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French infinitives to their English translations.",
+    "sourceText": "Daily routine verbs",
+    "targetAnswer": "se réveiller → to wake up, se doucher → to shower, partir → to leave, rentrer → to return",
+    "data": {
+      "pairs": [
+        {
+          "source": "se réveiller",
+          "target": "to wake up"
+        },
+        {
+          "source": "se doucher",
+          "target": "to shower"
+        },
+        {
+          "source": "partir",
+          "target": "to leave"
+        },
+        {
+          "source": "rentrer",
+          "target": "to return"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "French reflexive verbs like 'se réveiller' and 'se doucher' translate to plain English verbs — English does not use a reflexive pronoun for these routines."
+    }
+  },
+  {
+    "id": "eng_a2_09",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French adjectives to their English translations.",
+    "sourceText": "Descriptive adjectives",
+    "targetAnswer": "fatigué → tired, content → happy, difficile → difficult, facile → easy",
+    "data": {
+      "pairs": [
+        {
+          "source": "fatigué",
+          "target": "tired"
+        },
+        {
+          "source": "content",
+          "target": "happy"
+        },
+        {
+          "source": "difficile",
+          "target": "difficult"
+        },
+        {
+          "source": "facile",
+          "target": "easy"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Fatigué' and 'content' change form for feminine subjects in French (fatiguée, contente); their English translations never change."
+    }
+  },
+  {
+    "id": "eng_a2_10",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'semaine'.",
+    "sourceText": "I work five days a ___.",
+    "targetAnswer": "week",
+    "data": {
+      "options": [
+        "week",
+        "month",
+        "year",
+        "day"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Week' translates the French feminine noun 'semaine'."
+    }
+  },
+  {
+    "id": "eng_a2_11",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'souvent'.",
+    "sourceText": "I ___ go to the market.",
+    "targetAnswer": "often",
+    "data": {
+      "options": [
+        "often",
+        "never",
+        "yesterday",
+        "tomorrow"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Often' translates 'souvent' and is placed before the main verb, unlike in French where it usually follows the verb."
+    }
+  },
+  {
+    "id": "eng_a2_12",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Je me suis réveillé tôt ce matin.",
+    "targetAnswer": "I woke up early this morning.",
+    "data": {
+      "wordBank": [
+        "I",
+        "woke",
+        "up",
+        "early",
+        "this",
+        "morning",
+        "wake",
+        "waked"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Woke' is the irregular past simple of 'wake'. English does not need a reflexive pronoun here, unlike French 'me suis réveillé'."
+    }
+  },
+  {
+    "id": "eng_a2_13",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Elle est plus heureuse que son frère.",
+    "targetAnswer": "She is happier than her brother.",
+    "data": {
+      "wordBank": [
+        "She",
+        "is",
+        "happier",
+        "than",
+        "her",
+        "brother",
+        "more",
+        "his"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Happy' is a short adjective, so its comparative form adds '-er' instead of using 'more': happy → happier."
+    }
+  },
+  {
+    "id": "eng_a2_14",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Nous ne mangeons jamais de viande.",
+    "targetAnswer": "We never eat meat.",
+    "data": {
+      "wordBank": [
+        "We",
+        "never",
+        "eat",
+        "meat",
+        "eats",
+        "meats",
+        "not"
+      ]
+    },
+    "metadata": {
+      "explanation": "In English, 'never' alone makes the sentence negative and is placed before the main verb; no extra 'not' is needed."
+    }
+  },
+  {
+    "id": "eng_a2_15",
+    "track": "EN_FOR_FR",
+    "level": "A2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct past participle.",
+    "sourceText": "We have already ___ this movie.",
+    "targetAnswer": "seen",
+    "data": {
+      "options": [
+        "seen",
+        "saw",
+        "see",
+        "seeing"
+      ]
+    },
+    "metadata": {
+      "explanation": "The present perfect uses 'have' + past participle; 'see' has the irregular past participle 'seen'."
+    }
+  },
+  {
+    "id": "eng_b1_01",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct tense.",
+    "sourceText": "I ___ to Japan three times.",
+    "targetAnswer": "have been",
+    "data": {
+      "options": [
+        "went",
+        "have been",
+        "was",
+        "go"
+      ]
+    },
+    "metadata": {
+      "explanation": "The present perfect is used for life experiences without a specific past time, unlike the past simple which needs a defined moment."
+    }
+  },
+  {
+    "id": "eng_b1_02",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct tense.",
+    "sourceText": "I ___ to Japan in 2019.",
+    "targetAnswer": "went",
+    "data": {
+      "options": [
+        "have been",
+        "went",
+        "have gone",
+        "go"
+      ]
+    },
+    "metadata": {
+      "explanation": "A specific past time expression ('in 2019') requires the past simple, not the present perfect."
+    }
+  },
+  {
+    "id": "eng_b1_03",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct modal verb.",
+    "sourceText": "You ___ wear a seatbelt; it's the law.",
+    "targetAnswer": "must",
+    "data": {
+      "options": [
+        "must",
+        "might",
+        "could",
+        "would"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Must' expresses strong obligation, similar to French 'devoir' or 'il faut'."
+    }
+  },
+  {
+    "id": "eng_b1_04",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct relative pronoun.",
+    "sourceText": "The man ___ called you is my father.",
+    "targetAnswer": "who",
+    "data": {
+      "options": [
+        "which",
+        "who",
+        "whose",
+        "where"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Who' refers to people as the subject of the clause; 'which' would refer to things instead."
+    }
+  },
+  {
+    "id": "eng_b1_05",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly translated sentence.",
+    "sourceText": "une grosse voiture rouge",
+    "targetAnswer": "a big red car",
+    "data": {
+      "options": [
+        "a red big car",
+        "a big red car",
+        "a car big red",
+        "a red car big"
+      ]
+    },
+    "metadata": {
+      "explanation": "English adjective order places size before color: 'big' (size) comes before 'red' (color), the reverse of French where both would typically follow the noun."
+    }
+  },
+  {
+    "id": "eng_b1_06",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct adverb form of 'careful'.",
+    "sourceText": "She drives ___.",
+    "targetAnswer": "carefully",
+    "data": {
+      "options": [
+        "careful",
+        "carefully",
+        "carefuly",
+        "carefully's"
+      ]
+    },
+    "metadata": {
+      "explanation": "Most English adverbs are formed by adding '-ly' to the adjective: careful → carefully."
+    }
+  },
+  {
+    "id": "eng_b1_07",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French words to their English translations.",
+    "sourceText": "Travel nouns",
+    "targetAnswer": "l'aéroport → airport, le billet → ticket, les bagages → luggage, le passeport → passport",
+    "data": {
+      "pairs": [
+        {
+          "source": "l'aéroport",
+          "target": "airport"
+        },
+        {
+          "source": "le billet",
+          "target": "ticket"
+        },
+        {
+          "source": "les bagages",
+          "target": "luggage"
+        },
+        {
+          "source": "le passeport",
+          "target": "passport"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Bagages' is plural in French (les bagages), but its English translation 'luggage' is an uncountable noun and stays singular."
+    }
+  },
+  {
+    "id": "eng_b1_08",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French infinitives to their English translations.",
+    "sourceText": "Opinion & decision verbs",
+    "targetAnswer": "penser → to think, espérer → to hope, décider → to decide, choisir → to choose",
+    "data": {
+      "pairs": [
+        {
+          "source": "penser",
+          "target": "to think"
+        },
+        {
+          "source": "espérer",
+          "target": "to hope"
+        },
+        {
+          "source": "décider",
+          "target": "to decide"
+        },
+        {
+          "source": "choisir",
+          "target": "to choose"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "English verbs keep the same base form regardless of subject in most tenses, unlike French where each pronoun changes the verb ending."
+    }
+  },
+  {
+    "id": "eng_b1_09",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French adjectives to their English translations.",
+    "sourceText": "Opinion adjectives",
+    "targetAnswer": "intéressant → interesting, ennuyeux → boring, surprenant → surprising, utile → useful",
+    "data": {
+      "pairs": [
+        {
+          "source": "intéressant",
+          "target": "interesting"
+        },
+        {
+          "source": "ennuyeux",
+          "target": "boring"
+        },
+        {
+          "source": "surprenant",
+          "target": "surprising"
+        },
+        {
+          "source": "utile",
+          "target": "useful"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Ennuyeux' becomes 'ennuyeuse' in the feminine in French; its English translation 'boring' never changes form."
+    }
+  },
+  {
+    "id": "eng_b1_10",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'occasion' (opportunity).",
+    "sourceText": "This is a good ___ for you.",
+    "targetAnswer": "opportunity",
+    "data": {
+      "options": [
+        "opportunity",
+        "danger",
+        "mistake",
+        "excuse"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Opportunity' translates the French 'occasion' in this context — a false friend to watch, since English 'occasion' usually means a special event, not a chance."
+    }
+  },
+  {
+    "id": "eng_b1_11",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'malheureusement'.",
+    "sourceText": "___, he can't come.",
+    "targetAnswer": "unfortunately",
+    "data": {
+      "options": [
+        "unfortunately",
+        "fortunately",
+        "quickly",
+        "recently"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Unfortunately' translates 'malheureusement' and typically opens the sentence, just like in French."
+    }
+  },
+  {
+    "id": "eng_b1_12",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Je voyagerai en France l'année prochaine.",
+    "targetAnswer": "I will travel to France next year.",
+    "data": {
+      "wordBank": [
+        "I",
+        "will",
+        "travel",
+        "to",
+        "France",
+        "next",
+        "year",
+        "last",
+        "traveled"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Will' plus the base verb expresses a future plan, corresponding to the French futur simple."
+    }
+  },
+  {
+    "id": "eng_b1_13",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Le livre que je lis est intéressant.",
+    "targetAnswer": "The book that I am reading is interesting.",
+    "data": {
+      "wordBank": [
+        "The",
+        "book",
+        "that",
+        "I",
+        "am",
+        "reading",
+        "is",
+        "interesting",
+        "read",
+        "interested"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Interesting' describes the book itself, while 'interested' would describe a person's feeling — a common mix-up for French speakers, since French uses 'intéressant' for both."
+    }
+  },
+  {
+    "id": "eng_b1_14",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Elle habitait à Paris.",
+    "targetAnswer": "She used to live in Paris.",
+    "data": {
+      "wordBank": [
+        "She",
+        "used",
+        "to",
+        "live",
+        "in",
+        "Paris",
+        "uses",
+        "lived"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Used to' expresses a past habitual state, corresponding to the French imparfait 'habitait'."
+    }
+  },
+  {
+    "id": "eng_b1_15",
+    "track": "EN_FOR_FR",
+    "level": "B1",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct relative pronoun.",
+    "sourceText": "These flowers, ___ are beautiful, are for you.",
+    "targetAnswer": "which",
+    "data": {
+      "options": [
+        "which",
+        "who",
+        "whose",
+        "whom"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Which' refers to things, like 'flowers', while 'who' would refer to people."
+    }
+  },
+  {
+    "id": "eng_b2_01",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct passive form.",
+    "sourceText": "The letter ___ by John yesterday.",
+    "targetAnswer": "was written",
+    "data": {
+      "options": [
+        "wrote",
+        "was written",
+        "is written",
+        "has written"
+      ]
+    },
+    "metadata": {
+      "explanation": "The passive voice uses 'be' + past participle; the past tense 'was written' matches the time marker 'yesterday'."
+    }
+  },
+  {
+    "id": "eng_b2_02",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct conditional form.",
+    "sourceText": "If I ___ more time, I would travel more.",
+    "targetAnswer": "had",
+    "data": {
+      "options": [
+        "have",
+        "had",
+        "will have",
+        "would have"
+      ]
+    },
+    "metadata": {
+      "explanation": "The second conditional uses the past simple in the 'if' clause to describe a hypothetical present situation, matching French 'si + imparfait'."
+    }
+  },
+  {
+    "id": "eng_b2_03",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct conditional form.",
+    "sourceText": "If he had studied, he ___ passed the exam.",
+    "targetAnswer": "would have",
+    "data": {
+      "options": [
+        "would",
+        "would have",
+        "will have",
+        "had"
+      ]
+    },
+    "metadata": {
+      "explanation": "The third conditional describes an unreal past situation: 'would have' + past participle expresses the unrealized result."
+    }
+  },
+  {
+    "id": "eng_b2_04",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "VERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the phrasal verb meaning 'to postpone'.",
+    "sourceText": "We had to ___ the meeting until next week.",
+    "targetAnswer": "put off",
+    "data": {
+      "options": [
+        "put off",
+        "put on",
+        "put up",
+        "put down"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Put off' is a phrasal verb meaning to postpone, very common in everyday English, often replacing the more formal verb 'postpone'."
+    }
+  },
+  {
+    "id": "eng_b2_05",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "PRONOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correct reported speech form.",
+    "sourceText": "She said that she ___ tired.",
+    "targetAnswer": "was",
+    "data": {
+      "options": [
+        "is",
+        "was",
+        "be",
+        "has been"
+      ]
+    },
+    "metadata": {
+      "explanation": "In reported speech, present tense usually shifts back to the past tense: 'is' becomes 'was'."
+    }
+  },
+  {
+    "id": "eng_b2_06",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "GRAMMAR",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the correctly placed adverb.",
+    "sourceText": "He has ___ finished his work.",
+    "targetAnswer": "already",
+    "data": {
+      "options": [
+        "already",
+        "yesterday",
+        "tomorrow",
+        "still"
+      ]
+    },
+    "metadata": {
+      "explanation": "Adverbs like 'already' are placed between the auxiliary 'has' and the past participle in compound tenses."
+    }
+  },
+  {
+    "id": "eng_b2_07",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French words to their English translations.",
+    "sourceText": "Professional nouns",
+    "targetAnswer": "la carrière → career, le contrat → contract, la réunion → meeting, l'échéance → deadline",
+    "data": {
+      "pairs": [
+        {
+          "source": "la carrière",
+          "target": "career"
+        },
+        {
+          "source": "le contrat",
+          "target": "contract"
+        },
+        {
+          "source": "la réunion",
+          "target": "meeting"
+        },
+        {
+          "source": "l'échéance",
+          "target": "deadline"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Carrière', 'réunion', and 'échéance' are feminine in French; 'contrat' is masculine — but none of this affects the English translations."
+    }
+  },
+  {
+    "id": "eng_b2_08",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "VERB",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French infinitives to their English translations.",
+    "sourceText": "Professional verbs",
+    "targetAnswer": "accomplir → to achieve, négocier → to negotiate, convaincre → to convince, reporter → to postpone",
+    "data": {
+      "pairs": [
+        {
+          "source": "accomplir",
+          "target": "to achieve"
+        },
+        {
+          "source": "négocier",
+          "target": "to negotiate"
+        },
+        {
+          "source": "convaincre",
+          "target": "to convince"
+        },
+        {
+          "source": "reporter",
+          "target": "to postpone"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Reporter' (to postpone) is a false friend for English speakers, since it looks like the English noun 'reporter' (a journalist) but means something entirely different."
+    }
+  },
+  {
+    "id": "eng_b2_09",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADJECTIVE",
+    "exerciseType": "MATCHING",
+    "prompt": "Match the French adjectives to their English translations.",
+    "sourceText": "Nuanced personality adjectives",
+    "targetAnswer": "ambitieux → ambitious, fiable → reliable, exigeant → demanding, flexible → flexible",
+    "data": {
+      "pairs": [
+        {
+          "source": "ambitieux",
+          "target": "ambitious"
+        },
+        {
+          "source": "fiable",
+          "target": "reliable"
+        },
+        {
+          "source": "exigeant",
+          "target": "demanding"
+        },
+        {
+          "source": "flexible",
+          "target": "flexible"
+        }
+      ]
+    },
+    "metadata": {
+      "explanation": "'Ambitieux' agrees with gender in French (ambitieux/ambitieuse); its English translation 'ambitious' never changes form."
+    }
+  },
+  {
+    "id": "eng_b2_10",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "NOUN",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'conscience' in this environmental context.",
+    "sourceText": "We must raise environmental ___.",
+    "targetAnswer": "awareness",
+    "data": {
+      "options": [
+        "awareness",
+        "conscience",
+        "knowledge",
+        "wisdom"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Awareness' translates 'conscience' here — a false friend, since English 'conscience' refers to a moral sense of right and wrong, not general awareness."
+    }
+  },
+  {
+    "id": "eng_b2_11",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "VOCABULARY",
+    "partOfSpeech": "ADVERB",
+    "exerciseType": "CLOZE",
+    "prompt": "Choose the English word for 'néanmoins'.",
+    "sourceText": "It was raining; ___, we went out.",
+    "targetAnswer": "nevertheless",
+    "data": {
+      "options": [
+        "nevertheless",
+        "therefore",
+        "finally",
+        "so"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Nevertheless' translates 'néanmoins', introducing a contrast with the previous statement."
+    }
+  },
+  {
+    "id": "eng_b2_12",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Il est important qu'elle vienne à la réunion.",
+    "targetAnswer": "It is important that she comes to the meeting.",
+    "data": {
+      "wordBank": [
+        "It",
+        "is",
+        "important",
+        "that",
+        "she",
+        "comes",
+        "to",
+        "the",
+        "meeting",
+        "come",
+        "came"
+      ]
+    },
+    "metadata": {
+      "explanation": "Unlike French, which requires the subjunctive 'vienne', English simply uses the present simple 'comes' after 'that'."
+    }
+  },
+  {
+    "id": "eng_b2_13",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Si j'avais plus de temps, je voyagerais plus.",
+    "targetAnswer": "If I had more time, I would travel more.",
+    "data": {
+      "wordBank": [
+        "If",
+        "I",
+        "had",
+        "more",
+        "time",
+        "I",
+        "would",
+        "travel",
+        "more",
+        "have",
+        "will"
+      ]
+    },
+    "metadata": {
+      "explanation": "The second conditional pairs the past simple ('had') with 'would' + base verb, corresponding to French imparfait + conditionnel."
+    }
+  },
+  {
+    "id": "eng_b2_14",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "WORD_BANK",
+    "prompt": "Translate this sentence into English using the word bank.",
+    "sourceText": "Il aurait aimé la revoir.",
+    "targetAnswer": "He would have liked to see her again.",
+    "data": {
+      "wordBank": [
+        "He",
+        "would",
+        "have",
+        "liked",
+        "to",
+        "see",
+        "her",
+        "again",
+        "will",
+        "seen"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Would have liked' expresses an unrealized past wish, matching the French past conditional 'aurait aimé'."
+    }
+  },
+  {
+    "id": "eng_b2_15",
+    "track": "EN_FOR_FR",
+    "level": "B2",
+    "category": "SENTENCES",
+    "partOfSpeech": "MIXED",
+    "exerciseType": "CLOZE",
+    "prompt": "Complete the sentence with the correct verb form.",
+    "sourceText": "I wish I ___ more time to travel.",
+    "targetAnswer": "had",
+    "data": {
+      "options": [
+        "had",
+        "have",
+        "will have",
+        "having"
+      ]
+    },
+    "metadata": {
+      "explanation": "'Wish' + past simple expresses a present regret, similar to French 'si seulement j'avais'."
+    }
+  }
+]

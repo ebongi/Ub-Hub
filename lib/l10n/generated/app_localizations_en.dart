@@ -394,6 +394,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Logout';
 
   @override
+  String get deleteAccountButton => 'Delete Account';
+
+  @override
+  String get deleteAccountDialogTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountDialogBody =>
+      'This permanently deletes your account and all your data — profile, tasks, grades, exams, payment history, and chat history. This cannot be undone.';
+
+  @override
+  String get deleteAccountTypeToConfirm => 'Type DELETE to confirm.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Delete Forever';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return 'Couldn\'t delete your account: $error';
+  }
+
+  @override
   String get appLanguageTitle => 'Language';
 
   @override
@@ -440,6 +461,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeToolSupportBot => 'UB Support Bot';
+
+  @override
+  String get homeToolOfflineAi => 'Offline AI';
+
+  @override
+  String get gemmaChatTitle => 'Offline AI Chat';
+
+  @override
+  String get gemmaChatDownloadTitle => 'Chat offline, for free';
+
+  @override
+  String get gemmaChatDownloadBody =>
+      'Download a one-time AI model (~530 MB) to chat with an AI tutor with no internet connection and no AI credits used. Wi-Fi is recommended.';
+
+  @override
+  String get gemmaChatDownloadButton => 'Download';
+
+  @override
+  String gemmaChatDownloadProgressPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get gemmaChatDownloadCancelButton => 'Cancel';
+
+  @override
+  String gemmaChatDownloadFailedBody(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get gemmaChatRetryButton => 'Retry';
+
+  @override
+  String get gemmaChatRemoveModelTitle => 'Remove offline AI?';
+
+  @override
+  String get gemmaChatRemoveModelBody =>
+      'This deletes the downloaded model from your device. You can download it again anytime.';
+
+  @override
+  String get gemmaChatRemoveButton => 'Remove';
+
+  @override
+  String get gemmaChatRemoveMenuLabel => 'Remove downloaded model';
+
+  @override
+  String get gemmaChatEmptyStateTitle => 'Ask me anything, offline';
+
+  @override
+  String get gemmaChatEmptyStateBody => 'No internet needed. No credits used.';
+
+  @override
+  String get gemmaChatInputHint => 'Message offline AI…';
+
+  @override
+  String get gemmaChatUnavailableTitle => 'Not available on this device';
+
+  @override
+  String get gemmaChatUnavailableBody =>
+      'Offline AI currently requires Android. iOS support is planned.';
+
+  @override
+  String get gemmaChatInfoDialogTitle => 'Before you download';
+
+  @override
+  String get gemmaChatInfoDialogConfirm => 'I understand, download';
+
+  @override
+  String get gemmaChatInfoStorageTitle => 'Storage';
+
+  @override
+  String get gemmaChatInfoStorageBody =>
+      'Uses about 530 MB of your phone\'s storage, permanently, until you remove it from this screen.';
+
+  @override
+  String get gemmaChatInfoRamTitle => 'Memory (RAM)';
+
+  @override
+  String get gemmaChatInfoRamBody =>
+      'Needs extra memory while you\'re chatting — works best on phones with at least 4 GB of RAM. Older or low-RAM phones may slow down while offline AI is in use.';
+
+  @override
+  String get gemmaChatInfoPerformanceTitle => 'Performance';
+
+  @override
+  String get gemmaChatInfoPerformanceBody =>
+      'Responses are generated on your phone\'s own processor, so replies can be slower than the online AI tutor and may use more battery while chatting.';
+
+  @override
+  String get gemmaChatInfoAccuracyTitle => 'Accuracy';
+
+  @override
+  String get gemmaChatInfoAccuracyBody =>
+      'This is a smaller, lighter AI model built to run offline. Its answers can sometimes be incomplete or incorrect — always double-check anything important.';
+
+  @override
+  String get gemmaChatInfoDeviceTitle => 'Is your phone ready?';
+
+  @override
+  String get gemmaChatInfoDeviceBody =>
+      'Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app\'s performance.';
 
   @override
   String get sectionDepartmentsFaculties => 'Departments & Faculties';
@@ -969,7 +1092,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String correctAnswerLabel(String answer) {
-    return 'Correct Answer: $answer';
+    return 'Correct answer: $answer';
   }
 
   @override
@@ -1875,6 +1998,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToGeneratorButton => 'BACK TO GENERATOR';
+
+  @override
+  String get materialsTabLabel => 'Materials';
+
+  @override
+  String get practiceTabLabel => 'Practice';
+
+  @override
+  String get selectLevelLabel => 'Select a level';
+
+  @override
+  String get startLessonButton => 'Start Lesson';
+
+  @override
+  String get checkAnswerButton => 'Check';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get doneButton => 'Done';
+
+  @override
+  String get matchingInstructionLabel =>
+      'Tap a word on the left, then its match on the right.';
+
+  @override
+  String get frenchForEnglishSpeakersTitle => 'French for English Speakers';
+
+  @override
+  String get englishForFrenchSpeakersTitle => 'English for French Speakers';
 
   @override
   String get supportDeveloperBarrierLabel => 'Support Developer';

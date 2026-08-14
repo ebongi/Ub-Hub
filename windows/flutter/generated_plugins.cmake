@@ -7,9 +7,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   file_selector_windows
   firebase_core
+  flutter_gemma
   flutter_secure_storage_windows
   flutter_timezone
-  rive_native
   share_plus
   syncfusion_pdfviewer_windows
   url_launcher_windows

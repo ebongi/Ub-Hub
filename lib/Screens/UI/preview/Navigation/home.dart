@@ -29,6 +29,7 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/knowledge_bot_chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/gemma_chat_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -199,6 +200,14 @@ class _HomeState extends State<Home> {
       backgroundColor: Colors.transparent,
       brandColor: const Color(0xFFEA4335),
       widget: const KnowledgeBotChatScreen(),
+    ),
+    ToolItem(
+      name: l10n.homeToolOfflineAi,
+      icon: Icons.download_for_offline_rounded,
+      backgroundColor: Colors.transparent,
+      brandColor: const Color(0xFF34A853),
+      // Google Green
+      widget: const GemmaChatScreen(),
     ),
   ];
 

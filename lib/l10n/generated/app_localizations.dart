@@ -818,6 +818,42 @@ abstract class AppLocalizations {
   /// **'Logout'**
   String get logout;
 
+  /// No description provided for @deleteAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountButton;
+
+  /// No description provided for @deleteAccountDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountDialogTitle;
+
+  /// No description provided for @deleteAccountDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account and all your data — profile, tasks, grades, exams, payment history, and chat history. This cannot be undone.'**
+  String get deleteAccountDialogBody;
+
+  /// No description provided for @deleteAccountTypeToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm.'**
+  String get deleteAccountTypeToConfirm;
+
+  /// No description provided for @deleteAccountConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get deleteAccountConfirmButton;
+
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete your account: {error}'**
+  String deleteAccountFailed(String error);
+
   /// No description provided for @appLanguageTitle.
   ///
   /// In en, this message translates to:
@@ -913,6 +949,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'UB Support Bot'**
   String get homeToolSupportBot;
+
+  /// No description provided for @homeToolOfflineAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline AI'**
+  String get homeToolOfflineAi;
+
+  /// No description provided for @gemmaChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline AI Chat'**
+  String get gemmaChatTitle;
+
+  /// No description provided for @gemmaChatDownloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat offline, for free'**
+  String get gemmaChatDownloadTitle;
+
+  /// No description provided for @gemmaChatDownloadBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download a one-time AI model (~530 MB) to chat with an AI tutor with no internet connection and no AI credits used. Wi-Fi is recommended.'**
+  String get gemmaChatDownloadBody;
+
+  /// No description provided for @gemmaChatDownloadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get gemmaChatDownloadButton;
+
+  /// No description provided for @gemmaChatDownloadProgressPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String gemmaChatDownloadProgressPercent(int percent);
+
+  /// No description provided for @gemmaChatDownloadCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get gemmaChatDownloadCancelButton;
+
+  /// No description provided for @gemmaChatDownloadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed: {error}'**
+  String gemmaChatDownloadFailedBody(String error);
+
+  /// No description provided for @gemmaChatRetryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get gemmaChatRetryButton;
+
+  /// No description provided for @gemmaChatRemoveModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove offline AI?'**
+  String get gemmaChatRemoveModelTitle;
+
+  /// No description provided for @gemmaChatRemoveModelBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes the downloaded model from your device. You can download it again anytime.'**
+  String get gemmaChatRemoveModelBody;
+
+  /// No description provided for @gemmaChatRemoveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get gemmaChatRemoveButton;
+
+  /// No description provided for @gemmaChatRemoveMenuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove downloaded model'**
+  String get gemmaChatRemoveMenuLabel;
+
+  /// No description provided for @gemmaChatEmptyStateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me anything, offline'**
+  String get gemmaChatEmptyStateTitle;
+
+  /// No description provided for @gemmaChatEmptyStateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet needed. No credits used.'**
+  String get gemmaChatEmptyStateBody;
+
+  /// No description provided for @gemmaChatInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message offline AI…'**
+  String get gemmaChatInputHint;
+
+  /// No description provided for @gemmaChatUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available on this device'**
+  String get gemmaChatUnavailableTitle;
+
+  /// No description provided for @gemmaChatUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline AI currently requires Android. iOS support is planned.'**
+  String get gemmaChatUnavailableBody;
+
+  /// No description provided for @gemmaChatInfoDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you download'**
+  String get gemmaChatInfoDialogTitle;
+
+  /// No description provided for @gemmaChatInfoDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, download'**
+  String get gemmaChatInfoDialogConfirm;
+
+  /// No description provided for @gemmaChatInfoStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get gemmaChatInfoStorageTitle;
+
+  /// No description provided for @gemmaChatInfoStorageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses about 530 MB of your phone\'s storage, permanently, until you remove it from this screen.'**
+  String get gemmaChatInfoStorageBody;
+
+  /// No description provided for @gemmaChatInfoRamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory (RAM)'**
+  String get gemmaChatInfoRamTitle;
+
+  /// No description provided for @gemmaChatInfoRamBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs extra memory while you\'re chatting — works best on phones with at least 4 GB of RAM. Older or low-RAM phones may slow down while offline AI is in use.'**
+  String get gemmaChatInfoRamBody;
+
+  /// No description provided for @gemmaChatInfoPerformanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get gemmaChatInfoPerformanceTitle;
+
+  /// No description provided for @gemmaChatInfoPerformanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Responses are generated on your phone\'s own processor, so replies can be slower than the online AI tutor and may use more battery while chatting.'**
+  String get gemmaChatInfoPerformanceBody;
+
+  /// No description provided for @gemmaChatInfoAccuracyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get gemmaChatInfoAccuracyTitle;
+
+  /// No description provided for @gemmaChatInfoAccuracyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a smaller, lighter AI model built to run offline. Its answers can sometimes be incomplete or incorrect — always double-check anything important.'**
+  String get gemmaChatInfoAccuracyBody;
+
+  /// No description provided for @gemmaChatInfoDeviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Is your phone ready?'**
+  String get gemmaChatInfoDeviceTitle;
+
+  /// No description provided for @gemmaChatInfoDeviceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app\'s performance.'**
+  String get gemmaChatInfoDeviceBody;
 
   /// No description provided for @sectionDepartmentsFaculties.
   ///
@@ -1889,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @correctAnswerLabel.
   ///
   /// In en, this message translates to:
-  /// **'Correct Answer: {answer}'**
+  /// **'Correct answer: {answer}'**
   String correctAnswerLabel(String answer);
 
   /// No description provided for @reloadButton.
@@ -3559,6 +3775,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BACK TO GENERATOR'**
   String get backToGeneratorButton;
+
+  /// No description provided for @materialsTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials'**
+  String get materialsTabLabel;
+
+  /// No description provided for @practiceTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice'**
+  String get practiceTabLabel;
+
+  /// No description provided for @selectLevelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a level'**
+  String get selectLevelLabel;
+
+  /// No description provided for @startLessonButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Lesson'**
+  String get startLessonButton;
+
+  /// No description provided for @checkAnswerButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get checkAnswerButton;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @doneButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get doneButton;
+
+  /// No description provided for @matchingInstructionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a word on the left, then its match on the right.'**
+  String get matchingInstructionLabel;
+
+  /// No description provided for @frenchForEnglishSpeakersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'French for English Speakers'**
+  String get frenchForEnglishSpeakersTitle;
+
+  /// No description provided for @englishForFrenchSpeakersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'English for French Speakers'**
+  String get englishForFrenchSpeakersTitle;
 
   /// No description provided for @supportDeveloperBarrierLabel.
   ///

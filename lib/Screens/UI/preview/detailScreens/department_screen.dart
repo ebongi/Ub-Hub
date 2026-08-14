@@ -131,7 +131,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           builder: (context) => AlertDialog(
                             title: Text(l10n.deleteDepartmentDialogTitle),
                             content: Text(
-                              l10n.confirmDeleteDepartmentBody(widget.departmentName),
+                              l10n.confirmDeleteDepartmentBody(
+                                widget.departmentName,
+                              ),
                             ),
                             actions: [
                               TextButton(
@@ -154,9 +156,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           );
                           if (mounted) {
                             Navigator.pop(context, true);
-                            ErrorHandler.showSuccessSnackBar(context, l10n.departmentDeletedMessage);
+                            ErrorHandler.showSuccessSnackBar(
+                              context,
+                              l10n.departmentDeletedMessage,
+                            );
                           }
-
                         }
                       }
                     },
@@ -374,7 +378,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           return const CourseListShimmer();
         }
         if (snapshot.hasError) {
-          return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
+          return Center(
+            child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
+          );
         }
 
         final serverCourses = snapshot.data ?? [];
@@ -469,167 +475,151 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   : Colors.grey.withOpacity(0.15),
             ),
           ),
-          child: ExpansionTile(
-            shape: const RoundedRectangleBorder(side: BorderSide.none),
-            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                Icons.school_outlined,
-                color: isDark ? Colors.white70 : colorScheme.primary,
-                size: 20,
-              ),
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    course.name,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: isDark ? Colors.white : Colors.black87,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: isPending
+                ? null
+                : () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CourseDetailScreen(course: course),
                     ),
                   ),
-                ),
-                if (isPending)
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 1.5),
-                  ),
-              ],
-            ),
-            subtitle: Text(
-              course.code,
-              style: GoogleFonts.outfit(
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontSize: 13,
-              ),
-            ),
-            trailing:
-                _department?.adminId ==
-                    Supabase.instance.client.auth.currentUser?.id
-                ? PopupMenuButton<String>(
-                    icon: Icon(
-                      Icons.more_vert_rounded,
-                      size: 20,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.school_outlined,
                       color: isDark ? Colors.white70 : colorScheme.primary,
+                      size: 20,
                     ),
-                    onSelected: (value) async {
-                      if (value == 'delete') {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10n.deleteCourseDialogTitle),
-                            content: Text(
-                              l10n.confirmDeleteMaterialBody(course.name),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(l10n.cancel),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  l10n.deleteButton,
-                                  style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                course.name,
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
-                            ],
-                          ),
-                        );
-                        if (confirmed == true) {
-                          await _dbService.deleteCourse(course.id);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.courseDeletedMessage)),
-                            );
-                          }
-                        }
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.delete_outline_rounded,
-                              color: Colors.red,
-                              size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.deleteCourseMenuItem,
-                              style: const TextStyle(color: Colors.red),
-                            ),
+                            if (isPending)
+                              const SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                ),
+                              ),
                           ],
                         ),
-                      ),
-                    ],
-                  )
-                : IconButton(
-                    tooltip: l10n.courseMaterialsTooltip,
-                    icon: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: isDark ? Colors.white70 : colorScheme.primary,
-                    ),
-                    onPressed: isPending
-                        ? null
-                        : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  CourseDetailScreen(course: course),
-                            ),
+                        const SizedBox(height: 2),
+                        Text(
+                          course.code,
+                          style: GoogleFonts.outfit(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 13,
                           ),
+                        ),
+                      ],
+                    ),
                   ),
-            children: [
-              if (!isPending)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: _buildCourseMaterials(course),
-                ),
-            ],
+                  _department?.adminId ==
+                          Supabase.instance.client.auth.currentUser?.id
+                      ? PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert_rounded,
+                            size: 20,
+                            color: isDark
+                                ? Colors.white70
+                                : colorScheme.primary,
+                          ),
+                          onSelected: (value) async {
+                            if (value == 'delete') {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.deleteCourseDialogTitle),
+                                  content: Text(
+                                    l10n.confirmDeleteMaterialBody(course.name),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: Text(
+                                        l10n.deleteButton,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                await _dbService.deleteCourse(course.id);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.courseDeletedMessage),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.deleteCourseMenuItem,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: isDark ? Colors.white70 : colorScheme.primary,
+                        ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildCourseMaterials(Course course) {
-    return StreamBuilder<List<CourseMaterial>>(
-      stream: _dbService.getCourseMaterials(course.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: LinearProgressIndicator(),
-          );
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Text(
-            AppLocalizations.of(context)!.noMaterialsYetShort,
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-          );
-        }
-
-        final materials = snapshot.data!;
-        return Column(
-          children: materials.map((m) => _buildMaterialTile(m)).toList(),
-        );
-      },
     );
   }
 
@@ -654,7 +644,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             .toList();
 
         if (materials.isEmpty) {
-          return _buildEmptyState(AppLocalizations.of(context)!.noResourcesAvailableMessage, () {});
+          return _buildEmptyState(
+            AppLocalizations.of(context)!.noResourcesAvailableMessage,
+            () {},
+          );
         }
 
         return ListView.builder(
@@ -691,7 +684,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             .toList();
 
         if (questions.isEmpty) {
-          return _buildEmptyState(AppLocalizations.of(context)!.noPastQuestionsAvailableMessage, () {});
+          return _buildEmptyState(
+            AppLocalizations.of(context)!.noPastQuestionsAvailableMessage,
+            () {},
+          );
         }
 
         return ListView.builder(
@@ -760,7 +756,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         ),
                       ),
                       subtitle: Text(
-                        AppLocalizations.of(context)!.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
+                        AppLocalizations.of(
+                          context,
+                        )!.pastQuestionAnswersCountSubtitle(
+                          relatedAnswers.length,
+                        ),
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: isDark ? Colors.white70 : Colors.black54,
@@ -779,7 +779,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Text(
-                              AppLocalizations.of(context)!.noAnswersUploadedYet,
+                              AppLocalizations.of(
+                                context,
+                              )!.noAnswersUploadedYet,
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 fontStyle: FontStyle.italic,
@@ -804,7 +806,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                 ),
                               ),
                               subtitle: Text(
-                                AppLocalizations.of(context)!.verifiedAnswerFeeSubtitle(FapshiService.getAnswerDownloadFee().toInt()),
+                                AppLocalizations.of(
+                                  context,
+                                )!.verifiedAnswerFeeSubtitle(
+                                  FapshiService.getAnswerDownloadFee().toInt(),
+                                ),
                                 style: const TextStyle(fontSize: 11),
                               ),
                               trailing: IconButton(
@@ -989,7 +995,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
+                        Text(
+                          l10n.deleteButton,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ],
                     ),
                   ),
@@ -1101,7 +1110,11 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               ),
                             ),
                             child: Text(
-                              l10n.downloadFeeNotice(material.title, material.materialCategory.replaceAll('_', ' '), fee.toInt()),
+                              l10n.downloadFeeNotice(
+                                material.title,
+                                material.materialCategory.replaceAll('_', ' '),
+                                fee.toInt(),
+                              ),
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 height: 1.5,
@@ -1118,8 +1131,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             icon: Icons.phone_android_rounded,
                             keyboardType: TextInputType.phone,
                             enabled: !isProcessing,
-                            validator: (v) =>
-                                v == null || v.isEmpty ? l10n.requiredValidator : null,
+                            validator: (v) => v == null || v.isEmpty
+                                ? l10n.requiredValidator
+                                : null,
                           ),
                           const SizedBox(height: 32),
                           Row(
@@ -1168,10 +1182,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                                     } catch (e) {
                                       setState(() => isProcessing = false);
                                       if (context.mounted) {
-                                        ErrorHandler.showErrorSnackBar(context, e);
+                                        ErrorHandler.showErrorSnackBar(
+                                          context,
+                                          e,
+                                        );
                                       }
                                     }
-
                                   },
                                 ),
                               ),
@@ -1232,7 +1248,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     final nkwaPaymentId = collectResponse['id'] ?? collectResponse['paymentId'];
     final redirectUrl = collectResponse['redirectUrl'];
-    
+
     if (nkwaPaymentId == null) throw "Failed to initiate payment";
 
     if (redirectUrl != null) {
@@ -1276,9 +1292,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       );
       if (mounted) {
         ErrorHandler.showSuccessSnackBar(
-            context, AppLocalizations.of(context)!.materialSecuredOfflineMessage);
+          context,
+          AppLocalizations.of(context)!.materialSecuredOfflineMessage,
+        );
       }
-
     } catch (e) {
       print("Offline cache failed: $e");
     }
@@ -1357,7 +1374,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final l10n = AppLocalizations.of(context)!;
     if (!(_userProfile?.canUploadMaterial ?? false)) {
       ErrorHandler.showErrorSnackBar(
-          context, l10n.onlyContributorsCanUploadMessage);
+        context,
+        l10n.onlyContributorsCanUploadMessage,
+      );
       return;
     }
 
@@ -1389,12 +1408,18 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   child: _buildUgcGuidelinesCard(Theme.of(context)),
                 ),
                 if (_userProfile?.role == UserRole.admin)
                   ListTile(
-                    leading: Icon(Icons.school_rounded, color: colorScheme.primary),
+                    leading: Icon(
+                      Icons.school_rounded,
+                      color: colorScheme.primary,
+                    ),
                     title: Text(l10n.addNewCourseMenuItem),
                     onTap: () {
                       Navigator.pop(context);
@@ -1413,7 +1438,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.note_add_rounded, color: colorScheme.primary),
+                  leading: Icon(
+                    Icons.note_add_rounded,
+                    color: colorScheme.primary,
+                  ),
                   title: Text(l10n.uploadCourseMaterialMenuItem),
                   onTap: () async {
                     Navigator.pop(context);
@@ -1471,7 +1499,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         initialCategory: 'answer',
                       );
                     } else {
-                      _showCourseSelectionForUpload(courses, category: 'answer');
+                      _showCourseSelectionForUpload(
+                        courses,
+                        category: 'answer',
+                      );
                     }
                   },
                 ),
@@ -1554,7 +1585,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                             ),
                           ),
                           subtitle: Text(
-                            l10n.courseLevelCodeSubtitle(course.level ?? '', course.code),
+                            l10n.courseLevelCodeSubtitle(
+                              course.level ?? '',
+                              course.code,
+                            ),
                             style: GoogleFonts.outfit(fontSize: 12),
                           ),
                           onTap: () {
@@ -1628,10 +1662,14 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     PremiumDialogHeader(
-                      title: isDepartment ? l10n.deptResourceTitle : l10n.addMaterialTitle,
+                      title: isDepartment
+                          ? l10n.deptResourceTitle
+                          : l10n.addMaterialTitle,
                       subtitle: isDepartment
                           ? l10n.shareFacultyWideDocsSubtitle
-                          : l10n.addResourcesForCourseSubtitle(course?.name ?? l10n.courseFallback),
+                          : l10n.addResourcesForCourseSubtitle(
+                              course?.name ?? l10n.courseFallback,
+                            ),
                       icon: isDepartment
                           ? Icons.folder_shared_rounded
                           : Icons.note_add_rounded,
@@ -1772,8 +1810,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                               label: l10n.titleLabel,
                               hint: l10n.resourceTitleHintExample,
                               icon: Icons.title_rounded,
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? l10n.requiredValidator : null,
+                              validator: (v) => v == null || v.isEmpty
+                                  ? l10n.requiredValidator
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             PremiumTextField(
@@ -1998,23 +2037,26 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ErrorHandler.showSuccessSnackBar(context, AppLocalizations.of(context)!.uploadSuccessfulMessage);
+        ErrorHandler.showSuccessSnackBar(
+          context,
+          AppLocalizations.of(context)!.uploadSuccessfulMessage,
+        );
       }
     } catch (e) {
       if (mounted) {
         ErrorHandler.showErrorSnackBar(context, e);
       }
     }
-
   }
 
   void _addCourse() {
     if (_userProfile?.role != UserRole.admin) {
       ErrorHandler.showErrorSnackBar(
-          context, AppLocalizations.of(context)!.onlyAdminsCanAddCoursesMessage);
+        context,
+        AppLocalizations.of(context)!.onlyAdminsCanAddCoursesMessage,
+      );
       return;
     }
-
 
     showAddCourseDialog(
       context,
@@ -2091,11 +2133,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDark ? Colors.white70 : Colors.black54,
-        ),
+        Icon(icon, size: 16, color: isDark ? Colors.white70 : Colors.black54),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

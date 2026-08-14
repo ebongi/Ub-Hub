@@ -1,60 +1,45 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:google_generative_ai/google_generative_ai.dart' show DataPart;
 import 'package:flutter/foundation.dart';
-import 'package:go_study/core/app_config.dart';
 import 'package:go_study/services/gemini_client.dart';
 import 'package:go_study/services/database.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:go_study/services/ai_service.dart';
 
+const String _kGeminiSystemInstruction =
+    "You are 'Gemini Academic', a world-class academic assistant and tutor. "
+    "Your goal is to provide accurate, comprehensive, and helpful information to students. "
+    "\n\nGUIDELINES:\n"
+    "1. **Professionalism**: Always be polite, encouraging, and professional.\n"
+    "2. **Completeness**: Break down complex concepts step-by-step.\n"
+    "3. **Mathematics**: Use LaTeX for all math expressions (\$inline\$ and \$\$block\$\$).\n"
+    "4. **Formatting**: Use Markdown headers and lists.";
+
 class GeminiService implements AIService {
-  // Read API key from environment
-  static final String _apiKey = AppConfig.geminiApiKey;
   static const String _modelName = 'gemini-2.5-flash-lite';
+
+  @override
+  bool get requiresCredits => true;
+
+  @override
+  bool get supportsAttachments => true;
 
   GeminiClient _client;
 
   GeminiService({GeminiClient? client})
     : _client = client ?? _createNewClient();
 
-  static GeminiClient _createNewClient({List<Content>? history}) {
-    if (_apiKey.isEmpty) {
-      debugPrint("WARNING: Gemini API Key is empty! Check your .env file.");
-    }
-
-    return GeminiChatSessionClient(
-      GenerativeModel(
-        model: _modelName,
-        apiKey: _apiKey,
-        systemInstruction: Content.system(
-          "You are 'Gemini Academic', a world-class academic assistant and tutor. "
-          "Your goal is to provide accurate, comprehensive, and helpful information to students. "
-          "\n\nGUIDELINES:\n"
-          "1. **Professionalism**: Always be polite, encouraging, and professional.\n"
-          "2. **Completeness**: Break down complex concepts step-by-step.\n"
-          "3. **Mathematics**: Use LaTeX for all math expressions (\$inline\$ and \$\$block\$\$).\n"
-          "4. **Formatting**: Use Markdown headers and lists.",
-        ),
-      ).startChat(history: history),
+  static GeminiClient _createNewClient({List<AIChatMessage>? history}) {
+    return GeminiProxyChatClient(
+      model: _modelName,
+      systemInstruction: _kGeminiSystemInstruction,
+      initialHistory: history,
     );
   }
 
   @override
   void updateHistory(List<AIChatMessage> history) {
-    final geminiHistory = history.map((msg) {
-      if (msg.isUser) {
-        if (msg.attachments != null && msg.attachments!.isNotEmpty) {
-          return Content.multi([
-            TextPart(msg.text),
-            ...msg.attachments!.map((e) => DataPart(e.mimeType, e.bytes)),
-          ]);
-        }
-        return Content.text(msg.text);
-      } else {
-        return Content.model([TextPart(msg.text)]);
-      }
-    }).toList();
-    _client = _createNewClient(history: geminiHistory);
+    _client = _createNewClient(history: history);
   }
 
   @override
@@ -69,10 +54,6 @@ class GeminiService implements AIService {
     int creditCost = 1,
   }) async {
     try {
-      if (_apiKey.isEmpty) {
-        return "Error: Gemini API Key is missing. Please check your setup.";
-      }
-
       // Check and consume AI Credit
       final authClient = Supabase.instance.client.auth;
       final uid = authClient.currentUser?.id;

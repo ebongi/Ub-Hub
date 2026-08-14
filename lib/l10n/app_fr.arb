@@ -139,6 +139,17 @@
   "aboutTitle": "À propos",
   "aboutSubtitle": "En savoir plus sur l'application ",
   "logout": "Déconnexion",
+  "deleteAccountButton": "Supprimer le compte",
+  "deleteAccountDialogTitle": "Supprimer votre compte ?",
+  "deleteAccountDialogBody": "Cela supprime définitivement votre compte et toutes vos données — profil, tâches, notes, examens, historique de paiement et historique de discussion. Cette action est irréversible.",
+  "deleteAccountTypeToConfirm": "Tapez DELETE pour confirmer.",
+  "deleteAccountConfirmButton": "Supprimer définitivement",
+  "deleteAccountFailed": "Impossible de supprimer votre compte : {error}",
+  "@deleteAccountFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "appLanguageTitle": "Langue",
   "appLanguageSubtitle": "Choisissez la langue de l'application",
   "languageSystemDefault": "Par défaut du système",
@@ -156,6 +167,48 @@
   "homeToolTranscripts": "Relevés de notes",
   "homeToolPortal": "PORTAIL",
   "homeToolSupportBot": "Bot d'assistance UB",
+  "homeToolOfflineAi": "IA Hors Ligne",
+
+  "gemmaChatTitle": "Chat IA Hors Ligne",
+  "gemmaChatDownloadTitle": "Discutez hors ligne, gratuitement",
+  "gemmaChatDownloadBody": "Téléchargez un modèle d'IA (environ 530 Mo) une seule fois pour discuter avec un tuteur IA sans connexion internet et sans utiliser de crédits IA. Le Wi-Fi est recommandé.",
+  "gemmaChatDownloadButton": "Télécharger",
+  "gemmaChatDownloadProgressPercent": "{percent}%",
+  "@gemmaChatDownloadProgressPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "gemmaChatDownloadCancelButton": "Annuler",
+  "gemmaChatDownloadFailedBody": "Échec du téléchargement : {error}",
+  "@gemmaChatDownloadFailedBody": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "gemmaChatRetryButton": "Réessayer",
+  "gemmaChatRemoveModelTitle": "Supprimer l'IA hors ligne ?",
+  "gemmaChatRemoveModelBody": "Cela supprime le modèle téléchargé de votre appareil. Vous pouvez le retélécharger à tout moment.",
+  "gemmaChatRemoveButton": "Supprimer",
+  "gemmaChatRemoveMenuLabel": "Supprimer le modèle téléchargé",
+  "gemmaChatEmptyStateTitle": "Posez-moi vos questions, hors ligne",
+  "gemmaChatEmptyStateBody": "Pas besoin d'internet. Pas de crédits utilisés.",
+  "gemmaChatInputHint": "Message à l'IA hors ligne…",
+  "gemmaChatUnavailableTitle": "Non disponible sur cet appareil",
+  "gemmaChatUnavailableBody": "L'IA hors ligne nécessite actuellement Android. Le support iOS est prévu.",
+  "gemmaChatInfoDialogTitle": "Avant de télécharger",
+  "gemmaChatInfoDialogConfirm": "J'ai compris, télécharger",
+  "gemmaChatInfoStorageTitle": "Stockage",
+  "gemmaChatInfoStorageBody": "Utilise environ 530 Mo de stockage sur votre téléphone, de façon permanente, jusqu'à ce que vous le supprimiez depuis cet écran.",
+  "gemmaChatInfoRamTitle": "Mémoire (RAM)",
+  "gemmaChatInfoRamBody": "Nécessite de la mémoire supplémentaire pendant la discussion — fonctionne mieux sur les téléphones avec au moins 4 Go de RAM. Les téléphones plus anciens ou avec peu de RAM peuvent ralentir pendant l'utilisation de l'IA hors ligne.",
+  "gemmaChatInfoPerformanceTitle": "Performance",
+  "gemmaChatInfoPerformanceBody": "Les réponses sont générées directement par le processeur de votre téléphone, donc elles peuvent être plus lentes que le tuteur IA en ligne et consommer plus de batterie pendant la discussion.",
+  "gemmaChatInfoAccuracyTitle": "Précision",
+  "gemmaChatInfoAccuracyBody": "Il s'agit d'un modèle d'IA plus petit et plus léger, conçu pour fonctionner hors ligne. Ses réponses peuvent parfois être incomplètes ou incorrectes — vérifiez toujours les informations importantes.",
+  "gemmaChatInfoDeviceTitle": "Votre téléphone est-il prêt ?",
+  "gemmaChatInfoDeviceBody": "Ne téléchargez ceci que si votre téléphone est un appareil relativement récent, de milieu ou haut de gamme, avec suffisamment de stockage libre. Sur les téléphones plus anciens ou d'entrée de gamme, l'IA hors ligne peut être lente ou affecter les performances du reste de l'application.",
+
   "sectionDepartmentsFaculties": "Départements et facultés",
   "sectionTools": "OUTILS",
   "noDepartmentsAvailable": "Aucun département disponible pour le moment.",
@@ -674,6 +727,20 @@
   "youScoredOutOfLabel": "Vous avez obtenu {score} sur {total}",
   "accuracyPercentLabel": "{percent} % de précision",
   "backToGeneratorButton": "RETOUR AU GÉNÉRATEUR",
+  "materialsTabLabel": "Documents",
+  "practiceTabLabel": "Entraînement",
+  "selectLevelLabel": "Choisir un niveau",
+  "startLessonButton": "Commencer la leçon",
+  "checkAnswerButton": "Vérifier",
+  "continueButton": "Continuer",
+  "doneButton": "Terminé",
+  "correctAnswerLabel": "Réponse correcte : {answer}",
+  "@correctAnswerLabel": {
+    "placeholders": { "answer": { "type": "String" } }
+  },
+  "matchingInstructionLabel": "Touchez un mot à gauche, puis sa correspondance à droite.",
+  "frenchForEnglishSpeakersTitle": "Français pour anglophones",
+  "englishForFrenchSpeakersTitle": "Anglais pour francophones",
   "supportDeveloperBarrierLabel": "Soutenir le développeur",
   "supportTheDeveloperTitle": "Soutenir le développeur",
   "helpKeepProjectAliveSubtitle": "Aidez à maintenir le projet vivant et en croissance",

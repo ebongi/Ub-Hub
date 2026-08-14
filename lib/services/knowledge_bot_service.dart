@@ -1,5 +1,3 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:go_study/core/app_config.dart';
 import 'package:go_study/services/gemini_client.dart';
 import 'package:go_study/services/gemini_service.dart';
 import 'package:go_study/services/bot_knowledge.dart';
@@ -29,15 +27,7 @@ class KnowledgeBotService {
   KnowledgeBotService({GeminiService? geminiService})
     : _geminiService =
           geminiService ??
-          GeminiService(
-            client: GeminiOneShotClient(
-              GenerativeModel(
-                model: 'gemini-2.5-flash-lite',
-                apiKey: AppConfig.geminiApiKey,
-                systemInstruction: Content.system(_kSystemPersona),
-              ),
-            ),
-          );
+          GeminiService(client: GeminiProxyOneShotClient(_kSystemPersona));
 
   Stream<String> streamQuestion(
     String question,

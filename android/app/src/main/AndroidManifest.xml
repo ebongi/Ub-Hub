@@ -1,5 +1,13 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Foreground-service downloads for the on-device AI model (~530MB):
+         without these, a large download on a slow/interrupted connection
+         is subject to WorkManager's ~9-minute background-task kill. See
+         lib/services/gemma_model_manager.dart's downloadModel(). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
     <queries>
         <!-- If your app opens https URLs -->
@@ -50,6 +58,22 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- WorkManager's own SystemForegroundService (used by
+             background_downloader's foreground: true downloads, see
+             gemma_model_manager.dart) ships with no
+             android:foregroundServiceType set on its <service> element —
+             WorkManager can't know in advance what type a consuming app's
+             foreground work needs. On API 34+ this throws a hard
+             IllegalArgumentException at runtime ("foregroundServiceType ...
+             is not a subset of ... 0x00000000") unless the app declares it
+             explicitly here, merging into/overriding WorkManager's library
+             manifest entry. Confirmed via a real on-device crash trace this
+             session (FATAL EXCEPTION on SystemForegroundService.startForeground). -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

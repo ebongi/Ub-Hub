@@ -401,6 +401,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logout => 'Déconnexion';
 
   @override
+  String get deleteAccountButton => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountDialogTitle => 'Supprimer votre compte ?';
+
+  @override
+  String get deleteAccountDialogBody =>
+      'Cela supprime définitivement votre compte et toutes vos données — profil, tâches, notes, examens, historique de paiement et historique de discussion. Cette action est irréversible.';
+
+  @override
+  String get deleteAccountTypeToConfirm => 'Tapez DELETE pour confirmer.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Supprimer définitivement';
+
+  @override
+  String deleteAccountFailed(String error) {
+    return 'Impossible de supprimer votre compte : $error';
+  }
+
+  @override
   String get appLanguageTitle => 'Langue';
 
   @override
@@ -447,6 +468,109 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeToolSupportBot => 'Bot d\'assistance UB';
+
+  @override
+  String get homeToolOfflineAi => 'IA Hors Ligne';
+
+  @override
+  String get gemmaChatTitle => 'Chat IA Hors Ligne';
+
+  @override
+  String get gemmaChatDownloadTitle => 'Discutez hors ligne, gratuitement';
+
+  @override
+  String get gemmaChatDownloadBody =>
+      'Téléchargez un modèle d\'IA (environ 530 Mo) une seule fois pour discuter avec un tuteur IA sans connexion internet et sans utiliser de crédits IA. Le Wi-Fi est recommandé.';
+
+  @override
+  String get gemmaChatDownloadButton => 'Télécharger';
+
+  @override
+  String gemmaChatDownloadProgressPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get gemmaChatDownloadCancelButton => 'Annuler';
+
+  @override
+  String gemmaChatDownloadFailedBody(String error) {
+    return 'Échec du téléchargement : $error';
+  }
+
+  @override
+  String get gemmaChatRetryButton => 'Réessayer';
+
+  @override
+  String get gemmaChatRemoveModelTitle => 'Supprimer l\'IA hors ligne ?';
+
+  @override
+  String get gemmaChatRemoveModelBody =>
+      'Cela supprime le modèle téléchargé de votre appareil. Vous pouvez le retélécharger à tout moment.';
+
+  @override
+  String get gemmaChatRemoveButton => 'Supprimer';
+
+  @override
+  String get gemmaChatRemoveMenuLabel => 'Supprimer le modèle téléchargé';
+
+  @override
+  String get gemmaChatEmptyStateTitle => 'Posez-moi vos questions, hors ligne';
+
+  @override
+  String get gemmaChatEmptyStateBody =>
+      'Pas besoin d\'internet. Pas de crédits utilisés.';
+
+  @override
+  String get gemmaChatInputHint => 'Message à l\'IA hors ligne…';
+
+  @override
+  String get gemmaChatUnavailableTitle => 'Non disponible sur cet appareil';
+
+  @override
+  String get gemmaChatUnavailableBody =>
+      'L\'IA hors ligne nécessite actuellement Android. Le support iOS est prévu.';
+
+  @override
+  String get gemmaChatInfoDialogTitle => 'Avant de télécharger';
+
+  @override
+  String get gemmaChatInfoDialogConfirm => 'J\'ai compris, télécharger';
+
+  @override
+  String get gemmaChatInfoStorageTitle => 'Stockage';
+
+  @override
+  String get gemmaChatInfoStorageBody =>
+      'Utilise environ 530 Mo de stockage sur votre téléphone, de façon permanente, jusqu\'à ce que vous le supprimiez depuis cet écran.';
+
+  @override
+  String get gemmaChatInfoRamTitle => 'Mémoire (RAM)';
+
+  @override
+  String get gemmaChatInfoRamBody =>
+      'Nécessite de la mémoire supplémentaire pendant la discussion — fonctionne mieux sur les téléphones avec au moins 4 Go de RAM. Les téléphones plus anciens ou avec peu de RAM peuvent ralentir pendant l\'utilisation de l\'IA hors ligne.';
+
+  @override
+  String get gemmaChatInfoPerformanceTitle => 'Performance';
+
+  @override
+  String get gemmaChatInfoPerformanceBody =>
+      'Les réponses sont générées directement par le processeur de votre téléphone, donc elles peuvent être plus lentes que le tuteur IA en ligne et consommer plus de batterie pendant la discussion.';
+
+  @override
+  String get gemmaChatInfoAccuracyTitle => 'Précision';
+
+  @override
+  String get gemmaChatInfoAccuracyBody =>
+      'Il s\'agit d\'un modèle d\'IA plus petit et plus léger, conçu pour fonctionner hors ligne. Ses réponses peuvent parfois être incomplètes ou incorrectes — vérifiez toujours les informations importantes.';
+
+  @override
+  String get gemmaChatInfoDeviceTitle => 'Votre téléphone est-il prêt ?';
+
+  @override
+  String get gemmaChatInfoDeviceBody =>
+      'Ne téléchargez ceci que si votre téléphone est un appareil relativement récent, de milieu ou haut de gamme, avec suffisamment de stockage libre. Sur les téléphones plus anciens ou d\'entrée de gamme, l\'IA hors ligne peut être lente ou affecter les performances du reste de l\'application.';
 
   @override
   String get sectionDepartmentsFaculties => 'Départements et facultés';
@@ -982,7 +1106,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String correctAnswerLabel(String answer) {
-    return 'Bonne réponse : $answer';
+    return 'Réponse correcte : $answer';
   }
 
   @override
@@ -1901,6 +2025,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backToGeneratorButton => 'RETOUR AU GÉNÉRATEUR';
+
+  @override
+  String get materialsTabLabel => 'Documents';
+
+  @override
+  String get practiceTabLabel => 'Entraînement';
+
+  @override
+  String get selectLevelLabel => 'Choisir un niveau';
+
+  @override
+  String get startLessonButton => 'Commencer la leçon';
+
+  @override
+  String get checkAnswerButton => 'Vérifier';
+
+  @override
+  String get continueButton => 'Continuer';
+
+  @override
+  String get doneButton => 'Terminé';
+
+  @override
+  String get matchingInstructionLabel =>
+      'Touchez un mot à gauche, puis sa correspondance à droite.';
+
+  @override
+  String get frenchForEnglishSpeakersTitle => 'Français pour anglophones';
+
+  @override
+  String get englishForFrenchSpeakersTitle => 'Anglais pour francophones';
 
   @override
   String get supportDeveloperBarrierLabel => 'Soutenir le développeur';

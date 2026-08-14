@@ -1,0 +1,8 @@
+[functions.gemini-proxy]
+verify_jwt = true
+
+[functions.fapshi-proxy]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true

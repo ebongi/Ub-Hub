@@ -94,7 +94,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   width: 2,
                 ),
               ),
-              child: SvgPicture.asset('assets/images/logoicon.svg'),
+              child: SvgPicture.asset('assets/icons/android/play_store_512.png'),
             ),
             const SizedBox(height: 24),
             Text(
@@ -171,14 +171,14 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             
             const SizedBox(height: 60),
-            // Text(
-            //   "Built with ❤️ for UB Students",
-            //   style: GoogleFonts.outfit(
-            //     fontSize: 14,
-            //     color: Colors.grey,
-            //     fontStyle: FontStyle.italic,
-            //   ),
-            // ),
+            Text(
+              "Built with ❤️ for UB Students",
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               l10n.appLegaleseCopyright,

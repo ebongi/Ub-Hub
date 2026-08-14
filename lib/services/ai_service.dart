@@ -1,6 +1,18 @@
 import 'dart:async';
 
 abstract class AIService {
+  /// Whether calls to this service consume the user's AI credits. Cloud
+  /// implementations cost real API money and must gate on credits;
+  /// on-device implementations have no marginal cost and should not.
+  bool get requiresCredits;
+
+  /// Whether [sendMessage]/[streamMessage] accept non-empty [attachments].
+  /// UI-only signal (e.g. hide an attach-file button) — not a semantic
+  /// gate; implementations that don't support attachments still throw if
+  /// called with them anyway, this just avoids surfacing a "supported"
+  /// affordance for something that will always fail.
+  bool get supportsAttachments;
+
   /// Sends a single message and returns the full response.
   Future<String> sendMessage(
     String message, {

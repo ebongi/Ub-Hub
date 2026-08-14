@@ -277,10 +277,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      onPressed: () =>
+                          _confirmDeleteAccount(context, authentication, l10n),
+                      child: Text(
+                        l10n.deleteAccountButton,
+                        style: GoogleFonts.outfit(
+                          color: Colors.grey,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
-                      "Version $_version ($buildnumber)\n© 2026 Jovial Studio",
+                      "Version $_version ($buildnumber)\n© 2026 Jovial Labs",
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 12,
@@ -436,6 +452,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _confirmDeleteAccount(
+    BuildContext context,
+    Authentication authentication,
+    AppLocalizations l10n,
+  ) {
+    final confirmController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final canConfirm =
+              confirmController.text.trim().toUpperCase() == 'DELETE';
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: Text(
+              l10n.deleteAccountDialogTitle,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.deleteAccountDialogBody,
+                  style: GoogleFonts.outfit(),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.deleteAccountTypeToConfirm,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmController,
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    hintText: 'DELETE',
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  l10n.cancel,
+                  style: GoogleFonts.outfit(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: canConfirm
+                    ? () async {
+                        Navigator.pop(dialogContext);
+                        await _performAccountDeletion(
+                          context,
+                          authentication,
+                          l10n,
+                        );
+                      }
+                    : null,
+                child: Text(
+                  l10n.deleteAccountConfirmButton,
+                  style: GoogleFonts.outfit(
+                    color: canConfirm ? Colors.red : Colors.grey.shade400,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _performAccountDeletion(
+    BuildContext context,
+    Authentication authentication,
+    AppLocalizations l10n,
+  ) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await authentication.deleteAccount();
+      // No further navigation needed here — AuthWrapper's auth-state
+      // listener reacts to the resulting signed-out session and switches
+      // to the sign-in screen on its own. Just dismiss the spinner.
+      if (context.mounted) Navigator.pop(context);
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.deleteAccountFailed(e.toString())),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _supportPlatformViaWhatsApp(

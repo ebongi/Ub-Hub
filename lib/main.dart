@@ -1,5 +1,6 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:go_study/services/gemma_model_manager.dart';
 import 'package:go_study/services/message_provider.dart';
-import 'package:rive/rive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -25,7 +26,6 @@ void main() async {
 
   // 1. Load environment variables FIRST
   await AppConfig.init();
-  await RiveNative.init();
   // 2. Run remaining initializations in parallel
   final initResults = await Future.wait([
     sb.Supabase.initialize(
@@ -41,6 +41,14 @@ void main() async {
 
   // Initialize notifications without blocking the first frame
   NotificationService().init();
+
+  // On-device AI (Gemma) is Android-only in Phase 1 — flutter_gemma needs
+  // iOS 16+, this app's Podfile isn't set up for that yet. Registered here
+  // (once, app-wide) so GemmaChatScreen's engine is ready the moment a user
+  // opens it from the Toolbox, rather than registering lazily on first use.
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await GemmaModelManager().ensureEngineRegistered();
+  }
 
   final prefs = initResults[1] as SharedPreferences;
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;

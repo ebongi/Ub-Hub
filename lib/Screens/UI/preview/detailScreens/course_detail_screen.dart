@@ -9,9 +9,11 @@ import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/fapshi_service.dart';
+import 'package:go_study/services/language_exercise.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/language/language_practice_tab.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
@@ -25,12 +27,16 @@ class CourseDetailScreen extends StatefulWidget {
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
-class _CourseDetailScreenState extends State<CourseDetailScreen> {
+class _CourseDetailScreenState extends State<CourseDetailScreen>
+    with SingleTickerProviderStateMixin {
   late final DatabaseService _dbService;
   UserProfile? _userProfile;
 
   late final Stream<List<CourseMaterial>> _materialStream;
   final List<CourseMaterial> _optimisticMaterials = [];
+
+  LanguageTrack? _languageTrack;
+  TabController? _tabController;
 
   @override
   void initState() {
@@ -40,6 +46,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
     _materialStream = _dbService.getCourseMaterials(widget.course.id);
 
+    _languageTrack = LanguageTrack.fromCourseCode(widget.course.code);
+    if (_languageTrack != null) {
+      _tabController = TabController(length: 2, vsync: this);
+    }
+
     _dbService.userProfile.listen((profile) {
       if (mounted) {
         setState(() {
@@ -47,6 +58,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -95,75 +112,110 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
         ],
       ),
-      body: StreamBuilder<List<CourseMaterial>>(
-        stream: _materialStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              _optimisticMaterials.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
-          }
+      body: _languageTrack == null
+          ? _buildMaterialsBody()
+          : Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  labelColor: theme.colorScheme.primary,
+                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                  indicatorColor: theme.colorScheme.primary,
+                  indicatorWeight: 3,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  dividerColor: Colors.transparent,
+                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                  unselectedLabelStyle:
+                      GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+                  tabs: [
+                    Tab(text: l10n.materialsTabLabel),
+                    Tab(text: l10n.practiceTabLabel),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildMaterialsBody(),
+                      LanguagePracticeTab(track: _languageTrack!),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
 
-          final serverMaterials = snapshot.data ?? [];
+  Widget _buildMaterialsBody() {
+    final l10n = AppLocalizations.of(context)!;
+    return StreamBuilder<List<CourseMaterial>>(
+      stream: _materialStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _optimisticMaterials.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
+        }
 
-          // Reconciliation
-          _optimisticMaterials.removeWhere(
-            (optimistic) => serverMaterials.any(
-              (server) => server.title == optimistic.title,
+        final serverMaterials = snapshot.data ?? [];
+
+        // Reconciliation
+        _optimisticMaterials.removeWhere(
+          (optimistic) => serverMaterials.any(
+            (server) => server.title == optimistic.title,
+          ),
+        );
+
+        final allMaterials = [..._optimisticMaterials, ...serverMaterials];
+
+        if (allMaterials.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.noMaterialsYetMessage,
+                  style: GoogleFonts.outfit(color: Colors.grey),
+                ),
+              ],
             ),
           );
+        }
 
-          final allMaterials = [..._optimisticMaterials, ...serverMaterials];
+        final regularMaterials = allMaterials
+            .where((m) => m.materialCategory == 'regular')
+            .toList();
+        final questions = allMaterials
+            .where((m) => m.materialCategory == 'past_question')
+            .toList();
+        final answers = allMaterials
+            .where((m) => m.materialCategory == 'answer')
+            .toList();
 
-          if (allMaterials.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.folder_open, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.noMaterialsYetMessage,
-                    style: GoogleFonts.outfit(color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final regularMaterials = allMaterials
-              .where((m) => m.materialCategory == 'regular')
-              .toList();
-          final questions = allMaterials
-              .where((m) => m.materialCategory == 'past_question')
-              .toList();
-          final answers = allMaterials
-              .where((m) => m.materialCategory == 'answer')
-              .toList();
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (regularMaterials.isNotEmpty) ...[
-                _buildHeader(l10n.generalResourcesHeader),
-                ...regularMaterials.map((m) => _buildMaterialTile(m)),
-              ],
-              if (questions.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                _buildHeader(l10n.pastQuestionsAndAnswersHeader),
-                ...questions.map((q) {
-                  final relatedAnswers = answers
-                      .where((a) => a.linkedMaterialId == q.id)
-                      .toList();
-                  return _buildPastQuestionTile(q, relatedAnswers);
-                }),
-              ],
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (regularMaterials.isNotEmpty) ...[
+              _buildHeader(l10n.generalResourcesHeader),
+              ...regularMaterials.map((m) => _buildMaterialTile(m)),
             ],
-          );
-        },
-      ),
+            if (questions.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _buildHeader(l10n.pastQuestionsAndAnswersHeader),
+              ...questions.map((q) {
+                final relatedAnswers = answers
+                    .where((a) => a.linkedMaterialId == q.id)
+                    .toList();
+                return _buildPastQuestionTile(q, relatedAnswers);
+              }),
+            ],
+          ],
+        );
+      },
     );
   }
 
