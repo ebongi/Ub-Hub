@@ -5,8 +5,7 @@ import 'package:go_study/Screens/UI/preview/Chatbot/chatbot_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/dm_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/settings_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
-import 'package:go_study/services/database.dart';
-import 'package:go_study/services/department.dart';
+import 'package:go_study/services/departments_provider.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -162,9 +161,13 @@ class _NavBarState extends State<NavBar> {
 
     return MultiProvider(
       providers: [
-        StreamProvider<List<Department>?>.value(
-          value: DatabaseService().getDepartments(institutionId: institutionId),
-          initialData: null,
+        ChangeNotifierProxyProvider<UserModel, DepartmentsProvider>(
+          create: (_) => DepartmentsProvider()..updateInstitutionId(institutionId),
+          update: (_, userModel, departmentsProvider) {
+            final provider = departmentsProvider ?? DepartmentsProvider();
+            provider.updateInstitutionId(userModel.institutionId);
+            return provider;
+          },
         ),
         StreamProvider<List<FriendRequest>?>.value(
           value: FriendsService().getPendingRequestsStream(),

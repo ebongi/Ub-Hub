@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/home.dart'
-    show DepartmentUIData;
+    show DepartmentUIData, NoInternetWidget;
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/department.dart';
+import 'package:go_study/services/departments_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
@@ -60,11 +61,18 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final departments = Provider.of<List<Department>?>(context);
+    final departmentsProvider = Provider.of<DepartmentsProvider>(context);
+    final departments = departmentsProvider.departments;
     final userModel = Provider.of<UserModel>(context);
     final canCreate = userModel.role == UserRole.admin;
 
     if (departments == null) {
+      if (departmentsProvider.hasError) {
+        return Scaffold(
+          appBar: AppBar(title: Text(l10n.allDepartmentsTitle)),
+          body: NoInternetWidget(onRetry: departmentsProvider.retry),
+        );
+      }
       return const Scaffold(body: GridShimmer());
     }
 
@@ -86,11 +94,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            // Re-trigger build to refresh provider data if necessary
-          });
-        },
+        onRefresh: departmentsProvider.retry,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [

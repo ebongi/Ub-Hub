@@ -61,7 +61,6 @@ android {
             }
         }
     }
-
     // Size-variant comparison (temporary, edited between test builds — see
     // conversation with the size-reduction work): guarantees stripping
     // regardless of whether a lib came from Flutter's own output or a

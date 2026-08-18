@@ -24,6 +24,7 @@ import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
+import 'package:go_study/services/departments_provider.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
@@ -269,20 +270,27 @@ class _HomeState extends State<Home> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 5),
-                Consumer<List<Department>?>(
-                  builder: (context, departments, child) {
+                Consumer<DepartmentsProvider>(
+                  builder: (context, departmentsProvider, child) {
                     return IntroWidget(
                       userProfile: _userProfile,
                       recentActivity: _recentActivity,
-                      departments: departments,
+                      departments: departmentsProvider.departments,
                       onDepartmentDeleted: _loadRecentActivity,
                     );
                   },
                 ),
                 ViewSection(title: l10n.sectionDepartmentsFaculties),
-                Consumer<List<Department>?>(
-                  builder: (context, departments, child) {
+                Consumer<DepartmentsProvider>(
+                  builder: (context, departmentsProvider, child) {
+                    final departments = departmentsProvider.departments;
+
                     if (departments == null) {
+                      if (departmentsProvider.hasError) {
+                        return NoInternetWidget(
+                          onRetry: departmentsProvider.retry,
+                        );
+                      }
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(40.0),

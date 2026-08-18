@@ -277,22 +277,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: TextButton(
-                      onPressed: () =>
-                          _confirmDeleteAccount(context, authentication, l10n),
-                      child: Text(
-                        l10n.deleteAccountButton,
-                        style: GoogleFonts.outfit(
-                          color: Colors.grey,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // const SizedBox(height: 8),
+                  // Center(
+                  //   child: TextButton(
+                  //     onPressed: () =>
+                  //         _confirmDeleteAccount(context, authentication, l10n),
+                  //     child: Text(
+                  //       l10n.deleteAccountButton,
+                  //       style: GoogleFonts.outfit(
+                  //         color: Colors.grey,
+                  //         fontSize: 13,
+                  //         fontWeight: FontWeight.w500,
+                  //         decoration: TextDecoration.underline,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
