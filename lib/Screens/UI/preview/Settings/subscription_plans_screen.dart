@@ -197,10 +197,20 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               context,
               tier: SubscriptionTier.monthly,
               title: l10n.unlimitedMonthlyTitle,
-              price: 2500,
+              price: SubscriptionService.aiMonthlyPrice,
               color: Colors.orange,
               isCurrent: userModel.hasUnlimitedAI,
-              onSuccess: () => _db.purchaseAISubscription(),
+              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.monthly),
+            ),
+            const SizedBox(height: 16),
+            _buildTierCard(
+              context,
+              tier: SubscriptionTier.yearly,
+              title: l10n.unlimitedYearlyTitle,
+              price: SubscriptionService.aiYearlyPrice,
+              color: Colors.deepOrange,
+              isCurrent: userModel.hasUnlimitedAI,
+              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.yearly),
             ),
             const SizedBox(height: 32),
             Text(
@@ -218,6 +228,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             ),
             const SizedBox(height: 16),
             _buildAppPlanCard(context, userModel),
+            const SizedBox(height: 16),
+            _buildAppPlanYearlyCard(context, userModel),
             const SizedBox(height: 40),
           ],
         ),
@@ -355,7 +367,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.pricePerMonthLabel(price.toInt()),
+            tier == SubscriptionTier.yearly
+                ? l10n.pricePerYearLabel(price.toInt())
+                : l10n.pricePerMonthLabel(price.toInt()),
             style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
@@ -396,6 +410,13 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         userModel.subscriptionExpiry != null &&
         userModel.subscriptionExpiry!.isAfter(DateTime.now());
 
+    // Guards against offering a free monthly trial to someone who already
+    // pays for the yearly App Plan (their trialUsed can still be false if
+    // they bought yearly directly without ever touching the monthly tier).
+    final isOnOtherPaidTier = userModel.subscriptionTier == SubscriptionTier.yearly &&
+        userModel.subscriptionExpiry != null &&
+        userModel.subscriptionExpiry!.isAfter(DateTime.now());
+
     String? badgeText;
     Color badgeColor = theme.colorScheme.primary;
     Widget actionButton;
@@ -407,7 +428,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     } else if (isPaidActive) {
       badgeText = l10n.currentPlanBadge;
       actionButton = const SizedBox.shrink();
-    } else if (!userModel.trialUsed) {
+    } else if (!userModel.trialUsed && !isOnOtherPaidTier) {
       badgeText = l10n.firstMonthFreeBadge;
       badgeColor = Colors.green;
       actionButton = ElevatedButton(
@@ -470,6 +491,91 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             userModel.trialUsed || isPaidActive || userModel.isTrialActive
                 ? l10n.pricePerMonthLabel(price.toInt())
                 : l10n.freeMonthThenPriceLabel(price.toInt()),
+            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.aiFeaturesBilledSeparatelyShort,
+            style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+          ),
+          const SizedBox(height: 20),
+          ...features.map((f) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.check, size: 16, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(f, style: GoogleFonts.outfit(fontSize: 14)),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 20),
+          actionButton,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppPlanYearlyCard(BuildContext context, UserModel userModel) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final price = SubscriptionService.yearlyPrice;
+    final features = SubscriptionService.getTierFeatures(SubscriptionTier.yearly);
+
+    final isPaidActive = userModel.subscriptionTier == SubscriptionTier.yearly &&
+        !userModel.isTrialActive &&
+        userModel.subscriptionExpiry != null &&
+        userModel.subscriptionExpiry!.isAfter(DateTime.now());
+
+    final actionButton = isPaidActive
+        ? const SizedBox.shrink()
+        : ElevatedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handlePurchase(
+                      SubscriptionTier.yearly,
+                      price,
+                      () => _db.upgradeSubscription(SubscriptionTier.yearly),
+                    ),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(l10n.subscribeButton),
+          );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.unlimitedYearlyTitle,
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: theme.hintColor),
+          ),
+          const SizedBox(height: 8),
+          if (isPaidActive) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                l10n.currentPlanBadge,
+                style: GoogleFonts.outfit(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Text(
+            l10n.pricePerYearLabel(price.toInt()),
             style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),

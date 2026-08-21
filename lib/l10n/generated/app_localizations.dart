@@ -3914,29 +3914,11 @@ abstract class AppLocalizations {
   /// **'Thank you for your generous support! ❤️'**
   String get thankYouForSupportMessage;
 
-  /// No description provided for @confirmApplicationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Application'**
-  String get confirmApplicationTitle;
-
-  /// No description provided for @redirectToWhatsappBody.
-  ///
-  /// In en, this message translates to:
-  /// **'You will be redirected to WhatsApp to complete your application with our support team.'**
-  String get redirectToWhatsappBody;
-
   /// No description provided for @couldNotOpenWhatsappMessage.
   ///
   /// In en, this message translates to:
   /// **'Could not open WhatsApp. Please ensure WhatsApp is installed.'**
   String get couldNotOpenWhatsappMessage;
-
-  /// No description provided for @continueToWhatsappButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue to WhatsApp'**
-  String get continueToWhatsappButton;
 
   /// No description provided for @transcriptApplicationTitle.
   ///
@@ -4087,6 +4069,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Super Fast Mode (3500 XAF)'**
   String get modeSuperFast;
+
+  /// No description provided for @chooseDeliveryMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Delivery Method'**
+  String get chooseDeliveryMethodTitle;
+
+  /// No description provided for @chooseDeliveryMethodSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to receive your transcript?'**
+  String get chooseDeliveryMethodSubtitle;
+
+  /// No description provided for @deliveryMethodPdfLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF (Soft Copy)'**
+  String get deliveryMethodPdfLabel;
+
+  /// No description provided for @deliveryMethodPdfSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive a digital copy by email/WhatsApp'**
+  String get deliveryMethodPdfSubtitle;
+
+  /// No description provided for @deliveryMethodOnsiteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Onsite (Physical Pickup)'**
+  String get deliveryMethodOnsiteLabel;
+
+  /// No description provided for @deliveryMethodOnsiteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up a printed copy in person'**
+  String get deliveryMethodOnsiteSubtitle;
+
+  /// No description provided for @acceptButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptButton;
+
+  /// No description provided for @payToSubmitApplicationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay to submit your application'**
+  String get payToSubmitApplicationSubtitle;
+
+  /// No description provided for @applicationSubmittedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Application submitted! Redirecting to WhatsApp...'**
+  String get applicationSubmittedMessage;
 
   /// No description provided for @statusCurrentStudent.
   ///
@@ -4640,6 +4676,12 @@ abstract class AppLocalizations {
   /// **'Unlimited Monthly'**
   String get unlimitedMonthlyTitle;
 
+  /// No description provided for @unlimitedYearlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Yearly'**
+  String get unlimitedYearlyTitle;
+
   /// No description provided for @featureUnlimitedGeminiChat.
   ///
   /// In en, this message translates to:
@@ -4687,6 +4729,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{price} XAF / month'**
   String pricePerMonthLabel(int price);
+
+  /// No description provided for @pricePerYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} XAF / year'**
+  String pricePerYearLabel(int price);
 
   /// No description provided for @currentPlanButton.
   ///

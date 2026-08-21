@@ -2073,18 +2073,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Thank you for your generous support! ❤️';
 
   @override
-  String get confirmApplicationTitle => 'Confirm Application';
-
-  @override
-  String get redirectToWhatsappBody =>
-      'You will be redirected to WhatsApp to complete your application with our support team.';
-
-  @override
   String get couldNotOpenWhatsappMessage =>
       'Could not open WhatsApp. Please ensure WhatsApp is installed.';
-
-  @override
-  String get continueToWhatsappButton => 'Continue to WhatsApp';
 
   @override
   String get transcriptApplicationTitle => 'Transcript Application';
@@ -2161,6 +2151,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modeSuperFast => 'Super Fast Mode (3500 XAF)';
+
+  @override
+  String get chooseDeliveryMethodTitle => 'Choose Delivery Method';
+
+  @override
+  String get chooseDeliveryMethodSubtitle =>
+      'How would you like to receive your transcript?';
+
+  @override
+  String get deliveryMethodPdfLabel => 'PDF (Soft Copy)';
+
+  @override
+  String get deliveryMethodPdfSubtitle =>
+      'Receive a digital copy by email/WhatsApp';
+
+  @override
+  String get deliveryMethodOnsiteLabel => 'Onsite (Physical Pickup)';
+
+  @override
+  String get deliveryMethodOnsiteSubtitle => 'Pick up a printed copy in person';
+
+  @override
+  String get acceptButton => 'Accept';
+
+  @override
+  String get payToSubmitApplicationSubtitle => 'Pay to submit your application';
+
+  @override
+  String get applicationSubmittedMessage =>
+      'Application submitted! Redirecting to WhatsApp...';
 
   @override
   String get statusCurrentStudent => 'Current Student';
@@ -2465,6 +2485,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlimitedMonthlyTitle => 'Unlimited Monthly';
 
   @override
+  String get unlimitedYearlyTitle => 'Unlimited Yearly';
+
+  @override
   String get featureUnlimitedGeminiChat => 'Unlimited Gemini AI Chat';
 
   @override
@@ -2489,6 +2512,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String pricePerMonthLabel(int price) {
     return '$price XAF / month';
+  }
+
+  @override
+  String pricePerYearLabel(int price) {
+    return '$price XAF / year';
   }
 
   @override

@@ -2,7 +2,9 @@ import 'package:go_study/services/profile.dart';
 
 class SubscriptionService {
   static const double monthlyPrice = 500.0;
-  static const double yearlyPrice = 5000.0;
+  static const double yearlyPrice = 3500.0;
+  static const double aiMonthlyPrice = 1000.0;
+  static const double aiYearlyPrice = 3000.0;
   static const double contributorPrice = 5000.0;
 
   static const int freeTierDownloadLimit = 5;
@@ -34,16 +36,15 @@ class SubscriptionService {
       case SubscriptionTier.yearly:
         return [
           "Unlimited Downloads",
-          "Unlimited AI Study Plans",
+          "Duration: 1 Year",
           "Priority Support",
           "No Ads (Future)",
-          "Saves ~17% vs Monthly",
+          "Saves ~42% vs Monthly",
         ];
       case SubscriptionTier.monthly:
         return [
           "Unlimited Downloads",
           "Duration: 1 Month",
-          "Unlimited AI Study Plans",
           "Priority Support",
         ];
       case SubscriptionTier.free:

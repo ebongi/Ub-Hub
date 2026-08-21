@@ -2101,18 +2101,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Merci pour votre généreux soutien ! ❤️';
 
   @override
-  String get confirmApplicationTitle => 'Confirmer la demande';
-
-  @override
-  String get redirectToWhatsappBody =>
-      'Vous serez redirigé vers WhatsApp pour finaliser votre demande avec notre équipe de support.';
-
-  @override
   String get couldNotOpenWhatsappMessage =>
       'Impossible d\'ouvrir WhatsApp. Veuillez vous assurer que WhatsApp est installé.';
-
-  @override
-  String get continueToWhatsappButton => 'Continuer vers WhatsApp';
 
   @override
   String get transcriptApplicationTitle => 'Demande de relevé de notes';
@@ -2189,6 +2179,38 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get modeSuperFast => 'Mode super rapide (3500 XAF)';
+
+  @override
+  String get chooseDeliveryMethodTitle => 'Choisir le mode de livraison';
+
+  @override
+  String get chooseDeliveryMethodSubtitle =>
+      'Comment souhaitez-vous recevoir votre relevé de notes ?';
+
+  @override
+  String get deliveryMethodPdfLabel => 'PDF (Copie numérique)';
+
+  @override
+  String get deliveryMethodPdfSubtitle =>
+      'Recevez une copie numérique par email/WhatsApp';
+
+  @override
+  String get deliveryMethodOnsiteLabel => 'Sur place (Retrait physique)';
+
+  @override
+  String get deliveryMethodOnsiteSubtitle =>
+      'Récupérez une copie imprimée en personne';
+
+  @override
+  String get acceptButton => 'Accepter';
+
+  @override
+  String get payToSubmitApplicationSubtitle =>
+      'Payez pour soumettre votre demande';
+
+  @override
+  String get applicationSubmittedMessage =>
+      'Demande soumise ! Redirection vers WhatsApp...';
 
   @override
   String get statusCurrentStudent => 'Étudiant actuel';
@@ -2500,6 +2522,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlimitedMonthlyTitle => 'Illimité mensuel';
 
   @override
+  String get unlimitedYearlyTitle => 'Illimité annuel';
+
+  @override
   String get featureUnlimitedGeminiChat => 'Discussion IA Gemini illimitée';
 
   @override
@@ -2524,6 +2549,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String pricePerMonthLabel(int price) {
     return '$price XAF / mois';
+  }
+
+  @override
+  String pricePerYearLabel(int price) {
+    return '$price XAF / an';
   }
 
   @override

@@ -640,11 +640,13 @@ class DatabaseService {
 
   /// Activate the separately-purchased Unlimited AI subscription (always
   /// paid, never free). Independent of subscription_tier/subscription_expiry
-  /// (the App Plan).
-  Future<void> purchaseAISubscription() async {
+  /// (the App Plan). Duration depends on the chosen AI tier: 30 days for
+  /// monthly, 365 for yearly.
+  Future<void> purchaseAISubscription(SubscriptionTier tier) async {
     if (uid == null) return;
 
-    final expiry = DateTime.now().add(const Duration(days: 30));
+    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
+    final expiry = DateTime.now().add(Duration(days: durationDays));
 
     await _supabase
         .from('profiles')
@@ -655,7 +657,7 @@ class DatabaseService {
       title: 'AI Subscription Activated',
       body: 'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
       type: NotificationType.subscription,
-      data: {'ai_subscription_expiry': expiry.toIso8601String()},
+      data: {'ai_subscription_expiry': expiry.toIso8601String(), 'tier': tier.name},
     );
   }
 
