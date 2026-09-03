@@ -2699,4 +2699,89 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get testCreditsPackTitle => 'Crédits de test';
+
+  @override
+  String get editButton => 'Modifier';
+
+  @override
+  String get newsAdminNewPostButton => 'Nouveau post';
+
+  @override
+  String get newsAuthorFallback => 'Annonce';
+
+  @override
+  String get newsComposerNewTitle => 'Nouveau post';
+
+  @override
+  String get newsComposerEditTitle => 'Modifier le post';
+
+  @override
+  String get newsTitleFieldLabel => 'Titre';
+
+  @override
+  String get newsTitleFieldHint => 'Un titre court et clair';
+
+  @override
+  String get newsTitleRequiredValidator => 'Un titre est requis';
+
+  @override
+  String get newsBodyFieldLabel => 'Détails';
+
+  @override
+  String get newsBodyFieldHint => 'Rédigez l\'annonce…';
+
+  @override
+  String get newsBodyRequiredValidator => 'Des détails sont requis';
+
+  @override
+  String get newsUploadCoverLabel => 'Image de couverture (facultatif)';
+
+  @override
+  String get newsPublishButton => 'Publier';
+
+  @override
+  String get newsPostPublishedSnack => 'Post publié';
+
+  @override
+  String get newsPostUpdatedSnack => 'Post mis à jour';
+
+  @override
+  String get newsAdminOnlyMessage =>
+      'Seuls les administrateurs peuvent publier des actualités.';
+
+  @override
+  String get newsDeletePostTitle => 'Supprimer ce post ?';
+
+  @override
+  String get newsDeletePostBody =>
+      'Le post ainsi que tous ses j\'aime et commentaires seront définitivement supprimés.';
+
+  @override
+  String get newsDeleteCommentTitle => 'Supprimer le commentaire ?';
+
+  @override
+  String get newsDeleteCommentBody =>
+      'Ce commentaire sera définitivement supprimé.';
+
+  @override
+  String get newsNoCommentsYet =>
+      'Aucun commentaire pour l\'instant. Soyez le premier.';
+
+  @override
+  String get newsCommentHintText => 'Ajouter un commentaire…';
+
+  @override
+  String get newsSendCommentTooltip => 'Envoyer';
+
+  @override
+  String newsCommentsHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count commentaires',
+      one: '1 commentaire',
+      zero: 'Commentaires',
+    );
+    return '$_temp0';
+  }
 }

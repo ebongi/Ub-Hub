@@ -4969,6 +4969,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test Credits'**
   String get testCreditsPackTitle;
+
+  /// No description provided for @editButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButton;
+
+  /// No description provided for @newsAdminNewPostButton.
+  ///
+  /// In en, this message translates to:
+  /// **'New Post'**
+  String get newsAdminNewPostButton;
+
+  /// No description provided for @newsAuthorFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement'**
+  String get newsAuthorFallback;
+
+  /// No description provided for @newsComposerNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Post'**
+  String get newsComposerNewTitle;
+
+  /// No description provided for @newsComposerEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Post'**
+  String get newsComposerEditTitle;
+
+  /// No description provided for @newsTitleFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get newsTitleFieldLabel;
+
+  /// No description provided for @newsTitleFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A short, clear headline'**
+  String get newsTitleFieldHint;
+
+  /// No description provided for @newsTitleRequiredValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'A title is required'**
+  String get newsTitleRequiredValidator;
+
+  /// No description provided for @newsBodyFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get newsBodyFieldLabel;
+
+  /// No description provided for @newsBodyFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the announcement…'**
+  String get newsBodyFieldHint;
+
+  /// No description provided for @newsBodyRequiredValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details are required'**
+  String get newsBodyRequiredValidator;
+
+  /// No description provided for @newsUploadCoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image (optional)'**
+  String get newsUploadCoverLabel;
+
+  /// No description provided for @newsPublishButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get newsPublishButton;
+
+  /// No description provided for @newsPostPublishedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Post published'**
+  String get newsPostPublishedSnack;
+
+  /// No description provided for @newsPostUpdatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Post updated'**
+  String get newsPostUpdatedSnack;
+
+  /// No description provided for @newsAdminOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only admins can post news.'**
+  String get newsAdminOnlyMessage;
+
+  /// No description provided for @newsDeletePostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get newsDeletePostTitle;
+
+  /// No description provided for @newsDeletePostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The post and all of its likes and comments will be permanently removed.'**
+  String get newsDeletePostBody;
+
+  /// No description provided for @newsDeleteCommentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete comment?'**
+  String get newsDeleteCommentTitle;
+
+  /// No description provided for @newsDeleteCommentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment will be permanently removed.'**
+  String get newsDeleteCommentBody;
+
+  /// No description provided for @newsNoCommentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Be the first.'**
+  String get newsNoCommentsYet;
+
+  /// No description provided for @newsCommentHintText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment…'**
+  String get newsCommentHintText;
+
+  /// No description provided for @newsSendCommentTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get newsSendCommentTooltip;
+
+  /// No description provided for @newsCommentsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Comments} =1{1 comment} other{{count} comments}}'**
+  String newsCommentsHeader(int count);
 }
 
 class _AppLocalizationsDelegate

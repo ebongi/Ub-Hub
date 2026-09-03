@@ -5,6 +5,7 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/news_composer_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
@@ -312,14 +313,33 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return _ActionCard(
-      icon: Icons.person_rounded,
-      title: l10n.myProfileTitle,
-      subtitle: l10n.reviewYourAccountSubtitle,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const Profile()),
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: _ActionCard(
+            icon: Icons.person_rounded,
+            title: l10n.myProfileTitle,
+            subtitle: l10n.reviewYourAccountSubtitle,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const Profile()),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionCard(
+            icon: Icons.newspaper_rounded,
+            title: l10n.homeToolNews,
+            subtitle: l10n.newsComposerNewTitle,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NewsComposerScreen()),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

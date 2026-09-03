@@ -932,5 +932,35 @@
   "contributorUpgradeTermsBody": "Payez 5000 XAF une fois pour débloquer des téléchargements, téléversements et fonctionnalités premium illimités pour toujours.",
   "momoOmNumberLabel": "Numéro Momo/OM",
   "youAreNowContributorMessage": "Vous êtes maintenant contributeur !",
-  "testCreditsPackTitle": "Crédits de test"
+  "testCreditsPackTitle": "Crédits de test",
+
+  "editButton": "Modifier",
+  "newsAdminNewPostButton": "Nouveau post",
+  "newsAuthorFallback": "Annonce",
+  "newsComposerNewTitle": "Nouveau post",
+  "newsComposerEditTitle": "Modifier le post",
+  "newsTitleFieldLabel": "Titre",
+  "newsTitleFieldHint": "Un titre court et clair",
+  "newsTitleRequiredValidator": "Un titre est requis",
+  "newsBodyFieldLabel": "Détails",
+  "newsBodyFieldHint": "Rédigez l'annonce…",
+  "newsBodyRequiredValidator": "Des détails sont requis",
+  "newsUploadCoverLabel": "Image de couverture (facultatif)",
+  "newsPublishButton": "Publier",
+  "newsPostPublishedSnack": "Post publié",
+  "newsPostUpdatedSnack": "Post mis à jour",
+  "newsAdminOnlyMessage": "Seuls les administrateurs peuvent publier des actualités.",
+  "newsDeletePostTitle": "Supprimer ce post ?",
+  "newsDeletePostBody": "Le post ainsi que tous ses j'aime et commentaires seront définitivement supprimés.",
+  "newsDeleteCommentTitle": "Supprimer le commentaire ?",
+  "newsDeleteCommentBody": "Ce commentaire sera définitivement supprimé.",
+  "newsNoCommentsYet": "Aucun commentaire pour l'instant. Soyez le premier.",
+  "newsCommentHintText": "Ajouter un commentaire…",
+  "newsSendCommentTooltip": "Envoyer",
+  "newsCommentsHeader": "{count, plural, =0{Commentaires} =1{1 commentaire} other{{count} commentaires}}",
+  "@newsCommentsHeader": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

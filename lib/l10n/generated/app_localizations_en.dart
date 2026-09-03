@@ -2658,4 +2658,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get testCreditsPackTitle => 'Test Credits';
+
+  @override
+  String get editButton => 'Edit';
+
+  @override
+  String get newsAdminNewPostButton => 'New Post';
+
+  @override
+  String get newsAuthorFallback => 'Announcement';
+
+  @override
+  String get newsComposerNewTitle => 'New Post';
+
+  @override
+  String get newsComposerEditTitle => 'Edit Post';
+
+  @override
+  String get newsTitleFieldLabel => 'Title';
+
+  @override
+  String get newsTitleFieldHint => 'A short, clear headline';
+
+  @override
+  String get newsTitleRequiredValidator => 'A title is required';
+
+  @override
+  String get newsBodyFieldLabel => 'Details';
+
+  @override
+  String get newsBodyFieldHint => 'Write the announcement…';
+
+  @override
+  String get newsBodyRequiredValidator => 'Some details are required';
+
+  @override
+  String get newsUploadCoverLabel => 'Cover image (optional)';
+
+  @override
+  String get newsPublishButton => 'Publish';
+
+  @override
+  String get newsPostPublishedSnack => 'Post published';
+
+  @override
+  String get newsPostUpdatedSnack => 'Post updated';
+
+  @override
+  String get newsAdminOnlyMessage => 'Only admins can post news.';
+
+  @override
+  String get newsDeletePostTitle => 'Delete this post?';
+
+  @override
+  String get newsDeletePostBody =>
+      'The post and all of its likes and comments will be permanently removed.';
+
+  @override
+  String get newsDeleteCommentTitle => 'Delete comment?';
+
+  @override
+  String get newsDeleteCommentBody =>
+      'This comment will be permanently removed.';
+
+  @override
+  String get newsNoCommentsYet => 'No comments yet. Be the first.';
+
+  @override
+  String get newsCommentHintText => 'Add a comment…';
+
+  @override
+  String get newsSendCommentTooltip => 'Send';
+
+  @override
+  String newsCommentsHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comments',
+      one: '1 comment',
+      zero: 'Comments',
+    );
+    return '$_temp0';
+  }
 }

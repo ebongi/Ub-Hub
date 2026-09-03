@@ -18,6 +18,7 @@ import 'package:go_study/services/school.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/services/marketplace_listing.dart';
 import 'package:go_study/services/bot_knowledge.dart';
+import 'package:go_study/services/news_post.dart';
 
 class DatabaseService {
   final String? uid;
@@ -1057,5 +1058,172 @@ class DatabaseService {
       recipientId: userId,
       notifySelf: false,
     );
+  }
+
+  // ==================== News Feature Methods ====================
+
+  /// Live feed of published news posts, newest first.
+  Stream<List<NewsPost>> getNewsFeed() {
+    return _supabase
+        .from('news_posts')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map((data) => data.map((json) => NewsPost.fromSupabase(json)).toList());
+  }
+
+  /// One post by id (used by a push-notification deep link / refresh).
+  Future<NewsPost?> getNewsPost(String id) async {
+    final data = await _supabase
+        .from('news_posts')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (data == null) return null;
+    return NewsPost.fromSupabase(data);
+  }
+
+  /// The set of post ids the current user has liked. One cheap stream for the
+  /// whole feed — the public like tally lives in `news_posts.like_count`.
+  Stream<Set<String>> myLikedNewsPostIds() {
+    if (uid == null) return Stream.value(<String>{});
+    return _supabase
+        .from('news_likes')
+        .stream(primaryKey: ['post_id', 'user_id'])
+        .eq('user_id', uid!)
+        .map((rows) => rows.map((r) => r['post_id'] as String).toSet());
+  }
+
+  /// Add or remove the current user's like on [postId]. The `like_count`
+  /// column is kept in sync by a DB trigger.
+  Future<void> setNewsLike(String postId, bool liked) async {
+    if (uid == null) return;
+    if (liked) {
+      await _supabase.from('news_likes').upsert({
+        'post_id': postId,
+        'user_id': uid,
+      });
+    } else {
+      await _supabase
+          .from('news_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', uid!);
+    }
+  }
+
+  /// Live comment thread for a post, oldest first.
+  Stream<List<NewsComment>> getNewsComments(String postId) {
+    return _supabase
+        .from('news_comments')
+        .stream(primaryKey: ['id'])
+        .eq('post_id', postId)
+        .order('created_at')
+        .map(
+          (data) => data.map((json) => NewsComment.fromSupabase(json)).toList(),
+        );
+  }
+
+  Future<void> addNewsComment({
+    required String postId,
+    required String content,
+    String? authorName,
+    String? authorAvatarUrl,
+  }) async {
+    if (uid == null) return;
+    await _supabase.from('news_comments').insert(
+      NewsComment(
+        postId: postId,
+        userId: uid!,
+        authorName: authorName,
+        authorAvatarUrl: authorAvatarUrl,
+        content: content,
+      ).toSupabase(),
+    );
+  }
+
+  Future<void> deleteNewsComment(String id) async {
+    await _supabase.from('news_comments').delete().eq('id', id);
+  }
+
+  /// Ids of every profile — the broadcast audience for a new post.
+  Future<List<String>> _getAllProfileIds() async {
+    final rows = await _supabase.from('profiles').select('id');
+    return rows.map((r) => r['id'] as String).toList();
+  }
+
+  /// Create a news post (admin only — enforced by RLS) and broadcast it to
+  /// every other student: an in-app notification row plus an FCM push for
+  /// background/terminated devices. Best-effort — a notification failure
+  /// never blocks the post itself (same contract as [createCourse]).
+  Future<String> createNewsPost(NewsPost post) async {
+    final data = await _supabase
+        .from('news_posts')
+        .insert(post.toSupabase())
+        .select()
+        .single();
+
+    final id = data['id'] as String;
+    final preview = post.body.length > 140
+        ? '${post.body.substring(0, 140).trimRight()}…'
+        : post.body;
+
+    try {
+      final recipientIds = await _getAllProfileIds();
+      await NotificationService().createBroadcastNotification(
+        recipientIds: recipientIds,
+        title: post.title,
+        body: preview,
+        type: NotificationType.news,
+        data: {'newsPostId': id},
+        excludeUserId: uid,
+      );
+      await NotificationService().triggerPushViaEdgeFunction(
+        recipientIds: recipientIds,
+        excludeUserId: uid,
+        title: '📰 ${post.title}',
+        body: preview,
+        type: NotificationType.news,
+        data: {'newsPostId': id},
+        insertNotification: false, // already inserted above
+      );
+    } catch (_) {
+      // Silently ignore — see contract above.
+    }
+
+    return id;
+  }
+
+  /// Edit an existing post. No re-broadcast.
+  Future<void> updateNewsPost(NewsPost post) async {
+    await _supabase
+        .from('news_posts')
+        .update(post.toSupabase())
+        .eq('id', post.id);
+  }
+
+  /// Delete a post. Its comments and likes cascade away in the DB.
+  Future<void> deleteNewsPost(String id) async {
+    await _supabase.from('news_posts').delete().eq('id', id);
+  }
+
+  /// Upload a news cover image and return its public URL. Reuses the public
+  /// `department_images` bucket, like [uploadMarketplaceImage].
+  Future<String> uploadNewsImage(Uint8List imageData, String seed) async {
+    final cleanName =
+        '${DateTime.now().millisecondsSinceEpoch}_${seed.replaceAll(RegExp(r'\s+'), '_')}';
+    final path = 'news/$cleanName.jpg';
+
+    await _supabase.storage
+        .from('department_images')
+        .uploadBinary(
+          path,
+          imageData,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    return _supabase.storage.from('department_images').getPublicUrl(path);
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_study/main.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -129,6 +130,15 @@ class NotificationService {
         MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 3)),
         (route) => false,
       );
+    } else if (payload == 'news') {
+      // Reset to Home, then open the News feed on top.
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 0)),
+        (route) => false,
+      );
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => const NewsFeedScreen()),
+      );
     } else {
       // Default navigation to Home
       navigatorKey.currentState?.pushAndRemoveUntil(
@@ -197,7 +207,7 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final data = message.data;
       final type = (data['type'] ?? '').toString();
-      const shownViaRealtime = {'material', 'course', 'department'};
+      const shownViaRealtime = {'material', 'course', 'department', 'news'};
       if (shownViaRealtime.contains(type)) return;
 
       final title = data['title'] ?? message.notification?.title;
