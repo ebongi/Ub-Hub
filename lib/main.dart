@@ -18,6 +18,7 @@ import 'package:go_study/Screens/UI/preview/Navigation/splash_screen.dart';
 
 import 'package:go_study/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:go_study/firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -33,7 +34,9 @@ void main() async {
       anonKey: SupabaseConfig.anonKey,
     ),
     SharedPreferences.getInstance(),
-    Firebase.initializeApp().catchError((e) {
+    Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).catchError((e) {
       debugPrint("Firebase initialization failed: $e");
       return Firebase.app(); // Return existing app if already initialized, or just fallback
     }),

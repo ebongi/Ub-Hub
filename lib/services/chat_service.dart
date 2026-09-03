@@ -101,23 +101,38 @@ class ChatService {
 
     // Trigger notification (best-effort – may not be available in test env)
     try {
-      String? recipientId;
       if (roomId.startsWith('dm_')) {
-        // Extract recipient from dm_uid1_uid2
+        // ── Direct message ─────────────────────────────────────────────────
+        // Extract the recipient from the dm_uid1_uid2 convention
+        String? recipientId;
         final parts = roomId.split('_');
         if (parts.length == 3) {
           recipientId = parts[1] == user.id ? parts[2] : parts[1];
         }
-      }
 
-      if (recipientId != null) {
-        await NotificationService().createNotification(
-          title: 'New message from ${senderName ?? "Someone"}',
+        if (recipientId != null) {
+          await NotificationService().createNotification(
+            title: 'New message from ${senderName ?? "Someone"}',
+            body: content,
+            type: NotificationType.message,
+            recipientId: recipientId,
+            data: {'roomId': roomId},
+            showLocal: true,
+          );
+        }
+      } else {
+        // ── Group / department / global room ───────────────────────────────
+        // Let the Edge Function resolve room membership and send FCM pushes.
+        // We do NOT insert notification rows here (group chats are read via
+        // the chat stream, not the notifications list).
+        await NotificationService().triggerPushViaEdgeFunction(
+          roomId: roomId,
+          excludeUserId: user.id,
+          title: senderName ?? 'New Message',
           body: content,
           type: NotificationType.message,
-          recipientId: recipientId,
-          data: {'roomId': roomId},
-          showLocal: true, // Always show local alert for the recipient
+          data: {'roomId': roomId, 'messageType': 'group'},
+          insertNotification: false,
         );
       }
     } catch (_) {

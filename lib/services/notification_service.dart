@@ -11,41 +11,38 @@ import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // We need to initialize local notifications in the background isolate
-  final FlutterLocalNotificationsPlugin localNotifications =
-      FlutterLocalNotificationsPlugin();
+  // Runs in a separate isolate when a push arrives while the app is
+  // backgrounded or terminated. The Edge Function sends data-only messages
+  // (no `notification` block), so nothing is shown unless we show it here —
+  // which is exactly why there is never a duplicate from an OS auto-display.
+  final localNotifications = FlutterLocalNotificationsPlugin();
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
+  const initializationSettings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     iOS: DarwinInitializationSettings(),
   );
-
   await localNotifications.initialize(initializationSettings);
 
-  if (message.notification != null) {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'go_study_background',
-          'GO Study Background',
-          importance: Importance.max,
-          priority: Priority.high,
-        );
+  final data = message.data;
+  final title = data['title'] ?? message.notification?.title;
+  final body = data['body'] ?? message.notification?.body ?? '';
+  if (title == null) return;
 
-    const NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
+  await localNotifications.show(
+    message.hashCode,
+    title,
+    body,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'go_study_alerts',
+        'GO Study Alerts',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
       iOS: DarwinNotificationDetails(),
-    );
-
-    await localNotifications.show(
-      message.hashCode,
-      message.notification!.title,
-      message.notification!.body,
-      platformDetails,
-    );
-  }
+    ),
+    payload: data['type'],
+  );
 }
 
 class NotificationService {
@@ -92,6 +89,11 @@ class NotificationService {
       },
     );
 
+    // Create the Android channels up-front. A push can arrive before the app
+    // has ever shown an in-app notification (fresh install, first run while
+    // backgrounded); without an existing channel Android 8+ silently drops it.
+    await _createAndroidChannels();
+
     // Listen for Auth changes to start/stop the real-time listener
     _supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
@@ -136,35 +138,89 @@ class NotificationService {
     }
   }
 
-  Future<void> _initFCM() async {
-    // Request permissions for iOS
-    NotificationSettings settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+  /// Android notification channels. Kept in sync with the channel IDs used by
+  /// [showAlert] ('go_study_alerts'), [showChatNotification] ('go_study_chat'),
+  /// [scheduleNotification] ('go_study_reminders') and the FCM background
+  /// handler. Pre-creating them means a push has somewhere to land even before
+  /// the first in-app notification.
+  static const List<AndroidNotificationChannel> _androidChannels = [
+    AndroidNotificationChannel(
+      'go_study_alerts',
+      'GO Study Alerts',
+      description: 'General alerts and push notifications',
+      importance: Importance.max,
+    ),
+    AndroidNotificationChannel(
+      'go_study_chat',
+      'GO Study Chat',
+      description: 'Real-time chat messages',
+      importance: Importance.max,
+    ),
+    AndroidNotificationChannel(
+      'go_study_reminders',
+      'GO Study Reminders',
+      description: 'Scheduled study reminders and deadlines',
+      importance: Importance.max,
+    ),
+  ];
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      // Get token and save it
-      String? token = await _fcm.getToken();
-      if (token != null) {
-        await _saveTokenToSupabase(token);
-      }
+  Future<void> _createAndroidChannels() async {
+    final android =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return;
+    for (final channel in _androidChannels) {
+      await android.createNotificationChannel(channel);
     }
+    // Android 13+: without a granted POST_NOTIFICATIONS nothing is ever shown.
+    // firebase_messaging.requestPermission() also prompts, but asking here
+    // covers the plain local-notifications path too.
+    await android.requestNotificationsPermission();
+  }
 
-    // Handle foreground messages
+  Future<void> _initFCM() async {
+    // Prompts on iOS, and on Android 13+ (POST_NOTIFICATIONS).
+    await _fcm.requestPermission(alert: true, badge: true, sound: true);
+
+    // Save the token regardless of the permission result — it stays valid, and
+    // the user may enable notifications later from system settings.
+    final token = await _fcm.getToken();
+    if (token != null) {
+      await _saveTokenToSupabase(token);
+    }
+    _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
+
+    // Foreground messages. Broadcast types (material/course/department) also
+    // arrive as `notifications` table rows, whose realtime subscription
+    // (_listenForNotifications) already shows an alert — showing them here too
+    // would double up. Chat ('message') has no such row, so show it.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        showAlert(
-          id: message.hashCode,
-          title: message.notification!.title ?? 'New Notification',
-          body: message.notification!.body ?? '',
-        );
-      }
+      final data = message.data;
+      final type = (data['type'] ?? '').toString();
+      const shownViaRealtime = {'material', 'course', 'department'};
+      if (shownViaRealtime.contains(type)) return;
+
+      final title = data['title'] ?? message.notification?.title;
+      if (title == null) return;
+      showAlert(
+        id: message.hashCode,
+        title: title,
+        body: data['body'] ?? message.notification?.body ?? '',
+        payload: type.isEmpty ? null : type,
+      );
     });
 
-    // Handle background messages
+    // Background / terminated messages.
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Taps on a push delivered while backgrounded or terminated.
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) => _handleNotificationTap(message.data['type']),
+    );
+    final initialMessage = await _fcm.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotificationTap(initialMessage.data['type']);
+    }
   }
 
   Future<void> _saveTokenToSupabase(String token) async {
@@ -175,7 +231,7 @@ class NotificationService {
           .update({'fcm_token': token})
           .eq('id', _uid!);
     } catch (e) {
-      print('Error saving FCM token: $e');
+      debugPrint('Error saving FCM token: $e');
     }
   }
 
@@ -512,5 +568,52 @@ class NotificationService {
         .update({'is_read': true})
         .eq('user_id', _uid!)
         .eq('is_read', false);
+  }
+
+  // ---------------------------------------------------------------------------
+  // FCM push via Supabase Edge Function
+  // ---------------------------------------------------------------------------
+
+  /// Trigger a Firebase Cloud Messaging push for background / terminated devices.
+  ///
+  /// Provide either:
+  ///   • [recipientIds] — explicit list of user IDs to notify, OR
+  ///   • [roomId]       — the chat room whose members the Edge Function resolves
+  ///
+  /// [excludeUserId] is always stripped from the final recipient set.
+  /// [insertNotification] tells the Edge Function whether to also write rows to
+  /// the `notifications` table (set false when [createBroadcastNotification] has
+  /// already done that).
+  ///
+  /// All errors are caught and logged — a push failure must never break the
+  /// action that triggered it.
+  Future<void> triggerPushViaEdgeFunction({
+    required String title,
+    required String body,
+    required NotificationType type,
+    List<String>? recipientIds,
+    String? roomId,
+    String? excludeUserId,
+    Map<String, dynamic>? data,
+    bool insertNotification = false,
+  }) async {
+    try {
+      await _supabase.functions.invoke(
+        'send-push-notification',
+        body: {
+          if (recipientIds != null && recipientIds.isNotEmpty)
+            'recipient_ids': recipientIds,
+          if (roomId != null) 'room_id': roomId,
+          if (excludeUserId != null) 'exclude_user_id': excludeUserId,
+          'title': title,
+          'body': body,
+          'type': type.name,
+          if (data != null && data.isNotEmpty) 'data': data,
+          'insert_notification': insertNotification,
+        },
+      );
+    } catch (e) {
+      debugPrint('NotificationService.triggerPushViaEdgeFunction error: $e');
+    }
   }
 }

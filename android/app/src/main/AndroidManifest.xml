@@ -9,6 +9,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
+    <!-- Android 13+ requires this to be declared for notifications to be
+         grantable at runtime. firebase_messaging / flutter_local_notifications
+         trigger the actual prompt (see NotificationService). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <queries>
         <!-- If your app opens https URLs -->
         <intent>
@@ -58,6 +63,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Safety net: if an FCM message ever arrives carrying a `notification`
+             block, the OS renders it on this channel (created in
+             NotificationService._createAndroidChannels). The Edge Function
+             currently sends data-only messages, which the app renders itself. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="go_study_alerts" />
 
         <!-- WorkManager's own SystemForegroundService (used by
              background_downloader's foreground: true downloads, see

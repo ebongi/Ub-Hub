@@ -234,6 +234,16 @@ class DatabaseService {
           data: {'departmentId': id},
           excludeUserId: uid,
         );
+        // Also push to background/terminated devices via FCM.
+        await NotificationService().triggerPushViaEdgeFunction(
+          recipientIds: recipientIds,
+          excludeUserId: uid,
+          title: 'New Department',
+          body: 'A new department "${department.name}" has been added.',
+          type: NotificationType.department,
+          data: {'departmentId': id},
+          insertNotification: false, // already inserted above
+        );
       }
     } catch (_) {
       // Silently ignore — see comment above.
@@ -272,6 +282,16 @@ class DatabaseService {
         type: NotificationType.course,
         data: {'courseId': id, 'departmentId': course.departmentId},
         excludeUserId: uid,
+      );
+      // Also push to background/terminated devices via FCM.
+      await NotificationService().triggerPushViaEdgeFunction(
+        recipientIds: recipientIds,
+        excludeUserId: uid,
+        title: 'New Course',
+        body: 'A new course "${course.name}" (${course.code}) is now available.',
+        type: NotificationType.course,
+        data: {'courseId': id, 'departmentId': course.departmentId},
+        insertNotification: false, // already inserted above
       );
     } catch (_) {
       // Silently ignore — see comment above.
@@ -387,6 +407,20 @@ class DatabaseService {
             'category': material.materialCategory,
           },
           excludeUserId: uid,
+        );
+        // Also push to background/terminated devices via FCM.
+        await NotificationService().triggerPushViaEdgeFunction(
+          recipientIds: recipientIds,
+          excludeUserId: uid,
+          title: 'New Material Uploaded 📚',
+          body: 'New content "${material.title}" has been uploaded.',
+          type: NotificationType.material,
+          data: {
+            'materialId': id,
+            'courseId': material.courseId ?? '',
+            'category': material.materialCategory,
+          },
+          insertNotification: false, // already inserted above
         );
       } catch (_) {
         // Silently ignore — see comment above.
