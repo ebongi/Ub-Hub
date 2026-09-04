@@ -91,16 +91,25 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
             backgroundColor: theme.dividerColor,
           ),
           const SizedBox(height: 30),
-          Text(
-            currentQuestion['question'] ?? "",
-            style: GoogleFonts.outfit(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    currentQuestion['question'] ?? "",
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ...options.map((option) => _buildOptionTile(option, theme)),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 30),
-          ...options.map((option) => _buildOptionTile(option, theme)),
-          const Spacer(),
+          const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _selectedOption != null && !_showFeedback
                 ? _submitAnswer
@@ -152,19 +161,25 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                option,
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              Expanded(
+                child: Text(
+                  option,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
               ),
-              const Spacer(),
-              if (_showFeedback && isCorrect)
+              if (_showFeedback && isCorrect) ...[
+                const SizedBox(width: 8),
                 const Icon(Icons.check_circle, color: Colors.green),
-              if (_showFeedback && isSelected && !isCorrect)
+              ],
+              if (_showFeedback && isSelected && !isCorrect) ...[
+                const SizedBox(width: 8),
                 const Icon(Icons.cancel, color: Colors.red),
+              ],
             ],
           ),
         ),
