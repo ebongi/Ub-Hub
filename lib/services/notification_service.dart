@@ -124,10 +124,10 @@ class NotificationService {
   void _handleNotificationTap(String? payload) {
     if (payload == null) return;
 
-    // For friend requests or messages, navigate to the Messages tab (index 3)
+    // For friend requests or messages, navigate to the Messages tab (index 2)
     if (payload == 'friendRequest' || payload == 'message') {
       navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 3)),
+        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 2)),
         (route) => false,
       );
     } else if (payload == 'news') {
@@ -366,6 +366,29 @@ class NotificationService {
     );
   }
 
+  /// Whether the OS currently lets us post exact alarms. Exact alarms are gated
+  /// behind the SCHEDULE_EXACT_ALARM special access on Android 12+ (auto-granted
+  /// through API 32, revocable and denied-by-default on API 33+). Anything other
+  /// than Android has no such notion.
+  Future<bool> _canScheduleExactAlarms() async {
+    final android =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return true;
+    return await android.canScheduleExactNotifications() ?? false;
+  }
+
+  /// Send the user to the system "Alarms & reminders" screen to grant exact
+  /// alarms (Android 13+). Returns the resulting permission state. Scheduling
+  /// still works without this — it just falls back to an inexact alarm.
+  Future<bool> requestExactAlarmPermission() async {
+    final android =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return true;
+    return await android.requestExactAlarmsPermission() ?? false;
+  }
+
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -374,6 +397,14 @@ class NotificationService {
     String? payload,
   }) async {
     if (scheduledDate.isBefore(DateTime.now())) return;
+
+    // A reminder scheduled minutes/hours ahead does not need alarm-clock
+    // precision, so drop to an inexact alarm (needs no permission, delivery is
+    // still guaranteed within a maintenance window) rather than letting the
+    // plugin throw PlatformException(exact alarms not permitted).
+    final scheduleMode = await _canScheduleExactAlarms()
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
 
     await _notificationsPlugin.zonedSchedule(
       id,
@@ -393,7 +424,7 @@ class NotificationService {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: scheduleMode,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,

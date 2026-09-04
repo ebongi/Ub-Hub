@@ -1,22 +1,28 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/material_download_actions.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
+import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/flashcard_model.dart';
 
 import 'package:go_study/services/course_model.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/language_exercise.dart';
 import 'package:go_study/services/profile.dart';
-import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/language/language_practice_tab.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/Screens/Shared/compact_list_row.dart';
+import 'package:go_study/theme/app_radius.dart';
+import 'package:go_study/theme/app_spacing.dart';
+import 'package:go_study/theme/app_text_styles.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final Course course;
@@ -124,9 +130,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                   indicatorWeight: 3,
                   indicatorSize: TabBarIndicatorSize.label,
                   dividerColor: Colors.transparent,
-                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
-                  unselectedLabelStyle:
-                      GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+                  labelStyle: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  unselectedLabelStyle: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
                   tabs: [
                     Tab(text: l10n.materialsTabLabel),
                     Tab(text: l10n.practiceTabLabel),
@@ -147,6 +158,65 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   }
 
   Widget _buildMaterialsBody() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final courseDescription = widget.course.description;
+
+    return Column(
+      children: [
+        if ((courseDescription ?? '').isNotEmpty)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              0,
+            ),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              color: isDark
+                  ? theme.colorScheme.surfaceContainerLow
+                  : Colors.white,
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.grey.withOpacity(0.15),
+              ),
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: MarkdownBody(
+                data: courseDescription!,
+                styleSheet: MarkdownStyleSheet(
+                  h1: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                  h2: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  p: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    height: 1.5,
+                  ),
+                  listBullet: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Expanded(child: _buildMaterialsStream()),
+      ],
+    );
+  }
+
+  Widget _buildMaterialsStream() {
     final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<CourseMaterial>>(
       stream: _materialStream,
@@ -156,16 +226,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
+          return Center(
+            child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
+          );
         }
 
         final serverMaterials = snapshot.data ?? [];
 
         // Reconciliation
         _optimisticMaterials.removeWhere(
-          (optimistic) => serverMaterials.any(
-            (server) => server.title == optimistic.title,
-          ),
+          (optimistic) =>
+              serverMaterials.any((server) => server.title == optimistic.title),
         );
 
         final allMaterials = [..._optimisticMaterials, ...serverMaterials];
@@ -176,7 +247,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.folder_open, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   l10n.noMaterialsYetMessage,
                   style: GoogleFonts.outfit(color: Colors.grey),
@@ -197,21 +268,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
             .toList();
 
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
+            _buildDecksSection(),
             if (regularMaterials.isNotEmpty) ...[
               _buildHeader(l10n.generalResourcesHeader),
-              ...regularMaterials.map((m) => _buildMaterialTile(m)),
+              for (int i = 0; i < regularMaterials.length; i++) ...[
+                _buildMaterialTile(regularMaterials[i]),
+                if (i != regularMaterials.length - 1) const Divider(),
+              ],
             ],
             if (questions.isNotEmpty) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.sectionGap),
               _buildHeader(l10n.pastQuestionsAndAnswersHeader),
-              ...questions.map((q) {
-                final relatedAnswers = answers
-                    .where((a) => a.linkedMaterialId == q.id)
-                    .toList();
-                return _buildPastQuestionTile(q, relatedAnswers);
-              }),
+              for (int i = 0; i < questions.length; i++) ...[
+                _buildPastQuestionTile(
+                  questions[i],
+                  answers
+                      .where((a) => a.linkedMaterialId == questions[i].id)
+                      .toList(),
+                ),
+                if (i != questions.length - 1) const Divider(),
+              ],
             ],
           ],
         );
@@ -219,55 +297,112 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     );
   }
 
-  Widget _buildCategoryBadge(String category) {
-    final l10n = AppLocalizations.of(context)!;
-    Color color;
-    String label;
-    switch (category) {
-      case 'past_question':
-        color = Colors.orange;
-        label = l10n.pqBadge;
-        break;
-      case 'answer':
-        color = Colors.green;
-        label = l10n.ansBadge;
-        break;
-      default:
-        color = Colors.blue;
-        label = l10n.docBadge;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
+  Widget _buildHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md, top: AppSpacing.lg),
       child: Text(
-        label,
-        style: GoogleFonts.outfit(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
+        title.toUpperCase(),
+        style: AppText.settingsSectionLabel(context),
       ),
     );
   }
 
-  Widget _buildHeader(String title) {
+  Widget _buildDecksSection() {
+    final l10n = AppLocalizations.of(context)!;
+    return StreamBuilder<List<FlashcardDeck>>(
+      stream: _dbService.getDecksForCourse(widget.course.id),
+      builder: (context, snapshot) {
+        final decks = snapshot.data ?? const <FlashcardDeck>[];
+        if (decks.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeader(l10n.flashcardsTitle),
+            for (int i = 0; i < decks.length; i++) ...[
+              _buildDeckTile(decks[i]),
+              if (i != decks.length - 1) const Divider(),
+            ],
+            SizedBox(height: AppSpacing.sectionGap),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDeckTile(FlashcardDeck deck) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0, top: 16.0),
-      child: Text(
-        title.toUpperCase(),
-        style: GoogleFonts.outfit(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-          color: isDark ? Colors.white70 : theme.colorScheme.primary,
+    return CompactListRow(
+      title: deck.title,
+      subtitle: l10n.deckCardCountLabel(deck.cardCount),
+      icon: Icons.style_rounded,
+      tint: Colors.deepPurple,
+      onTap: () async {
+        try {
+          final cards = await _dbService.getCards(deck.id);
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FlashcardStudyScreen(deck: deck, cards: cards),
+            ),
+          );
+        } catch (e) {
+          if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+        }
+      },
+      trailing: PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert_rounded,
+          size: 20,
+          color: theme.colorScheme.onSurfaceVariant,
         ),
+        onSelected: (value) async {
+          if (value == 'delete') {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(l10n.deleteDeckDialogTitle),
+                content: Text(l10n.confirmDeleteDeckBody(deck.title)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(l10n.cancel),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(
+                      l10n.deleteButton,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              await _dbService.deleteDeck(deck.id);
+            }
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  l10n.deleteButton,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -275,215 +410,134 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   Widget _buildMaterialTile(CourseMaterial material) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final isDark = theme.brightness == Brightness.dark;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
     final isPending = material.id.isEmpty || material.id.startsWith('temp_');
+    final canManage =
+        material.uploaderId == _dbService.uid ||
+        widget.course.adminId == _dbService.uid;
+    final tint = isPdf ? Colors.red : Colors.blue;
 
-    return Opacity(
-      opacity: isPending ? 0.6 : 1.0,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: isDark ? theme.colorScheme.surfaceContainerLow : Colors.white,
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.grey.withOpacity(0.15),
-          ),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isPdf
-                  ? Icons.picture_as_pdf_outlined
-                  : Icons.description_outlined,
-              color: isPdf ? Colors.red[400] : Colors.blue[400],
-              size: 24,
-            ),
-          ),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  material.title,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (isPending)
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 1.5),
-                ),
-              const SizedBox(width: 8),
-              _buildCategoryBadge(material.materialCategory),
-            ],
-          ),
-          subtitle:
-              material.description != null && material.description!.isNotEmpty
-              ? Text(
-                  material.description!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                )
-              : null,
-          trailing:
-              (material.uploaderId == _dbService.uid ||
-                  widget.course.adminId == _dbService.uid)
-              ? PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    size: 20,
-                    color: isDark ? Colors.white70 : theme.colorScheme.primary,
-                  ),
-                  onSelected: (value) async {
-                    if (value == 'delete') {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(l10n.deleteMaterialDialogTitle),
-                          content: Text(
-                            l10n.confirmDeleteMaterialBody(material.title),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(l10n.cancel),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(
-                                l10n.deleteButton,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirmed == true) {
-                        await _dbService.deleteMaterial(material.id);
-                        if (mounted) {
-                          ErrorHandler.showSuccessSnackBar(
-                            context,
-                            l10n.materialDeletedMessage,
-                          );
-                        }
-                      }
-                    } else if (value == 'download') {
-                      _handleDownload(material);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'download',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.download_rounded, size: 20),
-                          const SizedBox(width: 8),
-                          Text(l10n.downloadMenuItem),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.delete_outline_rounded,
-                            color: Colors.red,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              : IconButton(
-                  icon: Icon(
-                    Icons.download_rounded,
-                    size: 20,
-                    color: isPending
-                        ? Colors.grey
-                        : (isDark ? Colors.white70 : theme.colorScheme.primary),
-                  ),
-                  onPressed: isPending ? null : () => _handleDownload(material),
-                ),
-          onTap: isPending
-              ? null
-              : () {
-                  if (material.fileType.toLowerCase() == 'pdf') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PDFViewerScreen(
-                          url: material.fileUrl,
-                          title: material.title,
-                        ),
-                      ),
-                    );
-                  } else {
-                    _handleDownload(material);
-                  }
-                },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleDownload(CourseMaterial material) async {
-    // Secure for offline use
-    await _secureForOffline(material);
-
-    final uri = Uri.parse(material.fileUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ErrorHandler.showErrorSnackBar(
-          context,
-          "Could not launch download link",
-        );
-      }
-    }
-  }
-
-  Future<void> _secureForOffline(CourseMaterial material) async {
-    try {
-      await StorageService().downloadAndEncrypt(
-        material.fileUrl,
-        material.id,
-        material.fileName,
+    Widget trailing;
+    if (isPending) {
+      trailing = const SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
       );
-      if (mounted) {
-        ErrorHandler.showSuccessSnackBar(
-          context,
-          AppLocalizations.of(context)!.materialSecuredOfflineMessage,
-        );
-      }
-    } catch (e) {
-      print("Offline cache failed: $e");
+    } else {
+      trailing = PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert_rounded,
+          size: 20,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        onSelected: (value) async {
+          if (value == 'flashcards') {
+            await generateFlashcardsForMaterial(
+              context: context,
+              dbService: _dbService,
+              userProfile: _userProfile,
+              material: material,
+            );
+          } else if (value == 'download') {
+            handleMaterialDownload(
+              context: context,
+              dbService: _dbService,
+              userProfile: _userProfile,
+              material: material,
+            );
+          } else if (value == 'delete') {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(l10n.deleteMaterialDialogTitle),
+                content: Text(l10n.confirmDeleteMaterialBody(material.title)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(l10n.cancel),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(
+                      l10n.deleteButton,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              await _dbService.deleteMaterial(material.id);
+              if (mounted) {
+                ErrorHandler.showSuccessSnackBar(
+                  context,
+                  l10n.materialDeletedMessage,
+                );
+              }
+            }
+          }
+        },
+        itemBuilder: (context) => [
+          if (isPdf)
+            PopupMenuItem(
+              value: 'flashcards',
+              child: Row(
+                children: [
+                  const Icon(Icons.style_rounded, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(l10n.generateFlashcardsButton),
+                ],
+              ),
+            ),
+          PopupMenuItem(
+            value: 'download',
+            child: Row(
+              children: [
+                const Icon(Icons.download_rounded, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(l10n.downloadMenuItem),
+              ],
+            ),
+          ),
+          if (canManage)
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    l10n.deleteButton,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
     }
+
+    return CompactListRow(
+      title: material.title,
+      subtitle: material.description,
+      icon: isPdf ? Icons.picture_as_pdf_outlined : Icons.description_outlined,
+      tint: tint,
+      trailing: trailing,
+      isPending: isPending,
+      onTap: isPending
+          ? null
+          : () => openMaterialFile(
+              context: context,
+              dbService: _dbService,
+              userProfile: _userProfile,
+              material: material,
+            ),
+    );
   }
 
   Widget _buildPastQuestionTile(
@@ -492,203 +546,191 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.grey.withOpacity(0.15),
+    return ExpansionTile(
+      shape: const RoundedRectangleBorder(side: BorderSide.none),
+      collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+      tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      childrenPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
         ),
+        child: Icon(Icons.help_outline_rounded, color: Colors.orange, size: 20),
       ),
-      child: ExpansionTile(
-        shape: const RoundedRectangleBorder(side: BorderSide.none),
-        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.help_outline_rounded,
-            color: Colors.orange[400],
-            size: 20,
-          ),
-        ),
-        title: Text(
-          question.title,
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        subtitle: Text(
-          l10n.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        trailing:
-            (question.uploaderId == _dbService.uid ||
-                widget.course.adminId == _dbService.uid)
-            ? PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  color: isDark ? Colors.white70 : colorScheme.primary,
-                  size: 20,
-                ),
-                onSelected: (value) async {
-                  if (value == 'delete') {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(l10n.deletePastQuestionDialogTitle),
-                        content: Text(
-                          l10n.confirmDeleteMaterialBody(question.title),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(l10n.cancel),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              l10n.deleteButton,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed == true) {
-                      await _dbService.deleteMaterial(question.id);
-                      if (mounted) {
-                        ErrorHandler.showSuccessSnackBar(
-                          context,
-                          l10n.pastQuestionDeletedMessage,
-                        );
-                      }
-                    }
-                  } else if (value == 'download') {
-                    _handleDownload(question);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'download',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.download_rounded, size: 20),
-                        const SizedBox(width: 8),
-                        Text(l10n.downloadMenuItem),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(l10n.deleteButton, style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            : IconButton(
-                icon: Icon(
-                  Icons.download_rounded,
-                  color: isDark ? Colors.white70 : colorScheme.primary,
-                  size: 20,
-                ),
-                onPressed: () => _handleDownload(question),
+      title: Text(
+        question.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.cardTitle(context).copyWith(fontSize: 14),
+      ),
+      subtitle: Text(
+        l10n.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
+        style: AppText.cardSubtitle(context),
+      ),
+      trailing:
+          (question.uploaderId == _dbService.uid ||
+              widget.course.adminId == _dbService.uid)
+          ? PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert_rounded,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
               ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: [
-                if (relatedAnswers.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      l10n.noAnswersUploadedYet,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                        color: isDark ? Colors.white54 : Colors.grey,
+              onSelected: (value) async {
+                if (value == 'delete') {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(l10n.deletePastQuestionDialogTitle),
+                      content: Text(
+                        l10n.confirmDeleteMaterialBody(question.title),
                       ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(l10n.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(
+                            l10n.deleteButton,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
-                  )
-                else
-                  ...relatedAnswers.map(
-                    (a) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: Colors.green[400],
+                  );
+                  if (confirmed == true) {
+                    await _dbService.deleteMaterial(question.id);
+                    if (mounted) {
+                      ErrorHandler.showSuccessSnackBar(
+                        context,
+                        l10n.pastQuestionDeletedMessage,
+                      );
+                    }
+                  }
+                } else if (value == 'download') {
+                  handleMaterialDownload(
+                    context: context,
+                    dbService: _dbService,
+                    userProfile: _userProfile,
+                    material: question,
+                  );
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'download',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.download_rounded, size: 20),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(l10n.downloadMenuItem),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.red,
                         size: 20,
                       ),
-                      title: Text(
-                        a.title,
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        l10n.deleteButton,
+                        style: const TextStyle(color: Colors.red),
                       ),
-                      subtitle: Text(
-                        l10n.verifiedAnswerFeeSubtitle(FapshiService.getAnswerDownloadFee().toInt()),
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: isDark ? Colors.white54 : Colors.black45,
-                        ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : IconButton(
+              icon: Icon(
+                Icons.download_rounded,
+                color: colorScheme.primary,
+                size: 20,
+              ),
+              onPressed: () => handleMaterialDownload(
+                context: context,
+                dbService: _dbService,
+                userProfile: _userProfile,
+                material: question,
+              ),
+            ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: Column(
+            children: [
+              if (relatedAnswers.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  child: Text(
+                    l10n.noAnswersUploadedYet,
+                    style: AppText.cardSubtitle(
+                      context,
+                    ).copyWith(fontStyle: FontStyle.italic),
+                  ),
+                )
+              else
+                ...relatedAnswers.map(
+                  (a) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: Colors.green[400],
+                      size: 20,
+                    ),
+                    title: Text(
+                      a.title,
+                      style: AppText.cardTitle(context).copyWith(fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      l10n.verifiedAnswerFeeSubtitle(
+                        FapshiService.getAnswerDownloadFee().toInt(),
                       ),
-                      trailing: IconButton(
-                        icon: Icon(
-                          Icons.download_rounded,
-                          size: 18,
-                          color: isDark ? Colors.white70 : colorScheme.primary,
-                        ),
-                        onPressed: () => _handleDownload(a),
+                      style: AppText.cardSubtitle(context),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(
+                        Icons.download_rounded,
+                        size: 18,
+                        color: colorScheme.primary,
                       ),
-                      onTap: () {
-                        if (a.fileType.toLowerCase() == 'pdf') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PDFViewerScreen(
-                                url: a.fileUrl,
-                                title: a.title,
-                              ),
-                            ),
-                          );
-                        } else {
-                          _handleDownload(a);
-                        }
-                      },
+                      onPressed: () => handleMaterialDownload(
+                        context: context,
+                        dbService: _dbService,
+                        userProfile: _userProfile,
+                        material: a,
+                      ),
+                    ),
+                    onTap: () => openMaterialFile(
+                      context: context,
+                      dbService: _dbService,
+                      userProfile: _userProfile,
+                      material: a,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -722,7 +764,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           return StatefulBuilder(
             builder: (context, setDialogState) => AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(AppRadius.sheet),
               ),
               backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
               surfaceTintColor: Colors.transparent,
@@ -738,7 +780,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       icon: Icons.note_add_rounded,
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.xxl,
+                        AppSpacing.lg,
+                        AppSpacing.xxl,
+                        AppSpacing.xxl,
+                      ),
                       child: Form(
                         key: formKey,
                         child: Column(
@@ -772,7 +819,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               },
                             ),
                             if (selectedCategory == 'answer') ...[
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.lg),
                               StreamBuilder<List<CourseMaterial>>(
                                 stream: _materialStream,
                                 builder: (context, snapshot) {
@@ -813,16 +860,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 },
                               ),
                             ],
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             PremiumTextField(
                               controller: titleController,
                               label: l10n.titleLabel,
                               hint: l10n.titleHintExample,
                               icon: Icons.title_rounded,
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? l10n.requiredValidator : null,
+                              validator: (v) => v == null || v.isEmpty
+                                  ? l10n.requiredValidator
+                                  : null,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.lg),
                             PremiumTextField(
                               controller: descriptionController,
                               label: l10n.descriptionOptionalLabel,
@@ -830,7 +878,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               icon: Icons.description_rounded,
                               maxLines: 2,
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: AppSpacing.xxl),
                             // Premium File Selection Zone
                             GestureDetector(
                               onTap: () async {
@@ -842,7 +890,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(AppSpacing.xl),
                                 decoration: BoxDecoration(
                                   color: result != null
                                       ? Colors.green.withOpacity(
@@ -851,7 +899,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                       : (isDark
                                             ? Colors.white.withOpacity(0.04)
                                             : Colors.grey[50]),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.card,
+                                  ),
                                   border: Border.all(
                                     color: result != null
                                         ? Colors.green.withOpacity(0.3)
@@ -873,7 +923,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                           ? Colors.green
                                           : theme.colorScheme.primary,
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: AppSpacing.md),
                                     Text(
                                       result != null
                                           ? result!.files.single.name
@@ -927,7 +977,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   flex: 2,
                                   child: PremiumSubmitButton(
@@ -1038,7 +1088,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
-        ErrorHandler.showSuccessSnackBar(context, AppLocalizations.of(context)!.uploadSuccessfulMessage);
+        ErrorHandler.showSuccessSnackBar(
+          context,
+          AppLocalizations.of(context)!.uploadSuccessfulMessage,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -1069,9 +1122,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           ),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.sheet),
+            ),
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: SafeArea(
             child: SingleChildScrollView(
               child: Column(
@@ -1085,7 +1140,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xxl),
                   Text(
                     l10n.uploadMaterialButton,
                     style: GoogleFonts.outfit(
@@ -1093,13 +1148,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     l10n.selectMaterialTypeSubtitle,
                     style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey),
                   ),
                   _buildUgcGuidelinesCard(Theme.of(context)),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _buildUploadOption(
                     icon: Icons.note_add_rounded,
                     color: Colors.blue,
@@ -1110,7 +1165,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       _addMaterial(initialCategory: 'regular');
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _buildUploadOption(
                     icon: Icons.history_edu_rounded,
                     color: Colors.orange,
@@ -1121,7 +1176,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       _addMaterial(initialCategory: 'past_question');
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   _buildUploadOption(
                     icon: Icons.check_circle_rounded,
                     color: Colors.green,
@@ -1132,7 +1187,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       _addMaterial(initialCategory: 'answer');
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xxl),
                 ],
               ),
             ),
@@ -1148,11 +1203,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: primaryColor.withOpacity(isDark ? 0.08 : 0.04),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(
           color: primaryColor.withOpacity(isDark ? 0.2 : 0.15),
           width: 1,
@@ -1168,7 +1223,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 color: primaryColor,
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.communityContributionCodeTitle,
                 style: GoogleFonts.outfit(
@@ -1179,19 +1234,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           _buildGuidelineItem(
             Icons.done_all_rounded,
             l10n.guidelineReadableContent,
             theme,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _buildGuidelineItem(
             Icons.find_in_page_rounded,
             l10n.guidelineCheckDuplicate,
             theme,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           _buildGuidelineItem(
             Icons.school_rounded,
             l10n.guidelineAcademicOnly,
@@ -1208,7 +1263,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: isDark ? Colors.white70 : Colors.black54),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
             text,
@@ -1233,12 +1288,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: isDark ? Colors.white.withOpacity(0.02) : Colors.grey[50],
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(
             color: isDark
                 ? Colors.white.withOpacity(0.05)

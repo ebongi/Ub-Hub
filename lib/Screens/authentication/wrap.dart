@@ -5,6 +5,7 @@ import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 import 'package:go_study/Screens/authentication/authenticate.dart';
+import 'package:go_study/Screens/authentication/paywall_screen.dart';
 
 
 import 'package:provider/provider.dart';
@@ -72,6 +73,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 trialUsed: profile.trialUsed,
                 isTrialSubscription: profile.isTrialSubscription,
                 aiSubscriptionExpiry: profile.aiSubscriptionExpiry,
+                profileLoaded: true,
               );
             });
           },
@@ -83,6 +85,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
         _profileSubscription = null;
         // Cleanup notification listener on logout
         NotificationService().clear();
+        // Reset so the next login doesn't briefly reuse this (long-lived)
+        // UserModel instance's stale profileLoaded=true from a previous session.
+        Provider.of<UserModel>(context, listen: false).update(profileLoaded: false);
       }
       _previousUser = user;
     }
@@ -102,9 +107,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (user == null) {
       // Show the widget that toggles between Sign In and Register
       return const Authenticate();
-    } else {
-      // If logged in, show the home screen immediately in this free community version
-      return const NavBar();
     }
+
+    final userModel = Provider.of<UserModel>(context);
+    if (!userModel.profileLoaded) {
+      // Real profile data (subscription/trial state) hasn't arrived from
+      // the realtime stream yet — avoid flashing PaywallScreen based on
+      // UserModel's pre-login default values.
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (!userModel.hasAccess) {
+      return const PaywallScreen();
+    }
+    return const NavBar();
   }
 }

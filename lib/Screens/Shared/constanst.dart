@@ -134,7 +134,37 @@ class UserModel extends ChangeNotifier {
       _subscriptionExpiry != null &&
       _subscriptionExpiry!.isAfter(DateTime.now());
 
-  bool get hasAccess => true; // Always allow access in free version
+  /// True while the App Plan (subscriptionTier/subscriptionExpiry) is an
+  /// active paid period or the active free trial month. Mirrors
+  /// UserProfile.isSubscribed in lib/services/profile.dart.
+  bool get isSubscribed =>
+      (_subscriptionTier != SubscriptionTier.free &&
+          _subscriptionExpiry != null &&
+          _subscriptionExpiry!.isAfter(DateTime.now())) ||
+      isTrialActive;
+
+  /// New-account grace window, kept in sync with UserProfile's copy in
+  /// lib/services/profile.dart (and the SQL is_authorized() function).
+  static const _newAccountGraceWindow = Duration(days: 3);
+
+  /// Central logic for the Hard Paywall. Mirrors UserProfile.hasAccess.
+  bool get hasAccess {
+    if (_role == UserRole.admin || _role == UserRole.contributor) return true;
+    if (isSubscribed) return true;
+    if (_createdAt != null && DateTime.now().difference(_createdAt!) < _newAccountGraceWindow) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Whether the realtime profile stream has delivered its first snapshot
+  /// yet for the currently logged-in user. Lets `AuthWrapper` distinguish
+  /// "no real data yet" (show a loader) from "real data says no access"
+  /// (show PaywallScreen) — without it, every login/app-resume would flash
+  /// PaywallScreen for a frame since the default field values (free tier,
+  /// no createdAt) evaluate hasAccess == false.
+  bool _profileLoaded = false;
+  bool get profileLoaded => _profileLoaded;
 
   int get trialDaysRemaining {
     if (!isTrialActive) return 0;
@@ -183,6 +213,7 @@ class UserModel extends ChangeNotifier {
     bool? trialUsed,
     bool? isTrialSubscription,
     DateTime? aiSubscriptionExpiry,
+    bool? profileLoaded,
   }) {
     if (uid != null) _uid = uid;
     if (name != null) _name = name;
@@ -204,6 +235,7 @@ class UserModel extends ChangeNotifier {
     if (trialUsed != null) _trialUsed = trialUsed;
     if (isTrialSubscription != null) _isTrialSubscription = isTrialSubscription;
     if (aiSubscriptionExpiry != null) _aiSubscriptionExpiry = aiSubscriptionExpiry;
+    if (profileLoaded != null) _profileLoaded = profileLoaded;
     notifyListeners();
   }
 }

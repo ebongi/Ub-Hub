@@ -200,7 +200,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               price: SubscriptionService.aiMonthlyPrice,
               color: Colors.orange,
               isCurrent: userModel.hasUnlimitedAI,
-              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.monthly),
+              itemType: 'ai_subscription',
+              onSuccess: (ref) => _db.purchaseAISubscription(SubscriptionTier.monthly, paymentRef: ref),
             ),
             const SizedBox(height: 16),
             _buildTierCard(
@@ -210,7 +211,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               price: SubscriptionService.aiYearlyPrice,
               color: Colors.deepOrange,
               isCurrent: userModel.hasUnlimitedAI,
-              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.yearly),
+              itemType: 'ai_subscription',
+              onSuccess: (ref) => _db.purchaseAISubscription(SubscriptionTier.yearly, paymentRef: ref),
             ),
             const SizedBox(height: 32),
             Text(
@@ -315,7 +317,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     required double price,
     required Color color,
     required bool isCurrent,
-    required Future<void> Function() onSuccess,
+    required String itemType,
+    required Future<void> Function(String paymentRef) onSuccess,
     List<String>? features,
     bool isPremium = false,
   }) {
@@ -387,7 +390,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ElevatedButton(
             onPressed: isCurrent || _isProcessing
                 ? null
-                : () => _handlePurchase(tier, price, onSuccess),
+                : () => _handlePurchase(tier, price, itemType, onSuccess),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -452,7 +455,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             : () => _handlePurchase(
                   SubscriptionTier.monthly,
                   price,
-                  () => _db.upgradeSubscription(SubscriptionTier.monthly),
+                  'app_plan_subscription',
+                  (ref) => _db.upgradeSubscription(SubscriptionTier.monthly, paymentRef: ref),
                 ),
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 50),
@@ -535,7 +539,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 : () => _handlePurchase(
                       SubscriptionTier.yearly,
                       price,
-                      () => _db.upgradeSubscription(SubscriptionTier.yearly),
+                      'app_plan_subscription',
+                      (ref) => _db.upgradeSubscription(SubscriptionTier.yearly, paymentRef: ref),
                     ),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
@@ -764,8 +769,24 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   Future<void> _processCreditPurchase(double amount, int credits, String phone) async {
     setState(() => _isProcessing = true);
     final l10n = AppLocalizations.of(context)!;
+    final userId = _db.uid;
 
     try {
+      if (userId == null) throw "User not authenticated";
+
+      final paymentRef = FapshiService.generatePaymentRef();
+      await _db.createPaymentTransaction(PaymentTransaction(
+        id: '',
+        userId: userId,
+        paymentRef: paymentRef,
+        amount: amount,
+        currency: FapshiService.getCurrency(),
+        status: PaymentStatus.pending,
+        itemType: 'ai_credits',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+
       final response = await FapshiService.collectPayment(
         amount: amount,
         phoneNumber: FapshiService.formatPhoneNumber(phone),
@@ -774,6 +795,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       final paymentId = response['paymentId'];
       final redirectUrl = response['redirectUrl'];
+      if (paymentId == null) throw "Failed to initiate payment";
+
+      await _db.attachPaymentProviderRef(paymentRef, paymentId.toString());
 
       if (redirectUrl != null) {
         final uri = Uri.parse(redirectUrl);
@@ -787,13 +811,16 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
-        await _db.addAICredits(credits);
+        await _db.addAICredits(credits, paymentRef: paymentRef);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.creditsAddedSuccessfullyMessage(credits))),
           );
         }
       } else {
+        // The edge function already flips a confirmed payment to 'success'
+        // server-side; only non-success outcomes need recording here.
+        await _db.updatePaymentStatus(paymentRef, status);
         throw "Payment was not successful";
       }
     } catch (e) {
@@ -810,7 +837,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   Future<void> _handlePurchase(
     SubscriptionTier tier,
     double amount,
-    Future<void> Function() onSuccess,
+    String itemType,
+    Future<void> Function(String paymentRef) onSuccess,
   ) async {
     final phoneController = TextEditingController();
     final l10n = AppLocalizations.of(context)!;
@@ -887,23 +915,40 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     );
 
     if (proceed == true && phoneController.text.isNotEmpty) {
-      _processPayment(tier, amount, phoneController.text.trim(), onSuccess);
+      _processPayment(tier, amount, itemType, phoneController.text.trim(), onSuccess);
     }
   }
 
   Future<void> _processPayment(
     SubscriptionTier tier,
     double amount,
+    String itemType,
     String phone,
-    Future<void> Function() onSuccess,
+    Future<void> Function(String paymentRef) onSuccess,
   ) async {
     setState(() {
       _isProcessing = true;
       _processingTier = tier;
     });
     final l10n = AppLocalizations.of(context)!;
+    final userId = _db.uid;
 
     try {
+      if (userId == null) throw "User not authenticated";
+
+      final paymentRef = FapshiService.generatePaymentRef();
+      await _db.createPaymentTransaction(PaymentTransaction(
+        id: '',
+        userId: userId,
+        paymentRef: paymentRef,
+        amount: amount,
+        currency: FapshiService.getCurrency(),
+        status: PaymentStatus.pending,
+        itemType: itemType,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+
       final response = await FapshiService.collectPayment(
         amount: amount,
         phoneNumber: FapshiService.formatPhoneNumber(phone),
@@ -912,6 +957,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       final paymentId = response['paymentId'] ?? response['id'];
       final redirectUrl = response['redirectUrl'];
+      if (paymentId == null) throw "Failed to initiate payment";
+
+      await _db.attachPaymentProviderRef(paymentRef, paymentId.toString());
 
       if (redirectUrl != null) {
         final uri = Uri.parse(redirectUrl);
@@ -925,16 +973,20 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
-        await onSuccess();
+        await onSuccess(paymentRef);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.subscriptionActivatedMessage)),
           );
           Navigator.pop(context);
         }
-      } else if (status == PaymentStatus.cancelled) {
-        throw "Payment was cancelled";
       } else {
+        // The edge function already flips a confirmed payment to 'success'
+        // server-side; only non-success outcomes need recording here.
+        await _db.updatePaymentStatus(paymentRef, status);
+        if (status == PaymentStatus.cancelled) {
+          throw "Payment was cancelled";
+        }
         throw "Payment timed out or failed. Please try again.";
       }
     } catch (e) {

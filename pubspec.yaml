@@ -116,6 +116,7 @@ flutter:
     - assets/images/
     - assets/icons/android/
     - assets/icons/ios/
+    - assets/icons/nav/
     - assets/
     - assets/data/
     - .env

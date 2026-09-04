@@ -1,20 +1,19 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart'
     show CancelToken, DownloadException, DownloadErrorMessage;
-import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
+import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_background.dart';
+import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_header.dart';
+import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_input_bar.dart';
+import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_message_bubble.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/gemma_client.dart';
 import 'package:go_study/services/gemma_model_manager.dart';
 import 'package:go_study/services/gemma_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:markdown/markdown.dart' as md;
-import 'package:markdown_widget/markdown_widget.dart';
 import 'package:uuid/uuid.dart';
 
 /// A friendly, deliberately simpler persona than the cloud tutor's — shorter
@@ -388,49 +387,38 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final ready = _aiService != null;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          l10n.gemmaChatTitle,
-          style: GoogleFonts.outfit(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: theme.colorScheme.onSurface,
+      body: AssistantBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              AssistantHeader(
+                title: l10n.gemmaChatTitle,
+                status: ready
+                    ? l10n.assistantStatusActive
+                    : l10n.assistantStatusOffline,
+                onRestart: ready ? _newChat : null,
+                onCollapse: () => Navigator.of(context).maybePop(),
+                onMenuSelected: (value) {
+                  if (value == 'remove') _confirmRemoveModel();
+                },
+                menuItems: ready
+                    ? [
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text(l10n.gemmaChatRemoveMenuLabel),
+                        ),
+                      ]
+                    : const [],
+              ),
+              Expanded(child: _buildBody(theme, l10n)),
+            ],
           ),
         ),
-        backgroundColor: theme.scaffoldBackgroundColor.withOpacity(0.7),
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.transparent),
-          ),
-        ),
-        elevation: 0,
-        actions: _aiService != null
-            ? [
-                IconButton(
-                  tooltip: l10n.newChatButton,
-                  icon: const Icon(Icons.add_comment_outlined),
-                  onPressed: _newChat,
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'remove') _confirmRemoveModel();
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'remove',
-                      child: Text(l10n.gemmaChatRemoveMenuLabel),
-                    ),
-                  ],
-                ),
-              ]
-            : null,
       ),
-      body: _buildBody(theme, l10n),
     );
   }
 
@@ -455,12 +443,24 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
                     return FadeInSlide(
                       key: ValueKey(msg.id),
                       delay: 0,
-                      child: _GemmaMessageBubble(message: msg),
+                      child: AssistantMessageBubble(
+                        key: ValueKey('bubble-${msg.id}'),
+                        text: msg.text,
+                        isUser: msg.isUser,
+                        createdAt: msg.createdAt,
+                        isError: msg.isError,
+                      ),
                     );
                   },
                 ),
         ),
-        _buildInputArea(theme, l10n),
+        AssistantInputBar(
+          controller: _controller,
+          hintText: l10n.gemmaChatInputHint,
+          onSend: _sendMessage,
+          isLoading: _isLoading,
+          onStop: _stopResponse,
+        ),
       ],
     );
   }
@@ -650,167 +650,6 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
     );
   }
 
-  Widget _buildInputArea(ThemeData theme, AppLocalizations l10n) {
-    final isDark = theme.brightness == Brightness.dark;
-    final pillColor = isDark ? const Color(0xFF1E1F20) : Colors.grey[100];
-    final textColor = theme.colorScheme.onSurface;
-
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor.withOpacity(0.8),
-            border: Border(
-              top: BorderSide(
-                color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.05),
-              ),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isLoading)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: pillColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.08)
-                            : Colors.black.withOpacity(0.05),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF4285F4),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.thinkingLabel,
-                          style: GoogleFonts.outfit(
-                            color: textColor.withOpacity(0.7),
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 1,
-                          height: 12,
-                          color: textColor.withOpacity(0.1),
-                        ),
-                        const SizedBox(width: 4),
-                        TextButton.icon(
-                          onPressed: _stopResponse,
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          icon: Icon(
-                            Icons.stop_circle_rounded,
-                            size: 16,
-                            color: Colors.red.shade400,
-                          ),
-                          label: Text(
-                            l10n.stopButton,
-                            style: GoogleFonts.outfit(
-                              color: Colors.red.shade400,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              Container(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  8,
-                  16,
-                  MediaQuery.of(context).orientation == Orientation.landscape
-                      ? 8
-                      : 24,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: pillColor,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.08)
-                          : Colors.black.withOpacity(0.05),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          textCapitalization: TextCapitalization.sentences,
-                          keyboardType: TextInputType.multiline,
-                          maxLines: 10,
-                          minLines: 1,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            color: textColor,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: l10n.gemmaChatInputHint,
-                            hintStyle: GoogleFonts.outfit(
-                              color: textColor.withOpacity(0.4),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 8,
-                            ),
-                          ),
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.send,
-                          color: theme.colorScheme.primary,
-                          size: 26,
-                        ),
-                        onPressed: _sendMessage,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _InfoDialogRow extends StatelessWidget {
@@ -865,194 +704,5 @@ class _InfoDialogRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _GemmaMessageBubble extends StatelessWidget {
-  final _GemmaMessage message;
-
-  const _GemmaMessageBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isUser = message.isUser;
-    final onSurface = theme.colorScheme.onSurface;
-
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Row(
-          mainAxisAlignment: isUser
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!isUser)
-              Padding(
-                padding: const EdgeInsets.only(left: 2.0, right: 4.0, bottom: 2),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 20,
-                  color: Colors.blue.shade400,
-                ),
-              ),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: isUser
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width *
-                          (isUser ? 0.75 : 0.94),
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isUser ? 20 : 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? (isDark
-                                ? const Color(0xFF2F2F2F)
-                                : theme.colorScheme.primary)
-                          : (message.isError
-                                ? Colors.red.withOpacity(0.05)
-                                : Colors.transparent),
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(24),
-                        topRight: const Radius.circular(24),
-                        bottomLeft: Radius.circular(isUser ? 24 : 0),
-                        bottomRight: Radius.circular(isUser ? 0 : 24),
-                      ),
-                      border: !isUser && message.isError
-                          ? Border.all(
-                              color: Colors.red.withOpacity(0.2),
-                              width: 1,
-                            )
-                          : null,
-                    ),
-                    child: isUser
-                        ? Text(
-                            message.text,
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 18,
-                              height: 1.4,
-                            ),
-                          )
-                        : MarkdownBlock(
-                            data: message.text,
-                            config: MarkdownConfig(
-                              configs: [
-                                PConfig(
-                                  textStyle: GoogleFonts.outfit(
-                                    color: message.isError
-                                        ? Colors.red.shade400
-                                        : onSurface,
-                                    fontSize: 18,
-                                    height: 1.6,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            generator: MarkdownGenerator(
-                              generators: [_gemmaLatexGenerator],
-                              inlineSyntaxList: [_GemmaLatexSyntax()],
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 6),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      DateFormat('HH:mm').format(message.createdAt),
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        color: isDark ? Colors.white30 : Colors.grey[400],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-final _gemmaLatexGenerator = SpanNodeGeneratorWithTag(
-  tag: 'latex',
-  generator: (e, config, visitor) =>
-      _GemmaLatexNode(e.attributes['content'] ?? '', config),
-);
-
-class _GemmaLatexNode extends SpanNode {
-  final String content;
-  final MarkdownConfig config;
-
-  _GemmaLatexNode(this.content, this.config);
-
-  @override
-  InlineSpan build() {
-    return WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: Material(
-        color: Colors.transparent,
-        child: Math.tex(
-          content,
-          mathStyle: MathStyle.text,
-          textStyle: config.p.textStyle,
-          onErrorFallback: (err) => Text(
-            content,
-            style: config.p.textStyle.copyWith(color: Colors.red),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Same math-vs-currency heuristic as the cloud chat screen's LatexSyntax
-/// (see chatbot_screen.dart) — duplicated rather than imported, since this
-/// screen is deliberately self-contained.
-class _GemmaLatexSyntax extends md.InlineSyntax {
-  _GemmaLatexSyntax() : super(r'(\$\$?)([\s\S]+?)\1');
-
-  static const _mathWords = {
-    'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
-    'log', 'ln', 'exp', 'max', 'min', 'det',
-    'lim', 'sup', 'inf', 'mod', 'gcd', 'lcm', 'arg',
-  };
-
-  @override
-  bool onMatch(md.InlineParser parser, Match match) {
-    final content = match.group(2) ?? '';
-    if (!_looksLikeMath(content)) return false;
-    parser.addNode(
-      md.Element.withTag('latex')..attributes['content'] = content,
-    );
-    return true;
-  }
-
-  static bool _looksLikeMath(String content) {
-    final trimmed = content.trim();
-    if (trimmed.isEmpty) return false;
-    if (trimmed.contains('\n\n')) return false;
-    if (trimmed.contains('\\')) return true;
-    if (RegExp(r'[=^_+/<>]').hasMatch(trimmed)) return true;
-
-    final plainWordCount = RegExp(r'[A-Za-z]{2,}')
-        .allMatches(trimmed)
-        .map((m) => m.group(0)!.toLowerCase())
-        .where((w) => !_mathWords.contains(w))
-        .length;
-    return plainWordCount < 2;
   }
 }

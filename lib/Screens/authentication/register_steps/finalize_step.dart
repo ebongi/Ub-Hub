@@ -4,17 +4,13 @@ import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/terms_of_service_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
-import 'package:go_study/services/database.dart';
-import 'package:go_study/services/department.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 class FinalizeStep extends StatelessWidget {
   const FinalizeStep({
     super.key,
     required this.formKey,
     required this.bioController,
-    required this.selectedInstitutionId,
-    required this.selectedDepartmentName,
-    required this.onDepartmentChanged,
     required this.agreedToTerms,
     required this.onAgreedToTermsChanged,
     required this.isDark,
@@ -22,9 +18,6 @@ class FinalizeStep extends StatelessWidget {
 
   final GlobalKey<FormState> formKey;
   final TextEditingController bioController;
-  final String? selectedInstitutionId;
-  final String? selectedDepartmentName;
-  final ValueChanged<String?> onDepartmentChanged;
   final bool agreedToTerms;
   final ValueChanged<bool> onAgreedToTermsChanged;
   final bool isDark;
@@ -52,7 +45,7 @@ class FinalizeStep extends StatelessWidget {
               icon: Icons.assignment_ind_outlined,
               isDark: isDark,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.academicBioLabel,
               hint: l10n.academicBioHint,
@@ -61,104 +54,7 @@ class FinalizeStep extends StatelessWidget {
               isDark: isDark,
               maxLines: 3,
             ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.academicDepartmentLabel,
-              style: GoogleFonts.outfit(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white.withOpacity(0.7) : regSlate700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (selectedInstitutionId == null || selectedInstitutionId!.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: regFieldFill(isDark),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: regBorderColor(isDark).withOpacity(0.5)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline_rounded,
-                      color: regIconColor(isDark),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.selectInstitutionFirstHint,
-                        style: GoogleFonts.outfit(
-                          color: regBodyColor(isDark),
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              StreamBuilder<List<Department>>(
-                stream: DatabaseService().getDepartments(
-                  institutionId: selectedInstitutionId,
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(
-                          color: regIndigo(context),
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    );
-                  }
-                  final departments = snapshot.data ?? [];
-                  if (departments.isEmpty) {
-                    return Text(
-                      l10n.noDepartmentsFound,
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFFEF4444),
-                        fontSize: 13.5,
-                      ),
-                    );
-                  }
-
-                  return RegistrationDropdown<String>(
-                    label: '',
-                    hint: l10n.chooseYourDepartmentHint,
-                    icon: Icons.category_outlined,
-                    value: selectedDepartmentName ?? '',
-                    isDark: isDark,
-                    showLabel: false,
-                    items: departments
-                        .map(
-                          (d) => DropdownMenuItem<String>(
-                            value: d.name,
-                            child: Text(
-                              d.name,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              style: GoogleFonts.outfit(
-                                fontSize: 15,
-                                color: regHeadingColor(isDark),
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: onDepartmentChanged,
-                    validator: (val) => val == null || val.isEmpty
-                        ? l10n.pleaseSelectDepartment
-                        : null,
-                  );
-                },
-              ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             FormField<bool>(
               initialValue: agreedToTerms,
               validator: (value) => (value ?? false)
@@ -186,7 +82,7 @@ class FinalizeStep extends StatelessWidget {
                             onTap: () => toggle(!agreedToTerms),
                             behavior: HitTestBehavior.opaque,
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
+                              padding: const EdgeInsets.only(top: AppSpacing.md),
                               child: Wrap(
                                 children: [
                                   Text(
@@ -255,7 +151,10 @@ class FinalizeStep extends StatelessWidget {
                     ),
                     if (field.hasError)
                       Padding(
-                        padding: const EdgeInsets.only(left: 12, top: 4),
+                        padding: const EdgeInsets.only(
+                          left: AppSpacing.md,
+                          top: AppSpacing.xs,
+                        ),
                         child: Text(
                           field.errorText!,
                           style: GoogleFonts.outfit(

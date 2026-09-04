@@ -160,10 +160,7 @@ Format your response in professional Markdown.
     dynamic pdfSource, {
     required QuestionDifficulty difficulty,
   }) async {
-    final Uint8List pdfBytes = pdfSource as Uint8List;
-    final prompt =
-        """
-You are an expert educator preparing students for an exam. Based on the attached PDF document, generate 5 multiple-choice questions that could plausibly appear on an exam covering this material, at a ${difficulty.label} difficulty level.
+    const responseSpec = """
 
 RESPONSE FORMAT:
 Your response must be a valid JSON object with the following structure:
@@ -177,7 +174,76 @@ Your response must be a valid JSON object with the following structure:
   ]
 }
 
-Provide ONLY the JSON object. Do not include markdown formatting or extra text.
+Provide ONLY the JSON object. Do not include markdown code fences or extra text.""";
+
+    if (pdfSource is String) {
+      final prompt =
+          """
+You are an expert educator preparing students for an exam. Based on the study material below, generate 5 multiple-choice questions that could plausibly appear on an exam covering this material, at a ${difficulty.label} difficulty level.
+
+STUDY MATERIAL:
+$pdfSource
+$responseSpec
+""";
+      return sendMessage(prompt, creditCost: 3);
+    }
+
+    final Uint8List pdfBytes = pdfSource as Uint8List;
+    final prompt =
+        """
+You are an expert educator preparing students for an exam. Based on the attached PDF document, generate 5 multiple-choice questions that could plausibly appear on an exam covering this material, at a ${difficulty.label} difficulty level.
+$responseSpec
+""";
+
+    return sendMessage(
+      prompt,
+      attachments: [DataPart('application/pdf', pdfBytes)],
+      creditCost: 3,
+    );
+  }
+
+  @override
+  Future<String> generateFlashcards(
+    dynamic source, {
+    int count = 15,
+  }) async {
+    const responseSpec = """
+
+RESPONSE FORMAT:
+Your response must be a single valid JSON object with this exact structure:
+{
+  "title": "A short title for this deck",
+  "cards": [
+    {
+      "question": "The front of the card - a concise question or term",
+      "answer": "The back of the card - the answer or definition, 1-3 sentences"
+    }
+  ]
+}
+
+Provide ONLY the JSON object. Do not include markdown code fences or any extra text.""";
+
+    // Preferred path: the material's text was extracted on-device and is
+    // passed inline — far smaller and more reliable than a base64 PDF.
+    if (source is String) {
+      final prompt =
+          """
+You are an expert educator creating study flashcards. Based on the study material below, generate $count flashcards covering the most important concepts, definitions, and facts a student should memorize.
+
+STUDY MATERIAL:
+$source
+$responseSpec
+""";
+      return sendMessage(prompt, creditCost: 3);
+    }
+
+    // Fallback: raw PDF bytes (scanned / image-only material). Only the
+    // cloud model can read these.
+    final Uint8List pdfBytes = source as Uint8List;
+    final prompt =
+        """
+You are an expert educator creating study flashcards. Based on the attached PDF document, generate $count flashcards covering the most important concepts, definitions, and facts a student should memorize from this material.
+$responseSpec
 """;
 
     return sendMessage(
@@ -189,8 +255,21 @@ Provide ONLY the JSON object. Do not include markdown formatting or extra text.
 
   @override
   Future<String> summarizePdf(dynamic pdfSource) async {
-    final Uint8List pdfBytes = pdfSource as Uint8List;
-    const prompt = """
+    final bool isText = pdfSource is String;
+    final prompt = isText
+        ? """
+You are an academic assistant. Please summarize the study material below.
+Provide:
+1. A concise overview (3-4 sentences).
+2. Key terms and their definitions found in the text.
+3. 3-5 main takeaways or core concepts.
+
+Format the response in professional Markdown.
+
+STUDY MATERIAL:
+$pdfSource
+"""
+        : """
 You are an academic assistant. Please summarize the attached PDF document.
 Provide:
 1. A concise overview (3-4 sentences).
@@ -218,7 +297,9 @@ Format the response in professional Markdown.
       final response = await _client
           .sendMessageStream(
             prompt,
-            attachments: [DataPart('application/pdf', pdfBytes)],
+            attachments: isText
+                ? null
+                : [DataPart('application/pdf', pdfSource as Uint8List)],
           )
           .fold("", (p, e) => p + e);
 

@@ -4,11 +4,9 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
-import 'package:go_study/services/profile.dart';
 
 class PaywallScreen extends StatelessWidget {
-  final UserProfile profile;
-  const PaywallScreen({super.key, required this.profile});
+  const PaywallScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +102,7 @@ class PaywallScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SubscriptionPlansScreen(userProfile: profile),
+                              builder: (_) => const SubscriptionPlansScreen(),
                             ),
                           );
                         },

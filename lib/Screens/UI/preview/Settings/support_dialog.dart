@@ -177,6 +177,11 @@ Future<void> showSupportDialog(BuildContext context) async {
                               throw Exception('Payment initiation failed');
                             }
 
+                            await dbService.attachPaymentProviderRef(
+                              paymentRef,
+                              nkwaPaymentId.toString(),
+                            );
+
                             if (redirectUrl != null) {
                               final uri = Uri.parse(redirectUrl);
                               if (await canLaunchUrl(uri)) {
@@ -197,13 +202,14 @@ Future<void> showSupportDialog(BuildContext context) async {
                               },
                             );
 
-                            // 4. Update status
-                            await dbService.updatePaymentStatus(
-                              paymentRef,
-                              status,
-                            );
-
                             if (status != PaymentStatus.success) {
+                              // The edge function already flips a confirmed
+                              // payment to 'success' server-side; only
+                              // non-success outcomes need recording here.
+                              await dbService.updatePaymentStatus(
+                                paymentRef,
+                                status,
+                              );
                               throw Exception(
                                 'Payment was not successful (Status: ${status.name})',
                               );

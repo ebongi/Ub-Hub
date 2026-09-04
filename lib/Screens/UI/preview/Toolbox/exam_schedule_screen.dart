@@ -32,12 +32,6 @@ class ExamScheduleScreen extends StatelessWidget {
           l10n.allEventsListTitle,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () {}, // Stream will auto-refresh
-          ),
-        ],
       ),
       body: StreamBuilder<List<ExamEvent>>(
         stream: dbService.exams,

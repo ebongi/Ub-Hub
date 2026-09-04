@@ -15,7 +15,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/settings_section.dart';
+import 'package:go_study/Screens/Shared/app_language_dialog.dart';
 import 'package:go_study/theme_provider.dart';
+import 'package:go_study/theme/app_text_styles.dart';
+import 'package:go_study/theme/app_spacing.dart';
+import 'package:go_study/theme/app_radius.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 
@@ -58,8 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final Authentication authentication = Authentication();
     final l10n = AppLocalizations.of(context)!;
 
-    final bgColor = isDark ? colorScheme.surface : const Color(0xFFF8F9FA);
-    final cardColor = isDark ? colorScheme.surfaceContainerLow : Colors.white;
+    final bgColor = isDark ? colorScheme.surface : Colors.white;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -73,207 +77,194 @@ class _SettingsScreenState extends State<SettingsScreen> {
               centerTitle: true,
               title: Text(
                 l10n.settingsTitle,
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
+                style: AppText.sectionTitle(context).copyWith(fontSize: 18),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // Account Section
-                  _buildGoogleSettingsCard(context, [
-                    _GoogleSettingsTile(
-                      icon: Icons.person_outline_rounded,
-                      iconColor: Colors.blue,
-                      title: l10n.accountProfileTitle,
-                      subtitle: l10n.accountProfileSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Profile(),
+                  _buildProfileHeader(context, userModel, l10n),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionAppearance,
+                    rows: [
+                      SettingsRow(
+                        icon: Icons.dark_mode_outlined,
+                        title: l10n.darkModeTitle,
+                        subtitle: l10n.darkModeSubtitle,
+                        tint: const Color(0xFF3F51B5),
+                        trailing: Switch(
+                          value: themeProvider.themeMode == ThemeMode.dark,
+                          onChanged: (value) => themeProvider.toggleTheme(value),
                         ),
                       ),
-                    ),
-                    if (userModel.role == UserRole.admin)
-                      _GoogleSettingsTile(
-                        icon: Icons.admin_panel_settings_rounded,
-                        iconColor: Colors.indigo,
-                        title: l10n.adminDashboardTitle,
-                        subtitle: l10n.adminDashboardSubtitle,
-                        isDark: isDark,
+                    ],
+                  ),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionLanguage,
+                    rows: [
+                      SettingsRow(
+                        icon: Icons.language_rounded,
+                        title: l10n.appLanguageTitle,
+                        subtitle: l10n.appLanguageSubtitle,
+                        tint: const Color(0xFF24C1E0),
+                        onTap: () => showAppLanguageDialog(context, localeProvider, l10n),
+                      ),
+                    ],
+                  ),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionAccount,
+                    rows: [
+                      if (userModel.role == UserRole.admin)
+                        SettingsRow(
+                          icon: Icons.admin_panel_settings_rounded,
+                          title: l10n.adminDashboardTitle,
+                          subtitle: l10n.adminDashboardSubtitle,
+                          tint: const Color(0xFF9334E6),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminPanel(),
+                            ),
+                          ),
+                        ),
+                      SettingsRow(
+                        icon: Icons.bolt_rounded,
+                        title: l10n.aiCreditsPlansTitle,
+                        subtitle: l10n.aiCreditsRemaining(userModel.aiCredits),
+                        tint: Colors.amber[800],
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AdminPanel(),
-                          ),
-                        ),
-                      ),
-                  ], cardColor: cardColor),
-                  const SizedBox(height: 16),
-
-                  // App Preferences
-                  _buildGoogleSettingsCard(context, [
-                    _GoogleSettingsTile(
-                      icon: Icons.bolt_rounded,
-                      iconColor: Colors.amber,
-                      title: l10n.aiCreditsPlansTitle,
-                      subtitle: l10n.aiCreditsRemaining(userModel.aiCredits),
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SubscriptionPlansScreen(
-                            userProfile: UserProfile(
-                              id: userModel.uid ?? '',
-                              name: userModel.name,
-                              aiCredits: userModel.aiCredits,
-                              subscriptionTier: userModel.subscriptionTier,
-                              subscriptionExpiry: userModel.subscriptionExpiry,
-                              role: userModel.role,
+                            builder: (context) => SubscriptionPlansScreen(
+                              userProfile: UserProfile(
+                                id: userModel.uid ?? '',
+                                name: userModel.name,
+                                aiCredits: userModel.aiCredits,
+                                subscriptionTier: userModel.subscriptionTier,
+                                subscriptionExpiry: userModel.subscriptionExpiry,
+                                role: userModel.role,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-
-                    _GoogleSettingsTile(
-                      icon: Icons.notifications_none_rounded,
-                      iconColor: Colors.orange,
-                      title: l10n.notificationsTitle,
-                      subtitle: l10n.notificationsSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Notifications(),
+                    ],
+                  ),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionNotifications,
+                    rows: [
+                      SettingsRow(
+                        icon: Icons.notifications_none_rounded,
+                        title: l10n.notificationsTitle,
+                        subtitle: l10n.notificationsSubtitle,
+                        tint: const Color(0xFFEA4335),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Notifications(),
+                          ),
                         ),
                       ),
-                    ),
-
-                    _GoogleSettingsTile(
-                      icon: Icons.dark_mode_outlined,
-                      iconColor: Colors.indigo,
-                      title: l10n.darkModeTitle,
-                      subtitle: l10n.darkModeSubtitle,
-                      isDark: isDark,
-                      trailing: Switch(
-                        value: themeProvider.themeMode == ThemeMode.dark,
-                        onChanged: (value) => themeProvider.toggleTheme(value),
+                    ],
+                  ),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionSupport,
+                    rows: [
+                      SettingsRow(
+                        icon: Icons.volunteer_activism_rounded,
+                        title: l10n.supportGoStudyTitle,
+                        subtitle: l10n.supportGoStudySubtitle,
+                        tint: const Color(0xFFFF6D00),
+                        onTap: () => _showSupportOptions(context, userModel),
                       ),
-                    ),
-
-                    _GoogleSettingsTile(
-                      icon: Icons.language_rounded,
-                      iconColor: Colors.teal,
-                      title: l10n.appLanguageTitle,
-                      subtitle: l10n.appLanguageSubtitle,
-                      isDark: isDark,
-                      onTap: () => _showLanguagePicker(
-                        context,
-                        localeProvider,
-                        l10n,
-                      ),
-                    ),
-                  ], cardColor: cardColor),
-                  const SizedBox(height: 16),
-
-                  // Legal Section
-                  _buildGoogleSettingsCard(context, [
-                    _GoogleSettingsTile(
-                      icon: Icons.privacy_tip_outlined,
-                      iconColor: Colors.purple,
-                      title: l10n.privacyPolicyTitle,
-                      subtitle: l10n.privacyPolicySubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PrivacyPolicyScreen(),
+                      SettingsRow(
+                        icon: Icons.feedback_outlined,
+                        title: l10n.sendFeedbackTitle,
+                        subtitle: l10n.sendFeedbackSubtitle,
+                        tint: const Color(0xFF34A853),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FeedbackScreen(),
+                          ),
                         ),
                       ),
-                    ),
-                    _GoogleSettingsTile(
-                      icon: Icons.gavel_rounded,
-                      iconColor: Colors.indigo,
-                      title: l10n.termsOfServiceTitle,
-                      subtitle: l10n.termsOfServiceSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TermsOfServiceScreen(),
+                      SettingsRow(
+                        icon: Icons.code_rounded,
+                        title: l10n.developerInformationTitle,
+                        subtitle: l10n.developerInformationSubtitle,
+                        tint: Colors.blueGrey,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DeveloperInfoScreen(),
+                          ),
                         ),
                       ),
-                    ),
-                  ], cardColor: cardColor),
-                  const SizedBox(height: 16),
-
-                  // Support Section
-                  _buildGoogleSettingsCard(context, [
-                    _GoogleSettingsTile(
-                      icon: Icons.volunteer_activism_rounded,
-                      iconColor: Colors.redAccent,
-                      title: l10n.supportGoStudyTitle,
-                      subtitle: l10n.supportGoStudySubtitle,
-                      isDark: isDark,
-                      onTap: () => _showSupportOptions(context, userModel),
-                    ),
-                    _GoogleSettingsTile(
-                      icon: Icons.feedback_outlined,
-                      iconColor: Colors.orange,
-                      title: l10n.sendFeedbackTitle,
-                      subtitle: l10n.sendFeedbackSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FeedbackScreen(),
+                      SettingsRow(
+                        icon: Icons.info_outline_rounded,
+                        title: l10n.aboutTitle,
+                        subtitle: l10n.aboutSubtitle,
+                        tint: const Color(0xFF4285F4),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AboutScreen(),
+                          ),
                         ),
                       ),
-                    ),
-                    _GoogleSettingsTile(
-                      icon: Icons.code_rounded,
-                      iconColor: Colors.blueGrey,
-                      title: l10n.developerInformationTitle,
-                      subtitle: l10n.developerInformationSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DeveloperInfoScreen(),
+                    ],
+                  ),
+                  _buildFlatSection(
+                    context,
+                    label: l10n.settingsSectionLegal,
+                    rows: [
+                      SettingsRow(
+                        icon: Icons.privacy_tip_outlined,
+                        title: l10n.privacyPolicyTitle,
+                        subtitle: l10n.privacyPolicySubtitle,
+                        tint: Colors.teal,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PrivacyPolicyScreen(),
+                          ),
                         ),
                       ),
-                    ),
-                    _GoogleSettingsTile(
-                      icon: Icons.info_outline_rounded,
-                      iconColor: Colors.teal,
-                      title: l10n.aboutTitle,
-                      subtitle: l10n.aboutSubtitle,
-                      isDark: isDark,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AboutScreen(),
+                      SettingsRow(
+                        icon: Icons.gavel_rounded,
+                        title: l10n.termsOfServiceTitle,
+                        subtitle: l10n.termsOfServiceSubtitle,
+                        tint: Colors.brown,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TermsOfServiceScreen(),
+                          ),
                         ),
                       ),
-                    ),
-                  ], cardColor: cardColor),
+                    ],
+                  ),
                   const SizedBox(height: 32),
 
-                  TextButton.icon(
-                    onPressed: () => authentication.signUserOut(),
-                    icon: const Icon(Icons.logout, color: Colors.red),
-                    label: Text(
-                      l10n.logout,
-                      style: GoogleFonts.outfit(
-                        color: Colors.red,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => authentication.signUserOut(),
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                      label: Text(
+                        l10n.logout,
+                        style: GoogleFonts.outfit(
+                          color: Colors.red,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -315,89 +306,150 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildGoogleSettingsCard(
+  /// Tappable account-summary card at the top of Settings — avatar, name,
+  /// institution, and an AI-credits pill — matching the "your account" header
+  /// seen at the top of Settings in e-learning apps like Coursera/Udemy,
+  /// styled after the home feed's `IntroWidget` card (tinted background,
+  /// subtle border, rounded corners).
+  Widget _buildProfileHeader(
     BuildContext context,
-    List<Widget> tiles, {
-    required Color cardColor,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: List.generate(tiles.length, (index) {
-          return Column(
-            children: [
-              tiles[index],
-              if (index < tiles.length - 1)
-                const Divider(height: 1, indent: 70, endIndent: 20),
-            ],
-          );
-        }),
+    UserModel userModel,
+    AppLocalizations l10n,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final avatarUrl = userModel.avatarUrl;
+    final displayName = userModel.name != null && userModel.name!.isNotEmpty
+        ? userModel.name!
+        : l10n.studentFallbackName;
+    final subtitleText = userModel.institutionName ?? l10n.unifiedAcademicPortal;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Profile()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? theme.colorScheme.surfaceContainerLow
+                  : theme.colorScheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(AppRadius.sheet),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : theme.colorScheme.primary.withOpacity(0.1),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.25),
+                      width: 2,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: (avatarUrl == null || avatarUrl.isEmpty)
+                        ? Icon(
+                            Icons.person_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 30,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.cardTitle(context).copyWith(fontSize: 17),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitleText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.cardSubtitle(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.chip),
+                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.bolt_rounded, color: Colors.amber, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${userModel.aiCredits}",
+                        style: AppText.caption(context).copyWith(color: Colors.amber[800]),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  void _showLanguagePicker(
-    BuildContext context,
-    LocaleProvider localeProvider,
-    AppLocalizations l10n,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          l10n.appLanguageTitle,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<Locale?>(
-              title: Text(l10n.languageSystemDefault),
-              value: null,
-              groupValue: localeProvider.locale,
-              onChanged: (value) {
-                localeProvider.setLocale(value);
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<Locale?>(
-              title: Text(l10n.languageEnglish),
-              value: const Locale('en'),
-              groupValue: localeProvider.locale,
-              onChanged: (value) {
-                localeProvider.setLocale(value);
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<Locale?>(
-              title: Text(l10n.languageFrench),
-              value: const Locale('fr'),
-              groupValue: localeProvider.locale,
-              onChanged: (value) {
-                localeProvider.setLocale(value);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.cancel,
-              style: GoogleFonts.outfit(
-                color: Colors.grey,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+  /// A flat Settings section: a bold all-caps grey label followed by plain
+  /// rows separated by thin dividers — no card background/border around
+  /// the group, matching the Coursera reference.
+  Widget _buildFlatSection(
+    BuildContext context, {
+    required String label,
+    required List<Widget> rows,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SettingsSectionLabel(label),
+        ...List.generate(rows.length, (index) {
+          return Column(
+            children: [
+              rows[index],
+              if (index < rows.length - 1) const Divider(indent: 16, endIndent: 16),
+            ],
+          );
+        }),
+      ],
     );
   }
 
@@ -653,59 +705,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _GoogleSettingsTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final bool isDark;
-  final VoidCallback? onTap;
-
-  const _GoogleSettingsTile({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    required this.isDark,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.1),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: iconColor, size: 22),
-      ),
-      title: Text(
-        title,
-        style: GoogleFonts.outfit(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: GoogleFonts.outfit(
-          fontSize: 13,
-          color: isDark ? Colors.white70 : Colors.black54,
-        ),
-      ),
-      trailing:
-          trailing ??
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: isDark ? Colors.white30 : Colors.grey[400],
-          ),
-    );
-  }
-}

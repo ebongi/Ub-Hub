@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get academicStepDescription =>
-      'Connect your university, matricule, and study level to unlock the right resources.';
+      'Add your matricule and academic level to unlock the right resources.';
 
   @override
   String get academicAffiliationTitle => 'Academic affiliation';
@@ -242,15 +242,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelectLevel => 'Please select a level';
 
   @override
-  String get assignedInstitutionLabel => 'Assigned Institution';
-
-  @override
-  String get selectYourUniversityHint => 'Select your University';
-
-  @override
-  String get pleaseSelectUniversity => 'Please select your university';
-
-  @override
   String get academicLevelResit => 'Resit';
 
   @override
@@ -258,7 +249,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finalizeStepDescription =>
-      'Complete your profile with your department and a short academic bio.';
+      'Add a short academic bio and accept our terms to complete your profile.';
 
   @override
   String get finalizeProfileTitle => 'Finalize profile';
@@ -272,22 +263,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get academicBioHint => 'Briefly describe your academic interests...';
-
-  @override
-  String get academicDepartmentLabel => 'Academic Department';
-
-  @override
-  String get selectInstitutionFirstHint =>
-      'Select an institution in the previous step to load departments.';
-
-  @override
-  String get chooseYourDepartmentHint => 'Choose your Department';
-
-  @override
-  String get pleaseSelectDepartment => 'Please select your department';
-
-  @override
-  String get noDepartmentsFound => 'No departments found for this institution.';
 
   @override
   String get agreeToTermsPrefix => 'I agree to the ';
@@ -563,6 +538,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gemmaChatInfoDeviceBody =>
       'Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app\'s performance.';
+
+  @override
+  String get sectionUniversities => 'Universities';
+
+  @override
+  String get noUniversitiesAvailable => 'No universities available yet.';
+
+  @override
+  String get switchUniversityTitle => 'Switch university?';
+
+  @override
+  String switchUniversityBody(String name) {
+    return 'Switching to $name will change your available departments and course content. Continue?';
+  }
+
+  @override
+  String get switchUniversityConfirmButton => 'Switch';
+
+  @override
+  String aboutInstitutionTooltip(String name) {
+    return 'About $name';
+  }
+
+  @override
+  String get institutionTypeUniversityBadge => 'University';
+
+  @override
+  String get seeAllButton => 'See all';
 
   @override
   String get sectionDepartmentsFaculties => 'Departments & Faculties';
@@ -1024,16 +1027,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get howCanIHelpTodayMessage => 'How can I help you today?';
 
   @override
-  String get quickStarterCalculus => '📈 Help me with calculus';
+  String get quickStarterFlashcards => 'Create flashcards from a file';
 
   @override
-  String get quickStarterStudyPlan => '📝 Write a study plan';
+  String get quickStarterExplainConcept => 'Explain a concept';
 
   @override
-  String get quickStarterProjectIdeas => '💡 Project ideas';
-
-  @override
-  String get quickStarterSummarizeNotes => '📚 Summarize notes';
+  String get quickStarterLearningSession => 'Start a learning session';
 
   @override
   String get thinkingLabel => 'Thinking';
@@ -1068,6 +1068,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showThinkingLabel => 'Show Thinking';
+
+  @override
+  String get assistantBetaBadge => 'BETA';
+
+  @override
+  String get assistantStatusActive => 'Active';
+
+  @override
+  String get assistantStatusOffline => 'Not downloaded';
+
+  @override
+  String get assistantStudyHint => 'What do you want to study?';
+
+  @override
+  String get assistantChatHistoryLabel => 'Chat history';
+
+  @override
+  String get assistantWelcomeGreeting =>
+      'Hi! How can I help you today? You can create flashcards, review your material, or learn something new.';
+
+  @override
+  String assistantMessagesRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You can send up to $count more messages',
+      one: 'You can send 1 more message',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get codeCopiedToClipboard => 'Code copied to clipboard';
@@ -1133,6 +1163,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allDepartmentsTitle => 'All Departments';
+
+  @override
+  String get allToolsTitle => 'All Tools';
 
   @override
   String get searchForDepartmentHint => 'Search for a department...';
@@ -2000,6 +2033,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backToGeneratorButton => 'BACK TO GENERATOR';
 
   @override
+  String get generateFlashcardsButton => 'Generate flashcards';
+
+  @override
+  String get flashcardsTitle => 'Flashcards';
+
+  @override
+  String get flashcardCountQuestion => 'How many cards?';
+
+  @override
+  String get generatingFlashcardsMessage => 'Generating flashcards…';
+
+  @override
+  String get flashcardGenerationFailed =>
+      'Couldn\'t generate flashcards. Please try again.';
+
+  @override
+  String get flashcardServiceUnavailable =>
+      'The AI service is unavailable right now. Please try again in a moment.';
+
+  @override
+  String get aiServiceUnavailable =>
+      'The AI service is unavailable right now. Please try again in a moment.';
+
+  @override
+  String get flashcardsPdfOnlyMessage =>
+      'Flashcards can only be generated from PDF materials';
+
+  @override
+  String get flashcardQuestionLabel => 'QUESTION';
+
+  @override
+  String get flashcardAnswerLabel => 'ANSWER';
+
+  @override
+  String get tapToFlipHint => 'Tap the card to flip';
+
+  @override
+  String get stillLearningButton => 'Still learning';
+
+  @override
+  String get studyAgainButton => 'Study again';
+
+  @override
+  String flashcardsMasteredLabel(int mastered, int total) {
+    return 'You mastered $mastered of $total';
+  }
+
+  @override
+  String deckCardCountLabel(int count) {
+    return '$count cards';
+  }
+
+  @override
+  String get deleteDeckDialogTitle => 'Delete deck?';
+
+  @override
+  String confirmDeleteDeckBody(String title) {
+    return 'Delete the deck \"$title\"? This cannot be undone.';
+  }
+
+  @override
   String get materialsTabLabel => 'Materials';
 
   @override
@@ -2660,6 +2754,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get testCreditsPackTitle => 'Test Credits';
 
   @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionNotifications => 'Push Notifications';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String get settingsSectionAccount => 'Account';
+
+  @override
+  String get settingsSectionSupport => 'Support';
+
+  @override
+  String get settingsSectionLegal => 'Legal';
+
+  @override
   String get editButton => 'Edit';
 
   @override
@@ -2740,5 +2852,110 @@ class AppLocalizationsEn extends AppLocalizations {
       zero: 'Comments',
     );
     return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressWeekRange(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get weeklyProgressTodayPill => 'Today';
+
+  @override
+  String get weeklyProgressTodayPillTooltip => 'Back to this week';
+
+  @override
+  String get weeklyProgressPrevWeekTooltip => 'Previous week';
+
+  @override
+  String get weeklyProgressNextWeekTooltip => 'Next week';
+
+  @override
+  String weeklyProgressNextExam(String date) {
+    return 'Next exam on $date';
+  }
+
+  @override
+  String get weeklyProgressNoUpcomingExams => 'No upcoming exams';
+
+  @override
+  String get weeklyProgressExamRowFallbackSubtitle => 'Tap to schedule one';
+
+  @override
+  String weeklyProgressTasksRemainingToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks remaining today',
+      one: '1 task remaining today',
+      zero: 'All tasks done for today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksToday => 'No tasks due today';
+
+  @override
+  String weeklyProgressCompletedYesterday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks completed yesterday',
+      one: '1 task completed yesterday',
+      zero: 'No tasks completed yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksYesterday => 'No tasks were due yesterday';
+
+  @override
+  String weeklyProgressDueTomorrow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks due tomorrow',
+      one: '1 task due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNothingTomorrow => 'Nothing scheduled for tomorrow';
+
+  @override
+  String weeklyProgressCompletedOnPastDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks completed on $day',
+      one: '1 task completed on $day',
+      zero: 'No tasks completed on $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNoTasksOnPastDate(String day) {
+    return 'No tasks were due on $day';
+  }
+
+  @override
+  String weeklyProgressDueOnFutureDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks due on $day',
+      one: '1 task due on $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNothingOnFutureDate(String day) {
+    return 'Nothing scheduled for $day';
   }
 }

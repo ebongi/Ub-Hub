@@ -76,7 +76,7 @@
   "phoneRequired": "Le numéro de téléphone est requis",
 
   "academicStepTitle": "Académique",
-  "academicStepDescription": "Renseignez votre université, votre matricule et votre niveau d'étude pour accéder aux bonnes ressources.",
+  "academicStepDescription": "Renseignez votre matricule et votre niveau d'étude pour accéder aux bonnes ressources.",
   "academicAffiliationTitle": "Affiliation académique",
   "academicAffiliationSubtitle": "Cela relie votre compte à la bonne filière d'études.",
   "studentMatriculeLabel": "Matricule étudiant",
@@ -85,22 +85,14 @@
   "currentAcademicLevelLabel": "Niveau académique actuel",
   "selectYourLevelHint": "Sélectionnez votre niveau",
   "pleaseSelectLevel": "Veuillez sélectionner votre niveau",
-  "assignedInstitutionLabel": "Établissement assigné",
-  "selectYourUniversityHint": "Sélectionnez votre université",
-  "pleaseSelectUniversity": "Veuillez sélectionner votre université",
   "academicLevelResit": "Rattrapage",
 
   "finalizeStepTitle": "Finalisation",
-  "finalizeStepDescription": "Complétez votre profil avec votre département et une courte bio académique.",
+  "finalizeStepDescription": "Ajoutez une courte bio académique et acceptez nos conditions pour finaliser votre profil.",
   "finalizeProfileTitle": "Finaliser le profil",
   "finalizeProfileSubtitle": "C'est la dernière étape avant que votre compte étudiant soit prêt.",
   "academicBioLabel": "Bio académique",
   "academicBioHint": "Décrivez brièvement vos centres d'intérêt académiques...",
-  "academicDepartmentLabel": "Département académique",
-  "selectInstitutionFirstHint": "Sélectionnez un établissement à l'étape précédente pour charger les départements.",
-  "chooseYourDepartmentHint": "Choisissez votre département",
-  "pleaseSelectDepartment": "Veuillez sélectionner votre département",
-  "noDepartmentsFound": "Aucun département trouvé pour cet établissement.",
   "agreeToTermsPrefix": "J'accepte les ",
   "termsOfServiceLink": "Conditions d'utilisation",
   "andSeparator": " et la ",
@@ -209,6 +201,24 @@
   "gemmaChatInfoDeviceTitle": "Votre téléphone est-il prêt ?",
   "gemmaChatInfoDeviceBody": "Ne téléchargez ceci que si votre téléphone est un appareil relativement récent, de milieu ou haut de gamme, avec suffisamment de stockage libre. Sur les téléphones plus anciens ou d'entrée de gamme, l'IA hors ligne peut être lente ou affecter les performances du reste de l'application.",
 
+  "sectionUniversities": "Universités",
+  "noUniversitiesAvailable": "Aucune université disponible pour le moment.",
+  "switchUniversityTitle": "Changer d'université ?",
+  "switchUniversityBody": "Passer à {name} modifiera vos départements et contenus de cours disponibles. Continuer ?",
+  "@switchUniversityBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "switchUniversityConfirmButton": "Changer",
+  "aboutInstitutionTooltip": "À propos de {name}",
+  "@aboutInstitutionTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "institutionTypeUniversityBadge": "Université",
+  "seeAllButton": "Tout voir",
   "sectionDepartmentsFaculties": "Départements et facultés",
   "sectionTools": "OUTILS",
   "noDepartmentsAvailable": "Aucun département disponible pour le moment.",
@@ -420,10 +430,9 @@
   "deleteChatConfirmBody": "Êtes-vous sûr de vouloir supprimer cette conversation ? Tous les messages seront définitivement supprimés.",
   "aiAssistantTitle": "Assistant IA",
   "howCanIHelpTodayMessage": "Comment puis-je vous aider aujourd'hui ?",
-  "quickStarterCalculus": "📈 Aide-moi avec le calcul",
-  "quickStarterStudyPlan": "📝 Rédiger un plan d'étude",
-  "quickStarterProjectIdeas": "💡 Idées de projets",
-  "quickStarterSummarizeNotes": "📚 Résumer des notes",
+  "quickStarterFlashcards": "Créer des cartes mémoire à partir d'un fichier",
+  "quickStarterExplainConcept": "Expliquer un concept",
+  "quickStarterLearningSession": "Démarrer une session d'apprentissage",
   "thinkingLabel": "Réflexion",
   "stopButton": "Arrêter",
   "askAiHint": "Demander à l'IA",
@@ -435,6 +444,18 @@
   "clearAllChatsConfirmBody": "Êtes-vous sûr de vouloir supprimer toutes les conversations ? Cette action supprimera définitivement tout votre historique de discussions.",
   "clearAllButton": "Tout effacer",
   "showThinkingLabel": "Afficher la réflexion",
+  "assistantBetaBadge": "BÊTA",
+  "assistantStatusActive": "Actif",
+  "assistantStatusOffline": "Non téléchargé",
+  "assistantStudyHint": "Que voulez-vous étudier ?",
+  "assistantChatHistoryLabel": "Historique des discussions",
+  "assistantWelcomeGreeting": "Bonjour ! Comment puis-je vous aider aujourd'hui ? Vous pouvez créer des cartes mémoire, réviser votre matière ou apprendre quelque chose de nouveau.",
+  "assistantMessagesRemaining": "{count, plural, =1{Vous pouvez envoyer 1 message de plus} other{Vous pouvez envoyer jusqu'à {count} messages de plus}}",
+  "@assistantMessagesRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "codeCopiedToClipboard": "Code copié dans le presse-papiers",
   "copyButton": "Copier",
   "privateChatTitle": "Discussion privée",
@@ -456,6 +477,7 @@
   "linkCopiedToClipboard": "Lien copié dans le presse-papiers",
   "openInExternalBrowserMenuItem": "Ouvrir dans le navigateur externe",
   "allDepartmentsTitle": "Tous les départements",
+  "allToolsTitle": "Tous les outils",
   "searchForDepartmentHint": "Rechercher un département...",
   "newDeptButton": "Nouveau départ.",
   "findFriendsTitle": "Trouver des amis",
@@ -727,6 +749,23 @@
   "youScoredOutOfLabel": "Vous avez obtenu {score} sur {total}",
   "accuracyPercentLabel": "{percent} % de précision",
   "backToGeneratorButton": "RETOUR AU GÉNÉRATEUR",
+  "generateFlashcardsButton": "Générer des fiches",
+  "flashcardsTitle": "Fiches de révision",
+  "flashcardCountQuestion": "Combien de fiches ?",
+  "generatingFlashcardsMessage": "Génération des fiches…",
+  "flashcardGenerationFailed": "Impossible de générer les fiches. Veuillez réessayer.",
+  "flashcardServiceUnavailable": "Le service d'IA est indisponible pour le moment. Veuillez réessayer dans un instant.",
+  "aiServiceUnavailable": "Le service d'IA est indisponible pour le moment. Veuillez réessayer dans un instant.",
+  "flashcardsPdfOnlyMessage": "Les fiches ne peuvent être générées qu'à partir de documents PDF",
+  "flashcardQuestionLabel": "QUESTION",
+  "flashcardAnswerLabel": "RÉPONSE",
+  "tapToFlipHint": "Appuyez sur la fiche pour la retourner",
+  "stillLearningButton": "À revoir",
+  "studyAgainButton": "Réviser à nouveau",
+  "flashcardsMasteredLabel": "Vous maîtrisez {mastered} sur {total}",
+  "deckCardCountLabel": "{count} fiches",
+  "deleteDeckDialogTitle": "Supprimer le paquet ?",
+  "confirmDeleteDeckBody": "Supprimer le paquet « {title} » ? Cette action est irréversible.",
   "materialsTabLabel": "Documents",
   "practiceTabLabel": "Entraînement",
   "selectLevelLabel": "Choisir un niveau",
@@ -933,6 +972,12 @@
   "momoOmNumberLabel": "Numéro Momo/OM",
   "youAreNowContributorMessage": "Vous êtes maintenant contributeur !",
   "testCreditsPackTitle": "Crédits de test",
+  "settingsSectionAppearance": "Apparence",
+  "settingsSectionNotifications": "Notifications push",
+  "settingsSectionLanguage": "Langue",
+  "settingsSectionAccount": "Compte",
+  "settingsSectionSupport": "Assistance",
+  "settingsSectionLegal": "Mentions légales",
 
   "editButton": "Modifier",
   "newsAdminNewPostButton": "Nouveau post",
@@ -962,5 +1007,24 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+
+  "weeklyProgressWeekRange": "{start} - {end}",
+  "weeklyProgressTodayPill": "Aujourd'hui",
+  "weeklyProgressTodayPillTooltip": "Revenir à cette semaine",
+  "weeklyProgressPrevWeekTooltip": "Semaine précédente",
+  "weeklyProgressNextWeekTooltip": "Semaine suivante",
+  "weeklyProgressNextExam": "Prochain examen le {date}",
+  "weeklyProgressNoUpcomingExams": "Aucun examen à venir",
+  "weeklyProgressExamRowFallbackSubtitle": "Appuyez pour en planifier un",
+  "weeklyProgressTasksRemainingToday": "{count, plural, =0{Toutes les tâches sont terminées pour aujourd'hui} =1{1 tâche restante aujourd'hui} other{{count} tâches restantes aujourd'hui}}",
+  "weeklyProgressNoTasksToday": "Aucune tâche prévue aujourd'hui",
+  "weeklyProgressCompletedYesterday": "{count, plural, =0{Aucune tâche terminée hier} =1{1 tâche terminée hier} other{{count} tâches terminées hier}}",
+  "weeklyProgressNoTasksYesterday": "Aucune tâche prévue hier",
+  "weeklyProgressDueTomorrow": "{count, plural, =1{1 tâche prévue demain} other{{count} tâches prévues demain}}",
+  "weeklyProgressNothingTomorrow": "Rien de prévu demain",
+  "weeklyProgressCompletedOnPastDate": "{count, plural, =0{Aucune tâche terminée le {day}} =1{1 tâche terminée le {day}} other{{count} tâches terminées le {day}}}",
+  "weeklyProgressNoTasksOnPastDate": "Aucune tâche prévue le {day}",
+  "weeklyProgressDueOnFutureDate": "{count, plural, =1{1 tâche prévue le {day}} other{{count} tâches prévues le {day}}}",
+  "weeklyProgressNothingOnFutureDate": "Rien de prévu le {day}"
 }

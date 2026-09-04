@@ -215,7 +215,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get academicStepDescription =>
-      'Renseignez votre université, votre matricule et votre niveau d\'étude pour accéder aux bonnes ressources.';
+      'Renseignez votre matricule et votre niveau d\'étude pour accéder aux bonnes ressources.';
 
   @override
   String get academicAffiliationTitle => 'Affiliation académique';
@@ -243,15 +243,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pleaseSelectLevel => 'Veuillez sélectionner un niveau';
 
   @override
-  String get assignedInstitutionLabel => 'Établissement assigné';
-
-  @override
-  String get selectYourUniversityHint => 'Sélectionnez votre université';
-
-  @override
-  String get pleaseSelectUniversity => 'Veuillez sélectionner votre université';
-
-  @override
   String get academicLevelResit => 'Rattrapage';
 
   @override
@@ -259,7 +250,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get finalizeStepDescription =>
-      'Complétez votre profil avec votre département et une courte bio académique.';
+      'Ajoutez une courte bio académique et acceptez nos conditions pour finaliser votre profil.';
 
   @override
   String get finalizeProfileTitle => 'Finaliser le profil';
@@ -274,24 +265,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get academicBioHint =>
       'Décrivez brièvement vos centres d\'intérêt académiques...';
-
-  @override
-  String get academicDepartmentLabel => 'Département académique';
-
-  @override
-  String get selectInstitutionFirstHint =>
-      'Sélectionnez un établissement à l\'étape précédente pour charger les départements.';
-
-  @override
-  String get chooseYourDepartmentHint => 'Choisissez votre département';
-
-  @override
-  String get pleaseSelectDepartment =>
-      'Veuillez sélectionner votre département';
-
-  @override
-  String get noDepartmentsFound =>
-      'Aucun département trouvé pour cet établissement.';
 
   @override
   String get agreeToTermsPrefix => 'J\'accepte les ';
@@ -571,6 +544,35 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get gemmaChatInfoDeviceBody =>
       'Ne téléchargez ceci que si votre téléphone est un appareil relativement récent, de milieu ou haut de gamme, avec suffisamment de stockage libre. Sur les téléphones plus anciens ou d\'entrée de gamme, l\'IA hors ligne peut être lente ou affecter les performances du reste de l\'application.';
+
+  @override
+  String get sectionUniversities => 'Universités';
+
+  @override
+  String get noUniversitiesAvailable =>
+      'Aucune université disponible pour le moment.';
+
+  @override
+  String get switchUniversityTitle => 'Changer d\'université ?';
+
+  @override
+  String switchUniversityBody(String name) {
+    return 'Passer à $name modifiera vos départements et contenus de cours disponibles. Continuer ?';
+  }
+
+  @override
+  String get switchUniversityConfirmButton => 'Changer';
+
+  @override
+  String aboutInstitutionTooltip(String name) {
+    return 'À propos de $name';
+  }
+
+  @override
+  String get institutionTypeUniversityBadge => 'Université';
+
+  @override
+  String get seeAllButton => 'Tout voir';
 
   @override
   String get sectionDepartmentsFaculties => 'Départements et facultés';
@@ -1038,16 +1040,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Comment puis-je vous aider aujourd\'hui ?';
 
   @override
-  String get quickStarterCalculus => '📈 Aide-moi avec le calcul';
+  String get quickStarterFlashcards =>
+      'Créer des cartes mémoire à partir d\'un fichier';
 
   @override
-  String get quickStarterStudyPlan => '📝 Rédiger un plan d\'étude';
+  String get quickStarterExplainConcept => 'Expliquer un concept';
 
   @override
-  String get quickStarterProjectIdeas => '💡 Idées de projets';
-
-  @override
-  String get quickStarterSummarizeNotes => '📚 Résumer des notes';
+  String get quickStarterLearningSession =>
+      'Démarrer une session d\'apprentissage';
 
   @override
   String get thinkingLabel => 'Réflexion';
@@ -1082,6 +1083,36 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get showThinkingLabel => 'Afficher la réflexion';
+
+  @override
+  String get assistantBetaBadge => 'BÊTA';
+
+  @override
+  String get assistantStatusActive => 'Actif';
+
+  @override
+  String get assistantStatusOffline => 'Non téléchargé';
+
+  @override
+  String get assistantStudyHint => 'Que voulez-vous étudier ?';
+
+  @override
+  String get assistantChatHistoryLabel => 'Historique des discussions';
+
+  @override
+  String get assistantWelcomeGreeting =>
+      'Bonjour ! Comment puis-je vous aider aujourd\'hui ? Vous pouvez créer des cartes mémoire, réviser votre matière ou apprendre quelque chose de nouveau.';
+
+  @override
+  String assistantMessagesRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vous pouvez envoyer jusqu\'à $count messages de plus',
+      one: 'Vous pouvez envoyer 1 message de plus',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get codeCopiedToClipboard => 'Code copié dans le presse-papiers';
@@ -1149,6 +1180,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get allDepartmentsTitle => 'Tous les départements';
+
+  @override
+  String get allToolsTitle => 'Tous les outils';
 
   @override
   String get searchForDepartmentHint => 'Rechercher un département...';
@@ -2027,6 +2061,67 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backToGeneratorButton => 'RETOUR AU GÉNÉRATEUR';
 
   @override
+  String get generateFlashcardsButton => 'Générer des fiches';
+
+  @override
+  String get flashcardsTitle => 'Fiches de révision';
+
+  @override
+  String get flashcardCountQuestion => 'Combien de fiches ?';
+
+  @override
+  String get generatingFlashcardsMessage => 'Génération des fiches…';
+
+  @override
+  String get flashcardGenerationFailed =>
+      'Impossible de générer les fiches. Veuillez réessayer.';
+
+  @override
+  String get flashcardServiceUnavailable =>
+      'Le service d\'IA est indisponible pour le moment. Veuillez réessayer dans un instant.';
+
+  @override
+  String get aiServiceUnavailable =>
+      'Le service d\'IA est indisponible pour le moment. Veuillez réessayer dans un instant.';
+
+  @override
+  String get flashcardsPdfOnlyMessage =>
+      'Les fiches ne peuvent être générées qu\'à partir de documents PDF';
+
+  @override
+  String get flashcardQuestionLabel => 'QUESTION';
+
+  @override
+  String get flashcardAnswerLabel => 'RÉPONSE';
+
+  @override
+  String get tapToFlipHint => 'Appuyez sur la fiche pour la retourner';
+
+  @override
+  String get stillLearningButton => 'À revoir';
+
+  @override
+  String get studyAgainButton => 'Réviser à nouveau';
+
+  @override
+  String flashcardsMasteredLabel(int mastered, int total) {
+    return 'Vous maîtrisez $mastered sur $total';
+  }
+
+  @override
+  String deckCardCountLabel(int count) {
+    return '$count fiches';
+  }
+
+  @override
+  String get deleteDeckDialogTitle => 'Supprimer le paquet ?';
+
+  @override
+  String confirmDeleteDeckBody(String title) {
+    return 'Supprimer le paquet « $title » ? Cette action est irréversible.';
+  }
+
+  @override
   String get materialsTabLabel => 'Documents';
 
   @override
@@ -2701,6 +2796,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get testCreditsPackTitle => 'Crédits de test';
 
   @override
+  String get settingsSectionAppearance => 'Apparence';
+
+  @override
+  String get settingsSectionNotifications => 'Notifications push';
+
+  @override
+  String get settingsSectionLanguage => 'Langue';
+
+  @override
+  String get settingsSectionAccount => 'Compte';
+
+  @override
+  String get settingsSectionSupport => 'Assistance';
+
+  @override
+  String get settingsSectionLegal => 'Mentions légales';
+
+  @override
   String get editButton => 'Modifier';
 
   @override
@@ -2783,5 +2896,111 @@ class AppLocalizationsFr extends AppLocalizations {
       zero: 'Commentaires',
     );
     return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressWeekRange(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get weeklyProgressTodayPill => 'Aujourd\'hui';
+
+  @override
+  String get weeklyProgressTodayPillTooltip => 'Revenir à cette semaine';
+
+  @override
+  String get weeklyProgressPrevWeekTooltip => 'Semaine précédente';
+
+  @override
+  String get weeklyProgressNextWeekTooltip => 'Semaine suivante';
+
+  @override
+  String weeklyProgressNextExam(String date) {
+    return 'Prochain examen le $date';
+  }
+
+  @override
+  String get weeklyProgressNoUpcomingExams => 'Aucun examen à venir';
+
+  @override
+  String get weeklyProgressExamRowFallbackSubtitle =>
+      'Appuyez pour en planifier un';
+
+  @override
+  String weeklyProgressTasksRemainingToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tâches restantes aujourd\'hui',
+      one: '1 tâche restante aujourd\'hui',
+      zero: 'Toutes les tâches sont terminées pour aujourd\'hui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksToday => 'Aucune tâche prévue aujourd\'hui';
+
+  @override
+  String weeklyProgressCompletedYesterday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tâches terminées hier',
+      one: '1 tâche terminée hier',
+      zero: 'Aucune tâche terminée hier',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksYesterday => 'Aucune tâche prévue hier';
+
+  @override
+  String weeklyProgressDueTomorrow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tâches prévues demain',
+      one: '1 tâche prévue demain',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNothingTomorrow => 'Rien de prévu demain';
+
+  @override
+  String weeklyProgressCompletedOnPastDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tâches terminées le $day',
+      one: '1 tâche terminée le $day',
+      zero: 'Aucune tâche terminée le $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNoTasksOnPastDate(String day) {
+    return 'Aucune tâche prévue le $day';
+  }
+
+  @override
+  String weeklyProgressDueOnFutureDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tâches prévues le $day',
+      one: '1 tâche prévue le $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNothingOnFutureDate(String day) {
+    return 'Rien de prévu le $day';
   }
 }

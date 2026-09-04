@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 class AccountStep extends StatelessWidget {
   const AccountStep({
@@ -55,7 +56,7 @@ class AccountStep extends StatelessWidget {
               icon: Icons.shield_outlined,
               isDark: isDark,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.academicEmailLabel,
               hint: l10n.academicEmailHint,
@@ -74,7 +75,7 @@ class AccountStep extends StatelessWidget {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.securePasswordLabel,
               hint: l10n.enterStrongPasswordHint,
@@ -110,13 +111,13 @@ class AccountStep extends StatelessWidget {
               },
             ),
             if (password.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               _StrengthMeter(
                 strength: strength,
                 isDark: isDark,
               ),
             ],
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.confirmPasswordLabel,
               hint: l10n.repeatPasswordHint,
@@ -172,7 +173,7 @@ class _StrengthMeter extends StatelessWidget {
     final emptyColor = regBorderColor(isDark);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: strengthColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
@@ -219,7 +220,7 @@ class _StrengthMeter extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             l10n.passwordStrengthHint,
             style: GoogleFonts.outfit(

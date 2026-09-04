@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 Color regIndigo(BuildContext context) => Theme.of(context).colorScheme.primary;
 const Color regSlate900 = Color(0xFF0F172A);
@@ -67,7 +68,7 @@ class RegistrationField extends StatelessWidget {
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         TextFormField(
           controller: controller,
@@ -173,7 +174,7 @@ class RegistrationDropdown<T> extends StatelessWidget {
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         DropdownButtonFormField<T>(
           isExpanded: true,
@@ -248,7 +249,7 @@ class RegistrationPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = regIndigo(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: regSurfaceColor(isDark),
         borderRadius: BorderRadius.circular(18),
@@ -267,7 +268,7 @@ class RegistrationPageHeader extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +281,7 @@ class RegistrationPageHeader extends StatelessWidget {
                     color: regHeadingColor(isDark),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   description,
                   style: GoogleFonts.outfit(
@@ -316,7 +317,7 @@ class RegistrationSectionFocus extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: regIndigo(context).withOpacity(isDark ? 0.12 : 0.05),
         borderRadius: BorderRadius.circular(18),
@@ -333,7 +334,7 @@ class RegistrationSectionFocus extends StatelessWidget {
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

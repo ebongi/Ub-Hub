@@ -279,6 +279,8 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
       final redirectUrl = response['redirectUrl'];
       if (paymentId == null) throw "Failed to initiate payment";
 
+      await _db.attachPaymentProviderRef(paymentRef, paymentId.toString());
+
       if (redirectUrl != null) {
         final uri = Uri.parse(redirectUrl);
         if (await canLaunchUrl(uri)) {
@@ -289,13 +291,15 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
       }
 
       final status = await FapshiService.waitForSuccessfulPayment(paymentId.toString());
-      await _db.updatePaymentStatus(paymentRef, status);
 
-      if (status == PaymentStatus.success) {
-        await _launchWhatsAppApplication(deliveryMethod);
-      } else {
+      if (status != PaymentStatus.success) {
+        // The edge function already flips a confirmed payment to 'success'
+        // server-side; only non-success outcomes need recording here.
+        await _db.updatePaymentStatus(paymentRef, status);
         throw "Payment was not successful";
       }
+
+      await _launchWhatsAppApplication(deliveryMethod);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));

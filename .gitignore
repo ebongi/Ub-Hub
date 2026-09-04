@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 .env
 supabase/.env.secrets
+# Local Supabase CLI cache/state, including a plaintext DB connection
+# string in pooler-url — must never be committed.
+supabase/.temp/
 /build/
 /coverage/
 

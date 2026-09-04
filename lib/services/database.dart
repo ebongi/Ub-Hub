@@ -19,6 +19,7 @@ import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/services/marketplace_listing.dart';
 import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/news_post.dart';
+import 'package:go_study/services/flashcard_model.dart';
 
 class DatabaseService {
   final String? uid;
@@ -473,6 +474,113 @@ class DatabaseService {
     return data.map((json) => CourseMaterial.fromSupabase(json)).toList();
   }
 
+  // ==================== Flashcard Deck Methods ====================
+  //
+  // Decks are private to their creator (RLS: auth.uid() = user_id). Supabase
+  // realtime streams take a single filter, so we filter by the FK server-side
+  // and drop anyone else's rows client-side — same shape as getBotKnowledge.
+
+  /// Decks the current user generated from a specific material.
+  Stream<List<FlashcardDeck>> getDecksForMaterial(String materialId) {
+    return _supabase
+        .from('flashcard_decks')
+        .stream(primaryKey: ['id'])
+        .eq('material_id', materialId)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data
+              .map((json) => FlashcardDeck.fromSupabase(json))
+              .where((d) => d.userId == uid)
+              .toList(),
+        );
+  }
+
+  /// Decks the current user generated from any of a course's materials.
+  Stream<List<FlashcardDeck>> getDecksForCourse(String courseId) {
+    return _supabase
+        .from('flashcard_decks')
+        .stream(primaryKey: ['id'])
+        .eq('course_id', courseId)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data
+              .map((json) => FlashcardDeck.fromSupabase(json))
+              .where((d) => d.userId == uid)
+              .toList(),
+        );
+  }
+
+  /// Decks the current user generated from any of a department's materials.
+  Stream<List<FlashcardDeck>> getDecksForDepartment(String departmentId) {
+    return _supabase
+        .from('flashcard_decks')
+        .stream(primaryKey: ['id'])
+        .eq('department_id', departmentId)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data
+              .map((json) => FlashcardDeck.fromSupabase(json))
+              .where((d) => d.userId == uid)
+              .toList(),
+        );
+  }
+
+  /// The cards of a deck, in study order.
+  Future<List<Flashcard>> getCards(String deckId) async {
+    final List<dynamic> data = await _supabase
+        .from('flashcards')
+        .select()
+        .eq('deck_id', deckId)
+        .order('position', ascending: true);
+
+    return data.map((json) => Flashcard.fromSupabase(json)).toList();
+  }
+
+  /// Persists a generated deck and its cards, returning the stored deck.
+  Future<FlashcardDeck> createDeckWithCards({
+    required String materialId,
+    String? courseId,
+    String? departmentId,
+    required String title,
+    required List<Flashcard> cards,
+  }) async {
+    final deck = FlashcardDeck(
+      materialId: materialId,
+      courseId: courseId,
+      departmentId: departmentId,
+      userId: uid ?? '',
+      title: title,
+      cardCount: cards.length,
+    );
+
+    final row = await _supabase
+        .from('flashcard_decks')
+        .insert(deck.toSupabase())
+        .select()
+        .single();
+
+    final stored = FlashcardDeck.fromSupabase(row);
+
+    if (cards.isNotEmpty) {
+      await _supabase.from('flashcards').insert([
+        for (int i = 0; i < cards.length; i++)
+          {
+            'deck_id': stored.id,
+            'question': cards[i].question,
+            'answer': cards[i].answer,
+            'position': i,
+          },
+      ]);
+    }
+
+    return stored;
+  }
+
+  /// Deletes a deck (its cards cascade).
+  Future<void> deleteDeck(String deckId) async {
+    await _supabase.from('flashcard_decks').delete().eq('id', deckId);
+  }
+
   // Get exams for the current user
   Stream<List<ExamEvent>> get exams {
     if (uid == null) return Stream.empty();
@@ -609,23 +717,18 @@ class DatabaseService {
     );
   }
 
-  /// Upgrade user subscription tier
-  Future<void> upgradeSubscription(SubscriptionTier tier) async {
+  /// Upgrade user subscription tier. Requires `paymentRef` to point at a
+  /// `payment_transactions` row (owned by this user) that the server has
+  /// already confirmed as `status='success'` — enforced by the
+  /// `grant_subscription` RPC, so this can't be forged by a direct write.
+  Future<void> upgradeSubscription(SubscriptionTier tier, {required String paymentRef}) async {
     if (uid == null) return;
 
-    // Monthly lasts for 30 days, Yearly for 365 days
-    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
-    final expiry = DateTime.now().add(Duration(days: durationDays));
-
-    await _supabase
-        .from('profiles')
-        .update({
-          'subscription_tier': tier.name,
-          'subscription_expiry': expiry.toIso8601String(),
-          'subscription_is_trial': false, // Any paid purchase/renewal clears the trial flag
-          'free_download_count': 0, // Reset count on upgrade/renewal
-        })
-        .eq('id', uid!);
+    final result = await _supabase.rpc(
+      'grant_subscription',
+      params: {'p_tier': tier.name, 'p_payment_ref': paymentRef},
+    );
+    final expiry = DateTime.parse(result as String);
 
     await NotificationService().createNotification(
       title: 'Subscription Activated',
@@ -636,32 +739,21 @@ class DatabaseService {
     );
   }
 
-  /// Activate the App Plan's one-time free trial month. Sets the same
-  /// subscription_tier/subscription_expiry fields as a paid App Plan
-  /// purchase, but marks the period as a trial (subscription_is_trial=true)
-  /// and never touches ai_subscription_expiry, so it never grants free AI.
-  /// Guarded by `.eq('trial_used', false)` so it can only ever run once per
-  /// account.
+  /// Activate the App Plan's one-time free trial month via the
+  /// `claim_free_trial` RPC, which is guarded server-side by
+  /// `trial_used = false` so it can only ever run once per account.
   Future<void> startFreeMonthlyTrial() async {
     if (uid == null) return;
 
-    final expiry = DateTime.now().add(const Duration(days: 30));
-
-    final updated = await _supabase
-        .from('profiles')
-        .update({
-          'subscription_tier': SubscriptionTier.monthly.name,
-          'subscription_expiry': expiry.toIso8601String(),
-          'subscription_is_trial': true,
-          'trial_used': true,
-          'free_download_count': 0,
-        })
-        .eq('id', uid!)
-        .eq('trial_used', false)
-        .select();
-
-    if (updated.isEmpty) {
-      throw Exception('Free trial already used');
+    DateTime expiry;
+    try {
+      final result = await _supabase.rpc('claim_free_trial');
+      expiry = DateTime.parse(result as String);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('already used')) {
+        throw Exception('Free trial already used');
+      }
+      rethrow;
     }
 
     await NotificationService().createNotification(
@@ -675,18 +767,15 @@ class DatabaseService {
 
   /// Activate the separately-purchased Unlimited AI subscription (always
   /// paid, never free). Independent of subscription_tier/subscription_expiry
-  /// (the App Plan). Duration depends on the chosen AI tier: 30 days for
-  /// monthly, 365 for yearly.
-  Future<void> purchaseAISubscription(SubscriptionTier tier) async {
+  /// (the App Plan). Requires `paymentRef` — see [upgradeSubscription].
+  Future<void> purchaseAISubscription(SubscriptionTier tier, {required String paymentRef}) async {
     if (uid == null) return;
 
-    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
-    final expiry = DateTime.now().add(Duration(days: durationDays));
-
-    await _supabase
-        .from('profiles')
-        .update({'ai_subscription_expiry': expiry.toIso8601String()})
-        .eq('id', uid!);
+    final result = await _supabase.rpc(
+      'grant_ai_subscription',
+      params: {'p_tier': tier.name, 'p_payment_ref': paymentRef},
+    );
+    final expiry = DateTime.parse(result as String);
 
     await NotificationService().createNotification(
       title: 'AI Subscription Activated',
@@ -696,22 +785,24 @@ class DatabaseService {
     );
   }
 
-  /// Increment free download count for Silver users
+  /// Increment free download count. Atomic server-side (`increment_free_download_count`
+  /// RPC), replacing the previous non-atomic read-then-write from Dart.
   Future<void> incrementFreeDownloadCount() async {
     if (uid == null) return;
+    await _supabase.rpc('increment_free_download_count');
+  }
 
-    final profile = await _supabase
-        .from('profiles')
-        .select('free_download_count')
-        .eq('id', uid!)
-        .single();
-
-    final currentCount = profile['free_download_count'] as int? ?? 0;
-
+  /// Write-once: attaches the payment provider's transaction id to our own
+  /// pending `payment_transactions` row right after `collectPayment`
+  /// returns one, so the fapshi-proxy edge function can later find this row
+  /// by that id alone when it reconciles a confirmed payment server-side.
+  Future<void> attachPaymentProviderRef(String paymentRef, String providerTransId) async {
+    if (uid == null) return;
     await _supabase
-        .from('profiles')
-        .update({'free_download_count': currentCount + 1})
-        .eq('id', uid!);
+        .from('payment_transactions')
+        .update({'fapshi_trans_id': providerTransId})
+        .eq('payment_ref', paymentRef)
+        .eq('user_id', uid!);
   }
 
   /// Deduct AI credits from the user's account. Delegates to the
@@ -732,23 +823,16 @@ class DatabaseService {
     }
   }
 
-  /// Add AI credits to the user's account
-  Future<void> addAICredits(int amount) async {
+  /// Add AI credits to the user's account. Requires `paymentRef` — see
+  /// [upgradeSubscription].
+  Future<void> addAICredits(int amount, {required String paymentRef}) async {
     if (uid == null) return;
 
-    final profile = await _supabase
-        .from('profiles')
-        .select('ai_credits')
-        .eq('id', uid!)
-        .single();
+    await _supabase.rpc(
+      'grant_ai_credits',
+      params: {'p_amount': amount, 'p_payment_ref': paymentRef},
+    );
 
-    final currentCredits = profile['ai_credits'] as int? ?? 0;
-
-    await _supabase
-        .from('profiles')
-        .update({'ai_credits': currentCredits + amount})
-        .eq('id', uid!);
-        
     await NotificationService().createNotification(
       title: 'Credits Added!',
       body: '$amount AI credits have been added to your account.',

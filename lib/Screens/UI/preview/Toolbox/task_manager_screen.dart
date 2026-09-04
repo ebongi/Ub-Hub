@@ -533,6 +533,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
               priority: task.priority,
               category: task.category,
               isDone: val ?? false,
+              completedAt: (val ?? false) ? DateTime.now() : null,
             );
             await _dbService.updateTask(updatedTask);
           },

@@ -150,7 +150,20 @@ class UserProfile {
     };
   }
 
-  bool get isSubscribed => true; // Always treat as subscribed/active in free community beta
+  /// How long a brand-new account gets full access before the paywall
+  /// applies, even with subscription_tier still 'free' and no trial
+  /// claimed yet — enough time to discover and tap "Start Free Trial".
+  /// Keep in sync with the SQL `INTERVAL '3 days'` in
+  /// supabase/migrations/reconcile_paywall_with_trial_model.sql.
+  static const _newAccountGraceWindow = Duration(days: 3);
+
+  /// True while the App Plan (subscription_tier/subscription_expiry) is an
+  /// active paid period or the active free trial month.
+  bool get isSubscribed =>
+      (subscriptionTier != SubscriptionTier.free &&
+          subscriptionExpiry != null &&
+          subscriptionExpiry!.isAfter(DateTime.now())) ||
+      isTrialActive;
 
   /// True while the current App Plan period (subscription_tier/subscription_expiry)
   /// is the free trial month, rather than a paid period.
@@ -170,15 +183,24 @@ class UserProfile {
     return days > 0 ? l10n.daysRemainingLabel(days) : l10n.endingTodayLabel;
   }
 
-  bool get hasUnlimitedDownloads => true; // Everyone gets unlimited downloads
+  bool get hasUnlimitedDownloads => isSubscribed;
 
   bool get canCreateDepartment => role == UserRole.admin; // Only admins can create departments/faculties
 
   bool get canUploadMaterial => true; // Everyone can help build the platform by uploading notes/study guides
 
-  /// Central logic for the Hard Paywall.
-  /// In the free community version, access is granted unconditionally to all users.
-  bool get hasAccess => true;
+  /// Central logic for the Hard Paywall: admins/contributors and active
+  /// subscribers (including the active free trial) always have access; a
+  /// brand-new account also has access for `_newAccountGraceWindow` so it
+  /// isn't paywalled the instant it signs up.
+  bool get hasAccess {
+    if (role == UserRole.admin || role == UserRole.contributor) return true;
+    if (isSubscribed) return true;
+    if (createdAt != null && DateTime.now().difference(createdAt!) < _newAccountGraceWindow) {
+      return true;
+    }
+    return false;
+  }
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of the App Plan's subscriptionTier/subscriptionExpiry, so

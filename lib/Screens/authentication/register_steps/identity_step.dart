@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 class IdentityStep extends StatelessWidget {
   const IdentityStep({
@@ -39,7 +40,7 @@ class IdentityStep extends StatelessWidget {
               icon: Icons.person_pin_outlined,
               isDark: isDark,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.fullLegalNameLabel,
               hint: l10n.firstLastNameHint,
@@ -49,7 +50,7 @@ class IdentityStep extends StatelessWidget {
               validator: (v) =>
                   v == null || v.isEmpty ? l10n.fullNameRequired : null,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             RegistrationField(
               label: l10n.phoneContactLabel,
               hint: '+237 ...',

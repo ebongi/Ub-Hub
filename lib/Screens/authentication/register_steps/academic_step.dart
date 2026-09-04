@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
-import 'package:go_study/services/database.dart';
-import 'package:go_study/services/institution.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 class AcademicStep extends StatelessWidget {
   const AcademicStep({
@@ -12,8 +11,6 @@ class AcademicStep extends StatelessWidget {
     required this.matriculeController,
     required this.selectedLevel,
     required this.onLevelChanged,
-    required this.selectedInstitutionId,
-    required this.onInstitutionChanged,
     required this.isDark,
   });
 
@@ -21,8 +18,6 @@ class AcademicStep extends StatelessWidget {
   final TextEditingController matriculeController;
   final String selectedLevel;
   final ValueChanged<String?> onLevelChanged;
-  final String? selectedInstitutionId;
-  final ValueChanged<String?> onInstitutionChanged;
   final bool isDark;
 
   static const _levelCodes = ['200', '300', '400', 'Resit'];
@@ -54,7 +49,7 @@ class AcademicStep extends StatelessWidget {
               icon: Icons.account_balance_outlined,
               isDark: isDark,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.studentMatriculeLabel,
               hint: l10n.officialUniversityIdHint,
@@ -64,7 +59,7 @@ class AcademicStep extends StatelessWidget {
               validator: (v) =>
                   v == null || v.isEmpty ? l10n.matriculeRequired : null,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             RegistrationDropdown<String>(
               label: l10n.currentAcademicLevelLabel,
               hint: l10n.selectYourLevelHint,
@@ -88,40 +83,6 @@ class AcademicStep extends StatelessWidget {
               onChanged: onLevelChanged,
               validator: (val) =>
                   val == null || val.isEmpty ? l10n.pleaseSelectLevel : null,
-            ),
-            const SizedBox(height: 24),
-            StreamBuilder<List<Institution>>(
-              stream: DatabaseService().institutions,
-              builder: (context, snapshot) {
-                final institutions = snapshot.data ?? [];
-                return RegistrationDropdown<String>(
-                  label: l10n.assignedInstitutionLabel,
-                  hint: l10n.selectYourUniversityHint,
-                  icon: Icons.account_balance_rounded,
-                  value: selectedInstitutionId ?? '',
-                  isDark: isDark,
-                  items: institutions
-                      .map(
-                        (i) => DropdownMenuItem<String>(
-                          value: i.id,
-                          child: Text(
-                            i.name,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: GoogleFonts.outfit(
-                              fontSize: 15,
-                              color: regHeadingColor(isDark),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: onInstitutionChanged,
-                  validator: (val) => val == null || val.isEmpty
-                      ? l10n.pleaseSelectUniversity
-                      : null,
-                );
-              },
             ),
           ],
         ),

@@ -39,14 +39,28 @@ abstract class AIService {
     required List<dynamic> exams,
   });
 
-  /// Generates a 5-question multiple-choice quiz from a PDF document's raw
-  /// bytes, at the requested difficulty.
+  /// Generates a 5-question multiple-choice quiz from a document, at the
+  /// requested difficulty. [pdfSource] is either the document's extracted
+  /// plain text (`String`, preferred) or its raw PDF bytes (`Uint8List`).
   Future<String> generateQuiz(
     dynamic pdfSource, {
     required QuestionDifficulty difficulty,
   });
 
-  /// Summarizes a PDF document from its raw bytes.
+  /// Generates study flashcards (question/answer pairs) from a course
+  /// material, returned as a JSON string of the shape
+  /// `{"title": "...", "cards": [{"question": "...", "answer": "..."}]}`.
+  ///
+  /// [source] is either the material's extracted plain text (`String`,
+  /// preferred — small and model-agnostic) or its raw PDF bytes
+  /// (`Uint8List`, a fallback for scanned / image-only PDFs).
+  Future<String> generateFlashcards(
+    dynamic source, {
+    int count = 15,
+  });
+
+  /// Summarizes a document. [pdfSource] is either its extracted plain text
+  /// (`String`, preferred) or its raw PDF bytes (`Uint8List`).
   Future<String> summarizePdf(dynamic pdfSource);
 }
 

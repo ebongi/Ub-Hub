@@ -5,6 +5,7 @@ class Course {
   final String departmentId;
   final String? semester;
   final String? level;
+  final String? description;
   final DateTime? createdAt;
   final String? adminId;
   final DateTime? updatedAt;
@@ -16,6 +17,7 @@ class Course {
     required this.departmentId,
     this.semester,
     this.level,
+    this.description,
     this.createdAt,
     this.adminId,
     this.updatedAt,
@@ -29,6 +31,7 @@ class Course {
       departmentId: json['department_id'] ?? '',
       semester: json['semester'],
       level: json['level'],
+      description: json['description'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -46,6 +49,7 @@ class Course {
       'department_id': departmentId,
       if (semester != null) 'semester': semester,
       if (level != null) 'level': level,
+      if (description != null) 'description': description,
       'admin_id': adminId,
       if (id.isNotEmpty && !id.startsWith('temp_')) 'id': id,
     };

@@ -14,6 +14,18 @@
          trigger the actual prompt (see NotificationService). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- Exact alarms for scheduled exam / study reminders
+         (NotificationService.scheduleNotification). Auto-granted through API 32.
+         On API 33+ it is a revocable special access ("Alarms & reminders") that
+         is denied by default; scheduleNotification() detects that and falls back
+         to an inexact alarm, so we cap the declaration at 32 to avoid the Play
+         Console exact-alarm policy declaration. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+
+    <!-- Re-register scheduled alarms after a device reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <queries>
         <!-- If your app opens https URLs -->
         <intent>

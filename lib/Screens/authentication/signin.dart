@@ -5,30 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────────────
-const Color _indigo = Color(0xFF4F46E5);
-const Color _slate900 = Color(0xFF0F172A);
-const Color _slate700 = Color(0xFF334155);
-const Color _slate500 = Color(0xFF64748B);
-const Color _slate300 = Color(0xFFCBD5E1);
-const Color _slate100 = Color(0xFFF1F5F9);
-
-// ── Dark mode equivalents ─────────────────────────────────────────────────────
-Color _bgColor(bool isDark) =>
-    isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-Color _surfaceColor(bool isDark) =>
-    isDark ? const Color(0xFF1E293B) : Colors.white;
-Color _headingColor(bool isDark) =>
-    isDark ? Colors.white : _slate900;
-Color _bodyColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.55) : _slate500;
-Color _borderColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.1) : _slate300;
-Color _fieldFill(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.06) : _slate100;
-Color _iconColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.4) : _slate500;
+import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 
 class Signin extends StatefulWidget {
   final Authentication? authService;
@@ -134,7 +111,7 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: _bgColor(isDark),
+      backgroundColor: regBgColor(isDark),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -215,7 +192,7 @@ class _BrandChip extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: _indigo,
+            color: regIndigo(context),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(
@@ -231,7 +208,7 @@ class _BrandChip extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: _indigo,
+              color: regIndigo(context),
               letterSpacing: 0.2,
             ),
             children: [
@@ -240,7 +217,7 @@ class _BrandChip extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.w400,
-                  color: isDark ? Colors.white.withOpacity(0.8) : _slate700,
+                  color: isDark ? Colors.white.withOpacity(0.8) : regSlate700,
                   letterSpacing: 0.2,
                 ),
               ),
@@ -268,7 +245,7 @@ class _SignInHeader extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 30,
             fontWeight: FontWeight.w800,
-            color: _headingColor(isDark),
+            color: regHeadingColor(isDark),
             height: 1.15,
             letterSpacing: -0.3,
           ),
@@ -278,7 +255,7 @@ class _SignInHeader extends StatelessWidget {
           l10n.signInSubtitle,
           style: GoogleFonts.outfit(
             fontSize: 14.5,
-            color: _bodyColor(isDark),
+            color: regBodyColor(isDark),
             fontWeight: FontWeight.w400,
             height: 1.5,
           ),
@@ -314,9 +291,9 @@ class _FormCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _surfaceColor(isDark),
+        color: regSurfaceColor(isDark),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _borderColor(isDark), width: 1),
+        border: Border.all(color: regBorderColor(isDark), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
@@ -367,7 +344,7 @@ class _FormCard extends StatelessWidget {
                   viewPassword
                       ? Icons.visibility_rounded
                       : Icons.visibility_off_rounded,
-                  color: _iconColor(isDark),
+                  color: regIconColor(isDark),
                   size: 20,
                 ),
               ),
@@ -395,7 +372,7 @@ class _FormCard extends StatelessWidget {
                   l10n.forgotPassword,
                   style: GoogleFonts.outfit(
                     fontSize: 13,
-                    color: _indigo,
+                    color: regIndigo(context),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -455,7 +432,7 @@ class _EduField extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white.withOpacity(0.7) : _slate700,
+            color: isDark ? Colors.white.withOpacity(0.7) : regSlate700,
             letterSpacing: 0.1,
           ),
         ),
@@ -467,15 +444,15 @@ class _EduField extends StatelessWidget {
           validator: validator,
           style: GoogleFonts.outfit(
             fontSize: 15,
-            color: isDark ? Colors.white.withOpacity(0.9) : _slate900,
+            color: isDark ? Colors.white.withOpacity(0.9) : regSlate900,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.outfit(
               fontSize: 15,
-              color: isDark ? Colors.white.withOpacity(0.2) : _slate300,
+              color: isDark ? Colors.white.withOpacity(0.2) : regSlate300,
             ),
-            prefixIcon: Icon(icon, color: _iconColor(isDark), size: 19),
+            prefixIcon: Icon(icon, color: regIconColor(isDark), size: 19),
             suffixIcon: suffixIcon != null
                 ? Padding(
                     padding: const EdgeInsets.only(right: 4),
@@ -483,22 +460,22 @@ class _EduField extends StatelessWidget {
                   )
                 : null,
             filled: true,
-            fillColor: _fieldFill(isDark),
+            fillColor: regFieldFill(isDark),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _borderColor(isDark)),
+              borderSide: BorderSide(color: regBorderColor(isDark)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _borderColor(isDark)),
+              borderSide: BorderSide(color: regBorderColor(isDark)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _indigo, width: 1.8),
+              borderSide: BorderSide(color: regIndigo(context), width: 1.8),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -539,8 +516,8 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _indigo,
-          disabledBackgroundColor: _indigo.withOpacity(0.55),
+          backgroundColor: regIndigo(context),
+          disabledBackgroundColor: regIndigo(context).withOpacity(0.55),
           foregroundColor: Colors.white,
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -587,7 +564,7 @@ class _SignInFooter extends StatelessWidget {
           children: [
             Expanded(
               child: Divider(
-                color: _borderColor(isDark),
+                color: regBorderColor(isDark),
                 thickness: 1,
               ),
             ),
@@ -597,7 +574,7 @@ class _SignInFooter extends StatelessWidget {
                 l10n.orDivider,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
-                  color: _bodyColor(isDark),
+                  color: regBodyColor(isDark),
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
                 ),
@@ -605,7 +582,7 @@ class _SignInFooter extends StatelessWidget {
             ),
             Expanded(
               child: Divider(
-                color: _borderColor(isDark),
+                color: regBorderColor(isDark),
                 thickness: 1,
               ),
             ),
@@ -622,7 +599,7 @@ class _SignInFooter extends StatelessWidget {
               Text(
                 l10n.noAccountPrompt,
                 style: GoogleFonts.outfit(
-                  color: _bodyColor(isDark),
+                  color: regBodyColor(isDark),
                   fontSize: 14.5,
                 ),
               ),
@@ -632,7 +609,7 @@ class _SignInFooter extends StatelessWidget {
                 child: Text(
                   l10n.signUpLink,
                   style: GoogleFonts.outfit(
-                    color: _indigo,
+                    color: regIndigo(context),
                     fontWeight: FontWeight.w700,
                     fontSize: 14.5,
                   ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -11,6 +12,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/core/pdf_ai_utils.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/ai_service.dart';
 import 'package:provider/provider.dart';
@@ -53,6 +55,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   List<PdfBookmark> _bookmarks = [];
 
   Future<void> _summarizeDocument() async {
+    final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context, listen: false);
     final profile = UserProfile(
       id: userModel.uid ?? '',
@@ -69,11 +72,19 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     setState(() => _isSummarizing = true);
 
     try {
-      // 1. Fetch PDF bytes
-      final response = await http.get(Uri.parse(widget.url));
+      // 1. Fetch the file, then prefer its extracted text over shipping the
+      //    whole PDF as a base64 attachment (which trips request-size limits).
+      final response = await http
+          .get(Uri.parse(widget.url))
+          .timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
+        final Object source =
+            extractPdfText(response.bodyBytes) ?? response.bodyBytes;
+
         // 2. Generate summary
-        final summary = await _aiService.summarizePdf(response.bodyBytes);
+        final summary = await _aiService
+            .summarizePdf(source)
+            .timeout(const Duration(seconds: 90));
 
         if (summary == "OUT_OF_CREDITS") {
           setState(() => _isSummarizing = false);
@@ -81,13 +92,15 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           return;
         }
 
+        if (looksLikeAiError(summary)) {
+          throw kDebugMode ? summary.trim() : l10n.aiServiceUnavailable;
+        }
+
         if (mounted) {
           _showSummarySheet(summary);
         }
       } else {
-        throw Exception(
-          "Failed to download PDF (Status: ${response.statusCode})",
-        );
+        throw "Failed to download PDF (Status: ${response.statusCode})";
       }
     } catch (e) {
       if (mounted) {
@@ -299,12 +312,17 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     setState(() => _isGeneratingQuiz = true);
 
     try {
-      final response = await http.get(Uri.parse(widget.url));
+      final response = await http
+          .get(Uri.parse(widget.url))
+          .timeout(const Duration(seconds: 30));
       if (response.statusCode == 200) {
-        final result = await _aiService.generateQuiz(
-          response.bodyBytes,
-          difficulty: difficulty,
-        );
+        // Prefer extracted text over a base64 copy of the whole PDF.
+        final Object source =
+            extractPdfText(response.bodyBytes) ?? response.bodyBytes;
+
+        final result = await _aiService
+            .generateQuiz(source, difficulty: difficulty)
+            .timeout(const Duration(seconds: 90));
 
         if (result == "OUT_OF_CREDITS") {
           setState(() => _isGeneratingQuiz = false);
@@ -312,11 +330,19 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           return;
         }
 
+        if (looksLikeAiError(result)) {
+          throw kDebugMode ? result.trim() : l10n.aiServiceUnavailable;
+        }
+
         Map<String, dynamic> quizData;
         try {
-          quizData = jsonDecode(result) as Map<String, dynamic>;
+          quizData =
+              jsonDecode(extractJsonObject(result)) as Map<String, dynamic>;
         } catch (_) {
-          throw Exception("Couldn't generate quiz questions. Please try again.");
+          throw kDebugMode
+              ? 'Quiz JSON parse failed. Model returned: '
+                    '${result.length > 300 ? '${result.substring(0, 300)}…' : result}'
+              : "Couldn't generate quiz questions. Please try again.";
         }
 
         if (mounted) {
@@ -328,9 +354,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           );
         }
       } else {
-        throw Exception(
-          "Failed to download PDF (Status: ${response.statusCode})",
-        );
+        throw "Failed to download PDF (Status: ${response.statusCode})";
       }
     } catch (e) {
       if (mounted) {

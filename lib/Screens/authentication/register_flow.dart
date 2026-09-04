@@ -6,12 +6,13 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
+import 'package:go_study/theme/app_radius.dart';
+import 'package:go_study/theme/app_spacing.dart';
 import 'package:go_study/Screens/authentication/register_steps/account_step.dart';
 import 'package:go_study/Screens/authentication/register_steps/identity_step.dart';
 import 'package:go_study/Screens/authentication/register_steps/academic_step.dart';
 import 'package:go_study/Screens/authentication/register_steps/finalize_step.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 class RegisterFlow extends StatefulWidget {
@@ -41,8 +42,6 @@ class _RegisterFlowState extends State<RegisterFlow>
   final Authentication _authentication = Authentication();
 
   String _selectedLevel = '';
-  String? _selectedInstitutionId;
-  String? _selectedDepartmentName;
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
   bool _isLoading = false;
@@ -75,15 +74,6 @@ class _RegisterFlowState extends State<RegisterFlow>
       ),
     );
 
-    _loadOnboardingData();
-  }
-
-  Future<void> _loadOnboardingData() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _selectedDepartmentName = prefs.getString('onboarding_department');
-    });
   }
 
   @override
@@ -148,8 +138,6 @@ class _RegisterFlowState extends State<RegisterFlow>
         matricule: _matriculeController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         level: _selectedLevel.trim(),
-        institutionId: _selectedInstitutionId,
-        department: _selectedDepartmentName,
         bio: _bioController.text.trim(),
       );
 
@@ -176,11 +164,14 @@ class _RegisterFlowState extends State<RegisterFlow>
       backgroundColor: regBgColor(isDark),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl,
+            vertical: AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               FadeTransition(
                 opacity: _fadeAnim,
                 child: SlideTransition(
@@ -188,7 +179,7 @@ class _RegisterFlowState extends State<RegisterFlow>
                   child: _BrandChip(isDark: isDark),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.xl),
               FadeTransition(
                 opacity: _fadeAnim,
                 child: SlideTransition(
@@ -205,7 +196,7 @@ class _RegisterFlowState extends State<RegisterFlow>
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 l10n.registerSubtitle,
                 style: GoogleFonts.outfit(
@@ -214,12 +205,12 @@ class _RegisterFlowState extends State<RegisterFlow>
                   color: regBodyColor(isDark),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: regSurfaceColor(isDark),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppRadius.sheet),
                   border: Border.all(color: regBorderColor(isDark).withOpacity(0.5)),
                   boxShadow: [
                     BoxShadow(
@@ -278,20 +269,11 @@ class _RegisterFlowState extends State<RegisterFlow>
                             onLevelChanged: (val) {
                               setState(() => _selectedLevel = val ?? '');
                             },
-                            selectedInstitutionId: _selectedInstitutionId,
-                            onInstitutionChanged: (val) {
-                              setState(() => _selectedInstitutionId = val);
-                            },
                             isDark: isDark,
                           ),
                           FinalizeStep(
                             formKey: _pageFormKeys[3],
                             bioController: _bioController,
-                            selectedInstitutionId: _selectedInstitutionId,
-                            selectedDepartmentName: _selectedDepartmentName,
-                            onDepartmentChanged: (val) {
-                              setState(() => _selectedDepartmentName = val);
-                            },
                             agreedToTerms: _agreedToTerms,
                             onAgreedToTermsChanged: (val) {
                               setState(() => _agreedToTerms = val);
@@ -312,7 +294,7 @@ class _RegisterFlowState extends State<RegisterFlow>
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xxl),
               _RegisterFooter(onToggle: widget.istoggle, isDark: isDark),
             ],
           ),
@@ -329,10 +311,13 @@ class _BrandChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = regIndigo(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(AppRadius.chip),
         border: Border.all(color: primary.withOpacity(0.12)),
       ),
       child: Row(
@@ -396,11 +381,13 @@ class _ProgressHeader extends StatelessWidget {
             final done = index < current;
             return Expanded(
               child: Container(
-                margin: EdgeInsets.only(right: index < total - 1 ? 8 : 0),
-                height: 8,
+                margin: EdgeInsets.only(
+                  right: index < total - 1 ? AppSpacing.sm : 0,
+                ),
+                height: AppSpacing.sm,
                 decoration: BoxDecoration(
                   color: active || done ? primary : regBorderColor(isDark),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
               ),
             );
@@ -450,7 +437,7 @@ class _NavigationButtons extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               ),
               child: Text(
                 l10n.registerBack,
@@ -462,7 +449,7 @@ class _NavigationButtons extends StatelessWidget {
               ),
             ),
           ),
-        if (currentStep > 0) const SizedBox(width: 16),
+        if (currentStep > 0) const SizedBox(width: AppSpacing.lg),
         Expanded(
           flex: 2,
           child: ElevatedButton(
@@ -476,7 +463,7 @@ class _NavigationButtons extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
             ),
             child: isLoading
                 ? const SizedBox(
@@ -520,7 +507,7 @@ class _RegisterFooter extends StatelessWidget {
                   Divider(color: regBorderColor(isDark).withOpacity(0.5), thickness: 1),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Text(
                 l10n.registerVerificationRequired,
                 style: GoogleFonts.outfit(
@@ -537,7 +524,7 @@ class _RegisterFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
         Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -550,7 +537,7 @@ class _RegisterFooter extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               GestureDetector(
                 onTap: () => onToggle(),
                 child: Text(
