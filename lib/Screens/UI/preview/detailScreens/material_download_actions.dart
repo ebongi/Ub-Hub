@@ -30,9 +30,12 @@ double _resolveDownloadFee(CourseMaterial material) {
 }
 
 /// Opens a material — a PDF is shown in-app via [PDFViewerScreen], anything
-/// else falls through to [handleMaterialDownload]. Shared across
-/// `DepartmentScreen`, `CourseDetailScreen`, and `SubjectScreen` so the
-/// (payment-gated) download flow lives in exactly one place.
+/// else falls through to a direct download. Both paths go through the same
+/// free-count/payment gate ([_ensureAccessAndRun]) before granting access,
+/// so viewing a PDF in-app can't be used to skip the download limit that
+/// non-PDF files are already subject to. Shared across `DepartmentScreen`,
+/// `CourseDetailScreen`, and `SubjectScreen` so the gated flow lives in
+/// exactly one place.
 Future<void> openMaterialFile({
   required BuildContext context,
   required DatabaseService dbService,
@@ -40,11 +43,21 @@ Future<void> openMaterialFile({
   required CourseMaterial material,
 }) async {
   if (material.fileType.toLowerCase() == 'pdf') {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PDFViewerScreen(url: material.fileUrl, title: material.title),
-      ),
+    await _ensureAccessAndRun(
+      context: context,
+      dbService: dbService,
+      userProfile: userProfile,
+      material: material,
+      onGranted: () async {
+        await _secureForOffline(context: context, material: material);
+        if (!context.mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PDFViewerScreen(url: material.fileUrl, title: material.title),
+          ),
+        );
+      },
     );
     return;
   }
@@ -56,32 +69,50 @@ Future<void> openMaterialFile({
   );
 }
 
-/// Downloads (or, once paid, opens) a material. Free-download-eligible
-/// users go straight through; everyone else sees a Fapshi payment dialog
-/// first. `UserProfile.hasUnlimitedDownloads` is currently hardcoded `true`
-/// ("free community beta"), so the payment branch is effectively dormant at
-/// runtime today — kept intact so it activates correctly the moment that
-/// changes, rather than being silently dropped.
+/// Downloads a material. Free-download-eligible users go straight through;
+/// everyone else sees a Fapshi payment dialog first.
 Future<void> handleMaterialDownload({
   required BuildContext context,
   required DatabaseService dbService,
   required UserProfile? userProfile,
   required CourseMaterial material,
 }) async {
+  await _ensureAccessAndRun(
+    context: context,
+    dbService: dbService,
+    userProfile: userProfile,
+    material: material,
+    onGranted: () async {
+      await _secureForOffline(context: context, material: material);
+      final uri = Uri.parse(material.fileUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else if (context.mounted) {
+        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
+      }
+    },
+  );
+}
+
+/// Shared gate in front of any material access, regardless of what
+/// "access" ends up meaning for the caller (launching a direct download vs.
+/// pushing an in-app viewer) — free-download-eligible users pass straight
+/// through (consuming a free-download credit, unless unlimited), everyone
+/// else is asked to pay via Fapshi first. [onGranted] runs exactly once,
+/// at the point access is actually confirmed.
+Future<void> _ensureAccessAndRun({
+  required BuildContext context,
+  required DatabaseService dbService,
+  required UserProfile? userProfile,
+  required CourseMaterial material,
+  required Future<void> Function() onGranted,
+}) async {
   final l10n = AppLocalizations.of(context)!;
   if (userProfile != null && SubscriptionService.canDownloadForFree(userProfile)) {
-    await _secureForOffline(context: context, material: material);
     if (!userProfile.hasUnlimitedDownloads) {
       await dbService.incrementFreeDownloadCount();
     }
-    final uri = Uri.parse(material.fileUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (context.mounted) {
-        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
-      }
-    }
+    await onGranted();
     return;
   }
 
@@ -194,6 +225,7 @@ Future<void> handleMaterialDownload({
                                       dbService: dbService,
                                       material: material,
                                       phoneNumber: phoneController.text,
+                                      onGranted: onGranted,
                                     );
                                     if (context.mounted) Navigator.pop(context);
                                   } catch (e) {
@@ -225,6 +257,7 @@ Future<void> _processDownloadPayment({
   required DatabaseService dbService,
   required CourseMaterial material,
   required String phoneNumber,
+  required Future<void> Function() onGranted,
 }) async {
   final userId = dbService.uid;
   if (userId == null) throw "User not authenticated";
@@ -279,13 +312,7 @@ Future<void> _processDownloadPayment({
     throw "Payment failed or timed out.";
   }
 
-  await _secureForOffline(context: context, material: material);
-  final uri = Uri.parse(material.fileUrl);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } else {
-    throw 'Could not launch download link';
-  }
+  await onGranted();
 }
 
 Future<void> _secureForOffline({
