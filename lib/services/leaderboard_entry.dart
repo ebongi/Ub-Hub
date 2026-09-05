@@ -4,6 +4,7 @@ class LeaderboardEntry {
   final String userId;
   final String name;
   final String? avatarUrl;
+  final String? level;
   final int totalPoints;
   final int rank;
   final LeaderboardTrend trend;
@@ -12,6 +13,7 @@ class LeaderboardEntry {
     required this.userId,
     required this.name,
     this.avatarUrl,
+    this.level,
     required this.totalPoints,
     required this.rank,
     required this.trend,
@@ -23,6 +25,7 @@ class LeaderboardEntry {
       userId: json['user_id'] as String,
       name: (name != null && name.trim().isNotEmpty) ? name : 'Student',
       avatarUrl: json['avatar_url'] as String?,
+      level: json['level'] as String?,
       totalPoints: (json['total_points'] as num?)?.toInt() ?? 0,
       rank: (json['rank'] as num?)?.toInt() ?? 0,
       trend: _trendFromString(json['trend'] as String?),
