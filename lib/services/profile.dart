@@ -63,6 +63,7 @@ class UserProfile {
   final bool trialUsed;
   final bool isTrialSubscription;
   final DateTime? aiSubscriptionExpiry;
+  final int totalPoints;
 
   UserProfile({
     required this.id,
@@ -84,6 +85,7 @@ class UserProfile {
     this.trialUsed = false,
     this.isTrialSubscription = false,
     this.aiSubscriptionExpiry,
+    this.totalPoints = 0,
   });
 
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
@@ -123,6 +125,7 @@ class UserProfile {
       aiSubscriptionExpiry: json['ai_subscription_expiry'] != null
           ? DateTime.parse(json['ai_subscription_expiry'])
           : null,
+      totalPoints: json['total_points'] ?? 0,
     );
   }
 
@@ -147,6 +150,7 @@ class UserProfile {
       'trial_used': trialUsed,
       'subscription_is_trial': isTrialSubscription,
       'ai_subscription_expiry': aiSubscriptionExpiry?.toIso8601String(),
+      'total_points': totalPoints,
     };
   }
 

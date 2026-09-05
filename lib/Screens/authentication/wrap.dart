@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/points_service.dart';
 import 'dart:async';
 
 class AuthWrapper extends StatefulWidget {
@@ -73,11 +74,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 trialUsed: profile.trialUsed,
                 isTrialSubscription: profile.isTrialSubscription,
                 aiSubscriptionExpiry: profile.aiSubscriptionExpiry,
+                totalPoints: profile.totalPoints,
                 profileLoaded: true,
               );
             });
           },
         );
+
+        // Daily login bonus — idempotent server-side (capped at once per
+        // calendar day in award_points()), so no local "already awarded
+        // today" tracking is needed here.
+        PointsService().awardPoints('daily_login').catchError((_) => 0);
 
 
       } else {

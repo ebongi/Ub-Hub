@@ -51,6 +51,7 @@ class UserModel extends ChangeNotifier {
   bool _trialUsed;
   bool _isTrialSubscription;
   DateTime? _aiSubscriptionExpiry;
+  int _totalPoints;
 
   UserModel({
     String? uid,
@@ -73,6 +74,7 @@ class UserModel extends ChangeNotifier {
     bool trialUsed = false,
     bool isTrialSubscription = false,
     DateTime? aiSubscriptionExpiry,
+    int totalPoints = 0,
   }) : _uid = uid,
        _name = name,
        _email = email,
@@ -92,7 +94,8 @@ class UserModel extends ChangeNotifier {
        _createdAt = createdAt,
        _trialUsed = trialUsed,
        _isTrialSubscription = isTrialSubscription,
-       _aiSubscriptionExpiry = aiSubscriptionExpiry;
+       _aiSubscriptionExpiry = aiSubscriptionExpiry,
+       _totalPoints = totalPoints;
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
@@ -114,6 +117,7 @@ class UserModel extends ChangeNotifier {
   bool get trialUsed => _trialUsed;
   bool get isTrialSubscription => _isTrialSubscription;
   DateTime? get aiSubscriptionExpiry => _aiSubscriptionExpiry;
+  int get totalPoints => _totalPoints;
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of subscriptionTier/subscriptionExpiry (the App Plan), so
@@ -214,6 +218,7 @@ class UserModel extends ChangeNotifier {
     bool? isTrialSubscription,
     DateTime? aiSubscriptionExpiry,
     bool? profileLoaded,
+    int? totalPoints,
   }) {
     if (uid != null) _uid = uid;
     if (name != null) _name = name;
@@ -236,6 +241,7 @@ class UserModel extends ChangeNotifier {
     if (isTrialSubscription != null) _isTrialSubscription = isTrialSubscription;
     if (aiSubscriptionExpiry != null) _aiSubscriptionExpiry = aiSubscriptionExpiry;
     if (profileLoaded != null) _profileLoaded = profileLoaded;
+    if (totalPoints != null) _totalPoints = totalPoints;
     notifyListeners();
   }
 }

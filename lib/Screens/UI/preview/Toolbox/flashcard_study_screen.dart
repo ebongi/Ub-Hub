@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/flashcard_model.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/level_service.dart';
+import 'package:go_study/services/points_service.dart';
 
 /// Flip-card study mode for a generated [FlashcardDeck]. Session-only: the
 /// user swipes through the deck, taps a card to flip between question and
@@ -34,6 +38,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   // clean run from one that took several passes.
   final Set<Flashcard> _everMissed = {};
   bool _completed = false;
+  bool _pointsAwarded = false;
+  int _awardedPoints = 0;
 
   @override
   void initState() {
@@ -50,6 +56,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       _stillLearning.clear();
       _everMissed.clear();
       _completed = false;
+      _pointsAwarded = false;
+      _awardedPoints = 0;
     });
   }
 
@@ -75,7 +83,54 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       });
     } else {
       setState(() => _completed = true);
+      _awardFlashcardPoints();
     }
+  }
+
+  Future<void> _awardFlashcardPoints() async {
+    if (_pointsAwarded) return;
+    _pointsAwarded = true;
+
+    final userModel = context.read<UserModel>();
+    final pointsBefore = userModel.totalPoints;
+
+    int awarded = 0;
+    try {
+      awarded = await PointsService().awardPoints(
+        'flashcards_studied',
+        metadata: {'mastered_count': _masteredCount},
+      );
+    } catch (_) {
+      // Best-effort — a points hiccup shouldn't block showing results.
+    }
+    if (!mounted || awarded <= 0) return;
+
+    setState(() => _awardedPoints = awarded);
+
+    final levelBefore = LevelService.computeLevel(pointsBefore);
+    final levelAfter = LevelService.computeLevel(pointsBefore + awarded);
+    if (levelAfter.level > levelBefore.level && mounted) {
+      _showLevelUpDialog(levelAfter);
+    }
+  }
+
+  void _showLevelUpDialog(LevelInfo info) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Level Up! 🎉', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        content: Text(
+          'You reached Level ${info.level} — ${info.title}!',
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Nice!'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -276,6 +331,26 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(fontSize: 20, color: Colors.grey),
           ),
+          if (_awardedPoints > 0) ...[
+            const SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '+$_awardedPoints points',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 50),
           ElevatedButton(
             onPressed: _restart,

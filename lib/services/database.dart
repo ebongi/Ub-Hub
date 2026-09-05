@@ -20,6 +20,7 @@ import 'package:go_study/services/marketplace_listing.dart';
 import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/news_post.dart';
 import 'package:go_study/services/flashcard_model.dart';
+import 'package:go_study/services/points_service.dart';
 
 class DatabaseService {
   final String? uid;
@@ -442,6 +443,13 @@ class DatabaseService {
       } catch (_) {
         // Silently ignore — see comment above.
       }
+    }
+
+    // Best-effort — a points RPC hiccup shouldn't fail the upload itself.
+    try {
+      await PointsService().awardPoints('material_uploaded');
+    } catch (_) {
+      // Silently ignore.
     }
 
     return id;

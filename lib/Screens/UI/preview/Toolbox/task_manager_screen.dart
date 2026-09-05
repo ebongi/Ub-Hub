@@ -5,6 +5,7 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/points_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 
@@ -536,6 +537,13 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
               completedAt: (val ?? false) ? DateTime.now() : null,
             );
             await _dbService.updateTask(updatedTask);
+            if (val == true && !task.isDone) {
+              // Best-effort — a points hiccup shouldn't block marking the
+              // task done. Gated on the false->true transition so unrelated
+              // re-renders/toggles can't double-award (award_points()'s
+              // daily cap is a second line of defense, not the only one).
+              PointsService().awardPoints('task_completed').catchError((_) => 0);
+            }
           },
         ),
         title: Text(
