@@ -344,6 +344,10 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     '${result.length > 300 ? '${result.substring(0, 300)}…' : result}'
               : "Couldn't generate quiz questions. Please try again.";
         }
+        // The AI's JSON response only carries the questions — stash the
+        // chosen difficulty here too so QuizViewScreen can factor it into
+        // the points awarded on completion (see award_points() RPC).
+        quizData['difficulty'] = difficulty.name;
 
         if (mounted) {
           Navigator.push(

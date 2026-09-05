@@ -66,12 +66,15 @@ class _QuizViewScreenState extends State<QuizViewScreen> {
     final userModel = context.read<UserModel>();
     final pointsBefore = userModel.totalPoints;
     final scorePercentage = (_score / _questions.length) * 100;
+    // Set by pdf_viewer_screen.dart when the quiz is generated; defaults to
+    // 'intermediate' for older in-flight quizzes that predate this field.
+    final difficulty = widget.quizData['difficulty'] as String? ?? 'intermediate';
 
     int awarded = 0;
     try {
       awarded = await PointsService().awardPoints(
         'quiz_completed',
-        metadata: {'score_percentage': scorePercentage},
+        metadata: {'score_percentage': scorePercentage, 'difficulty': difficulty},
       );
     } catch (_) {
       // Best-effort — a points hiccup shouldn't block showing quiz results.
