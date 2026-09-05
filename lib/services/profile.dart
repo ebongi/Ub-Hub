@@ -187,11 +187,14 @@ class UserProfile {
     return days > 0 ? l10n.daysRemainingLabel(days) : l10n.endingTodayLabel;
   }
 
-  bool get hasUnlimitedDownloads => isSubscribed;
+  /// Admins/contributors get unlimited downloads regardless of subscription
+  /// tier, matching the exemption `hasAccess`/`canUseAI` already grant them.
+  bool get hasUnlimitedDownloads =>
+      role == UserRole.admin || role == UserRole.contributor || isSubscribed;
 
   bool get canCreateDepartment => role == UserRole.admin; // Only admins can create departments/faculties
 
-  bool get canUploadMaterial => true; // Everyone can help build the platform by uploading notes/study guides
+  bool get canUploadMaterial => role == UserRole.admin; // Only admins can upload course materials
 
   /// Central logic for the Hard Paywall: admins/contributors and active
   /// subscribers (including the active free trial) always have access; a

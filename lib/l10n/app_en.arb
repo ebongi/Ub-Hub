@@ -637,7 +637,7 @@
   "@verifiedAnswerFeeSubtitle": {
     "placeholders": { "fee": { "type": "int" } }
   },
-  "onlyContributorsCanUploadMessage": "Only contributors and admins can upload content.",
+  "onlyContributorsCanUploadMessage": "Only administrators can upload content.",
   "addMaterialTitle": "Add Material",
   "shareResourcesSubtitle": "Share resources with your peers",
   "categoryLabel": "Category",

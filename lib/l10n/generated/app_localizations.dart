@@ -2939,7 +2939,7 @@ abstract class AppLocalizations {
   /// No description provided for @onlyContributorsCanUploadMessage.
   ///
   /// In en, this message translates to:
-  /// **'Only contributors and admins can upload content.'**
+  /// **'Only administrators can upload content.'**
   String get onlyContributorsCanUploadMessage;
 
   /// No description provided for @addMaterialTitle.

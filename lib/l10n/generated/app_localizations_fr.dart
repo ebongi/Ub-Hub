@@ -1574,7 +1574,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onlyContributorsCanUploadMessage =>
-      'Seuls les contributeurs et administrateurs peuvent téléverser du contenu.';
+      'Seuls les administrateurs peuvent téléverser du contenu.';
 
   @override
   String get addMaterialTitle => 'Ajouter un document';

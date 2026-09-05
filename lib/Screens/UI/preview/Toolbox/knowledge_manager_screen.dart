@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/bot_knowledge.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/services/profile.dart' show UserRole;
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
@@ -162,30 +165,36 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
         throw "Could not extract text from PDF. It might be an image-only PDF.";
       }
 
-      // Ask if it should be global
-      final bool? isGlobal = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.knowledgeScopeTitle),
-          content: Text(
-            l10n.knowledgeScopeBody,
+      // Only admins may make a knowledge entry global (feeds the bot's
+      // answers for every user) — everyone else's entries stay personal.
+      final isAdmin = context.read<UserModel>().role == UserRole.admin;
+      bool isGlobal = false;
+      if (isAdmin) {
+        final choice = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.knowledgeScopeTitle),
+            content: Text(
+              l10n.knowledgeScopeBody,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.personalOption),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.globalOption),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.personalOption),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.globalOption),
-            ),
-          ],
-        ),
-      );
+        );
 
-      if (isGlobal == null) {
-        setState(() => _isUploading = false);
-        return;
+        if (choice == null) {
+          setState(() => _isUploading = false);
+          return;
+        }
+        isGlobal = choice;
       }
 
       // Create a knowledge snippet
@@ -217,6 +226,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     bool isGlobal = false;
+    final isAdmin = context.read<UserModel>().role == UserRole.admin;
     final l10n = AppLocalizations.of(context)!;
 
     showPremiumGeneralDialog(
@@ -242,19 +252,21 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
                 icon: Icons.info_outline_rounded,
                 maxLines: 5,
               ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: Text(
-                  l10n.makeGlobalLabel,
-                  style: const TextStyle(fontSize: 14),
+              if (isAdmin) ...[
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: Text(
+                    l10n.makeGlobalLabel,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    l10n.visibleToAllUsersSubtitle,
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                  value: isGlobal,
+                  onChanged: (val) => setDialogState(() => isGlobal = val),
                 ),
-                subtitle: Text(
-                  l10n.visibleToAllUsersSubtitle,
-                  style: const TextStyle(fontSize: 10),
-                ),
-                value: isGlobal,
-                onChanged: (val) => setDialogState(() => isGlobal = val),
-              ),
+              ],
             ],
           ),
           actions: [

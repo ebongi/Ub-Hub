@@ -598,7 +598,7 @@
   "pastQuestionDeletedMessage": "Question passée supprimée",
   "noAnswersUploadedYet": "Aucune réponse téléversée pour le moment",
   "verifiedAnswerFeeSubtitle": "Réponse vérifiée • {fee} XAF",
-  "onlyContributorsCanUploadMessage": "Seuls les contributeurs et administrateurs peuvent téléverser du contenu.",
+  "onlyContributorsCanUploadMessage": "Seuls les administrateurs peuvent téléverser du contenu.",
   "addMaterialTitle": "Ajouter un document",
   "shareResourcesSubtitle": "Partagez des ressources avec vos pairs",
   "categoryLabel": "Catégorie",

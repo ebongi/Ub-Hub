@@ -1553,7 +1553,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlyContributorsCanUploadMessage =>
-      'Only contributors and admins can upload content.';
+      'Only administrators can upload content.';
 
   @override
   String get addMaterialTitle => 'Add Material';
