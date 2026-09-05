@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/services/database.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/services/notification_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,6 +35,27 @@ class _NotificationsState extends State<Notifications> {
       _emailEnabled = prefs.getBool('email_notifications') ?? false;
       _studyRemindersEnabled = prefs.getBool('study_reminders') ?? false;
     });
+
+    // study_reminders_enabled on the server is what actually controls
+    // delivery (see send-study-reminder Edge Function), so it's the source
+    // of truth for this toggle — the local pref above is just a fast cache
+    // that can go stale across devices/reinstalls.
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid == null) return;
+      final row = await Supabase.instance.client
+          .from('profiles')
+          .select('study_reminders_enabled')
+          .eq('id', uid)
+          .maybeSingle();
+      final serverValue = row?['study_reminders_enabled'] as bool?;
+      if (serverValue != null && mounted) {
+        setState(() => _studyRemindersEnabled = serverValue);
+        await prefs.setBool('study_reminders', serverValue);
+      }
+    } catch (_) {
+      // Fall back to the local cache already applied above.
+    }
   }
 
   Future<void> _togglePush(bool value) async {
@@ -51,11 +74,18 @@ class _NotificationsState extends State<Notifications> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('study_reminders', value);
     setState(() => _studyRemindersEnabled = value);
-    
-    if (value) {
-      await NotificationService().scheduleStudyReminders();
-    } else {
-      await NotificationService().cancelStudyReminders();
+
+    // Server-side flag consumed by the send-study-reminder Edge Function,
+    // triggered daily by a Postgres cron job (see
+    // supabase/migrations/schedule_daily_study_reminder.sql) — this fires
+    // via Firebase push even when the app is backgrounded or fully closed,
+    // unlike a client-scheduled local notification.
+    try {
+      await DatabaseService(uid: Supabase.instance.client.auth.currentUser?.id)
+          .updateUserData(studyRemindersEnabled: value);
+    } catch (_) {
+      // Best-effort — the local prefs flag above still reflects the
+      // user's choice on this device even if this sync briefly fails.
     }
   }
 

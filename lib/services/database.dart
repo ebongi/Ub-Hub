@@ -38,6 +38,7 @@ class DatabaseService {
     String? department,
     String? bio,
     String? avatarUrl,
+    bool? studyRemindersEnabled,
   }) async {
     if (uid == null) return;
     return await _supabase.from('profiles').upsert({
@@ -50,6 +51,7 @@ class DatabaseService {
       if (department != null) 'department': department,
       if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (studyRemindersEnabled != null) 'study_reminders_enabled': studyRemindersEnabled,
     });
   }
 

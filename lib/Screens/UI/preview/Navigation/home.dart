@@ -81,7 +81,6 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
-    _checkStudyReminders();
     _maybeShowRatingPrompt();
 
     _loadRecentActivity();
@@ -225,13 +224,6 @@ class _HomeState extends State<Home> {
       setState(() {
         _recentActivity = activity;
       });
-    }
-  }
-
-  Future<void> _checkStudyReminders() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('study_reminders') ?? false) {
-      await NotificationService().scheduleStudyReminders();
     }
   }
 

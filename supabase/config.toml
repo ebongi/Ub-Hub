@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.send-push-notification]
 verify_jwt = true
+
+[functions.send-study-reminder]
+verify_jwt = true
