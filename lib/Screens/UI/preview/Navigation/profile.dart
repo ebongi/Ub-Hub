@@ -476,7 +476,9 @@ class _ProfileState extends State<Profile> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${level.pointsIntoLevel}/${level.pointsForNextLevel} to next level',
+                  level.isMaxLevel
+                      ? 'Max level reached!'
+                      : '${level.pointsIntoLevel}/${level.pointsForNextLevel} to next level',
                   style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.9), fontSize: 12),
                 ),
                 Row(
