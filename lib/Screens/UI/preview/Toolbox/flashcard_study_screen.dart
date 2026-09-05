@@ -28,6 +28,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   bool _flipped = false;
   int _masteredCount = 0;
   final List<Flashcard> _stillLearning = [];
+  // Cards graded "still learning" at least once, so the results screen can
+  // score first-attempt mastery — every card eventually lands in
+  // _masteredCount once mastered, so that count alone can't distinguish a
+  // clean run from one that took several passes.
+  final Set<Flashcard> _everMissed = {};
   bool _completed = false;
 
   @override
@@ -43,6 +48,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       _flipped = false;
       _masteredCount = 0;
       _stillLearning.clear();
+      _everMissed.clear();
       _completed = false;
     });
   }
@@ -52,6 +58,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       _masteredCount++;
     } else {
       _stillLearning.add(_queue[_index]);
+      _everMissed.add(_queue[_index]);
     }
 
     if (_index < _queue.length - 1) {
@@ -240,7 +247,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   Widget _buildResults(ThemeData theme, AppLocalizations l10n) {
     final total = widget.cards.length;
-    final pct = total == 0 ? 0.0 : (_masteredCount / total) * 100;
+    // Percent mastered on the first attempt — _masteredCount always equals
+    // total by the time results render (every card is eventually mastered
+    // to end the session), so it can't reflect how many passes it took.
+    final pct = total == 0 ? 0.0 : ((total - _everMissed.length) / total) * 100;
     final good = pct >= 50;
 
     return Padding(

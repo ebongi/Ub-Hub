@@ -128,57 +128,159 @@ async function sendFCMMessage(
 }
 
 // ---------------------------------------------------------------------------
-// Supabase recipient resolution helpers
+// Recipient resolution — every scope is resolved server-side from real DB
+// relationships. The client never supplies a raw recipient list; it only
+// says *what* it wants to notify (a room, a department, an institution,
+// everyone) and the server derives *who* that means, the same way RLS
+// already scopes the equivalent direct-DB-insert path
+// (add_department_notification_policy.sql / admin_management_policies.sql).
 // ---------------------------------------------------------------------------
 
 type SupabaseClientType = ReturnType<typeof createClient>;
 
-/** Return user IDs for a given room, excluding the sender. */
-async function resolveRoomRecipients(
+async function resolveDepartmentMemberIds(
   supabase: SupabaseClientType,
-  roomId: string,
-  excludeUserId?: string,
+  departmentId: string,
 ): Promise<string[]> {
-  // DM rooms are handled client-side; skip here.
-  if (roomId.startsWith("dm_")) return [];
+  const { data: dept } = await supabase
+    .from("departments")
+    .select("name")
+    .eq("id", departmentId)
+    .maybeSingle();
+  if (!dept?.name) return [];
 
+  const { data: rows } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("department", dept.name);
+  return (rows ?? []).map((r: { id: string }) => r.id);
+}
+
+async function resolveInstitutionMemberIds(
+  supabase: SupabaseClientType,
+  institutionId: string,
+): Promise<string[]> {
+  const { data: rows } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("institution_id", institutionId);
+  return (rows ?? []).map((r: { id: string }) => r.id);
+}
+
+async function resolveAllProfileIds(supabase: SupabaseClientType): Promise<string[]> {
+  const { data: rows } = await supabase.from("profiles").select("id");
+  return (rows ?? []).map((r: { id: string }) => r.id);
+}
+
+async function getCallerProfile(
+  supabase: SupabaseClientType,
+  callerUid: string,
+): Promise<{ department: string | null; role: string | null }> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("department, role")
+    .eq("id", callerUid)
+    .maybeSingle();
+  return { department: data?.department ?? null, role: data?.role ?? null };
+}
+
+/**
+ * Resolve the recipient set for a request, authorizing it against the
+ * caller's own identity along the way. Throws (caller returns 403) if the
+ * caller isn't allowed to notify the requested scope.
+ */
+async function resolveRecipients(
+  supabase: SupabaseClientType,
+  callerUid: string,
+  scope: string,
+  scopeId?: string,
+): Promise<string[]> {
   let ids: string[] = [];
 
-  if (roomId === "global") {
-    // Scope global room to the sender's institution so we don't blast every user.
-    let institutionId: string | null = null;
-    if (excludeUserId) {
-      const { data: sender } = await supabase
-        .from("profiles")
-        .select("institution_id")
-        .eq("id", excludeUserId)
+  switch (scope) {
+    case "room": {
+      // Group / department / global chat room — open to any authenticated
+      // sender, matching the existing "Authenticated users can send
+      // messages" RLS on the messages table itself.
+      if (!scopeId) throw new Error("scope_id (room id) is required for scope 'room'");
+      if (scopeId.startsWith("dm_")) {
+        throw new Error("Use scope 'dm' for direct-message rooms");
+      }
+      if (scopeId === "global") {
+        // Scope "global" to the caller's own institution so a global-room
+        // message doesn't blast every user in the database.
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("institution_id")
+          .eq("id", callerUid)
+          .maybeSingle();
+        const institutionId = profile?.institution_id ?? null;
+        ids = institutionId
+          ? await resolveInstitutionMemberIds(supabase, institutionId)
+          : await resolveAllProfileIds(supabase);
+      } else {
+        // Every other room id is a department UUID.
+        ids = await resolveDepartmentMemberIds(supabase, scopeId);
+      }
+      break;
+    }
+    case "dm": {
+      if (!scopeId) throw new Error("scope_id (room id) is required for scope 'dm'");
+      const parts = scopeId.split("_");
+      if (parts.length !== 3 || parts[0] !== "dm") {
+        throw new Error("Invalid dm room id");
+      }
+      const [, uidA, uidB] = parts;
+      if (callerUid !== uidA && callerUid !== uidB) {
+        throw new Error("Caller is not a participant of this DM room");
+      }
+      ids = [callerUid === uidA ? uidB : uidA];
+      break;
+    }
+    case "department": {
+      // New-content broadcasts (course/material) — mirrors "Users can
+      // notify their own department": caller may only broadcast to their
+      // own department.
+      if (!scopeId) throw new Error("scope_id (department id) is required for scope 'department'");
+      const caller = await getCallerProfile(supabase, callerUid);
+      const { data: dept } = await supabase
+        .from("departments")
+        .select("name")
+        .eq("id", scopeId)
         .maybeSingle();
-      institutionId = sender?.institution_id ?? null;
+      if (!dept?.name || caller.department !== dept.name) {
+        throw new Error("Caller may only broadcast to their own department");
+      }
+      ids = await resolveDepartmentMemberIds(supabase, scopeId);
+      break;
     }
-
-    const query = supabase.from("profiles").select("id");
-    const { data: rows } = institutionId
-      ? await query.eq("institution_id", institutionId)
-      : await query;
-    ids = (rows ?? []).map((r: { id: string }) => r.id);
-  } else {
-    // Treat roomId as a department UUID
-    const { data: dept } = await supabase
-      .from("departments")
-      .select("name")
-      .eq("id", roomId)
-      .maybeSingle();
-
-    if (dept?.name) {
-      const { data: rows } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("department", dept.name);
-      ids = (rows ?? []).map((r: { id: string }) => r.id);
+    case "institution": {
+      // Institution-wide broadcasts (new department created) — mirrors the
+      // fact that no non-admin institution-wide notifications policy
+      // exists; only admins may reach this scope.
+      if (!scopeId) throw new Error("scope_id (institution id) is required for scope 'institution'");
+      const caller = await getCallerProfile(supabase, callerUid);
+      if (caller.role !== "admin") {
+        throw new Error("Only admins may broadcast to scope 'institution'");
+      }
+      ids = await resolveInstitutionMemberIds(supabase, scopeId);
+      break;
     }
+    case "all": {
+      // Everyone (new news post) — mirrors "Admins can create notifications
+      // for anyone" / news_posts being admin-only.
+      const caller = await getCallerProfile(supabase, callerUid);
+      if (caller.role !== "admin") {
+        throw new Error("Only admins may broadcast to scope 'all'");
+      }
+      ids = await resolveAllProfileIds(supabase);
+      break;
+    }
+    default:
+      throw new Error(`Unknown scope: ${scope}`);
   }
 
-  return excludeUserId ? ids.filter((id) => id !== excludeUserId) : ids;
+  return ids.filter((id) => id !== callerUid);
 }
 
 // ---------------------------------------------------------------------------
@@ -193,25 +295,49 @@ serve(async (req: Request) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const projectId = Deno.env.get("FIREBASE_PROJECT_ID") ?? "facultyofscienceapp-neo";
 
+    // Authenticate the caller from their own JWT — never trust a client-
+    // supplied identity. Recipient resolution below is scoped to this uid.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userError } = await callerClient.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Invalid or expired session" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerUid = userData.user.id;
+
+    // Service-role client for recipient resolution / notification rows / FCM
+    // token lookups — the caller's identity has already been established
+    // above, so every subsequent query is scoped by `callerUid`, not by
+    // anything the request body claims.
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json();
     const {
-      room_id,
-      recipient_ids,
-      exclude_user_id,
+      scope,
+      scope_id,
       title,
       body: messageBody,
       type = "system",
       data = {},
       insert_notification = false,
     } = body as {
-      room_id?: string;
-      recipient_ids?: string[];
-      exclude_user_id?: string;
+      scope: "room" | "dm" | "department" | "institution" | "all";
+      scope_id?: string;
       title: string;
       body: string;
       type?: string;
@@ -219,15 +345,22 @@ serve(async (req: Request) => {
       insert_notification?: boolean;
     };
 
-    // 1. Resolve the list of recipient user IDs
-    let resolvedIds: string[] = recipient_ids ?? [];
+    if (!scope) {
+      return new Response(JSON.stringify({ error: "Missing scope" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (room_id) {
-      const roomIds = await resolveRoomRecipients(supabase, room_id, exclude_user_id);
-      // Merge: explicit ids + room-resolved ids (deduplicated)
-      resolvedIds = [...new Set([...resolvedIds, ...roomIds])];
-    } else if (exclude_user_id) {
-      resolvedIds = resolvedIds.filter((id) => id !== exclude_user_id);
+    // 1. Resolve (and authorize) the recipient set for this scope.
+    let resolvedIds: string[];
+    try {
+      resolvedIds = await resolveRecipients(supabase, callerUid, scope, scope_id);
+    } catch (e) {
+      return new Response(JSON.stringify({ error: (e as Error).message }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (resolvedIds.length === 0) {

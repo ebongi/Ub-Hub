@@ -60,11 +60,12 @@ class DatabaseService {
         .eq('id', uid!)
         .map((data) {
           if (data.isEmpty) {
-            final authUser = Supabase.instance.client.auth.currentUser;
-            final parsedName =
-                authUser?.userMetadata?['name'] ??
-                authUser?.email?.split('@').first;
-            return UserProfile(id: uid!, name: parsedName);
+            // Route through fromSupabase so createdAt falls back to
+            // auth.currentUser.createdAt (see profile.dart) instead of
+            // staying null — a null createdAt fails hasAccess's new-account
+            // grace window and wrongly paywalls a user whose profiles row
+            // hasn't been created yet (a signup-vs-profile-insert race).
+            return UserProfile.fromSupabase({'id': uid});
           }
           return UserProfile.fromSupabase(data.first);
         });
@@ -206,6 +207,45 @@ class DatabaseService {
     return rows.map((r) => r['id'] as String).toList();
   }
 
+  /// Fires the "new content" broadcast pair together — an in-app
+  /// notification row (visible in the recipient's notification list) plus
+  /// an FCM push (for background/terminated devices) — since neither
+  /// depends on the other's result. Each create-content method still
+  /// resolves its own [recipientIds] (the DB-row audience) and
+  /// [scope]/[scopeId] (the push audience, resolved server-side by the edge
+  /// function) since their broadcast semantics differ.
+  Future<void> _broadcastCreate({
+    required List<String> recipientIds,
+    required String title,
+    required String body,
+    required NotificationType type,
+    required String scope,
+    String? scopeId,
+    Map<String, dynamic>? data,
+    String? pushTitle,
+    Map<String, dynamic>? pushData,
+  }) async {
+    await Future.wait([
+      NotificationService().createBroadcastNotification(
+        recipientIds: recipientIds,
+        title: title,
+        body: body,
+        type: type,
+        data: data,
+        excludeUserId: uid,
+      ),
+      NotificationService().triggerPushViaEdgeFunction(
+        scope: scope,
+        scopeId: scopeId,
+        title: pushTitle ?? title,
+        body: body,
+        type: type,
+        data: pushData ?? data,
+        insertNotification: false,
+      ),
+    ]);
+  }
+
   // Create a new department
   Future<String> createDepartment(Department department) async {
     final data = await _supabase
@@ -228,23 +268,14 @@ class DatabaseService {
       final institutionId = school?['institution_id'] as String?;
       if (institutionId != null) {
         final recipientIds = await _getStudentIdsInInstitution(institutionId);
-        await NotificationService().createBroadcastNotification(
+        await _broadcastCreate(
           recipientIds: recipientIds,
           title: 'New Department',
           body: 'A new department "${department.name}" has been added.',
           type: NotificationType.department,
           data: {'departmentId': id},
-          excludeUserId: uid,
-        );
-        // Also push to background/terminated devices via FCM.
-        await NotificationService().triggerPushViaEdgeFunction(
-          recipientIds: recipientIds,
-          excludeUserId: uid,
-          title: 'New Department',
-          body: 'A new department "${department.name}" has been added.',
-          type: NotificationType.department,
-          data: {'departmentId': id},
-          insertNotification: false, // already inserted above
+          scope: 'institution',
+          scopeId: institutionId,
         );
       }
     } catch (_) {
@@ -276,24 +307,15 @@ class DatabaseService {
       final recipientIds = await _getStudentIdsInDepartment(
         course.departmentId,
       );
-      await NotificationService().createBroadcastNotification(
+      await _broadcastCreate(
         recipientIds: recipientIds,
         title: 'New Course',
         body:
             'A new course "${course.name}" (${course.code}) is now available.',
         type: NotificationType.course,
         data: {'courseId': id, 'departmentId': course.departmentId},
-        excludeUserId: uid,
-      );
-      // Also push to background/terminated devices via FCM.
-      await NotificationService().triggerPushViaEdgeFunction(
-        recipientIds: recipientIds,
-        excludeUserId: uid,
-        title: 'New Course',
-        body: 'A new course "${course.name}" (${course.code}) is now available.',
-        type: NotificationType.course,
-        data: {'courseId': id, 'departmentId': course.departmentId},
-        insertNotification: false, // already inserted above
+        scope: 'department',
+        scopeId: course.departmentId,
       );
     } catch (_) {
       // Silently ignore — see comment above.
@@ -398,7 +420,7 @@ class DatabaseService {
       // let a rejected broadcast fail the upload itself.
       try {
         final recipientIds = await _getStudentIdsInDepartment(departmentId);
-        await NotificationService().createBroadcastNotification(
+        await _broadcastCreate(
           recipientIds: recipientIds,
           title: 'New Material Uploaded',
           body: 'New content "${material.title}" has been uploaded.',
@@ -408,21 +430,14 @@ class DatabaseService {
             'courseId': material.courseId,
             'category': material.materialCategory,
           },
-          excludeUserId: uid,
-        );
-        // Also push to background/terminated devices via FCM.
-        await NotificationService().triggerPushViaEdgeFunction(
-          recipientIds: recipientIds,
-          excludeUserId: uid,
-          title: 'New Material Uploaded 📚',
-          body: 'New content "${material.title}" has been uploaded.',
-          type: NotificationType.material,
-          data: {
+          scope: 'department',
+          scopeId: departmentId,
+          pushTitle: 'New Material Uploaded 📚',
+          pushData: {
             'materialId': id,
             'courseId': material.courseId ?? '',
             'category': material.materialCategory,
           },
-          insertNotification: false, // already inserted above
         );
       } catch (_) {
         // Silently ignore — see comment above.
@@ -480,12 +495,14 @@ class DatabaseService {
   // realtime streams take a single filter, so we filter by the FK server-side
   // and drop anyone else's rows client-side — same shape as getBotKnowledge.
 
-  /// Decks the current user generated from a specific material.
-  Stream<List<FlashcardDeck>> getDecksForMaterial(String materialId) {
+  /// Decks the current user generated, filtered by a single foreign-key
+  /// column ('material_id', 'course_id', or 'department_id') — the three
+  /// public getters below only differ in which column they filter on.
+  Stream<List<FlashcardDeck>> _getDecksFiltered(String column, String value) {
     return _supabase
         .from('flashcard_decks')
         .stream(primaryKey: ['id'])
-        .eq('material_id', materialId)
+        .eq(column, value)
         .order('created_at', ascending: false)
         .map(
           (data) => data
@@ -494,36 +511,18 @@ class DatabaseService {
               .toList(),
         );
   }
+
+  /// Decks the current user generated from a specific material.
+  Stream<List<FlashcardDeck>> getDecksForMaterial(String materialId) =>
+      _getDecksFiltered('material_id', materialId);
 
   /// Decks the current user generated from any of a course's materials.
-  Stream<List<FlashcardDeck>> getDecksForCourse(String courseId) {
-    return _supabase
-        .from('flashcard_decks')
-        .stream(primaryKey: ['id'])
-        .eq('course_id', courseId)
-        .order('created_at', ascending: false)
-        .map(
-          (data) => data
-              .map((json) => FlashcardDeck.fromSupabase(json))
-              .where((d) => d.userId == uid)
-              .toList(),
-        );
-  }
+  Stream<List<FlashcardDeck>> getDecksForCourse(String courseId) =>
+      _getDecksFiltered('course_id', courseId);
 
   /// Decks the current user generated from any of a department's materials.
-  Stream<List<FlashcardDeck>> getDecksForDepartment(String departmentId) {
-    return _supabase
-        .from('flashcard_decks')
-        .stream(primaryKey: ['id'])
-        .eq('department_id', departmentId)
-        .order('created_at', ascending: false)
-        .map(
-          (data) => data
-              .map((json) => FlashcardDeck.fromSupabase(json))
-              .where((d) => d.userId == uid)
-              .toList(),
-        );
-  }
+  Stream<List<FlashcardDeck>> getDecksForDepartment(String departmentId) =>
+      _getDecksFiltered('department_id', departmentId);
 
   /// The cards of a deck, in study order.
   Future<List<Flashcard>> getCards(String deckId) async {
@@ -1084,26 +1083,6 @@ class DatabaseService {
         );
   }
 
-  /// Get latest university news
-  Stream<List<NewsArticle>> getUniversityNews({String? institutionId}) {
-    final query = _supabase.from('university_news').stream(primaryKey: ['id']);
-
-    if (institutionId != null) {
-      return query
-          .eq('institution_id', institutionId)
-          .order('created_at', ascending: false)
-          .map(
-            (data) =>
-                data.map((json) => NewsArticle.fromSupabase(json)).toList(),
-          );
-    }
-
-    return query
-        .order('created_at', ascending: false)
-        .map(
-          (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
-        );
-  }
   // ==================== Admin Management Methods ====================
 
   /// Search users for admin purposes (can search by name, matricule, or department)
@@ -1164,6 +1143,17 @@ class DatabaseService {
         .maybeSingle();
     if (data == null) return null;
     return NewsPost.fromSupabase(data);
+  }
+
+  /// Live view of a single post by id — lets a detail screen reflect
+  /// like_count/comment_count changes made by other users in real time,
+  /// instead of staying frozen at the snapshot passed in at navigation time.
+  Stream<NewsPost?> getNewsPostStream(String id) {
+    return _supabase
+        .from('news_posts')
+        .stream(primaryKey: ['id'])
+        .eq('id', id)
+        .map((data) => data.isEmpty ? null : NewsPost.fromSupabase(data.first));
   }
 
   /// The set of post ids the current user has liked. One cheap stream for the
@@ -1253,22 +1243,14 @@ class DatabaseService {
 
     try {
       final recipientIds = await _getAllProfileIds();
-      await NotificationService().createBroadcastNotification(
+      await _broadcastCreate(
         recipientIds: recipientIds,
         title: post.title,
         body: preview,
         type: NotificationType.news,
         data: {'newsPostId': id},
-        excludeUserId: uid,
-      );
-      await NotificationService().triggerPushViaEdgeFunction(
-        recipientIds: recipientIds,
-        excludeUserId: uid,
-        title: '📰 ${post.title}',
-        body: preview,
-        type: NotificationType.news,
-        data: {'newsPostId': id},
-        insertNotification: false, // already inserted above
+        scope: 'all',
+        pushTitle: '📰 ${post.title}',
       );
     } catch (_) {
       // Silently ignore — see contract above.

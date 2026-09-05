@@ -14,6 +14,21 @@ import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/storage_service.dart';
 import 'package:go_study/services/subscription_service.dart';
 
+/// Resolves the download fee for a material — shared between the price
+/// shown to the user (handleMaterialDownload) and the amount actually
+/// charged (_processDownloadPayment), so the two can never diverge.
+double _resolveDownloadFee(CourseMaterial material) {
+  if (material.price > 0) return material.price;
+  switch (material.materialCategory) {
+    case 'past_question':
+      return FapshiService.getPastQuestionDownloadFee();
+    case 'answer':
+      return FapshiService.getAnswerDownloadFee();
+    default:
+      return FapshiService.getDocumentDownloadFee();
+  }
+}
+
 /// Opens a material — a PDF is shown in-app via [PDFViewerScreen], anything
 /// else falls through to [handleMaterialDownload]. Shared across
 /// `DepartmentScreen`, `CourseDetailScreen`, and `SubjectScreen` so the
@@ -64,9 +79,7 @@ Future<void> handleMaterialDownload({
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch download link")),
-        );
+        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
       }
     }
     return;
@@ -76,15 +89,7 @@ Future<void> handleMaterialDownload({
   final formKey = GlobalKey<FormState>();
   bool isProcessing = false;
 
-  double fee = material.price;
-  if (fee <= 0) {
-    fee = FapshiService.getDocumentDownloadFee();
-    if (material.materialCategory == 'past_question') {
-      fee = FapshiService.getPastQuestionDownloadFee();
-    } else if (material.materialCategory == 'answer') {
-      fee = FapshiService.getAnswerDownloadFee();
-    }
-  }
+  final fee = _resolveDownloadFee(material);
 
   await showPremiumGeneralDialog(
     context: context,
@@ -225,15 +230,7 @@ Future<void> _processDownloadPayment({
   if (userId == null) throw "User not authenticated";
 
   final paymentRef = FapshiService.generatePaymentRef();
-  double amount = material.price;
-  if (amount <= 0) {
-    amount = FapshiService.getDocumentDownloadFee();
-    if (material.materialCategory == 'past_question') {
-      amount = FapshiService.getPastQuestionDownloadFee();
-    } else if (material.materialCategory == 'answer') {
-      amount = FapshiService.getAnswerDownloadFee();
-    }
-  }
+  final amount = _resolveDownloadFee(material);
   final formattedPhone = FapshiService.formatPhoneNumber(phoneNumber);
 
   final transaction = PaymentTransaction(

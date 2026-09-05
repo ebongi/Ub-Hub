@@ -329,26 +329,34 @@ class _LikeRow extends StatefulWidget {
 
 class _LikeRowState extends State<_LikeRow> {
   late final Stream<Set<String>> _likedStream = widget.db.myLikedNewsPostIds();
+  // Live view of this post's row so other users' likes update the count
+  // while this screen is open, instead of staying frozen at the widget.post
+  // snapshot passed in at navigation time.
+  late final Stream<NewsPost?> _postStream =
+      widget.db.getNewsPostStream(widget.post.id);
   bool _busy = false;
-  bool? _overrideLiked;
-  int _delta = 0;
+  bool _liked = false;
+  late int _likeCount = widget.post.likeCount;
 
-  Future<void> _toggle(bool current) async {
+  Future<void> _toggle() async {
     if (_busy) return;
+    final current = _liked;
     final next = !current;
     setState(() {
       _busy = true;
-      _overrideLiked = next;
-      _delta += next ? 1 : -1;
+      _liked = next;
+      _likeCount = (_likeCount + (next ? 1 : -1)).clamp(0, 1 << 31);
     });
     HapticFeedback.lightImpact();
     try {
       await widget.db.setNewsLike(widget.post.id, next);
     } catch (_) {
-      setState(() {
-        _overrideLiked = current;
-        _delta += next ? -1 : 1;
-      });
+      if (mounted) {
+        setState(() {
+          _liked = current;
+          _likeCount = (_likeCount + (next ? -1 : 1)).clamp(0, 1 << 31);
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -360,44 +368,54 @@ class _LikeRowState extends State<_LikeRow> {
     return StreamBuilder<Set<String>>(
       stream: _likedStream,
       initialData: const <String>{},
-      builder: (context, snap) {
-        final likedFromServer =
-            (snap.data ?? const <String>{}).contains(widget.post.id);
-        final liked = _overrideLiked ?? likedFromServer;
-        final count =
-            (widget.post.likeCount + _delta).clamp(0, 1 << 31);
-        return Row(
-          children: [
-            InkWell(
-              onTap: () => _toggle(liked),
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      liked
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: liked ? Colors.redAccent : theme.hintColor,
-                      size: 22,
+      builder: (context, likedSnap) {
+        // Re-sync with server truth when we're not mid-toggle — same
+        // guard as the feed card's didUpdateWidget, adapted for a stream
+        // that has no natural "widget updated" hook of its own.
+        if (!_busy) {
+          _liked = (likedSnap.data ?? const <String>{}).contains(widget.post.id);
+        }
+        return StreamBuilder<NewsPost?>(
+          stream: _postStream,
+          initialData: widget.post,
+          builder: (context, postSnap) {
+            if (!_busy) {
+              _likeCount = (postSnap.data ?? widget.post).likeCount;
+            }
+            return Row(
+              children: [
+                InkWell(
+                  onTap: _toggle,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$count',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w600,
-                        color: liked ? Colors.redAccent : theme.hintColor,
-                      ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _liked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: _liked ? Colors.redAccent : theme.hintColor,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$_likeCount',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w600,
+                            color: _liked ? Colors.redAccent : theme.hintColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );

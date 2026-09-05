@@ -2,8 +2,8 @@
 /// like and comment on. Backed by the `news_posts` / `news_comments` /
 /// `news_likes` tables (see supabase/migrations/create_news_posts.sql).
 ///
-/// Distinct from [NewsArticle] in campus_models.dart, which modelled the old
-/// scraped-news feed that this feature replaces.
+/// Replaces the old scraped-news feed (formerly `NewsArticle` in
+/// campus_models.dart, removed as dead code).
 library;
 
 class NewsPost {

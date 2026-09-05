@@ -63,6 +63,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final ValueNotifier<String> _streamingText = ValueNotifier<String>('');
   String? _streamingId;
 
+  /// The true accumulator for the in-flight response — updated on every
+  /// chunk, unlike [_streamingText] which is throttled to ~80ms for render
+  /// cost. Stopping mid-stream must finalize from this, not from
+  /// [_streamingText], or the tail since the last throttled flush is lost.
+  String _fullResponseBuffer = '';
+
   List<ChatMessage> get _messages => _currentSessionIndex != null
       ? _sessions[_currentSessionIndex!].messages
       : [];
@@ -153,7 +159,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _aiSubscription?.cancel();
     _aiSubscription = null;
     if (_streamingId != null) {
-      _finalizeStreamingMessage(text: _streamingText.value, isError: false);
+      _finalizeStreamingMessage(text: _fullResponseBuffer, isError: false);
     } else if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -269,7 +275,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _scrollToBottom();
 
     try {
-      String fullResponse = "";
+      _fullResponseBuffer = "";
       // markdown_widget re-parses the ENTIRE accumulated text from scratch on
       // every rebuild (no memoization) and rebuilds every Math.tex with it.
       // Push the growing text through [_streamingText] (only the streaming
@@ -302,11 +308,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 return;
               }
 
-              fullResponse += chunk;
+              _fullResponseBuffer += chunk;
               final now = DateTime.now();
               if (now.difference(lastUiUpdate) < uiUpdateInterval) return;
               lastUiUpdate = now;
-              _streamingText.value = fullResponse;
+              _streamingText.value = _fullResponseBuffer;
               _scrollToBottom();
             },
             onError: (e) {
@@ -321,7 +327,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             onDone: () {
               if (!mounted) return;
               _aiSubscription = null;
-              _finalizeStreamingMessage(text: fullResponse, isError: false);
+              _finalizeStreamingMessage(text: _fullResponseBuffer, isError: false);
             },
           );
     } catch (e) {

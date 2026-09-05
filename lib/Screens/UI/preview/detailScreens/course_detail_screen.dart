@@ -39,6 +39,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   UserProfile? _userProfile;
 
   late final Stream<List<CourseMaterial>> _materialStream;
+  late final Stream<List<FlashcardDeck>> _decksStream;
   final List<CourseMaterial> _optimisticMaterials = [];
 
   LanguageTrack? _languageTrack;
@@ -51,6 +52,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     _dbService = DatabaseService(uid: currentUser?.id);
 
     _materialStream = _dbService.getCourseMaterials(widget.course.id);
+    _decksStream = _dbService.getDecksForCourse(widget.course.id);
 
     _languageTrack = LanguageTrack.fromCourseCode(widget.course.code);
     if (_languageTrack != null) {
@@ -310,7 +312,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   Widget _buildDecksSection() {
     final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<FlashcardDeck>>(
-      stream: _dbService.getDecksForCourse(widget.course.id),
+      stream: _decksStream,
       builder: (context, snapshot) {
         final decks = snapshot.data ?? const <FlashcardDeck>[];
         if (decks.isEmpty) return const SizedBox.shrink();

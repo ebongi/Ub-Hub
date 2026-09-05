@@ -53,6 +53,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   late final Stream<List<Course>> _courseStream;
   late final Stream<List<CourseMaterial>> _materialStream;
+  late final Stream<List<FlashcardDeck>> _decksStream;
   final List<Course> _optimisticCourses = [];
   final List<CourseMaterial> _optimisticMaterials = [];
 
@@ -65,6 +66,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
     _courseStream = _dbService.getCoursesForDepartment(widget.departmentId);
     _materialStream = _dbService.getDepartmentMaterials(widget.departmentId);
+    _decksStream = _dbService.getDecksForDepartment(widget.departmentId);
     _loadDepartment();
 
     _tabController.addListener(() {
@@ -629,7 +631,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   Widget _buildDecksSection() {
     final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<FlashcardDeck>>(
-      stream: _dbService.getDecksForDepartment(widget.departmentId),
+      stream: _decksStream,
       builder: (context, snapshot) {
         final decks = snapshot.data ?? const <FlashcardDeck>[];
         if (decks.isEmpty) return const SizedBox.shrink();

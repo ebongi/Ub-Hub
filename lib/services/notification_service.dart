@@ -617,11 +617,14 @@ class NotificationService {
 
   /// Trigger a Firebase Cloud Messaging push for background / terminated devices.
   ///
-  /// Provide either:
-  ///   • [recipientIds] — explicit list of user IDs to notify, OR
-  ///   • [roomId]       — the chat room whose members the Edge Function resolves
+  /// The Edge Function resolves (and authorizes) the actual recipient list
+  /// itself from [scope]/[scopeId] — the caller's own verified JWT identity,
+  /// never a client-supplied id list, decides who the request is allowed to
+  /// reach. Valid scopes: 'room' (scopeId = room id; 'global' or a
+  /// department id), 'dm' (scopeId = the `dm_<uid>_<uid>` room id), 'department'
+  /// (scopeId = department id — caller must belong to it), 'institution'
+  /// (scopeId = institution id — admin only), 'all' (admin only).
   ///
-  /// [excludeUserId] is always stripped from the final recipient set.
   /// [insertNotification] tells the Edge Function whether to also write rows to
   /// the `notifications` table (set false when [createBroadcastNotification] has
   /// already done that).
@@ -632,9 +635,8 @@ class NotificationService {
     required String title,
     required String body,
     required NotificationType type,
-    List<String>? recipientIds,
-    String? roomId,
-    String? excludeUserId,
+    required String scope,
+    String? scopeId,
     Map<String, dynamic>? data,
     bool insertNotification = false,
   }) async {
@@ -642,10 +644,8 @@ class NotificationService {
       await _supabase.functions.invoke(
         'send-push-notification',
         body: {
-          if (recipientIds != null && recipientIds.isNotEmpty)
-            'recipient_ids': recipientIds,
-          if (roomId != null) 'room_id': roomId,
-          if (excludeUserId != null) 'exclude_user_id': excludeUserId,
+          'scope': scope,
+          if (scopeId != null) 'scope_id': scopeId,
           'title': title,
           'body': body,
           'type': type.name,

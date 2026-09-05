@@ -63,6 +63,13 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
   bool _isLoading = false;
   StreamSubscription? _aiSubscription;
 
+  /// The true accumulator for the in-flight response, and the id of the
+  /// placeholder message it belongs to — both updated on every chunk, so
+  /// stopping mid-stream can finalize the message instead of leaving it
+  /// frozen at whatever the last throttled (~80ms) setState wrote.
+  String _fullResponseBuffer = '';
+  String? _streamingMessageId;
+
   bool _isDownloading = false;
   int _downloadPercent = 0;
   CancelToken? _cancelToken;
@@ -289,7 +296,25 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
 
   void _stopResponse() {
     _aiSubscription?.cancel();
-    setState(() => _isLoading = false);
+    _aiSubscription = null;
+    final streamingId = _streamingMessageId;
+    if (streamingId != null) {
+      setState(() {
+        final index = _messages.indexWhere((m) => m.id == streamingId);
+        if (index != -1) {
+          _messages[index] = _GemmaMessage(
+            id: streamingId,
+            text: _fullResponseBuffer,
+            isUser: false,
+            createdAt: _messages[index].createdAt,
+          );
+        }
+        _isLoading = false;
+        _streamingMessageId = null;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -309,14 +334,15 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
     });
     _scrollToBottom();
 
-    var fullResponse = '';
+    _fullResponseBuffer = '';
+    _streamingMessageId = placeholder.id;
     var lastUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
     const uiUpdateInterval = Duration(milliseconds: 80);
 
     _aiSubscription = service.streamMessage(text).listen(
       (chunk) {
         if (!mounted) return;
-        fullResponse += chunk;
+        _fullResponseBuffer += chunk;
         final now = DateTime.now();
         if (now.difference(lastUiUpdate) < uiUpdateInterval) return;
         lastUiUpdate = now;
@@ -325,7 +351,7 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
           if (index != -1) {
             _messages[index] = _GemmaMessage(
               id: placeholder.id,
-              text: fullResponse,
+              text: _fullResponseBuffer,
               isUser: false,
               createdAt: placeholder.createdAt,
             );
@@ -350,6 +376,7 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
             _messages.add(errorMessage);
           }
           _isLoading = false;
+          _streamingMessageId = null;
         });
       },
       onDone: () {
@@ -359,12 +386,13 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
           if (index != -1) {
             _messages[index] = _GemmaMessage(
               id: placeholder.id,
-              text: fullResponse,
+              text: _fullResponseBuffer,
               isUser: false,
               createdAt: placeholder.createdAt,
             );
           }
           _isLoading = false;
+          _streamingMessageId = null;
         });
         _aiSubscription = null;
       },

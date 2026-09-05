@@ -41,34 +41,3 @@ class CampusLocation {
     };
   }
 }
-
-class NewsArticle {
-  final String id;
-  final String title;
-  final String content;
-  final String source; // 'official', 'student_union', 'department'
-  final DateTime date;
-  final String? imageUrl;
-
-  NewsArticle({
-    this.id = '',
-    required this.title,
-    required this.content,
-    required this.source,
-    required this.date,
-    this.imageUrl,
-  });
-
-  factory NewsArticle.fromSupabase(Map<String, dynamic> json) {
-    return NewsArticle(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      content: json['content'] ?? '',
-      source: json['source'] ?? 'official',
-      date: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      imageUrl: json['image_url'],
-    );
-  }
-}

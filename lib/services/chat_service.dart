@@ -119,6 +119,19 @@ class ChatService {
             data: {'roomId': roomId},
             showLocal: true,
           );
+
+          // Also push to the recipient's background/terminated device — the
+          // DB row above only shows a local alert if their app is already
+          // open with an active realtime subscription.
+          await NotificationService().triggerPushViaEdgeFunction(
+            scope: 'dm',
+            scopeId: roomId,
+            title: 'New message from ${senderName ?? "Someone"}',
+            body: content,
+            type: NotificationType.message,
+            data: {'roomId': roomId},
+            insertNotification: false, // already inserted above
+          );
         }
       } else {
         // ── Group / department / global room ───────────────────────────────
@@ -126,8 +139,8 @@ class ChatService {
         // We do NOT insert notification rows here (group chats are read via
         // the chat stream, not the notifications list).
         await NotificationService().triggerPushViaEdgeFunction(
-          roomId: roomId,
-          excludeUserId: user.id,
+          scope: 'room',
+          scopeId: roomId,
           title: senderName ?? 'New Message',
           body: content,
           type: NotificationType.message,
