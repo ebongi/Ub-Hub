@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,7 +18,6 @@ import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/school.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/services/marketplace_listing.dart';
-import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/news_post.dart';
 import 'package:go_study/services/flashcard_model.dart';
 import 'package:go_study/services/points_service.dart';
@@ -51,7 +51,8 @@ class DatabaseService {
       if (department != null) 'department': department,
       if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
-      if (studyRemindersEnabled != null) 'study_reminders_enabled': studyRemindersEnabled,
+      if (studyRemindersEnabled != null)
+        'study_reminders_enabled': studyRemindersEnabled,
     });
   }
 
@@ -503,7 +504,7 @@ class DatabaseService {
   //
   // Decks are private to their creator (RLS: auth.uid() = user_id). Supabase
   // realtime streams take a single filter, so we filter by the FK server-side
-  // and drop anyone else's rows client-side — same shape as getBotKnowledge.
+  // and drop anyone else's rows client-side.
 
   /// Decks the current user generated, filtered by a single foreign-key
   /// column ('material_id', 'course_id', or 'department_id') — the three
@@ -730,7 +731,10 @@ class DatabaseService {
   /// `payment_transactions` row (owned by this user) that the server has
   /// already confirmed as `status='success'` — enforced by the
   /// `grant_subscription` RPC, so this can't be forged by a direct write.
-  Future<void> upgradeSubscription(SubscriptionTier tier, {required String paymentRef}) async {
+  Future<void> upgradeSubscription(
+    SubscriptionTier tier, {
+    required String paymentRef,
+  }) async {
     if (uid == null) return;
 
     final result = await _supabase.rpc(
@@ -770,14 +774,21 @@ class DatabaseService {
       body:
           'Your free App Plan month is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
       type: NotificationType.subscription,
-      data: {'tier': SubscriptionTier.monthly.name, 'expiry': expiry.toIso8601String(), 'trial': 'true'},
+      data: {
+        'tier': SubscriptionTier.monthly.name,
+        'expiry': expiry.toIso8601String(),
+        'trial': 'true',
+      },
     );
   }
 
   /// Activate the separately-purchased Unlimited AI subscription (always
   /// paid, never free). Independent of subscription_tier/subscription_expiry
   /// (the App Plan). Requires `paymentRef` — see [upgradeSubscription].
-  Future<void> purchaseAISubscription(SubscriptionTier tier, {required String paymentRef}) async {
+  Future<void> purchaseAISubscription(
+    SubscriptionTier tier, {
+    required String paymentRef,
+  }) async {
     if (uid == null) return;
 
     final result = await _supabase.rpc(
@@ -788,9 +799,13 @@ class DatabaseService {
 
     await NotificationService().createNotification(
       title: 'AI Subscription Activated',
-      body: 'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
+      body:
+          'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
       type: NotificationType.subscription,
-      data: {'ai_subscription_expiry': expiry.toIso8601String(), 'tier': tier.name},
+      data: {
+        'ai_subscription_expiry': expiry.toIso8601String(),
+        'tier': tier.name,
+      },
     );
   }
 
@@ -805,7 +820,10 @@ class DatabaseService {
   /// pending `payment_transactions` row right after `collectPayment`
   /// returns one, so the fapshi-proxy edge function can later find this row
   /// by that id alone when it reconciles a confirmed payment server-side.
-  Future<void> attachPaymentProviderRef(String paymentRef, String providerTransId) async {
+  Future<void> attachPaymentProviderRef(
+    String paymentRef,
+    String providerTransId,
+  ) async {
     if (uid == null) return;
     await _supabase
         .from('payment_transactions')
@@ -1022,27 +1040,37 @@ class DatabaseService {
   // ==================== Custom Bot Knowledge Methods ====================
 
   /// Get all knowledge entries for a user (including global ones)
-  Stream<List<BotKnowledge>> getBotKnowledge(String userId) {
-    return _supabase
-        .from('bot_knowledge')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
-        .map((data) {
-          return data
-              .map((json) => BotKnowledge.fromSupabase(json))
-              .where((k) => k.userId == userId || k.isGlobal)
-              .toList();
-        });
+  static const String _botKnowledgeBucket = 'bot_knowledge';
+  static const String _botKnowledgeFileName = 'knowledge.txt';
+
+  /// The single shared knowledge document every user's UB Support Bot chat
+  /// reads from — one file in Storage, not a per-user table, so everyone
+  /// gets identical answers. Returns '' if it hasn't been uploaded yet.
+  Future<String> getSharedBotKnowledge() async {
+    try {
+      final bytes = await _supabase.storage
+          .from(_botKnowledgeBucket)
+          .download(_botKnowledgeFileName);
+      return utf8.decode(bytes);
+    } on StorageException catch (e) {
+      if (e.statusCode == '404') return '';
+      rethrow;
+    }
   }
 
-  /// Add a new knowledge entry
-  Future<void> addBotKnowledge(BotKnowledge knowledge) async {
-    await _supabase.from('bot_knowledge').insert(knowledge.toSupabase());
-  }
-
-  /// Delete a knowledge entry
-  Future<void> deleteBotKnowledge(String id) async {
-    await _supabase.from('bot_knowledge').delete().eq('id', id);
+  /// Admin-only: replace the shared knowledge document. RLS on
+  /// storage.objects enforces is_admin() for this bucket server-side.
+  Future<void> updateSharedBotKnowledge(String content) async {
+    await _supabase.storage
+        .from(_botKnowledgeBucket)
+        .uploadBinary(
+          _botKnowledgeFileName,
+          Uint8List.fromList(utf8.encode(content)),
+          fileOptions: const FileOptions(
+            contentType: 'text/plain',
+            upsert: true,
+          ),
+        );
   }
 
   // ==================== Grade Tracking / Predictor Methods ====================
@@ -1095,25 +1123,44 @@ class DatabaseService {
 
   // ==================== Admin Management Methods ====================
 
+  /// Escapes a value for safe embedding inside a PostgREST `.or()` filter
+  /// string. Wrapping in double quotes (per PostgREST's embedded-filter
+  /// syntax) stops characters like `,`, `.`, `(` and `)` in user-typed
+  /// search text from being parsed as filter/column separators.
+  String _sanitizeIlikeValue(String value) {
+    return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+  }
+
   /// Search users for admin purposes (can search by name, matricule, or department)
   Future<List<UserProfile>> adminSearchUsers(String query) async {
     if (query.trim().isEmpty) return [];
 
+    final safeQuery = _sanitizeIlikeValue(query);
+    final results = await _supabase
+        .from('profiles')
+        .select()
+        .or(
+          'name.ilike."%$safeQuery%",matricule.ilike."%$safeQuery%",department.ilike."%$safeQuery%"',
+        )
+        .limit(30);
+
+    return (results as List)
+        .map((json) => UserProfile.fromSupabase(json))
+        .toList();
+  }
+
+  /// Total number of registered user profiles, for the admin dashboard's
+  /// stat card.
+  Future<int> getTotalUsersCount() async {
     try {
-      final results = await _supabase
+      final response = await _supabase
           .from('profiles')
           .select()
-          .or(
-            'name.ilike.%$query%,matricule.ilike.%$query%,department.ilike.%$query%',
-          )
-          .limit(30);
-
-      return (results as List)
-          .map((json) => UserProfile.fromSupabase(json))
-          .toList();
+          .count(CountOption.exact);
+      return response.count;
     } catch (e) {
-      print('Error searching users: $e');
-      return [];
+      print('Error fetching total users count: $e');
+      return 0;
     }
   }
 
@@ -1141,7 +1188,9 @@ class DatabaseService {
         .from('news_posts')
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
-        .map((data) => data.map((json) => NewsPost.fromSupabase(json)).toList());
+        .map(
+          (data) => data.map((json) => NewsPost.fromSupabase(json)).toList(),
+        );
   }
 
   /// One post by id (used by a push-notification deep link / refresh).
@@ -1214,15 +1263,17 @@ class DatabaseService {
     String? authorAvatarUrl,
   }) async {
     if (uid == null) return;
-    await _supabase.from('news_comments').insert(
-      NewsComment(
-        postId: postId,
-        userId: uid!,
-        authorName: authorName,
-        authorAvatarUrl: authorAvatarUrl,
-        content: content,
-      ).toSupabase(),
-    );
+    await _supabase
+        .from('news_comments')
+        .insert(
+          NewsComment(
+            postId: postId,
+            userId: uid!,
+            authorName: authorName,
+            authorAvatarUrl: authorAvatarUrl,
+            content: content,
+          ).toSupabase(),
+        );
   }
 
   Future<void> deleteNewsComment(String id) async {

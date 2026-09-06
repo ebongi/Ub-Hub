@@ -331,10 +331,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get termsOfServiceTitle => 'Conditions d\'utilisation';
 
   @override
-  String get termsOfServiceSubtitle => 'Les règles d\'utilisation de GO Study';
+  String get termsOfServiceSubtitle => 'Les règles d\'utilisation de GoStudy';
 
   @override
-  String get supportGoStudyTitle => 'Soutenir Go Study';
+  String get supportGoStudyTitle => 'Soutenir GoStudy';
 
   @override
   String get supportGoStudySubtitle =>
@@ -1394,6 +1394,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get roleLabelContributor => 'Contributeur';
 
   @override
+  String get roleLabelViewer => 'Visiteur';
+
+  @override
   String promoteToRoleTitle(String role) {
     return 'Promouvoir en $role';
   }
@@ -1402,6 +1405,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String promoteUserConfirmBody(String name, String role) {
     return 'Promouvoir $name en $role ?';
   }
+
+  @override
+  String demoteToRoleTitle(String role) {
+    return 'Rétrograder en $role';
+  }
+
+  @override
+  String demoteUserConfirmBody(String name, String role) {
+    return 'Rétrograder $name en $role ?';
+  }
+
+  @override
+  String get demoteButton => 'Rétrograder';
 
   @override
   String get thisUserFallback => 'cet utilisateur';
@@ -1413,6 +1429,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String userIsNowRoleLabel(String name, String role) {
     return '$name est maintenant $role';
   }
+
+  @override
+  String get searchResultsErrorTitle => 'Impossible de charger les résultats';
+
+  @override
+  String get totalUsersStatLabel => 'Utilisateurs';
+
+  @override
+  String get totalDepartmentsStatLabel => 'Départements';
 
   @override
   String get globalChatTitle => 'Discussion globale';
@@ -1428,7 +1453,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get globalChatDescription =>
-      'Il s\'agit d\'un salon de discussion en temps réel pour tous les utilisateurs de GO-Study spécifique à ce cours. Veuillez être respectueux et suivre les règles de la communauté.';
+      'Il s\'agit d\'un salon de discussion en temps réel pour tous les utilisateurs de GoStudy spécifique à ce cours. Veuillez être respectueux et suivre les règles de la communauté.';
 
   @override
   String get gotItButton => 'Compris';
@@ -1947,7 +1972,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appDescriptionBody =>
-      'GO-Study est votre compagnon académique ultime, spécialement conçu pour la communauté étudiante de l\'Université de Buea. Des plans d\'étude pilotés par IA aux calendriers d\'examens en temps réel et à la collaboration mondiale entre pairs, nous vous donnons les outils techniques nécessaires pour naviguer votre parcours académique avec excellence et facilité.';
+      'GoStudy est votre compagnon académique ultime, spécialement conçu pour la communauté étudiante de l\'Université de Buea. Des plans d\'étude pilotés par IA aux calendriers d\'examens en temps réel et à la collaboration mondiale entre pairs, nous vous donnons les outils techniques nécessaires pour naviguer votre parcours académique avec excellence et facilité.';
 
   @override
   String versionLabel(String version) {
@@ -1966,7 +1991,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aboutDialogDescription =>
-      'GO-Study est un compagnon académique conçu pour les étudiants de l\'Université de Buea. Il offre un accès facile aux ressources, à l\'assistance d\'étude par IA, à la gestion des cours et à des outils de collaboration entre pairs pour vous aider à exceller dans votre parcours académique.';
+      'GoStudy est un compagnon académique conçu pour les étudiants de l\'Université de Buea. Il offre un accès facile aux ressources, à l\'assistance d\'étude par IA, à la gestion des cours et à des outils de collaboration entre pairs pour vous aider à exceller dans votre parcours académique.';
 
   @override
   String get eventsCalendarTitle => 'Calendrier des événements';

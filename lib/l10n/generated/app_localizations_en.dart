@@ -327,10 +327,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termsOfServiceTitle => 'Terms of Service';
 
   @override
-  String get termsOfServiceSubtitle => 'The rules for using GO Study';
+  String get termsOfServiceSubtitle => 'The rules for using GoStudy';
 
   @override
-  String get supportGoStudyTitle => 'Support Go Study';
+  String get supportGoStudyTitle => 'Support GoStudy';
 
   @override
   String get supportGoStudySubtitle =>
@@ -1374,6 +1374,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roleLabelContributor => 'Contributor';
 
   @override
+  String get roleLabelViewer => 'Viewer';
+
+  @override
   String promoteToRoleTitle(String role) {
     return 'Promote to $role';
   }
@@ -1382,6 +1385,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String promoteUserConfirmBody(String name, String role) {
     return 'Promote $name to $role?';
   }
+
+  @override
+  String demoteToRoleTitle(String role) {
+    return 'Demote to $role';
+  }
+
+  @override
+  String demoteUserConfirmBody(String name, String role) {
+    return 'Demote $name to $role?';
+  }
+
+  @override
+  String get demoteButton => 'Demote';
 
   @override
   String get thisUserFallback => 'this user';
@@ -1393,6 +1409,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String userIsNowRoleLabel(String name, String role) {
     return '$name is now a $role';
   }
+
+  @override
+  String get searchResultsErrorTitle => 'Couldn\'t load results';
+
+  @override
+  String get totalUsersStatLabel => 'Total Users';
+
+  @override
+  String get totalDepartmentsStatLabel => 'Departments';
 
   @override
   String get globalChatTitle => 'Global Chat';
@@ -1408,7 +1433,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalChatDescription =>
-      'This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.';
+      'This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.';
 
   @override
   String get gotItButton => 'Got it';
@@ -1919,7 +1944,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescriptionBody =>
-      'GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.';
+      'GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.';
 
   @override
   String versionLabel(String version) {
@@ -1938,7 +1963,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutDialogDescription =>
-      'GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.';
+      'GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.';
 
   @override
   String get eventsCalendarTitle => 'Events Calendar';

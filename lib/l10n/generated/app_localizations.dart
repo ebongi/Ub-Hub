@@ -695,13 +695,13 @@ abstract class AppLocalizations {
   /// No description provided for @termsOfServiceSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The rules for using GO Study'**
+  /// **'The rules for using GoStudy'**
   String get termsOfServiceSubtitle;
 
   /// No description provided for @supportGoStudyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Support Go Study'**
+  /// **'Support GoStudy'**
   String get supportGoStudyTitle;
 
   /// No description provided for @supportGoStudySubtitle.
@@ -2624,6 +2624,12 @@ abstract class AppLocalizations {
   /// **'Contributor'**
   String get roleLabelContributor;
 
+  /// No description provided for @roleLabelViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer'**
+  String get roleLabelViewer;
+
   /// No description provided for @promoteToRoleTitle.
   ///
   /// In en, this message translates to:
@@ -2635,6 +2641,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Promote {name} to {role}?'**
   String promoteUserConfirmBody(String name, String role);
+
+  /// No description provided for @demoteToRoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote to {role}'**
+  String demoteToRoleTitle(String role);
+
+  /// No description provided for @demoteUserConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote {name} to {role}?'**
+  String demoteUserConfirmBody(String name, String role);
+
+  /// No description provided for @demoteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote'**
+  String get demoteButton;
 
   /// No description provided for @thisUserFallback.
   ///
@@ -2653,6 +2677,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} is now a {role}'**
   String userIsNowRoleLabel(String name, String role);
+
+  /// No description provided for @searchResultsErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load results'**
+  String get searchResultsErrorTitle;
+
+  /// No description provided for @totalUsersStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Users'**
+  String get totalUsersStatLabel;
+
+  /// No description provided for @totalDepartmentsStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments'**
+  String get totalDepartmentsStatLabel;
 
   /// No description provided for @globalChatTitle.
   ///
@@ -2681,7 +2723,7 @@ abstract class AppLocalizations {
   /// No description provided for @globalChatDescription.
   ///
   /// In en, this message translates to:
-  /// **'This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.'**
+  /// **'This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.'**
   String get globalChatDescription;
 
   /// No description provided for @gotItButton.
@@ -3617,7 +3659,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescriptionBody.
   ///
   /// In en, this message translates to:
-  /// **'GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.'**
+  /// **'GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.'**
   String get appDescriptionBody;
 
   /// No description provided for @versionLabel.
@@ -3647,7 +3689,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutDialogDescription.
   ///
   /// In en, this message translates to:
-  /// **'GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.'**
+  /// **'GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.'**
   String get aboutDialogDescription;
 
   /// No description provided for @eventsCalendarTitle.

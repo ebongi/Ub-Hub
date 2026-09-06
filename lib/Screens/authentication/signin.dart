@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/app_wordmark.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
@@ -185,47 +186,7 @@ class _BrandChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: regIndigo(context),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(
-            Icons.school_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text.rich(
-          TextSpan(
-            text: 'Go',
-            style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: regIndigo(context),
-              letterSpacing: 0.2,
-            ),
-            children: [
-              TextSpan(
-                text: 'Study',
-                style: GoogleFonts.outfit(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w400,
-                  color: isDark ? Colors.white.withOpacity(0.8) : regSlate700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return const AppWordmark(fontSize: 22);
   }
 }
 

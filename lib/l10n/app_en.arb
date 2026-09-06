@@ -118,8 +118,8 @@
   "privacyPolicyTitle": "Privacy Policy",
   "privacyPolicySubtitle": "How we protect and use your data",
   "termsOfServiceTitle": "Terms of Service",
-  "termsOfServiceSubtitle": "The rules for using GO Study",
-  "supportGoStudyTitle": "Support Go Study",
+  "termsOfServiceSubtitle": "The rules for using GoStudy",
+  "supportGoStudyTitle": "Support GoStudy",
   "supportGoStudySubtitle": "Sponsor development or volunteer to help",
   "supportOptionsDialogBody": "Choose how you'd like to support development.",
   "chatOnWhatsAppButton": "Chat on WhatsApp",
@@ -536,7 +536,6 @@
   "roleAdmin": "ADMIN",
   "roleContributor": "CONTRIBUTOR",
   "roleViewer": "VIEWER",
-  "adminDashboardTitle": "Admin Dashboard",
   "adminAccessRequired": "Admin access required.",
   "manageDepartmentsTitle": "Manage departments",
   "manageUsersTitle": "Manage users",
@@ -558,6 +557,7 @@
   "noMatriculeFallback": "No matricule",
   "roleLabelAdmin": "Admin",
   "roleLabelContributor": "Contributor",
+  "roleLabelViewer": "Viewer",
   "promoteToRoleTitle": "Promote to {role}",
   "@promoteToRoleTitle": {
     "placeholders": { "role": { "type": "String" } }
@@ -566,17 +566,29 @@
   "@promoteUserConfirmBody": {
     "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
   },
+  "demoteToRoleTitle": "Demote to {role}",
+  "@demoteToRoleTitle": {
+    "placeholders": { "role": { "type": "String" } }
+  },
+  "demoteUserConfirmBody": "Demote {name} to {role}?",
+  "@demoteUserConfirmBody": {
+    "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
+  },
+  "demoteButton": "Demote",
   "thisUserFallback": "this user",
   "promoteButton": "Promote",
   "userIsNowRoleLabel": "{name} is now a {role}",
   "@userIsNowRoleLabel": {
     "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
   },
+  "searchResultsErrorTitle": "Couldn't load results",
+  "totalUsersStatLabel": "Total Users",
+  "totalDepartmentsStatLabel": "Departments",
   "globalChatTitle": "Global Chat",
   "activeNowLabel": "Active Now",
   "aboutGlobalChatLabel": "About Global Chat",
   "connectWithPeersSubtitle": "Connect with your peers",
-  "globalChatDescription": "This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.",
+  "globalChatDescription": "This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.",
   "gotItButton": "Got it",
   "errorLoadingMessages": "Error: {error}",
   "@errorLoadingMessages": {
@@ -775,7 +787,7 @@
   "pleaseSelectLevel": "Please select a level",
   "userNotAuthenticatedMessage": "User not authenticated",
   "aboutAppTitle": "About App",
-  "appDescriptionBody": "GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
+  "appDescriptionBody": "GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
   "versionLabel": "Version {version}",
   "@versionLabel": {
     "placeholders": { "version": { "type": "String" } }
@@ -783,7 +795,7 @@
   "licensesLegalTitle": "Licenses & Legal",
   "openSourceLibrariesSubtitle": "Open source libraries and legal info",
   "appLegaleseCopyright": "© 2026 Jovial Studio",
-  "aboutDialogDescription": "GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
+  "aboutDialogDescription": "GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
   "eventsCalendarTitle": "Events Calendar",
   "eventIdLabel": "Event ID",
   "eventNameLabel": "Event Name",

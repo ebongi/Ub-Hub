@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/app_wordmark.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -108,15 +109,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Text(
-                        'GO Study',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      const AppWordmark(fontSize: 14),
                       const Spacer(),
                       TextButton(
                         onPressed: _skip,

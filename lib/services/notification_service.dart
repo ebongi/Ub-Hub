@@ -36,7 +36,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     const NotificationDetails(
       android: AndroidNotificationDetails(
         'go_study_alerts',
-        'GO Study Alerts',
+        'GoStudy Alerts',
         importance: Importance.max,
         priority: Priority.high,
       ),
@@ -156,19 +156,19 @@ class NotificationService {
   static const List<AndroidNotificationChannel> _androidChannels = [
     AndroidNotificationChannel(
       'go_study_alerts',
-      'GO Study Alerts',
+      'GoStudy Alerts',
       description: 'General alerts and push notifications',
       importance: Importance.max,
     ),
     AndroidNotificationChannel(
       'go_study_chat',
-      'GO Study Chat',
+      'GoStudy Chat',
       description: 'Real-time chat messages',
       importance: Importance.max,
     ),
     AndroidNotificationChannel(
       'go_study_reminders',
-      'GO Study Reminders',
+      'GoStudy Reminders',
       description: 'Scheduled study reminders and deadlines',
       importance: Importance.max,
     ),
@@ -306,7 +306,7 @@ class NotificationService {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'go_study_alerts',
-          'GO Study Alerts',
+          'GoStudy Alerts',
           importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
@@ -340,7 +340,7 @@ class NotificationService {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'go_study_chat',
-          'GO Study Chat',
+          'GoStudy Chat',
           channelDescription: 'Real-time chat notifications',
           importance: Importance.max,
           priority: Priority.high,
@@ -414,7 +414,7 @@ class NotificationService {
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'go_study_reminders',
-          'GO Study Reminders',
+          'GoStudy Reminders',
           importance: Importance.max,
           priority: Priority.high,
         ),

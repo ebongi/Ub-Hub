@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/app_wordmark.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -320,39 +321,7 @@ class _BrandChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.chip),
         border: Border.all(color: primary.withOpacity(0.12)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
-            child: const Icon(Icons.school_rounded, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Text.rich(
-            TextSpan(
-              text: 'Go',
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: primary,
-                letterSpacing: 0.5,
-              ),
-              children: [
-                TextSpan(
-                  text: 'Study',
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: isDark ? Colors.white.withOpacity(0.9) : regSlate700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: const AppWordmark(fontSize: 16),
     );
   }
 }

@@ -1,5 +1,5 @@
 name: go_study
-description: "GO-Study - Your academic companion."
+description: "GoStudy - Your academic companion."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -96,8 +96,14 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icons/android/play_store_512.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#0F172A"
-  adaptive_icon_foreground: "assets/icons/android/play_store_512.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/android/adaptive_icon_foreground.png"
+  web:
+    generate: true
+    image_path: "assets/icons/android/play_store_512.png"
+    background_color: "#FFFFFF"
+    theme_color: "#1656D8"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

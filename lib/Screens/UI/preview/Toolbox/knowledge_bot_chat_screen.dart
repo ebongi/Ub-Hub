@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/knowledge_bot_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
@@ -28,7 +27,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
   late final DatabaseService _dbService;
   final _botService = KnowledgeBotService();
   final _currentUser = Supabase.instance.client.auth.currentUser;
-  List<BotKnowledge> _knowledgeBase = [];
+  String _knowledgeText = '';
   bool _welcomeMessageAdded = false;
 
   @override
@@ -51,10 +50,9 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     }
   }
 
-  void _loadKnowledge() {
-    _dbService.getBotKnowledge(_currentUser!.id).listen((data) {
-      if (mounted) setState(() => _knowledgeBase = data);
-    });
+  Future<void> _loadKnowledge() async {
+    final text = await _dbService.getSharedBotKnowledge();
+    if (mounted) setState(() => _knowledgeText = text);
   }
 
   void _sendMessage() async {
@@ -103,7 +101,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
       bool firstChunk = true;
 
       // Start the stream
-      final stream = _botService.streamQuestion(text, _knowledgeBase);
+      final stream = _botService.streamQuestion(text, _knowledgeText);
       
       await for (final chunk in stream) {
         if (chunk == "OUT_OF_CREDITS") {
@@ -185,6 +183,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final isAdmin = Provider.of<UserModel>(context).role == UserRole.admin;
 
     return Scaffold(
       appBar: AppBar(
@@ -202,14 +201,15 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_suggest_rounded),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const KnowledgeManagerScreen()),
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.settings_suggest_rounded),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const KnowledgeManagerScreen()),
+              ),
+              tooltip: l10n.manageKnowledgeTooltip,
             ),
-            tooltip: l10n.manageKnowledgeTooltip,
-          ),
         ],
       ),
       body: Container(

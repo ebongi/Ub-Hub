@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:go_study/core/app_assets.dart';
+import 'package:go_study/core/app_wordmark.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -38,14 +39,15 @@ class _AboutScreenState extends State<AboutScreen> {
     final l10n = AppLocalizations.of(context)!;
     showAboutDialog(
       context: context,
-      applicationName: "GO-Study",
+      applicationName: "GoStudy",
       applicationVersion: "v$_version ($_buildNumber)",
       applicationIcon: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: SvgPicture.asset(
-          'assets/images/logoicon.svg',
+        child: Image.asset(
+          AppAssets.logo,
           width: 48,
           height: 48,
+          cacheWidth: 100,
         ),
       ),
       applicationLegalese: l10n.appLegaleseCopyright,
@@ -94,17 +96,13 @@ class _AboutScreenState extends State<AboutScreen> {
                   width: 2,
                 ),
               ),
-              child: SvgPicture.asset('assets/icons/android/play_store_512.png'),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              "GO-Study",
-              style: GoogleFonts.outfit(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87,
+              child: Image.asset(
+                AppAssets.logo,
+                cacheWidth: 150,
               ),
             ),
+            const SizedBox(height: 24),
+            const AppWordmark(fontSize: 32),
             Text(
               l10n.versionLabel(_version),
               style: GoogleFonts.outfit(

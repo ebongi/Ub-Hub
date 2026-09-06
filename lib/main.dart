@@ -104,7 +104,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
-          title: "GO Study",
+          title: "GoStudy",
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,

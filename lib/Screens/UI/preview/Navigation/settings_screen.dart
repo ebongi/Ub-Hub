@@ -632,10 +632,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuildContext context,
     UserModel userModel,
   ) async {
-    final String studentName = userModel.name ?? 'a Go Study User';
+    final String studentName = userModel.name ?? 'a GoStudy User';
     final String messageText =
-        "💖 *SUPPORT & VOLUNTEER FOR GO STUDY* 💖\n\n"
-        "Hi Developer, I love using Go Study and would like to voluntarily support the development and growth of this platform!\n\n"
+        "💖 *SUPPORT & VOLUNTEER FOR GOSTUDY* 💖\n\n"
+        "Hi Developer, I love using GoStudy and would like to voluntarily support the development and growth of this platform!\n\n"
         "Please let me know how I can contribute or help.\n\n"
         "Best regards,\n"
         "$studentName";
@@ -651,7 +651,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          "Support Go Study",
+          "Support GoStudy",
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
         content: Text(
