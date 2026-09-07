@@ -27,6 +27,14 @@ class KnowledgeBotService {
   // in every message body).
   final GeminiService _geminiService;
 
+  // The whole document is stuffed into every question's prompt (no
+  // chunking/retrieval — see the class doc above), so an admin pasting in
+  // an entire multi-hundred-page PDF would otherwise make every question
+  // slower and pricier without bound. This caps it to a size that's
+  // generous for FAQ/handbook-style content while keeping worst-case
+  // prompt size bounded.
+  static const int maxKnowledgeChars = 100000;
+
   KnowledgeBotService({GeminiService? geminiService})
     : _geminiService =
           geminiService ??
@@ -38,10 +46,14 @@ class KnowledgeBotService {
       return;
     }
 
+    final truncated = knowledge.length > maxKnowledgeChars
+        ? knowledge.substring(0, maxKnowledgeChars)
+        : knowledge;
+
     final prompt =
         """
 CONTEXT:
-$knowledge
+$truncated
 
 USER QUESTION:
 $question

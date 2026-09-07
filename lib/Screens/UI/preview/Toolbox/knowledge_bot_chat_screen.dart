@@ -59,6 +59,14 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final text = _inputController.text.trim();
     if (text.isEmpty || _isLoading) return;
 
+    // Set the guard (and clear the input) before the await below, so a
+    // fast double-tap on Send can't slip a second call through while the
+    // first is still awaiting the usage-gate check.
+    setState(() {
+      _isLoading = true;
+      _inputController.clear();
+    });
+
     final userModel = Provider.of<UserModel>(context, listen: false);
     final profile = UserProfile(
       id: userModel.uid ?? '',
@@ -70,7 +78,10 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     );
 
     final canProceed = await AIUsageGate.checkAndShow(context, profile);
-    if (!canProceed) return;
+    if (!canProceed) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     final userMsgId = "user_${DateTime.now().millisecondsSinceEpoch}";
     final botMsgId = "bot_${DateTime.now().millisecondsSinceEpoch}";
@@ -81,8 +92,6 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
         'text': text,
         'isBot': false,
       });
-      _isLoading = true;
-      _inputController.clear();
     });
 
     _scrollToBottom();
@@ -120,7 +129,10 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
                 firstChunk = false;
               }
             });
-            _scrollToBottom();
+            // Follow the growing response without an animation: a token
+            // can arrive many times a second, and restarting an animated
+            // scroll on every one of them fights itself and burns frames.
+            _scrollToBottomInstant();
           }
         }
       }
@@ -164,6 +176,14 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
+      }
+    });
+  }
+
+  void _scrollToBottomInstant() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
   }
@@ -250,7 +270,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final theme = Theme.of(context);
     return FadeInSlide(
       key: ValueKey(key),
-      delay: 50,
+      delay: 0,
       duration: const Duration(milliseconds: 200),
       child: Align(
         alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,

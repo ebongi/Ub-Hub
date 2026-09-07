@@ -1053,7 +1053,16 @@ class DatabaseService {
           .download(_botKnowledgeFileName);
       return utf8.decode(bytes);
     } on StorageException catch (e) {
-      if (e.statusCode == '404') return '';
+      // Supabase Storage doesn't reliably surface a missing-object 404 in
+      // `statusCode` — it's sometimes wrapped in an outer error (observed:
+      // statusCode "400" with the real `{"statusCode":"404",...,"code":
+      // "NoSuchKey"}` JSON nested inside `message` as a string), so check
+      // the message text too instead of trusting `statusCode` alone.
+      final notFound = e.statusCode == '404' ||
+          e.message.contains('404') ||
+          e.message.contains('NoSuchKey') ||
+          e.message.contains('not_found');
+      if (notFound) return '';
       rethrow;
     }
   }

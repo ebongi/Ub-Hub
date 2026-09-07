@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/profile.dart' show UserRole;
 import 'package:go_study/services/database.dart';
+import 'package:go_study/services/knowledge_bot_service.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 
@@ -39,13 +40,19 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
     super.initState();
     _dbService = DatabaseService(uid: _currentUser?.id);
     _loadKnowledge();
+    // Rebuilds just to refresh the character-count/truncation warning below
+    // the field as the admin types or pastes in new content.
+    _contentController.addListener(_onContentChanged);
   }
 
   @override
   void dispose() {
+    _contentController.removeListener(_onContentChanged);
     _contentController.dispose();
     super.dispose();
   }
+
+  void _onContentChanged() => setState(() {});
 
   Future<void> _loadKnowledge() async {
     try {
@@ -91,8 +98,12 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
       final bytes = await file.readAsBytes();
 
       final document = PdfDocument(inputBytes: bytes);
-      final text = PdfTextExtractor(document).extractText();
-      document.dispose();
+      final String text;
+      try {
+        text = PdfTextExtractor(document).extractText();
+      } finally {
+        document.dispose();
+      }
 
       if (text.trim().isEmpty) {
         throw "Could not extract text from PDF. It might be an image-only PDF.";
@@ -175,6 +186,24 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
                       ),
                     ),
                   ),
+                  if (isAdmin) ...[
+                    const SizedBox(height: 8),
+                    Builder(
+                      builder: (context) {
+                        final length = _contentController.text.length;
+                        final overLimit = length > KnowledgeBotService.maxKnowledgeChars;
+                        return Text(
+                          overLimit
+                              ? '$length characters — only the first ${KnowledgeBotService.maxKnowledgeChars} will be used per question; trim it so nothing important gets cut off.'
+                              : '$length / ${KnowledgeBotService.maxKnowledgeChars} characters used per question.',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: overLimit ? theme.colorScheme.error : theme.hintColor,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
