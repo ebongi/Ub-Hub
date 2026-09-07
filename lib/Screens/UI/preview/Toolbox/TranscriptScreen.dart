@@ -102,9 +102,15 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
     await _showPaymentDialog(_amountForSelectedMode(l10n), deliveryMethod);
   }
 
+  static const double _formerStudentSurcharge = 0.3;
+
   double _amountForSelectedMode(AppLocalizations l10n) {
     final idx = _modes(l10n).indexOf(_modeOfApplication);
-    return idx >= 0 ? _modePrices[idx] : _modePrices[0];
+    final base = idx >= 0 ? _modePrices[idx] : _modePrices[0];
+    if (_status == l10n.statusFormerStudent) {
+      return (base * (1 + _formerStudentSurcharge)).roundToDouble();
+    }
+    return base;
   }
 
   Future<String?> _showDeliveryMethodDialog() {
@@ -517,6 +523,16 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
                     validator: (v) =>
                         (v == null || v.isEmpty) ? l10n.selectYourStatusValidator : null,
                   ),
+                  if (_status == l10n.statusFormerStudent) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.formerStudentSurchargeNotice,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: isDarkMode ? Colors.amberAccent : Colors.orange[800],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 40),
                   AuthButton(
                     label: l10n.submitApplicationButton,

@@ -927,6 +927,7 @@
   "applicationSubmittedMessage": "Application submitted! Redirecting to WhatsApp...",
   "statusCurrentStudent": "Current Student",
   "statusFormerStudent": "Former Student",
+  "formerStudentSurchargeNotice": "Former students pay a 30% surcharge on the fee above.",
   "ubKnowledgeBaseTitle": "UB Knowledge Base",
   "noUbKnowledgeYet": "No UB knowledge added yet",
   "addUniversityFactsSubtitle": "Add university facts for the bot to learn!",

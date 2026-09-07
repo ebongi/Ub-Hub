@@ -2317,6 +2317,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusFormerStudent => 'Former Student';
 
   @override
+  String get formerStudentSurchargeNotice =>
+      'Former students pay a 30% surcharge on the fee above.';
+
+  @override
   String get ubKnowledgeBaseTitle => 'UB Knowledge Base';
 
   @override

@@ -4340,6 +4340,12 @@ abstract class AppLocalizations {
   /// **'Former Student'**
   String get statusFormerStudent;
 
+  /// No description provided for @formerStudentSurchargeNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Former students pay a 30% surcharge on the fee above.'**
+  String get formerStudentSurchargeNotice;
+
   /// No description provided for @ubKnowledgeBaseTitle.
   ///
   /// In en, this message translates to:

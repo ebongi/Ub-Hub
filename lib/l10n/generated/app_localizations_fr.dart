@@ -2349,6 +2349,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statusFormerStudent => 'Ancien étudiant';
 
   @override
+  String get formerStudentSurchargeNotice =>
+      'Les anciens étudiants paient une majoration de 30 % sur les frais ci-dessus.';
+
+  @override
   String get ubKnowledgeBaseTitle => 'Base de connaissances UB';
 
   @override

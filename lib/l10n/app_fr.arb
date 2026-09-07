@@ -840,6 +840,7 @@
   "applicationSubmittedMessage": "Demande soumise ! Redirection vers WhatsApp...",
   "statusCurrentStudent": "Étudiant actuel",
   "statusFormerStudent": "Ancien étudiant",
+  "formerStudentSurchargeNotice": "Les anciens étudiants paient une majoration de 30 % sur les frais ci-dessus.",
   "ubKnowledgeBaseTitle": "Base de connaissances UB",
   "noUbKnowledgeYet": "Aucune connaissance UB ajoutée pour le moment",
   "addUniversityFactsSubtitle": "Ajoutez des faits universitaires pour que le bot les apprenne !",

@@ -123,7 +123,8 @@ class UserModel extends ChangeNotifier {
   /// Independent of subscriptionTier/subscriptionExpiry (the App Plan), so
   /// the App Plan's free trial month never grants free AI.
   bool get hasUnlimitedAI =>
-      _aiSubscriptionExpiry != null && _aiSubscriptionExpiry!.isAfter(DateTime.now());
+      _aiSubscriptionExpiry != null &&
+      _aiSubscriptionExpiry!.isAfter(DateTime.now());
 
   bool get canUseAI {
     if (role == UserRole.admin) return true;
@@ -155,7 +156,8 @@ class UserModel extends ChangeNotifier {
   bool get hasAccess {
     if (_role == UserRole.admin || _role == UserRole.contributor) return true;
     if (isSubscribed) return true;
-    if (_createdAt != null && DateTime.now().difference(_createdAt!) < _newAccountGraceWindow) {
+    if (_createdAt != null &&
+        DateTime.now().difference(_createdAt!) < _newAccountGraceWindow) {
       return true;
     }
     return false;
@@ -239,7 +241,8 @@ class UserModel extends ChangeNotifier {
     if (createdAt != null) _createdAt = createdAt;
     if (trialUsed != null) _trialUsed = trialUsed;
     if (isTrialSubscription != null) _isTrialSubscription = isTrialSubscription;
-    if (aiSubscriptionExpiry != null) _aiSubscriptionExpiry = aiSubscriptionExpiry;
+    if (aiSubscriptionExpiry != null)
+      _aiSubscriptionExpiry = aiSubscriptionExpiry;
     if (profileLoaded != null) _profileLoaded = profileLoaded;
     if (totalPoints != null) _totalPoints = totalPoints;
     notifyListeners();
@@ -643,6 +646,7 @@ class AuthDropdown extends StatelessWidget {
 
     return DropdownButtonFormField<String>(
       value: value.isEmpty ? null : value,
+      isExpanded: true,
       items: items.map((String item) {
         return DropdownMenuItem<String>(
           value: item,
@@ -652,6 +656,8 @@ class AuthDropdown extends StatelessWidget {
               fontSize: 16,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
