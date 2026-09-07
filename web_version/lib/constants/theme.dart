@@ -1,27 +1,104 @@
 import 'package:jaspr/dom.dart';
 
-// As your CSS styles are defined using just Dart, you can simply
-// use global variables or methods for common things like colors.
-const primaryColor = Color('#01589B');
+// Brand palette — mirrors the app's dark theme and the store feature graphic.
+const bg = Color('#0F172A');
+const ink = Color('#E8EEF7');
+const heading = Color('#F8FAFC');
+const textMuted = Color('#A9BCD6');
+const textMuted2 = Color('#8B9FBC');
+const textMuted3 = Color('#6F86A6');
+const accent = Color('#38BDF8');
+const accentLight = Color('#7DD3FC');
+const blue = Color('#1E88E5');
+const blueDark = Color('#1565C0');
+const surface = Color('#F8FAFC');
+const surfaceInk = Color('#0F172A');
+const surfaceMuted = Color('#475569');
+const phoneBezel = Color('#080D18');
 
-// Defines the global CSS styles for this project.
-//
-// By using the @css annotation, these will be rendered automatically to CSS and included in your page.
+Color border(double a) => Color.rgba(125, 211, 252, a);
+
+/// `grid-template-columns: repeat(auto-fit, minmax(minPx, 1fr))` — the responsive
+/// card-grid pattern used throughout the design.
+GridTemplate autoFitGrid(double minPx) => GridTemplate(
+  columns: GridTracks([
+    GridTrack.repeat(TrackRepeat.autoFit, [
+      GridTrack(TrackSize.minmax(TrackSize(minPx.px), TrackSize.fr(1))),
+    ]),
+  ]),
+);
+
+/// The `ch` CSS unit (character width) — not covered by Jaspr's typed `Unit` extensions.
+Unit ch(num n) => Unit.expression('${n}ch');
+
+const fontFamily = FontFamily.list([FontFamily('Outfit'), FontFamilies.sansSerif]);
+const monoFontFamily = FontFamily.list([
+  FontFamilies.uiMonospace,
+  FontFamily('Menlo'),
+  FontFamilies.monospace,
+]);
+
 @css
-List<StyleRule> get styles => [
-  // Special import rule to include to another css file.
-  css.import('https://fonts.googleapis.com/css?family=Roboto'),
-  // Each style rule takes a valid css selector and a set of styles.
-  // Styles are defined using type-safe css bindings and can be freely chained and nested.
-  css('html, body').styles(
-    width: 100.percent,
-    minHeight: 100.vh,
-    padding: .zero,
+List<StyleRule> get globalStyles => [
+  css('html').styles(raw: {'scroll-behavior': 'smooth'}),
+  css('body').styles(
     margin: .zero,
-    fontFamily: const .list([FontFamily('Roboto'), FontFamilies.sansSerif]),
+    backgroundColor: bg,
+    color: ink,
+    fontFamily: fontFamily,
+    raw: {'-webkit-font-smoothing': 'antialiased'},
   ),
-  css('h1').styles(
-    margin: .unset,
-    fontSize: 4.rem,
+  css('*').styles(boxSizing: .borderBox),
+  css('a').styles(color: accentLight, textDecoration: TextDecoration(line: .none)),
+  css('a:hover').styles(color: accent),
+  css('::selection').styles(backgroundColor: Color.rgba(56, 189, 248, .28)),
+  css(':focus-visible').styles(
+    outline: Outline(color: accent, style: .solid, width: OutlineWidth(2.px), offset: 2.px),
   ),
+
+  css.keyframes('gs-float', {
+    '0%, 100%': Styles(transform: .translate(y: 0.px)),
+    '50%': Styles(transform: .translate(y: (-10).px)),
+  }),
+  css.keyframes('gs-glow', {
+    '0%, 100%': Styles(opacity: .30),
+    '50%': Styles(opacity: .62),
+  }),
+  css.keyframes('gs-rule', {
+    'from': Styles(raw: {'transform': 'scaleX(0)'}),
+    'to': Styles(raw: {'transform': 'scaleX(1)'}),
+  }),
+
+  css.media(MediaQuery.raw('(prefers-reduced-motion: reduce)'), [
+    css('*').styles(raw: {'animation': 'none !important', 'transition': 'none !important'}),
+  ]),
+];
+
+/// Shared layout + typography utility classes reused across sections.
+@css
+List<StyleRule> get layoutStyles => [
+  css('.gs-shell').styles(minHeight: 100.vh, backgroundColor: bg, overflow: .only(x: .hidden)),
+  css('.gs-container').styles(maxWidth: 1160.px, margin: .symmetric(horizontal: .auto), padding: .symmetric(horizontal: 24.px)),
+  css('.gs-eyebrow').styles(
+    fontFamily: monoFontFamily,
+    fontSize: 11.px,
+    letterSpacing: .20.em,
+    color: accentLight,
+    margin: .only(bottom: 12.px),
+  ),
+  css('.gs-h2').styles(
+    margin: .only(bottom: 16.px),
+    fontSize: .expression('clamp(28px,3.4vw,40px)'),
+    fontWeight: .w700,
+    letterSpacing: (-.02).em,
+    color: heading,
+  ),
+  css('.gs-lede').styles(
+    margin: .only(bottom: 48.px),
+    maxWidth: ch(56),
+    fontSize: 17.px,
+    lineHeight: 1.6.em,
+    color: textMuted,
+  ),
+  css('.gs-section').styles(padding: .symmetric(vertical: 84.px, horizontal: 24.px), border: .only(bottom: .solid(color: border(.18), width: 1.px))),
 ];

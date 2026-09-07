@@ -1,19 +1,26 @@
-import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
-import '../components/counter.dart';
+import 'home/feature_strip_section.dart';
+import 'home/features_section.dart';
+import 'home/hero_section.dart';
+import 'home/pricing_section.dart';
+import 'home/screens_section.dart';
+import 'home/support_section.dart';
+import 'home/why_section.dart';
 
 class Home extends StatelessComponent {
   const Home({super.key});
 
   @override
   Component build(BuildContext context) {
-    return section([
-      img(src: 'images/logo.svg', width: 80),
-      h1([.text('Welcome')]),
-      p([.text('You successfully create a new Jaspr site.')]),
-      div(styles: Styles(height: 100.px), []),
-      const Counter(),
+    return .fragment([
+      const HeroSection(),
+      const FeatureStripSection(),
+      const ScreensSection(),
+      const FeaturesSection(),
+      const WhySection(),
+      const PricingSection(),
+      const SupportSection(),
     ]);
   }
 }
