@@ -25,15 +25,34 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _matriculeController;
-  late TextEditingController _facultyController;
+  late TextEditingController _otherFacultyController;
   late TextEditingController _departmentController;
 
   String _modeOfApplication = '';
   String _status = '';
+  String _faculty = '';
 
   final DatabaseService _db = DatabaseService(uid: Authentication().currentUser?.id);
   bool _isProcessing = false;
   static const List<double> _modePrices = [1200.0, 2500.0, 3500.0]; // positional match with _modes(l10n)
+
+  // Official Faculties & Schools per ubuea.cm/index.php/faculties-schools —
+  // kept as fixed English names (not localized) since this is what gets
+  // relayed verbatim to the transcript office, regardless of app locale.
+  static const List<String> _facultyOptions = [
+    'Faculty of Arts',
+    'Faculty of Science',
+    'Faculty of Education',
+    'Faculty of Health Sciences',
+    'Faculty of Engineering and Technology (FET)',
+    'Faculty of Laws and Political Science',
+    'Faculty of Social and Management Sciences',
+    'Faculty of Agriculture and Veterinary Medicine',
+    'College of Technology (COT)',
+    'Advanced School of Translators and Interpreters (ASTI)',
+    'Higher Technical Teachers Training College (HTTTC)',
+    'Higher Teachers Training College (HTTC)',
+  ];
 
   List<String> _modes(AppLocalizations l10n) => [
         l10n.modeNormal,
@@ -43,6 +62,10 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
   List<String> _statuses(AppLocalizations l10n) => [
         l10n.statusCurrentStudent,
         l10n.statusFormerStudent,
+      ];
+  List<String> _faculties(AppLocalizations l10n) => [
+        ..._facultyOptions,
+        l10n.facultyOtherOption,
       ];
 
   @override
@@ -54,7 +77,7 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
     _phoneController = TextEditingController(text: user.phoneNumber);
     _emailController = TextEditingController(text: user.email);
     _matriculeController = TextEditingController(text: user.matricule);
-    _facultyController = TextEditingController(text: user.institutionName);
+    _otherFacultyController = TextEditingController();
     _departmentController = TextEditingController(text: user.department);
   }
 
@@ -64,7 +87,7 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _matriculeController.dispose();
-    _facultyController.dispose();
+    _otherFacultyController.dispose();
     _departmentController.dispose();
     super.dispose();
   }
@@ -315,7 +338,9 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
     final String phone = _phoneController.text.trim();
     final String email = _emailController.text.trim();
     final String matricule = _matriculeController.text.trim();
-    final String faculty = _facultyController.text.trim();
+    final String faculty = _faculty == l10n.facultyOtherOption
+        ? _otherFacultyController.text.trim()
+        : _faculty;
     final String department = _departmentController.text.trim();
     final String deliveryLabel = deliveryMethod == 'pdf'
         ? l10n.deliveryMethodPdfLabel
@@ -445,12 +470,25 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
                     validator: (v) => v!.isEmpty ? l10n.enterYourMatriculeValidator : null,
                   ),
                   const SizedBox(height: 16),
-                  AuthTextField(
-                    controller: _facultyController,
+                  AuthDropdown(
+                    value: _faculty,
                     hintText: l10n.facultyHint,
                     prefixIcon: Iconsax.bank,
-                    validator: (v) => v!.isEmpty ? l10n.enterYourFacultyValidator : null,
+                    items: _faculties(l10n),
+                    onChanged: (val) => setState(() => _faculty = val ?? ''),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? l10n.selectYourFacultyValidator : null,
                   ),
+                  if (_faculty == l10n.facultyOtherOption) ...[
+                    const SizedBox(height: 16),
+                    AuthTextField(
+                      controller: _otherFacultyController,
+                      hintText: l10n.otherFacultyHint,
+                      prefixIcon: Iconsax.bank,
+                      validator: (v) =>
+                          v!.trim().isEmpty ? l10n.enterYourOtherFacultyValidator : null,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _departmentController,

@@ -4184,11 +4184,29 @@ abstract class AppLocalizations {
   /// **'Faculty'**
   String get facultyHint;
 
-  /// No description provided for @enterYourFacultyValidator.
+  /// No description provided for @selectYourFacultyValidator.
   ///
   /// In en, this message translates to:
-  /// **'Enter your faculty'**
-  String get enterYourFacultyValidator;
+  /// **'Select your faculty'**
+  String get selectYourFacultyValidator;
+
+  /// No description provided for @facultyOtherOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get facultyOtherOption;
+
+  /// No description provided for @otherFacultyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your faculty/school name'**
+  String get otherFacultyHint;
+
+  /// No description provided for @enterYourOtherFacultyValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your faculty/school name'**
+  String get enterYourOtherFacultyValidator;
 
   /// No description provided for @departmentHint.
   ///

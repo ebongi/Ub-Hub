@@ -2265,7 +2265,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get facultyHint => 'Faculté';
 
   @override
-  String get enterYourFacultyValidator => 'Entrez votre faculté';
+  String get selectYourFacultyValidator => 'Sélectionnez votre faculté';
+
+  @override
+  String get facultyOtherOption => 'Autre';
+
+  @override
+  String get otherFacultyHint => 'Entrez le nom de votre faculté/école';
+
+  @override
+  String get enterYourOtherFacultyValidator =>
+      'Entrez le nom de votre faculté/école';
 
   @override
   String get departmentHint => 'Département';
