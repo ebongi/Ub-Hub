@@ -61,10 +61,14 @@ android {
             }
         }
     }
-    // Release ABI policy: ship arm64-v8a only. Covers Play's 64-bit
-    // requirement and the overwhelming majority of real devices; dropped
-    // 32-bit armeabi-v7a and x86_64 (emulator-only) to keep the on-device
-    // Gemma model bundle (~0.5GB) from ballooning the download further.
+    // Release ABI policy: exclude only x86_64 (emulator-only, no real
+    // devices ship it). arm64-v8a and armeabi-v7a are both kept — Play
+    // Store serves per-device ABI splits from the app bundle, so 64-bit
+    // devices don't pay for the 32-bit lib; dropping armeabi-v7a instead
+    // made the app entirely unavailable on the many budget/low-RAM devices
+    // (e.g. Samsung A10/A-series) that ship a 32-bit-only Android userspace
+    // despite a 64-bit-capable SoC — Play's device catalog filters those
+    // out at the store-listing level, not as a crash.
     // Uses packaging.excludes rather than ndk.abiFilters because the
     // Flutter Gradle plugin silently overrides abiFilters, and this way
     // stripping applies to plugin AARs' bundled libs too, not just
@@ -73,7 +77,6 @@ android {
         jniLibs {
             excludes += setOf(
                 "lib/x86_64/**",
-                "lib/armeabi-v7a/**",
                 // MediaPipe vision/image-generation tasks — flutter_gemma is
                 // used here for text-only chat (see GEMMA_MIGRATION_TODO.md),
                 // these appear unreachable. Verify on-device before trusting.
