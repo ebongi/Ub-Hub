@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:go_study/services/app_update_service.dart';
 import 'package:go_study/services/gemma_model_manager.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -92,6 +93,10 @@ void main() async {
       child: MyApp(isFirstLaunch: isFirstLaunch),
     ),
   );
+
+  // Fire-and-forget: checks Play Store for an update and, if flexible,
+  // downloads it in the background then prompts the user to restart.
+  AppUpdateService.checkForUpdate(navigatorKey);
 }
 
 class MyApp extends StatelessWidget {
