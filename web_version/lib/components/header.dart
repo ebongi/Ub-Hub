@@ -1,16 +1,42 @@
+import 'dart:async';
+
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
+import 'package:web/web.dart' as web;
 
 import '../constants/content.dart';
 import '../constants/theme.dart';
 
-class Header extends StatelessComponent {
+class Header extends StatefulComponent {
   const Header({super.key});
 
   @override
+  State<Header> createState() => HeaderState();
+}
+
+class HeaderState extends State<Header> {
+  bool _scrolled = false;
+  StreamSubscription<web.Event>? _scrollSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollSub = web.EventStreamProviders.scrollEvent.forTarget(web.window).listen((_) {
+      final scrolled = web.window.scrollY > 8;
+      if (scrolled != _scrolled && mounted) setState(() => _scrolled = scrolled);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollSub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Component build(BuildContext context) {
-    return header(classes: 'gs-header', [
+    return header(classes: _scrolled ? 'gs-header gs-header--scrolled' : 'gs-header', [
       div(classes: 'gs-header-inner', [
         Link(
           to: '/',
@@ -49,6 +75,10 @@ class Header extends StatelessComponent {
         ]),
       ),
     ]),
+    css('.gs-header--scrolled').styles(
+      border: .only(bottom: .solid(color: border(.30), width: 1.px)),
+      shadow: BoxShadow(offsetX: 0.px, offsetY: 10.px, blur: 30.px, spread: (-18).px, color: Color.rgba(0, 0, 0, .9)),
+    ),
     css('.gs-header-inner').styles(
       maxWidth: 1160.px,
       margin: .symmetric(horizontal: .auto),

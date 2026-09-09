@@ -19,7 +19,9 @@ class App extends StatelessComponent {
         ShellRoute(
           builder: (context, state, child) => .fragment([
             const Header(),
-            child,
+            // Keyed by path so navigating between routes remounts this
+            // wrapper and replays the fade-up entrance animation.
+            div(key: ValueKey(state.location), classes: 'gs-page-transition', [child]),
             const Footer(),
           ]),
           routes: [

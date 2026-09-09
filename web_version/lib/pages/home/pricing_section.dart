@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
 import '../../components/corner_marks.dart';
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -20,7 +21,7 @@ class PricingSection extends StatelessComponent {
             'No card, no bank visit, no minimum.',
           ),
         ]),
-        div(classes: 'gs-pricing-grid', [
+        Reveal(classes: 'gs-pricing-grid', stagger: true, children: [
           div(classes: 'gs-plan-card', [
             const CornerMarks(color: '#38BDF8'),
             div(classes: 'gs-plan-tag', [.text('PLAN 01')]),
@@ -87,7 +88,9 @@ class PricingSection extends StatelessComponent {
       border: .all(color: border(.26), width: 1.px),
       display: .flex,
       flexDirection: .column,
+      transition: Transition('transform', duration: 260.ms, curve: .cubicBezier(.22, .7, .24, 1)),
     ),
+    css('.gs-plan-card:hover').styles(transform: .translate(y: (-4).px)),
     css('.gs-plan-card--highlight').styles(
       border: .all(color: accent, width: 1.px),
       raw: {'background-image': 'linear-gradient(rgba(56,189,248,.07),rgba(56,189,248,.02))'},

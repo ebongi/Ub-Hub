@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
 import '../../components/corner_marks.dart';
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -23,7 +24,7 @@ class SupportSectionState extends State<SupportSection> {
       div(classes: 'gs-container', [
         div(classes: 'gs-eyebrow', [.text('SUPPORT')]),
         h2(classes: 'gs-h2 gs-h2--tight', [.text('Stuck? Talk to a human')]),
-        div(classes: 'gs-support-grid', [
+        Reveal(classes: 'gs-support-grid', children: [
           div(classes: 'gs-contact-col', [
             a(href: 'mailto:$supportEmail', classes: 'gs-contact-card', [
               const CornerMarks(color: '#38BDF8'),

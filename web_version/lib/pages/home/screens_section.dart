@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
 import '../../components/corner_marks.dart';
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -14,10 +15,21 @@ class ScreensSection extends StatefulComponent {
 
 class ScreensSectionState extends State<ScreensSection> {
   int index = 0;
+  int _direction = 1;
 
-  void _prev() => setState(() => index = (index - 1 + shots.length) % shots.length);
-  void _next() => setState(() => index = (index + 1) % shots.length);
-  void _pick(int i) => setState(() => index = i);
+  void _go(int newIndex) {
+    if (newIndex == index) return;
+    final last = shots.length - 1;
+    final wrappedForward = index == last && newIndex == 0;
+    setState(() {
+      _direction = (newIndex > index || wrappedForward) ? 1 : -1;
+      index = newIndex;
+    });
+  }
+
+  void _prev() => _go((index - 1 + shots.length) % shots.length);
+  void _next() => _go((index + 1) % shots.length);
+  void _pick(int i) => _go(i);
 
   @override
   Component build(BuildContext context) {
@@ -46,18 +58,23 @@ class ScreensSectionState extends State<ScreensSection> {
           ]),
         ]),
         div(classes: 'gs-screens-grid', [
-          div(classes: 'gs-screens-mock-wrap', [
+          Reveal(classes: 'gs-screens-mock-wrap', children: [
             div(classes: 'gs-screens-mock', [
               const CornerMarks(color: '#38BDF8'),
               div(classes: 'gs-phone-frame', [
                 div(classes: 'gs-phone-screen', [
-                  img(src: current.src, alt: current.title, classes: 'gs-phone-img'),
+                  img(
+                    key: ValueKey(index),
+                    src: current.src,
+                    alt: current.title,
+                    classes: _direction == 1 ? 'gs-phone-img gs-phone-img--in-right' : 'gs-phone-img gs-phone-img--in-left',
+                  ),
                   span(classes: 'gs-phone-notch', []),
                 ]),
               ]),
             ]),
           ]),
-          div(classes: 'gs-screens-copy', [
+          Reveal(classes: 'gs-screens-copy', children: [
             div(classes: 'gs-screens-fig', [.text('FIG. ${current.n}')]),
             h3(classes: 'gs-screens-title', [.text(current.title)]),
             p(classes: 'gs-screens-body', [.text(current.body)]),
@@ -115,6 +132,8 @@ class ScreensSectionState extends State<ScreensSection> {
       alignItems: .center,
     ),
     css('.gs-screens-mock-wrap').styles(minWidth: 0.px, display: .flex, justifyContent: .center),
+    css('.gs-phone-img--in-right').styles(raw: {'animation': 'gs-shot-in-right .46s cubic-bezier(.22,.7,.24,1) both'}),
+    css('.gs-phone-img--in-left').styles(raw: {'animation': 'gs-shot-in-left .46s cubic-bezier(.22,.7,.24,1) both'}),
     css('.gs-screens-mock').styles(
       position: .relative(),
       padding: .all(16.px),

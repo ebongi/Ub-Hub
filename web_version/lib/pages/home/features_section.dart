@@ -1,6 +1,7 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -18,7 +19,11 @@ class FeaturesSection extends StatelessComponent {
             'Six systems, one app. No juggling six different tools and a WhatsApp group that lost your lecture notes.',
           ),
         ]),
-        div(classes: 'gs-features-grid', [for (final f in features) FeatureCard(feature: f)]),
+        Reveal(
+          classes: 'gs-features-grid',
+          stagger: true,
+          children: [for (final f in features) FeatureCard(feature: f)],
+        ),
       ]),
     ]);
   }
@@ -54,7 +59,21 @@ class FeatureCard extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-    css('.gs-feature-card').styles(position: .relative(), padding: .fromLTRB(30.px, 34.px, 30.px, 36.px), backgroundColor: bg),
+    css('.gs-feature-card', [
+      css('&').styles(
+        position: .relative(),
+        padding: .fromLTRB(30.px, 34.px, 30.px, 36.px),
+        backgroundColor: bg,
+        transition: Transition.combine([
+          Transition('transform', duration: 260.ms, curve: .cubicBezier(.22, .7, .24, 1)),
+          Transition('background', duration: 260.ms),
+        ]),
+      ),
+      css('&:hover').styles(
+        transform: .translate(y: (-3).px),
+        backgroundColor: Color.rgba(56, 189, 248, .04),
+      ),
+    ]),
     css('.gs-feature-n').styles(fontFamily: monoFontFamily, fontSize: 10.px, letterSpacing: .16.em, color: accent, margin: .only(bottom: 16.px)),
     css('.gs-feature-title').styles(margin: .fromLTRB(0.px, 0.px, 0.px, 12.px), fontSize: 21.px, fontWeight: .w700, letterSpacing: (-.012).em, color: heading),
     css('.gs-feature-body').styles(margin: .fromLTRB(0.px, 0.px, 0.px, 18.px), fontSize: 15.px, lineHeight: 1.62.em, color: textMuted),

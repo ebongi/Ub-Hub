@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
 import '../../components/corner_marks.dart';
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -13,7 +14,7 @@ class HeroSection extends StatelessComponent {
     return section(id: 'top', classes: 'gs-hero', [
       span(classes: 'gs-hero-glow', []),
       div(classes: 'gs-hero-grid', [
-        div(classes: 'gs-hero-copy', [
+        Reveal(classes: 'gs-hero-copy', children: [
           div(classes: 'gs-hero-wordmark', [
             img(src: 'images/logo-mark.png', alt: 'G', classes: 'gs-logo-mark gs-logo-mark--hero'),
             span(classes: 'gs-hero-word', [.text('oStudy')]),
@@ -42,7 +43,7 @@ class HeroSection extends StatelessComponent {
             ]),
           ]),
         ]),
-        div(classes: 'gs-hero-mock-wrap', [
+        Reveal(classes: 'gs-hero-mock-wrap', children: [
           div(classes: 'gs-hero-mock', [
             const CornerMarks(color: '#38BDF8'),
             div(classes: 'gs-hero-mock-tag', [.text('FIG. 01 — HOME')]),

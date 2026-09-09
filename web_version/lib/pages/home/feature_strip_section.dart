@@ -1,6 +1,7 @@
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
+import '../../components/reveal.dart';
 import '../../constants/content.dart';
 import '../../constants/theme.dart';
 
@@ -11,9 +12,10 @@ class FeatureStripSection extends StatelessComponent {
   Component build(BuildContext context) {
     return section(classes: 'gs-strip', [
       div(classes: 'gs-container', [
-        div(
+        Reveal(
           classes: 'gs-strip-grid',
-          [for (final item in strip) StripCell(item: item)],
+          stagger: true,
+          children: [for (final item in strip) StripCell(item: item)],
         ),
       ]),
     ]);

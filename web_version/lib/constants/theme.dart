@@ -68,6 +68,46 @@ List<StyleRule> get globalStyles => [
     'from': Styles(raw: {'transform': 'scaleX(0)'}),
     'to': Styles(raw: {'transform': 'scaleX(1)'}),
   }),
+  css.keyframes('gs-page-in', {
+    'from': Styles(opacity: 0, raw: {'transform': 'translateY(14px)'}),
+    'to': Styles(opacity: 1, raw: {'transform': 'none'}),
+  }),
+  css.keyframes('gs-shot-in-right', {
+    '0%': Styles(opacity: 0, raw: {'transform': 'translateX(22px) scale(.985)'}),
+    '100%': Styles(opacity: 1, raw: {'transform': 'none'}),
+  }),
+  css.keyframes('gs-shot-in-left', {
+    '0%': Styles(opacity: 0, raw: {'transform': 'translateX(-22px) scale(.985)'}),
+    '100%': Styles(opacity: 1, raw: {'transform': 'none'}),
+  }),
+
+  // Scroll-reveal (see components/reveal.dart) — mirrors the design canvas's
+  // data-reveal/data-stagger treatment.
+  css('.gs-reveal').styles(
+    opacity: 0,
+    transform: .translate(y: 20.px),
+    transition: Transition.combine([
+      Transition('opacity', duration: 620.ms, curve: .cubicBezier(.22, .7, .24, 1)),
+      Transition('transform', duration: 620.ms, curve: .cubicBezier(.22, .7, .24, 1)),
+    ]),
+  ),
+  css('.gs-reveal--in').styles(opacity: 1, transform: .translate(y: 0.px)),
+  css('.gs-stagger > *').styles(
+    opacity: 0,
+    transform: .translate(y: 20.px),
+    transition: Transition.combine([
+      Transition('opacity', duration: 620.ms, curve: .cubicBezier(.22, .7, .24, 1)),
+      Transition('transform', duration: 620.ms, curve: .cubicBezier(.22, .7, .24, 1)),
+    ]),
+  ),
+  for (var i = 1; i <= 8; i++)
+    css('.gs-stagger > *:nth-child($i)').styles(raw: {'transition-delay': '${(i - 1) * 75}ms'}),
+  css('.gs-stagger > *:nth-child(n+9)').styles(raw: {'transition-delay': '600ms'}),
+  css('.gs-stagger--in > *').styles(opacity: 1, transform: .translate(y: 0.px)),
+
+  css('.gs-page-transition').styles(
+    raw: {'animation': 'gs-page-in .5s cubic-bezier(.22,.7,.24,1) both'},
+  ),
 
   css.media(MediaQuery.raw('(prefers-reduced-motion: reduce)'), [
     css('*').styles(raw: {'animation': 'none !important', 'transition': 'none !important'}),
