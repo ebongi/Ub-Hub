@@ -776,6 +776,24 @@ abstract class AppLocalizations {
   /// **'Delete Account'**
   String get deleteAccountButton;
 
+  /// No description provided for @deleteAccountWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you go...'**
+  String get deleteAccountWarningTitle;
+
+  /// No description provided for @deleteAccountWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account permanently removes:\n\n• Your profile and account details\n• All uploaded study materials and marketplace listings\n• Your AI chat history\n• Any remaining AI credits and active subscription — these are forfeited, not refunded\n• Exam schedules and course selections\n\nThis cannot be undone.'**
+  String get deleteAccountWarningBody;
+
+  /// No description provided for @deleteAccountWarningContinueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, continue'**
+  String get deleteAccountWarningContinueButton;
+
   /// No description provided for @deleteAccountDialogTitle.
   ///
   /// In en, this message translates to:

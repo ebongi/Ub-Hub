@@ -268,22 +268,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  // const SizedBox(height: 8),
-                  // Center(
-                  //   child: TextButton(
-                  //     onPressed: () =>
-                  //         _confirmDeleteAccount(context, authentication, l10n),
-                  //     child: Text(
-                  //       l10n.deleteAccountButton,
-                  //       style: GoogleFonts.outfit(
-                  //         color: Colors.grey,
-                  //         fontSize: 13,
-                  //         fontWeight: FontWeight.w500,
-                  //         decoration: TextDecoration.underline,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      onPressed: () =>
+                          _showDeleteAccountFlow(context, authentication, l10n),
+                      child: Text(
+                        l10n.deleteAccountButton,
+                        style: GoogleFonts.outfit(
+                          color: Colors.grey,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
@@ -506,23 +506,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _confirmDeleteAccount(
+  // A single dialog that walks the user through a warning step and then a
+  // type-DELETE-to-confirm step, rather than two separate showDialog calls
+  // popping and pushing in sequence (which flickered and duplicated the
+  // shape/cancel-button styling across two builders).
+  void _showDeleteAccountFlow(
     BuildContext context,
     Authentication authentication,
     AppLocalizations l10n,
   ) {
     final confirmController = TextEditingController();
+    var showWarningStep = true;
+    const dialogShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(24)),
+    );
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
+          final cancelButton = TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.cancel,
+              style: GoogleFonts.outfit(
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
+
+          if (showWarningStep) {
+            return AlertDialog(
+              shape: dialogShape,
+              title: Text(
+                l10n.deleteAccountWarningTitle,
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: Text(
+                  l10n.deleteAccountWarningBody,
+                  style: GoogleFonts.outfit(height: 1.5),
+                ),
+              ),
+              actions: [
+                cancelButton,
+                TextButton(
+                  onPressed: () =>
+                      setDialogState(() => showWarningStep = false),
+                  child: Text(
+                    l10n.deleteAccountWarningContinueButton,
+                    style: GoogleFonts.outfit(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
           final canConfirm =
               confirmController.text.trim().toUpperCase() == 'DELETE';
           return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
+            shape: dialogShape,
             title: Text(
               l10n.deleteAccountDialogTitle,
               style: GoogleFonts.outfit(
@@ -530,47 +577,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Colors.red,
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.deleteAccountDialogBody,
-                  style: GoogleFonts.outfit(),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.deleteAccountTypeToConfirm,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    color: Colors.grey,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.deleteAccountDialogBody,
+                    style: GoogleFonts.outfit(),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: confirmController,
-                  autocorrect: false,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    hintText: 'DELETE',
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.deleteAccountTypeToConfirm,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
-                  onChanged: (_) => setDialogState(() {}),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmController,
+                    autocorrect: false,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: 'DELETE',
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ],
+              ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(
-                  l10n.cancel,
-                  style: GoogleFonts.outfit(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              cancelButton,
               TextButton(
                 onPressed: canConfirm
                     ? () async {
@@ -594,7 +634,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
         },
       ),
-    );
+    ).then((_) => confirmController.dispose());
   }
 
   Future<void> _performAccountDeletion(

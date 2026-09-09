@@ -377,6 +377,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteAccountButton => 'Supprimer le compte';
 
   @override
+  String get deleteAccountWarningTitle => 'Avant de continuer...';
+
+  @override
+  String get deleteAccountWarningBody =>
+      'La suppression de votre compte supprime définitivement :\n\n• Votre profil et les informations de votre compte\n• Tous les documents et annonces de la marketplace que vous avez publiés\n• Votre historique de discussion avec l\'IA\n• Les crédits IA restants et l\'abonnement actif — ils sont perdus, sans remboursement\n• Les emplois du temps d\'examens et les cours sélectionnés\n\nCette action est irréversible.';
+
+  @override
+  String get deleteAccountWarningContinueButton => 'J\'ai compris, continuer';
+
+  @override
   String get deleteAccountDialogTitle => 'Supprimer votre compte ?';
 
   @override

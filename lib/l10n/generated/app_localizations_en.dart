@@ -372,6 +372,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountButton => 'Delete Account';
 
   @override
+  String get deleteAccountWarningTitle => 'Before you go...';
+
+  @override
+  String get deleteAccountWarningBody =>
+      'Deleting your account permanently removes:\n\n• Your profile and account details\n• All uploaded study materials and marketplace listings\n• Your AI chat history\n• Any remaining AI credits and active subscription — these are forfeited, not refunded\n• Exam schedules and course selections\n\nThis cannot be undone.';
+
+  @override
+  String get deleteAccountWarningContinueButton => 'I understand, continue';
+
+  @override
   String get deleteAccountDialogTitle => 'Delete your account?';
 
   @override
