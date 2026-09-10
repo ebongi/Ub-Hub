@@ -413,7 +413,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         userModel.subscriptionExpiry != null &&
         userModel.subscriptionExpiry!.isAfter(DateTime.now());
 
-    // Guards against offering a free monthly trial to someone who already
+    // Guards against offering a free trial to someone who already
     // pays for the yearly App Plan (their trialUsed can still be false if
     // they bought yearly directly without ever touching the monthly tier).
     final isOnOtherPaidTier = userModel.subscriptionTier == SubscriptionTier.yearly &&
@@ -674,13 +674,15 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
     setState(() => _isProcessingTrial = true);
     try {
-      await _db.startFreeMonthlyTrial();
+      await _db.startFreeTrial();
       if (mounted) {
         // Reflect the new trial state immediately instead of waiting on the
         // realtime profile stream, so the button disappears right away.
+        // Kept in sync with the `INTERVAL '14 days'` in
+        // supabase/migrations/shorten_free_trial_to_two_weeks.sql.
         Provider.of<UserModel>(context, listen: false).update(
           subscriptionTier: SubscriptionTier.monthly,
-          subscriptionExpiry: DateTime.now().add(const Duration(days: 30)),
+          subscriptionExpiry: DateTime.now().add(const Duration(days: 14)),
           trialUsed: true,
           isTrialSubscription: true,
         );

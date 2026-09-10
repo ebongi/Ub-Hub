@@ -121,7 +121,7 @@ class UserModel extends ChangeNotifier {
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of subscriptionTier/subscriptionExpiry (the App Plan), so
-  /// the App Plan's free trial month never grants free AI.
+  /// the App Plan's free trial never grants free AI.
   bool get hasUnlimitedAI =>
       _aiSubscriptionExpiry != null &&
       _aiSubscriptionExpiry!.isAfter(DateTime.now());
@@ -133,14 +133,14 @@ class UserModel extends ChangeNotifier {
   }
 
   /// True while the current App Plan period (subscriptionTier/subscriptionExpiry)
-  /// is the free trial month, rather than a paid period.
+  /// is the free trial, rather than a paid period.
   bool get isTrialActive =>
       _isTrialSubscription &&
       _subscriptionExpiry != null &&
       _subscriptionExpiry!.isAfter(DateTime.now());
 
   /// True while the App Plan (subscriptionTier/subscriptionExpiry) is an
-  /// active paid period or the active free trial month. Mirrors
+  /// active paid period or the active free trial. Mirrors
   /// UserProfile.isSubscribed in lib/services/profile.dart.
   bool get isSubscribed =>
       (_subscriptionTier != SubscriptionTier.free &&
@@ -149,8 +149,14 @@ class UserModel extends ChangeNotifier {
       isTrialActive;
 
   /// New-account grace window, kept in sync with UserProfile's copy in
-  /// lib/services/profile.dart (and the SQL is_authorized() function).
+  /// lib/services/profile.dart (and the SQL is_authorized() function). On
+  /// top of the free trial, not in place of it.
   static const _newAccountGraceWindow = Duration(days: 3);
+
+  /// Kept in sync with UserProfile's copy in lib/services/profile.dart and
+  /// the `INTERVAL '14 days'` in
+  /// supabase/migrations/shorten_free_trial_to_two_weeks.sql.
+  static const _trialLength = Duration(days: 14);
 
   /// Central logic for the Hard Paywall. Mirrors UserProfile.hasAccess.
   bool get hasAccess {
@@ -174,7 +180,7 @@ class UserModel extends ChangeNotifier {
 
   int get trialDaysRemaining {
     if (!isTrialActive) return 0;
-    return _subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+    return _subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, _trialLength.inDays);
   }
 
   String trialTimeLeft(AppLocalizations l10n) {

@@ -162,7 +162,7 @@ class UserProfile {
   static const _newAccountGraceWindow = Duration(days: 3);
 
   /// True while the App Plan (subscription_tier/subscription_expiry) is an
-  /// active paid period or the active free trial month.
+  /// active paid period or the active free trial.
   bool get isSubscribed =>
       (subscriptionTier != SubscriptionTier.free &&
           subscriptionExpiry != null &&
@@ -170,15 +170,19 @@ class UserProfile {
       isTrialActive;
 
   /// True while the current App Plan period (subscription_tier/subscription_expiry)
-  /// is the free trial month, rather than a paid period.
+  /// is the free trial, rather than a paid period.
   bool get isTrialActive =>
       isTrialSubscription &&
       subscriptionExpiry != null &&
       subscriptionExpiry!.isAfter(DateTime.now());
 
+  /// Kept in sync with the `INTERVAL '14 days'` in
+  /// supabase/migrations/shorten_free_trial_to_two_weeks.sql.
+  static const _trialLength = Duration(days: 14);
+
   int get trialDaysRemaining {
     if (!isTrialActive) return 0;
-    return subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+    return subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, _trialLength.inDays);
   }
 
   String trialTimeLeft(AppLocalizations l10n) {
@@ -198,8 +202,9 @@ class UserProfile {
 
   /// Central logic for the Hard Paywall: admins/contributors and active
   /// subscribers (including the active free trial) always have access; a
-  /// brand-new account also has access for `_newAccountGraceWindow` so it
-  /// isn't paywalled the instant it signs up.
+  /// brand-new account also has access for `_newAccountGraceWindow` — on top
+  /// of the free trial, not in place of it — so it isn't paywalled the
+  /// instant it signs up.
   bool get hasAccess {
     if (role == UserRole.admin || role == UserRole.contributor) return true;
     if (isSubscribed) return true;
@@ -211,7 +216,7 @@ class UserProfile {
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of the App Plan's subscriptionTier/subscriptionExpiry, so
-  /// the App Plan's free trial month never grants free AI.
+  /// the App Plan's free trial never grants free AI.
   bool get hasUnlimitedAI =>
       aiSubscriptionExpiry != null && aiSubscriptionExpiry!.isAfter(DateTime.now());
 

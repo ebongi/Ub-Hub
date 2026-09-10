@@ -476,6 +476,7 @@
   "navAiAssistantLabel": "AI Assistant",
   "navMessagesLabel": "Messages",
   "navSettingsLabel": "Settings",
+  "pressBackAgainToExit": "Press back again to exit",
   "studentPortalTitle": "Student Portal",
   "syncingAcademicDataLabel": "Syncing Academic Data...",
   "reloadPageMenuItem": "Reload Page",
@@ -775,7 +776,7 @@
   "feedbackBodyText": "Found a bug? Have a suggestion? Send us an email and help us make Ub-Hub better.",
   "sendEmailButton": "Send Email",
   "trialPeriodEndedTitle": "Trial Period Ended",
-  "trialExpiredBody": "Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
+  "trialExpiredBody": "Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
   "viewUpgradePlansButton": "View Upgrade Plans",
   "addCourseTitle": "Add Course",
   "organizeAcademicContentSubtitle": "Organize your academic content",
@@ -1064,17 +1065,17 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "currentPlanBadge": "CURRENT PLAN",
-  "firstMonthFreeBadge": "FIRST MONTH FREE",
+  "firstMonthFreeBadge": "2 WEEKS FREE",
   "startFreeTrialButton": "Start Free Trial",
   "subscribeButton": "Subscribe",
-  "freeMonthThenPriceLabel": "Free for 1 month, then {price} XAF / month",
+  "freeMonthThenPriceLabel": "Free for 2 weeks, then {price} XAF / month",
   "@freeMonthThenPriceLabel": {
     "placeholders": { "price": { "type": "int" } }
   },
   "aiFeaturesBilledSeparatelyShort": "AI features are billed separately and not included.",
-  "startYourFreeMonthTitle": "Start Your Free Month",
+  "startYourFreeMonthTitle": "Start Your Free Trial",
   "noPaymentRequiredTodaySubtitle": "No payment required today",
-  "freeTrialTermsBody": "Your App Plan is free for the first 30 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.",
+  "freeTrialTermsBody": "Your App Plan is free for the first 14 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.",
   "@freeTrialTermsBody": {
     "placeholders": { "price": { "type": "int" } }
   },

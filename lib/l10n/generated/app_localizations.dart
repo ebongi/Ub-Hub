@@ -2198,6 +2198,12 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettingsLabel;
 
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// No description provided for @studentPortalTitle.
   ///
   /// In en, this message translates to:
@@ -3599,7 +3605,7 @@ abstract class AppLocalizations {
   /// No description provided for @trialExpiredBody.
   ///
   /// In en, this message translates to:
-  /// **'Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.'**
+  /// **'Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.'**
   String get trialExpiredBody;
 
   /// No description provided for @viewUpgradePlansButton.
@@ -4991,7 +4997,7 @@ abstract class AppLocalizations {
   /// No description provided for @firstMonthFreeBadge.
   ///
   /// In en, this message translates to:
-  /// **'FIRST MONTH FREE'**
+  /// **'2 WEEKS FREE'**
   String get firstMonthFreeBadge;
 
   /// No description provided for @startFreeTrialButton.
@@ -5009,7 +5015,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeMonthThenPriceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Free for 1 month, then {price} XAF / month'**
+  /// **'Free for 2 weeks, then {price} XAF / month'**
   String freeMonthThenPriceLabel(int price);
 
   /// No description provided for @aiFeaturesBilledSeparatelyShort.
@@ -5021,7 +5027,7 @@ abstract class AppLocalizations {
   /// No description provided for @startYourFreeMonthTitle.
   ///
   /// In en, this message translates to:
-  /// **'Start Your Free Month'**
+  /// **'Start Your Free Trial'**
   String get startYourFreeMonthTitle;
 
   /// No description provided for @noPaymentRequiredTodaySubtitle.
@@ -5033,7 +5039,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeTrialTermsBody.
   ///
   /// In en, this message translates to:
-  /// **'Your App Plan is free for the first 30 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.'**
+  /// **'Your App Plan is free for the first 14 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.'**
   String freeTrialTermsBody(int price);
 
   /// No description provided for @freeTrialActivatedMessage.

@@ -1169,6 +1169,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navSettingsLabel => 'Paramètres';
 
   @override
+  String get pressBackAgainToExit =>
+      'Appuyez à nouveau sur retour pour quitter';
+
+  @override
   String get studentPortalTitle => 'Portail étudiant';
 
   @override
@@ -1941,7 +1945,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trialExpiredBody =>
-      'Votre accès gratuit de 4 jours à GoStudy a expiré. Passez à un forfait premium pour débloquer votre tableau de bord académique, le bot d\'assistance UB et des ressources illimitées.';
+      'Votre accès gratuit à GoStudy a expiré. Passez à un forfait premium pour débloquer votre tableau de bord académique, le bot d\'assistance UB et des ressources illimitées.';
 
   @override
   String get viewUpgradePlansButton => 'Voir les forfaits';
@@ -2715,7 +2719,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get currentPlanBadge => 'FORFAIT ACTUEL';
 
   @override
-  String get firstMonthFreeBadge => 'PREMIER MOIS GRATUIT';
+  String get firstMonthFreeBadge => '2 SEMAINES GRATUITES';
 
   @override
   String get startFreeTrialButton => 'Démarrer l\'essai gratuit';
@@ -2725,7 +2729,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String freeMonthThenPriceLabel(int price) {
-    return 'Gratuit pendant 1 mois, puis $price XAF / mois';
+    return 'Gratuit pendant 2 semaines, puis $price XAF / mois';
   }
 
   @override
@@ -2733,7 +2737,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les fonctionnalités IA sont facturées séparément et non incluses.';
 
   @override
-  String get startYourFreeMonthTitle => 'Démarrez votre mois gratuit';
+  String get startYourFreeMonthTitle => 'Démarrez votre essai gratuit';
 
   @override
   String get noPaymentRequiredTodaySubtitle =>
@@ -2741,7 +2745,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String freeTrialTermsBody(int price) {
-    return 'Votre forfait application est gratuit pendant les 30 premiers jours, puis se renouvelle à $price XAF/mois. Les fonctionnalités IA sont facturées séparément et ne sont pas incluses dans cet essai.';
+    return 'Votre forfait application est gratuit pendant les 14 premiers jours, puis se renouvelle à $price XAF/mois. Les fonctionnalités IA sont facturées séparément et ne sont pas incluses dans cet essai.';
   }
 
   @override

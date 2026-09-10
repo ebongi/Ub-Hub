@@ -752,10 +752,10 @@ class DatabaseService {
     );
   }
 
-  /// Activate the App Plan's one-time free trial month via the
-  /// `claim_free_trial` RPC, which is guarded server-side by
-  /// `trial_used = false` so it can only ever run once per account.
-  Future<void> startFreeMonthlyTrial() async {
+  /// Activate the App Plan's one-time free trial via the `claim_free_trial`
+  /// RPC, which is guarded server-side by `trial_used = false` so it can
+  /// only ever run once per account.
+  Future<void> startFreeTrial() async {
     if (uid == null) return;
 
     DateTime expiry;
@@ -772,7 +772,7 @@ class DatabaseService {
     await NotificationService().createNotification(
       title: 'Free Trial Activated',
       body:
-          'Your free App Plan month is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
+          'Your free App Plan trial is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
       type: NotificationType.subscription,
       data: {
         'tier': SubscriptionTier.monthly.name,

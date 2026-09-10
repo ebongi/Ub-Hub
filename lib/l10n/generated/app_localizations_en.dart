@@ -1154,6 +1154,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettingsLabel => 'Settings';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get studentPortalTitle => 'Student Portal';
 
   @override
@@ -1913,7 +1916,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trialExpiredBody =>
-      'Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.';
+      'Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.';
 
   @override
   String get viewUpgradePlansButton => 'View Upgrade Plans';
@@ -2676,7 +2679,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentPlanBadge => 'CURRENT PLAN';
 
   @override
-  String get firstMonthFreeBadge => 'FIRST MONTH FREE';
+  String get firstMonthFreeBadge => '2 WEEKS FREE';
 
   @override
   String get startFreeTrialButton => 'Start Free Trial';
@@ -2686,7 +2689,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String freeMonthThenPriceLabel(int price) {
-    return 'Free for 1 month, then $price XAF / month';
+    return 'Free for 2 weeks, then $price XAF / month';
   }
 
   @override
@@ -2694,14 +2697,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'AI features are billed separately and not included.';
 
   @override
-  String get startYourFreeMonthTitle => 'Start Your Free Month';
+  String get startYourFreeMonthTitle => 'Start Your Free Trial';
 
   @override
   String get noPaymentRequiredTodaySubtitle => 'No payment required today';
 
   @override
   String freeTrialTermsBody(int price) {
-    return 'Your App Plan is free for the first 30 days, then renews at $price XAF/month. AI features are billed separately and are not included in this trial.';
+    return 'Your App Plan is free for the first 14 days, then renews at $price XAF/month. AI features are billed separately and are not included in this trial.';
   }
 
   @override

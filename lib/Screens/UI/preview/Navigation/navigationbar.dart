@@ -24,12 +24,18 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   static const int _aiTabIndex = 1;
+  static const int _homeTabIndex = 0;
 
   late int _selectedIndex;
 
   /// The last non-AI tab, so the AI Assistant screen's collapse chevron can
   /// return the user to where they came from (Home by default).
   int _previousIndex = 0;
+
+  /// Set right after a back press on the Home tab shows the "press again to
+  /// exit" snackbar; cleared after a short window so a second back press
+  /// within that window exits the app instead of being swallowed again.
+  DateTime? _lastBackPressAt;
 
   late final List<Widget> _widgetOptions;
 
@@ -52,6 +58,32 @@ class _NavBarState extends State<NavBar> {
       if (_selectedIndex != _aiTabIndex) _previousIndex = _selectedIndex;
       _selectedIndex = index;
     });
+  }
+
+  Future<void> _handleBackPress() async {
+    if (_selectedIndex != _homeTabIndex) {
+      _onItemTapped(_homeTabIndex);
+      return;
+    }
+
+    final now = DateTime.now();
+    final lastPress = _lastBackPressAt;
+    if (lastPress != null && now.difference(lastPress) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPressAt = now;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.pressBackAgainToExit),
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   @override
@@ -214,29 +246,36 @@ class _NavBarState extends State<NavBar> {
           initialData: 0,
         ),
       ],
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        body: Row(
-          children: [
-            if (isLargeScreen) buildNavRail(),
-            Expanded(
-              child: IndexedStack(index: _selectedIndex, children: _widgetOptions),
-            ),
-          ],
-        ),
-        // Hidden on the AI Assistant tab, which owns the full screen; the
-        // header's collapse chevron brings it back. Animated so it slides
-        // away rather than popping.
-        bottomNavigationBar: isLargeScreen
-            ? null
-            : AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeInOut,
-                alignment: Alignment.topCenter,
-                child: _selectedIndex == _aiTabIndex
-                    ? const SizedBox(width: double.infinity)
-                    : buildBottomBar(),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          _handleBackPress();
+        },
+        child: Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: Row(
+            children: [
+              if (isLargeScreen) buildNavRail(),
+              Expanded(
+                child: IndexedStack(index: _selectedIndex, children: _widgetOptions),
               ),
+            ],
+          ),
+          // Hidden on the AI Assistant tab, which owns the full screen; the
+          // header's collapse chevron brings it back. Animated so it slides
+          // away rather than popping.
+          bottomNavigationBar: isLargeScreen
+              ? null
+              : AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: _selectedIndex == _aiTabIndex
+                      ? const SizedBox(width: double.infinity)
+                      : buildBottomBar(),
+                ),
+        ),
       ),
     );
   }
