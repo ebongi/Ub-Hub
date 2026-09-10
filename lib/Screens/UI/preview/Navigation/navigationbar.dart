@@ -39,10 +39,20 @@ class _NavBarState extends State<NavBar> {
 
   late final List<Widget> _widgetOptions;
 
+  // Constructed once here rather than in build() — StreamProvider.value
+  // resubscribes whenever the `value` Stream instance changes identity, and
+  // both of these open a Supabase realtime channel, so rebuilding them per
+  // build() (e.g. on every tab tap) would tear down and reopen the
+  // subscriptions each time.
+  late final Stream<List<FriendRequest>?> _pendingRequestsStream;
+  late final Stream<int> _unreadNotificationCountStream;
+
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    _pendingRequestsStream = FriendsService().getPendingRequestsStream();
+    _unreadNotificationCountStream = NotificationService().unreadCountStream;
     _widgetOptions = <Widget>[
       const Home(),
       ChatbotScreen(onCollapse: () => _onItemTapped(_previousIndex)),
@@ -238,11 +248,11 @@ class _NavBarState extends State<NavBar> {
           },
         ),
         StreamProvider<List<FriendRequest>?>.value(
-          value: FriendsService().getPendingRequestsStream(),
+          value: _pendingRequestsStream,
           initialData: null,
         ),
         StreamProvider<int>.value(
-          value: NotificationService().unreadCountStream,
+          value: _unreadNotificationCountStream,
           initialData: 0,
         ),
       ],

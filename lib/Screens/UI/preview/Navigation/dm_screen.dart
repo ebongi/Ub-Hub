@@ -24,11 +24,18 @@ class _DmScreenState extends State<DmScreen> {
   late final String _myId;
   bool _requestsExpanded = true;
 
+  /// Cached once so switching _requestsExpanded (or any other rebuild)
+  /// doesn't tear down and recreate the underlying realtime subscription.
+  late final Stream<List<FriendRequest>> _pendingRequestsStream;
+  late final Stream<List<FriendProfile>> _friendsStream;
+
   @override
   void initState() {
     super.initState();
     _friendsService = FriendsService();
     _myId = sb.Supabase.instance.client.auth.currentUser?.id ?? '';
+    _pendingRequestsStream = _friendsService.getPendingRequestsStream();
+    _friendsStream = _friendsService.getFriendsStream();
   }
 
   void _openSearch() {
@@ -94,7 +101,7 @@ class _DmScreenState extends State<DmScreen> {
           children: [
             // ─── Pending Requests Section ─────────────────────────────────────
             StreamBuilder<List<FriendRequest>>(
-              stream: _friendsService.getPendingRequestsStream(),
+              stream: _pendingRequestsStream,
               builder: (context, snapshot) {
                 final requests = snapshot.data ?? [];
                 if (requests.isEmpty) return const SizedBox.shrink();
@@ -174,7 +181,7 @@ class _DmScreenState extends State<DmScreen> {
             // ─── Friends / Conversations List ─────────────────────────────────
             Expanded(
               child: StreamBuilder<List<FriendProfile>>(
-                stream: _friendsService.getFriendsStream(),
+                stream: _friendsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
