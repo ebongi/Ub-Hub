@@ -9,6 +9,7 @@ import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
 
 class OfflineLibraryScreen extends StatefulWidget {
   const OfflineLibraryScreen({super.key});
@@ -55,9 +56,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error loading library: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
       setState(() => _isLoading = false);
     }
@@ -194,9 +193,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to decrypt file: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }

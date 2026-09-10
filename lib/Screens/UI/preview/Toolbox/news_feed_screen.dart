@@ -12,6 +12,7 @@ import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_composer_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_post_detail_screen.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/news_post.dart';
@@ -484,34 +485,10 @@ class _ErrorState extends StatelessWidget {
       future: _isOffline(),
       builder: (context, snap) {
         final offline = snap.data == true;
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  offline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
-                  size: 60,
-                  color: Colors.red.withOpacity(0.5),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  offline ? l10n.noConnectionTitle : l10n.couldntFetchNews,
-                  style: GoogleFonts.outfit(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(l10n.retryButton),
-                ),
-              ],
-            ),
-          ),
+        return ErrorView(
+          icon: offline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
+          title: offline ? l10n.noConnectionTitle : l10n.couldntFetchNews,
+          onRetry: onRetry,
         );
       },
     );

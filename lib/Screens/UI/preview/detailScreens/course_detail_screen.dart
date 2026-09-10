@@ -6,6 +6,7 @@ import 'package:go_study/Screens/UI/preview/detailScreens/material_download_acti
 import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/flashcard_model.dart';
@@ -38,7 +39,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   late final DatabaseService _dbService;
   UserProfile? _userProfile;
 
-  late final Stream<List<CourseMaterial>> _materialStream;
+  late Stream<List<CourseMaterial>> _materialStream;
   late final Stream<List<FlashcardDeck>> _decksStream;
   final List<CourseMaterial> _optimisticMaterials = [];
 
@@ -228,8 +229,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
+          return ErrorView(
+            onRetry: () => setState(() {
+              _materialStream = _dbService.getCourseMaterials(widget.course.id);
+            }),
           );
         }
 
@@ -269,31 +272,71 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
             .where((m) => m.materialCategory == 'answer')
             .toList();
 
-        return ListView(
+        final rows = <_MaterialRow>[const _MaterialRow.decks()];
+        if (regularMaterials.isNotEmpty) {
+          rows.add(_MaterialRow.header(l10n.generalResourcesHeader));
+          for (var i = 0; i < regularMaterials.length; i++) {
+            rows.add(
+              _MaterialRow.regular(
+                regularMaterials[i],
+                isLast: i == regularMaterials.length - 1,
+              ),
+            );
+          }
+        }
+        if (questions.isNotEmpty) {
+          rows.add(
+            _MaterialRow.header(
+              l10n.pastQuestionsAndAnswersHeader,
+              extraGapBefore: true,
+            ),
+          );
+          for (var i = 0; i < questions.length; i++) {
+            final linkedAnswers = answers
+                .where((a) => a.linkedMaterialId == questions[i].id)
+                .toList();
+            rows.add(
+              _MaterialRow.pastQuestion(
+                questions[i],
+                linkedAnswers,
+                isLast: i == questions.length - 1,
+              ),
+            );
+          }
+        }
+
+        return ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            _buildDecksSection(),
-            if (regularMaterials.isNotEmpty) ...[
-              _buildHeader(l10n.generalResourcesHeader),
-              for (int i = 0; i < regularMaterials.length; i++) ...[
-                _buildMaterialTile(regularMaterials[i]),
-                if (i != regularMaterials.length - 1) const Divider(),
-              ],
-            ],
-            if (questions.isNotEmpty) ...[
-              SizedBox(height: AppSpacing.sectionGap),
-              _buildHeader(l10n.pastQuestionsAndAnswersHeader),
-              for (int i = 0; i < questions.length; i++) ...[
-                _buildPastQuestionTile(
-                  questions[i],
-                  answers
-                      .where((a) => a.linkedMaterialId == questions[i].id)
-                      .toList(),
-                ),
-                if (i != questions.length - 1) const Divider(),
-              ],
-            ],
-          ],
+          itemCount: rows.length,
+          itemBuilder: (context, index) {
+            final row = rows[index];
+            switch (row.kind) {
+              case _MaterialRowKind.decks:
+                return _buildDecksSection();
+              case _MaterialRowKind.header:
+                return Column(
+                  children: [
+                    if (row.extraGapBefore)
+                      SizedBox(height: AppSpacing.sectionGap),
+                    _buildHeader(row.header!),
+                  ],
+                );
+              case _MaterialRowKind.regular:
+                return Column(
+                  children: [
+                    _buildMaterialTile(row.material!),
+                    if (!row.isLast) const Divider(),
+                  ],
+                );
+              case _MaterialRowKind.pastQuestion:
+                return Column(
+                  children: [
+                    _buildPastQuestionTile(row.material!, row.linkedAnswers!),
+                    if (!row.isLast) const Divider(),
+                  ],
+                );
+            }
+          },
         );
       },
     );
@@ -1341,4 +1384,40 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       ),
     );
   }
+}
+
+/// A flattened row for the resources tab's `ListView.builder`: the decks
+/// section, a section header, or a material tile, so lazy building works
+/// across materials + past-questions-with-linked-answers.
+enum _MaterialRowKind { decks, header, regular, pastQuestion }
+
+class _MaterialRow {
+  const _MaterialRow.decks()
+      : kind = _MaterialRowKind.decks,
+        header = null,
+        extraGapBefore = false,
+        material = null,
+        linkedAnswers = null,
+        isLast = false;
+  const _MaterialRow.header(this.header, {this.extraGapBefore = false})
+      : kind = _MaterialRowKind.header,
+        material = null,
+        linkedAnswers = null,
+        isLast = false;
+  const _MaterialRow.regular(this.material, {required this.isLast})
+      : kind = _MaterialRowKind.regular,
+        header = null,
+        extraGapBefore = false,
+        linkedAnswers = null;
+  const _MaterialRow.pastQuestion(this.material, this.linkedAnswers, {required this.isLast})
+      : kind = _MaterialRowKind.pastQuestion,
+        header = null,
+        extraGapBefore = false;
+
+  final _MaterialRowKind kind;
+  final String? header;
+  final bool extraGapBefore;
+  final CourseMaterial? material;
+  final List<CourseMaterial>? linkedAnswers;
+  final bool isLast;
 }

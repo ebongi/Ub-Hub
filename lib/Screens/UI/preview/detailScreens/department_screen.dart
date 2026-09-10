@@ -11,6 +11,7 @@ import 'package:go_study/Screens/UI/preview/detailScreens/material_download_acti
 import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
 import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/course_material.dart';
 import 'package:go_study/services/flashcard_model.dart';
@@ -51,7 +52,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
   UserProfile? _userProfile;
   Department? _department;
 
-  late final Stream<List<Course>> _courseStream;
+  late Stream<List<Course>> _courseStream;
   late final Stream<List<CourseMaterial>> _materialStream;
   late final Stream<List<FlashcardDeck>> _decksStream;
   final List<Course> _optimisticCourses = [];
@@ -404,8 +405,10 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           return const CourseListShimmer();
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
+          return ErrorView(
+            onRetry: () => setState(() {
+              _courseStream = _dbService.getCoursesForDepartment(widget.departmentId);
+            }),
           );
         }
 
@@ -433,35 +436,51 @@ class _DepartmentScreenState extends State<DepartmentScreen>
             .where((c) => c.level == null || c.level!.isEmpty)
             .toList();
 
-        return ListView(
+        final rows = <_CourseRow>[];
+        for (final level in distinctLevels) {
+          rows.add(_CourseRow.header(_sectionHeaderFor(level, l10n)));
+          final levelCourses = allCourses.where((c) => c.level == level).toList();
+          for (var i = 0; i < levelCourses.length; i++) {
+            rows.add(
+              _CourseRow.course(
+                levelCourses[i],
+                i * 0.05,
+                isLastInSection: i == levelCourses.length - 1,
+              ),
+            );
+          }
+        }
+        if (others.isNotEmpty) {
+          rows.add(_CourseRow.header(l10n.otherCoursesHeader));
+          for (var i = 0; i < others.length; i++) {
+            rows.add(
+              _CourseRow.course(
+                others[i],
+                i * 0.05,
+                isLastInSection: i == others.length - 1,
+              ),
+            );
+          }
+        }
+
+        return ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            for (final level in distinctLevels) ...[
-              if (level != distinctLevels.first)
-                const SizedBox(height: AppSpacing.lg),
-              _buildLevelHeader(_sectionHeaderFor(level, l10n)),
-              ...ListTile.divideTiles(
-                context: context,
-                tiles: allCourses
-                    .where((c) => c.level == level)
-                    .toList()
-                    .asMap()
-                    .entries
-                    .map((e) => _buildCourseTile(e.value, delay: e.key * 0.05)),
-              ),
-            ],
-            if (others.isNotEmpty) ...[
-              if (distinctLevels.isNotEmpty)
-                const SizedBox(height: AppSpacing.lg),
-              _buildLevelHeader(l10n.otherCoursesHeader),
-              ...ListTile.divideTiles(
-                context: context,
-                tiles: others.asMap().entries.map(
-                  (e) => _buildCourseTile(e.value, delay: e.key * 0.05),
-                ),
-              ),
-            ],
-          ],
+          itemCount: rows.length,
+          itemBuilder: (context, index) {
+            final row = rows[index];
+            if (row.headerText != null) {
+              return Padding(
+                padding: EdgeInsets.only(top: index == 0 ? 0 : AppSpacing.lg),
+                child: _buildLevelHeader(row.headerText!),
+              );
+            }
+            return Column(
+              children: [
+                _buildCourseTile(row.course!, delay: row.delay),
+                if (!row.isLastInSection) const Divider(),
+              ],
+            );
+          },
         );
       },
     );
@@ -608,21 +627,25 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           );
         }
 
-        return ListView(
+        return ListView.builder(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm,
           ),
-          children: [
-            _buildDecksSection(),
-            for (int i = 0; i < materials.length; i++) ...[
-              FadeInSlide(
-                delay: i * 0.05,
-                child: _buildMaterialTile(materials[i]),
-              ),
-              if (i != materials.length - 1) const Divider(),
-            ],
-          ],
+          itemCount: materials.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) return _buildDecksSection();
+            final i = index - 1;
+            return Column(
+              children: [
+                FadeInSlide(
+                  delay: i * 0.05,
+                  child: _buildMaterialTile(materials[i]),
+                ),
+                if (i != materials.length - 1) const Divider(),
+              ],
+            );
+          },
         );
       },
     );
@@ -1962,4 +1985,21 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
     return false;
   }
+}
+
+/// A flattened row for the courses tab's `ListView.builder`: either a
+/// section header or a course tile, so lazy building works across the
+/// grouped-by-level layout.
+class _CourseRow {
+  const _CourseRow.header(this.headerText)
+      : course = null,
+        delay = 0,
+        isLastInSection = false;
+  const _CourseRow.course(this.course, this.delay, {required this.isLastInSection})
+      : headerText = null;
+
+  final String? headerText;
+  final Course? course;
+  final double delay;
+  final bool isLastInSection;
 }

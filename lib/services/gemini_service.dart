@@ -1,5 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart' show DataPart;
 import 'package:flutter/foundation.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/gemini_client.dart';
 import 'package:go_study/services/database.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -76,7 +77,7 @@ class GeminiService implements AIService {
           "I'm sorry, I couldn't generate a response. Please try again.";
     } catch (e) {
       debugPrint('Gemini Error: $e');
-      return "I encountered an error connecting to the AI service. Details: ${e.toString().split('\n').first}";
+      return "I encountered an error connecting to the AI service. ${ErrorHandler.getFriendlyMessage(e)}";
     }
   }
 
@@ -110,7 +111,7 @@ class GeminiService implements AIService {
       if (kDebugMode) {
         print('Gemini Stream Error: $e');
       }
-      yield "Error: Could not load stream. ($e)";
+      yield "Error: ${ErrorHandler.getFriendlyMessage(e)}";
     }
   }
 
@@ -309,7 +310,7 @@ Format the response in professional Markdown.
       if (kDebugMode) {
         print('Gemini PDF Error: $e');
       }
-      return "Sorry, I encountered an error summarizing the PDF: $e";
+      return "Sorry, I encountered an error summarizing the PDF. ${ErrorHandler.getFriendlyMessage(e)}";
     }
   }
 }

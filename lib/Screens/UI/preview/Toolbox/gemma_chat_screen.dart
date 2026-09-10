@@ -9,6 +9,7 @@ import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_background
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_header.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_input_bar.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_message_bubble.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/gemma_client.dart';
 import 'package:go_study/services/gemma_model_manager.dart';
@@ -223,7 +224,7 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
       }
       final message = e is DownloadException
           ? e.error.toUserMessage()
-          : e.toString();
+          : ErrorHandler.getFriendlyMessage(e);
       setState(() {
         _isDownloading = false;
         _downloadError = message;
@@ -365,7 +366,7 @@ class _GemmaChatScreenState extends State<GemmaChatScreen> {
           final index = _messages.indexWhere((m) => m.id == placeholder.id);
           final errorMessage = _GemmaMessage(
             id: placeholder.id,
-            text: l10n.sorryEncounteredError(e.toString()),
+            text: l10n.sorryEncounteredError(ErrorHandler.getFriendlyMessage(e)),
             isUser: false,
             isError: true,
             createdAt: placeholder.createdAt,

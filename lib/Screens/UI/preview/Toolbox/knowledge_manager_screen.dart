@@ -66,7 +66,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ErrorHandler.showErrorSnackBar(context, "Couldn't load the knowledge base: $e");
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }
@@ -113,7 +113,7 @@ class _KnowledgeManagerScreenState extends State<KnowledgeManagerScreen> {
         ErrorHandler.showSuccessSnackBar(context, "Extracted — review below, then Save.");
       }
     } catch (e) {
-      if (mounted) ErrorHandler.showErrorSnackBar(context, "Error processing PDF: $e");
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _isExtracting = false);
     }

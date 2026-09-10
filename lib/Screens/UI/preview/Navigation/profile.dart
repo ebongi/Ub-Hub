@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
@@ -9,6 +10,7 @@ import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/leaderboard_screen.dart';
 import 'package:go_study/services/level_service.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/core/error_handler.dart';
 
 
 import 'package:image_picker/image_picker.dart';
@@ -73,7 +75,7 @@ class _ProfileState extends State<Profile> {
                           0.1,
                         ),
                         backgroundImage: user.avatarUrl != null
-                            ? NetworkImage(user.avatarUrl!)
+                            ? CachedNetworkImageProvider(user.avatarUrl!)
                             : null,
                         child: user.avatarUrl == null
                             ? Icon(
@@ -679,9 +681,7 @@ class _ProfileState extends State<Profile> {
         } catch (e) {
           if (mounted) {
             Navigator.pop(context); // Close loading
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Error uploading avatar: $e")),
-            );
+            ErrorHandler.showErrorSnackBar(context, e);
           }
         }
       }

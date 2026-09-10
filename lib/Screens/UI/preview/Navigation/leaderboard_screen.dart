@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/services/leaderboard_entry.dart';
 import 'package:go_study/services/level_service.dart';
@@ -117,7 +119,10 @@ class _LeaderboardTabBodyState extends State<_LeaderboardTabBody>
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return _ErrorState(onRetry: () => setState(_load));
+          return ErrorView(
+            onRetry: () => setState(_load),
+            title: "Couldn't load the leaderboard",
+          );
         }
 
         final entries = snap.data ?? const <LeaderboardEntry>[];
@@ -145,26 +150,38 @@ class _LeaderboardTabBodyState extends State<_LeaderboardTabBody>
 
         return RefreshIndicator(
           onRefresh: _refresh,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            children: [
-              _Podium(top3: top3, showLevel: showLevel),
-              const SizedBox(height: 20),
-              FutureBuilder<LeaderboardEntry?>(
-                future: _myPositionFuture,
-                builder: (context, mySnap) {
-                  final mine = mySnap.data;
-                  if (mine == null) return const SizedBox.shrink();
-                  return _MyRankCard(entry: mine, showLevel: showLevel);
-                },
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      _Podium(top3: top3, showLevel: showLevel),
+                      const SizedBox(height: 20),
+                      FutureBuilder<LeaderboardEntry?>(
+                        future: _myPositionFuture,
+                        builder: (context, mySnap) {
+                          final mine = mySnap.data;
+                          if (mine == null) return const SizedBox.shrink();
+                          return _MyRankCard(entry: mine, showLevel: showLevel);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              ...List.generate(rest.length, (i) {
-                return FadeInSlide(
-                  delay: (i * 0.05).clamp(0, 0.4),
-                  child: _LeaderboardRow(entry: rest[i], showLevel: showLevel),
-                );
-              }),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                sliver: SliverList.builder(
+                  itemCount: rest.length,
+                  itemBuilder: (context, i) => FadeInSlide(
+                    delay: (i * 0.05).clamp(0, 0.4),
+                    child: _LeaderboardRow(entry: rest[i], showLevel: showLevel),
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -324,7 +341,7 @@ class _PodiumSlot extends StatelessWidget {
                 radius: tier.avatarSize / 2,
                 backgroundColor: color.withOpacity(0.15),
                 backgroundImage: entry.avatarUrl != null
-                    ? NetworkImage(entry.avatarUrl!)
+                    ? CachedNetworkImageProvider(entry.avatarUrl!)
                     : null,
                 child: entry.avatarUrl == null
                     ? Text(
@@ -441,7 +458,7 @@ class _MyRankCard extends StatelessWidget {
             radius: 22,
             backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
             backgroundImage: entry.avatarUrl != null
-                ? NetworkImage(entry.avatarUrl!)
+                ? CachedNetworkImageProvider(entry.avatarUrl!)
                 : null,
             child: entry.avatarUrl == null
                 ? Icon(Icons.person_rounded, color: theme.colorScheme.primary)
@@ -524,7 +541,7 @@ class _LeaderboardRow extends StatelessWidget {
             radius: 18,
             backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
             backgroundImage: entry.avatarUrl != null
-                ? NetworkImage(entry.avatarUrl!)
+                ? CachedNetworkImageProvider(entry.avatarUrl!)
                 : null,
             child: entry.avatarUrl == null
                 ? Text(
@@ -641,40 +658,3 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.onRetry});
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 60,
-              color: Colors.red.withOpacity(0.5),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              "Couldn't load the leaderboard",
-              style: GoogleFonts.outfit(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            MaterialButton(
-              elevation: 0,
-              onPressed: onRetry,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

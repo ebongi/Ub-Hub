@@ -6,11 +6,17 @@ import 'package:go_study/services/database.dart';
 import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/create_exam_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/exam_detail_screen.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ExamScheduleScreen extends StatelessWidget {
+class ExamScheduleScreen extends StatefulWidget {
   const ExamScheduleScreen({super.key});
 
+  @override
+  State<ExamScheduleScreen> createState() => _ExamScheduleScreenState();
+}
+
+class _ExamScheduleScreenState extends State<ExamScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -40,7 +46,7 @@ class ExamScheduleScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return ErrorView(onRetry: () => setState(() {}));
           }
           final exams = snapshot.data ?? [];
           if (exams.isEmpty) {

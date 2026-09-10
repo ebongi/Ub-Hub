@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_study/core/error_handler.dart';
 
 Future<void> showSupportDialog(BuildContext context) async {
   final amountController = TextEditingController();
@@ -229,17 +230,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                           } catch (e) {
                             setDialogState(() => isLoading = false);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e
-                                        .toString()
-                                        .replaceAll('Exception:', '')
-                                        .trim(),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              ErrorHandler.showErrorSnackBar(context, e);
                             }
                           }
                         },

@@ -6,6 +6,7 @@ import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/core/error_handler.dart';
 
 class CreateExamScreen extends StatefulWidget {
   final ExamEvent? exam;
@@ -162,9 +163,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error saving exam: $e')));
+          ErrorHandler.showErrorSnackBar(context, e);
         }
         return;
       } finally {

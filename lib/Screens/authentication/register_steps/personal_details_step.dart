@@ -4,10 +4,14 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 import 'package:go_study/theme/app_spacing.dart';
 
-class AccountStep extends StatelessWidget {
-  const AccountStep({
+/// Step 1 of sign-up: identity + account credentials (was the separate
+/// Account and Identity steps, merged to match the 2-step design reference).
+class PersonalDetailsStep extends StatelessWidget {
+  const PersonalDetailsStep({
     super.key,
     required this.formKey,
+    required this.firstNameController,
+    required this.lastNameController,
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
@@ -15,11 +19,12 @@ class AccountStep extends StatelessWidget {
     required this.isConfirmPasswordObscured,
     required this.onTogglePassword,
     required this.onToggleConfirmPassword,
-    required this.onPasswordChanged,
     required this.isDark,
   });
 
   final GlobalKey<FormState> formKey;
+  final TextEditingController firstNameController;
+  final TextEditingController lastNameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
@@ -27,13 +32,10 @@ class AccountStep extends StatelessWidget {
   final bool isConfirmPasswordObscured;
   final VoidCallback onTogglePassword;
   final VoidCallback onToggleConfirmPassword;
-  final ValueChanged<String> onPasswordChanged;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final password = passwordController.text;
-    final strength = _strengthOf(password);
     final l10n = AppLocalizations.of(context)!;
 
     return Form(
@@ -43,18 +45,33 @@ class AccountStep extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RegistrationPageHeader(
-              title: l10n.accountStepTitle,
-              description: l10n.accountStepDescription,
-              icon: Icons.lock_person_outlined,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 18),
-            RegistrationSectionFocus(
-              title: l10n.accountCredentialsTitle,
-              subtitle: l10n.accountCredentialsSubtitle,
-              icon: Icons.shield_outlined,
-              isDark: isDark,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: RegistrationField(
+                    label: l10n.firstNameLabel,
+                    hint: l10n.firstNameHint,
+                    icon: Icons.person_outline_rounded,
+                    controller: firstNameController,
+                    isDark: isDark,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? l10n.firstNameRequired : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: RegistrationField(
+                    label: l10n.lastNameLabel,
+                    hint: l10n.lastNameHint,
+                    icon: Icons.person_outline_rounded,
+                    controller: lastNameController,
+                    isDark: isDark,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? l10n.lastNameRequired : null,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.xl),
             RegistrationField(
@@ -83,7 +100,6 @@ class AccountStep extends StatelessWidget {
               controller: passwordController,
               isDark: isDark,
               obscureText: isPasswordObscured,
-              onChanged: onPasswordChanged,
               suffixIcon: GestureDetector(
                 onTap: onTogglePassword,
                 child: Icon(
@@ -110,13 +126,20 @@ class AccountStep extends StatelessWidget {
                 return null;
               },
             ),
-            if (password.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.lg),
-              _StrengthMeter(
-                strength: strength,
-                isDark: isDark,
-              ),
-            ],
+            AnimatedBuilder(
+              animation: passwordController,
+              builder: (context, _) {
+                final password = passwordController.text;
+                if (password.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.lg),
+                  child: _StrengthMeter(
+                    strength: _strengthOf(password),
+                    isDark: isDark,
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: AppSpacing.xl),
             RegistrationField(
               label: l10n.confirmPasswordLabel,
@@ -157,10 +180,7 @@ class AccountStep extends StatelessWidget {
 }
 
 class _StrengthMeter extends StatelessWidget {
-  const _StrengthMeter({
-    required this.strength,
-    required this.isDark,
-  });
+  const _StrengthMeter({required this.strength, required this.isDark});
 
   final double strength;
   final bool isDark;

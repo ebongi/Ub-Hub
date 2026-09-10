@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
@@ -7,6 +8,7 @@ import 'package:go_study/Screens/UI/preview/Settings/terms_of_service_screen.dar
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:go_study/Screens/UI/preview/Settings/feedback.dart';
 import 'package:go_study/Screens/UI/preview/Settings/support_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/locale_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -362,7 +364,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     radius: 28,
                     backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                     backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                        ? NetworkImage(avatarUrl)
+                        ? CachedNetworkImageProvider(avatarUrl)
                         : null,
                     child: (avatarUrl == null || avatarUrl.isEmpty)
                         ? Icon(
@@ -660,7 +662,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.deleteAccountFailed(e.toString())),
+            content: Text(l10n.deleteAccountFailed(ErrorHandler.getFriendlyMessage(e))),
             backgroundColor: Colors.red.shade700,
           ),
         );

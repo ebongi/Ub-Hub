@@ -1043,15 +1043,25 @@ class DatabaseService {
   static const String _botKnowledgeBucket = 'bot_knowledge';
   static const String _botKnowledgeFileName = 'knowledge.txt';
 
+  /// In-memory cache of the shared knowledge document for this app session —
+  /// static since the document is global (not per-uid), and DatabaseService
+  /// is instantiated fresh per screen. Avoids re-downloading the whole file
+  /// from Storage every time a chat/manager screen opens.
+  static String? _sharedBotKnowledgeCache;
+
   /// The single shared knowledge document every user's UB Support Bot chat
   /// reads from — one file in Storage, not a per-user table, so everyone
   /// gets identical answers. Returns '' if it hasn't been uploaded yet.
   Future<String> getSharedBotKnowledge() async {
+    final cached = _sharedBotKnowledgeCache;
+    if (cached != null) return cached;
     try {
       final bytes = await _supabase.storage
           .from(_botKnowledgeBucket)
           .download(_botKnowledgeFileName);
-      return utf8.decode(bytes);
+      final content = utf8.decode(bytes);
+      _sharedBotKnowledgeCache = content;
+      return content;
     } on StorageException catch (e) {
       // Supabase Storage doesn't reliably surface a missing-object 404 in
       // `statusCode` — it's sometimes wrapped in an outer error (observed:
@@ -1080,6 +1090,7 @@ class DatabaseService {
             upsert: true,
           ),
         );
+    _sharedBotKnowledgeCache = content;
   }
 
   // ==================== Grade Tracking / Predictor Methods ====================

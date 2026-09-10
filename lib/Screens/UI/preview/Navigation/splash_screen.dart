@@ -18,8 +18,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const _totalDuration = Duration(milliseconds: 2600);
-  static const _navigateAfter = Duration(milliseconds: 3000);
+  static const _totalDuration = Duration(milliseconds: 1500);
+  static const _navigateAfter = Duration(milliseconds: 1700);
 
   // Timeline, as fractions of _totalDuration:
   //   0.00 - 0.19  "G" emblem revealed left-to-right (wipe)

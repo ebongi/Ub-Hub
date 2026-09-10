@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_grid_card.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
@@ -32,7 +33,7 @@ class InstitutionAboutScreen extends StatefulWidget {
 class _InstitutionAboutScreenState extends State<InstitutionAboutScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  late final Stream<List<Department>> _departmentStream;
+  late Stream<List<Department>> _departmentStream;
 
   @override
   void initState() {
@@ -209,11 +210,13 @@ class _InstitutionAboutScreenState extends State<InstitutionAboutScreen> {
               }
               if (snapshot.hasError) {
                 return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Center(
-                      child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
-                    ),
+                  child: ErrorView(
+                    onRetry: () => setState(() {
+                      _departmentStream = DatabaseService().getDepartments(
+                        institutionId: widget.institution.id,
+                      );
+                    }),
+                    compact: true,
                   ),
                 );
               }

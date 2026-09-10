@@ -46,7 +46,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWelcomeBack => 'Welcome back';
 
   @override
-  String get signInSubtitle => 'Sign in to continue your academic journey.';
+  String get signInSubtitle => 'Please enter your details';
 
   @override
   String get emailAddressLabel => 'Email Address';
@@ -67,10 +67,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get signInButton => 'Sign In';
-
-  @override
-  String get orDivider => 'OR';
+  String get signInButton => 'Login';
 
   @override
   String get noAccountPrompt => 'Don\'t have an account?';
@@ -79,28 +76,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signUpLink => 'Sign Up';
 
   @override
-  String get registerTitle => 'Student Registration';
+  String get registerTitle => 'Get started with us';
 
   @override
-  String get registerSubtitle =>
-      'Create your account in four guided steps designed for the academic workflow.';
-
-  @override
-  String registerStepOf(int current, int total) {
-    return 'Step $current of $total';
-  }
+  String get registerSubtitle => 'Please enter your details';
 
   @override
   String get registerBack => 'Back';
 
   @override
-  String get registerContinue => 'Continue';
+  String get registerContinue => 'Proceed';
 
   @override
-  String get registerComplete => 'Complete Registration';
-
-  @override
-  String get registerVerificationRequired => 'VERIFICATION REQUIRED';
+  String get registerComplete => 'Register';
 
   @override
   String get alreadyRegistered => 'Already registered?';
@@ -109,18 +97,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInToPortal => 'Sign In to Portal';
 
   @override
-  String get accountStepTitle => 'Account';
+  String get personalDetailsStepLabel => 'Personal details';
 
   @override
-  String get accountStepDescription =>
-      'Secure your academic profile with a strong email and password.';
+  String get academicDetailsStepLabel => 'Academic details';
 
   @override
-  String get accountCredentialsTitle => 'Account credentials';
+  String get firstNameLabel => 'First Name';
 
   @override
-  String get accountCredentialsSubtitle =>
-      'This section protects your portal access and your study records.';
+  String get firstNameHint => 'eg. John';
+
+  @override
+  String get firstNameRequired => 'First name is required';
+
+  @override
+  String get lastNameLabel => 'Last Name';
+
+  @override
+  String get lastNameHint => 'eg. Doe';
+
+  @override
+  String get lastNameRequired => 'Last name is required';
 
   @override
   String get academicEmailLabel => 'Academic Email';
@@ -181,47 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get identityStepTitle => 'Identity';
-
-  @override
-  String get identityStepDescription =>
-      'Add your real name and contact details so the community can identify you.';
-
-  @override
-  String get personalIdentityTitle => 'Personal identity';
-
-  @override
-  String get personalIdentitySubtitle =>
-      'This section makes your profile recognizable to classmates and admins.';
-
-  @override
-  String get fullLegalNameLabel => 'Full Legal Name';
-
-  @override
-  String get firstLastNameHint => 'First and Last Name';
-
-  @override
-  String get fullNameRequired => 'Full name is required';
-
-  @override
   String get phoneContactLabel => 'Phone Contact';
 
   @override
   String get phoneRequired => 'Phone number is required';
-
-  @override
-  String get academicStepTitle => 'Academic';
-
-  @override
-  String get academicStepDescription =>
-      'Add your matricule and academic level to unlock the right resources.';
-
-  @override
-  String get academicAffiliationTitle => 'Academic affiliation';
-
-  @override
-  String get academicAffiliationSubtitle =>
-      'This links your account to the correct educational track.';
 
   @override
   String get studentMatriculeLabel => 'Student Matricule';
@@ -243,20 +204,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get academicLevelResit => 'Resit';
-
-  @override
-  String get finalizeStepTitle => 'Finalize';
-
-  @override
-  String get finalizeStepDescription =>
-      'Add a short academic bio and accept our terms to complete your profile.';
-
-  @override
-  String get finalizeProfileTitle => 'Finalize profile';
-
-  @override
-  String get finalizeProfileSubtitle =>
-      'This is the last step before your study account is ready.';
 
   @override
   String get academicBioLabel => 'Academic Bio';

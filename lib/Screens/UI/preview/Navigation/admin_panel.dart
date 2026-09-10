@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -12,6 +13,8 @@ import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart
 import 'package:go_study/Screens/Shared/content_media_card.dart';
 import 'package:go_study/Screens/Shared/department_ui_data.dart';
 import 'package:go_study/Screens/Shared/section_header.dart';
+import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
@@ -159,13 +162,7 @@ class _AdminPanelState extends State<AdminPanel> {
       await _handleSearch(_lastQuery);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update role: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ErrorHandler.showErrorSnackBar(context, e);
     }
   }
 
@@ -262,8 +259,9 @@ class _AdminPanelState extends State<AdminPanel> {
                           );
                         }
                         if (_hasSearchError) {
-                          return _SearchErrorState(
-                            theme: theme,
+                          return ErrorView(
+                            icon: Icons.wifi_off_rounded,
+                            title: AppLocalizations.of(context)!.searchResultsErrorTitle,
                             onRetry: () => _handleSearch(_lastQuery),
                           );
                         }
@@ -828,48 +826,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _SearchErrorState extends StatelessWidget {
-  const _SearchErrorState({required this.theme, required this.onRetry});
-
-  final ThemeData theme;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 44),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 48,
-              color: theme.colorScheme.error.withOpacity(0.6),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.searchResultsErrorTitle,
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w700,
-                color: theme.hintColor,
-              ),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: Text(
-                l10n.retryButton,
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _UserCard extends StatelessWidget {
   const _UserCard({
     required this.user,
@@ -915,7 +871,7 @@ class _UserCard extends StatelessWidget {
                 radius: 26,
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                 backgroundImage: user.avatarUrl != null
-                    ? NetworkImage(user.avatarUrl!)
+                    ? CachedNetworkImageProvider(user.avatarUrl!)
                     : null,
                 child: user.avatarUrl == null
                     ? Icon(

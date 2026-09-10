@@ -14,6 +14,7 @@ import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_message_bu
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_suggestion_chips.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/assistant_welcome_card.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/widgets/message_quota_pill.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/ai_service.dart';
@@ -88,7 +89,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         });
       }
     } catch (e) {
-      _showErrorSnackBar("Failed to pick files: $e");
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
     }
   }
 
@@ -121,29 +122,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     } catch (e) {
       debugPrint("Error loading sessions: $e");
       if (mounted) {
-        _showErrorSnackBar(AppLocalizations.of(context)!.failedToLoadChatHistory);
+        ErrorHandler.showErrorSnackBar(
+          context,
+          AppLocalizations.of(context)!.failedToLoadChatHistory,
+        );
       }
     }
-  }
-
-  void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.red.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-      ),
-    );
   }
 
   @override
@@ -236,7 +220,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       try {
         await _syncService.saveSession(newSession);
       } catch (e) {
-        _showErrorSnackBar("Failed to sync new session: $e");
+        if (mounted) ErrorHandler.showErrorSnackBar(context, e);
       }
     }
 
@@ -270,7 +254,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final currentSession = _sessions[_currentSessionIndex!];
     _syncService
         .saveMessage(currentSession.id, userMessage)
-        .catchError((e) => _showErrorSnackBar(l10n.messageSyncFailed));
+        .catchError((e) {
+          if (mounted) {
+            ErrorHandler.showErrorSnackBar(context, l10n.messageSyncFailed);
+          }
+        });
 
     _scrollToBottom();
 
@@ -297,10 +285,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
               if (chunk.startsWith("Error:") || chunk == "OUT_OF_CREDITS") {
                 if (chunk == "OUT_OF_CREDITS") {
-                  _showErrorSnackBar(l10n.outOfAiCreditsMessage);
+                  ErrorHandler.showErrorSnackBar(context, l10n.outOfAiCreditsMessage);
                   AIUsageGate.checkAndShow(context, profile);
                 } else {
-                  _showErrorSnackBar(chunk.replaceFirst("Error:", "").trim());
+                  // Legitimate use of the String-passthrough path in
+                  // getFriendlyMessage: `chunk` is already sanitized by
+                  // ErrorHandler.getFriendlyMessage upstream in
+                  // gemini_service.dart's streamMessage, so this is not a
+                  // raw exception being routed around translation.
+                  ErrorHandler.showErrorSnackBar(
+                    context,
+                    chunk.replaceFirst("Error:", "").trim(),
+                  );
                 }
                 _aiSubscription?.cancel();
                 _aiSubscription = null;
@@ -317,10 +313,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             },
             onError: (e) {
               if (!mounted) return;
-              _showErrorSnackBar("AI Error: $e");
+              ErrorHandler.showErrorSnackBar(context, e);
               _aiSubscription = null;
               _finalizeStreamingMessage(
-                text: l10n.sorryEncounteredError(e.toString()),
+                text: l10n.sorryEncounteredError(
+                  ErrorHandler.getFriendlyMessage(e),
+                ),
                 isError: true,
               );
             },
@@ -332,9 +330,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           );
     } catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar("Critical Error: $e");
+      ErrorHandler.showErrorSnackBar(context, e);
       final errorMessage = ChatMessage(
-        text: l10n.sorryEncounteredCriticalError(e.toString()),
+        text: l10n.sorryEncounteredCriticalError(
+          ErrorHandler.getFriendlyMessage(e),
+        ),
         isUser: false,
         isError: true,
       );
@@ -486,7 +486,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           }
         });
       } catch (e) {
-        _showErrorSnackBar("Failed to delete chat: $e");
+        if (mounted) ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }
@@ -571,7 +571,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           Navigator.pop(context);
         }
       } catch (e) {
-        _showErrorSnackBar("Failed to clear chats: $e");
+        if (mounted) ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }

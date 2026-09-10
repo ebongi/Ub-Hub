@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -1121,7 +1122,7 @@ class AppBarUser extends StatelessWidget {
                   context,
                 ).colorScheme.primary.withOpacity(0.1),
                 backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
+                    ? CachedNetworkImageProvider(avatarUrl)
                     : null,
                 child: (avatarUrl == null || avatarUrl.isEmpty)
                     ? Icon(

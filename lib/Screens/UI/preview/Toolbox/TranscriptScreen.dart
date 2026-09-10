@@ -10,6 +10,7 @@ import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
 
 class TranscriptScreen extends StatefulWidget {
   const TranscriptScreen({super.key});
@@ -331,7 +332,7 @@ class _TranscriptScreenState extends State<TranscriptScreen> {
       await _launchWhatsAppApplication(deliveryMethod);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);

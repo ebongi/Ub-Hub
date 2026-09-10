@@ -7,12 +7,9 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/Screens/authentication/register_form_widgets.dart';
-import 'package:go_study/theme/app_radius.dart';
 import 'package:go_study/theme/app_spacing.dart';
-import 'package:go_study/Screens/authentication/register_steps/account_step.dart';
-import 'package:go_study/Screens/authentication/register_steps/identity_step.dart';
-import 'package:go_study/Screens/authentication/register_steps/academic_step.dart';
-import 'package:go_study/Screens/authentication/register_steps/finalize_step.dart';
+import 'package:go_study/Screens/authentication/register_steps/personal_details_step.dart';
+import 'package:go_study/Screens/authentication/register_steps/academic_details_step.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -29,17 +26,17 @@ class _RegisterFlowState extends State<RegisterFlow>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _matriculeController = TextEditingController();
   final _bioController = TextEditingController();
 
   final List<GlobalKey<FormState>> _pageFormKeys = List.generate(
-    4,
+    2,
     (_) => GlobalKey<FormState>(),
   );
 
-  final PageController _pageController = PageController(initialPage: 0);
   final Authentication _authentication = Authentication();
 
   String _selectedLevel = '';
@@ -74,40 +71,29 @@ class _RegisterFlowState extends State<RegisterFlow>
         curve: Curves.easeOutCubic,
       ),
     );
-
   }
 
   @override
   void dispose() {
     _entryController.dispose();
-    _pageController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
     _matriculeController.dispose();
     _bioController.dispose();
     super.dispose();
   }
 
-  void _checkPasswordStrength(String password) {
-    // Strength feedback is handled inside the Account step widget.
-  }
-
   Future<void> _nextStep() async {
     final valid = _pageFormKeys[_currentStep].currentState?.validate() ?? false;
     if (!valid) return;
 
-    if (_currentStep < 3) {
+    if (_currentStep < 1) {
       await HapticFeedback.lightImpact();
-      final next = _currentStep + 1;
-      setState(() => _currentStep = next);
-      await _pageController.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+      setState(() => _currentStep = _currentStep + 1);
     } else {
       _submitForm();
     }
@@ -116,13 +102,7 @@ class _RegisterFlowState extends State<RegisterFlow>
   Future<void> _previousStep() async {
     if (_currentStep == 0) return;
     await HapticFeedback.lightImpact();
-    final previous = _currentStep - 1;
-    setState(() => _currentStep = previous);
-    await _pageController.animateToPage(
-      previous,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
+    setState(() => _currentStep = _currentStep - 1);
   }
 
   Future<void> _submitForm() async {
@@ -130,12 +110,16 @@ class _RegisterFlowState extends State<RegisterFlow>
     final valid = _pageFormKeys[_currentStep].currentState?.validate() ?? false;
     if (!valid) return;
 
+    final fullName =
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+            .trim();
+
     setState(() => _isLoading = true);
     try {
       final user = await _authentication.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-        name: _nameController.text.trim(),
+        name: fullName,
         matricule: _matriculeController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         level: _selectedLevel.trim(),
@@ -143,8 +127,7 @@ class _RegisterFlowState extends State<RegisterFlow>
       );
 
       if (user != null && mounted) {
-        Provider.of<UserModel>(context, listen: false)
-            .setName(_nameController.text.trim());
+        Provider.of<UserModel>(context, listen: false).setName(fullName);
         Navigator.of(context).pop();
       }
     } on sb.AuthException catch (e) {
@@ -177,7 +160,7 @@ class _RegisterFlowState extends State<RegisterFlow>
                 opacity: _fadeAnim,
                 child: SlideTransition(
                   position: _slideAnim,
-                  child: _BrandChip(isDark: isDark),
+                  child: const AppWordmark(fontSize: 20),
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -188,112 +171,93 @@ class _RegisterFlowState extends State<RegisterFlow>
                   child: Text(
                     l10n.registerTitle,
                     style: GoogleFonts.outfit(
-                      fontSize: 32,
+                      fontSize: 30,
                       fontWeight: FontWeight.w800,
                       color: regHeadingColor(isDark),
-                      height: 1.1,
-                      letterSpacing: -0.8,
+                      height: 1.15,
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 6),
               Text(
                 l10n.registerSubtitle,
                 style: GoogleFonts.outfit(
-                  fontSize: 15,
+                  fontSize: 14.5,
                   height: 1.5,
                   color: regBodyColor(isDark),
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: regSurfaceColor(isDark),
-                  borderRadius: BorderRadius.circular(AppRadius.sheet),
-                  border: Border.all(color: regBorderColor(isDark).withOpacity(0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.28 : 0.04),
-                      blurRadius: 28,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
+              AuthStepTracker(
+                currentStep: _currentStep,
+                stepLabels: [
+                  l10n.personalDetailsStepLabel,
+                  l10n.academicDetailsStepLabel,
+                ],
+                isDark: isDark,
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.04, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ProgressHeader(
-                      current: _currentStep,
-                      total: 4,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.54,
-                      child: PageView(
-                        controller: _pageController,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          AccountStep(
-                            formKey: _pageFormKeys[0],
-                            emailController: _emailController,
-                            passwordController: _passwordController,
-                            confirmPasswordController: _confirmPasswordController,
-                            isPasswordObscured: _isPasswordObscured,
-                            isConfirmPasswordObscured: _isConfirmPasswordObscured,
-                            onTogglePassword: () {
-                              setState(
-                                () => _isPasswordObscured = !_isPasswordObscured,
-                              );
-                            },
-                            onToggleConfirmPassword: () {
-                              setState(
-                                () => _isConfirmPasswordObscured =
-                                    !_isConfirmPasswordObscured,
-                              );
-                            },
-                            onPasswordChanged: _checkPasswordStrength,
-                            isDark: isDark,
-                          ),
-                          IdentityStep(
-                            formKey: _pageFormKeys[1],
-                            nameController: _nameController,
-                            phoneController: _phoneController,
-                            isDark: isDark,
-                          ),
-                          AcademicStep(
-                            formKey: _pageFormKeys[2],
-                            matriculeController: _matriculeController,
-                            selectedLevel: _selectedLevel,
-                            onLevelChanged: (val) {
-                              setState(() => _selectedLevel = val ?? '');
-                            },
-                            isDark: isDark,
-                          ),
-                          FinalizeStep(
-                            formKey: _pageFormKeys[3],
-                            bioController: _bioController,
-                            agreedToTerms: _agreedToTerms,
-                            onAgreedToTermsChanged: (val) {
-                              setState(() => _agreedToTerms = val);
-                            },
-                            isDark: isDark,
-                          ),
-                        ],
+                child: _currentStep == 0
+                    ? PersonalDetailsStep(
+                        key: const ValueKey('personal'),
+                        formKey: _pageFormKeys[0],
+                        firstNameController: _firstNameController,
+                        lastNameController: _lastNameController,
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        confirmPasswordController: _confirmPasswordController,
+                        isPasswordObscured: _isPasswordObscured,
+                        isConfirmPasswordObscured: _isConfirmPasswordObscured,
+                        onTogglePassword: () {
+                          setState(
+                            () => _isPasswordObscured = !_isPasswordObscured,
+                          );
+                        },
+                        onToggleConfirmPassword: () {
+                          setState(
+                            () => _isConfirmPasswordObscured =
+                                !_isConfirmPasswordObscured,
+                          );
+                        },
+                        isDark: isDark,
+                      )
+                    : AcademicDetailsStep(
+                        key: const ValueKey('academic'),
+                        formKey: _pageFormKeys[1],
+                        phoneController: _phoneController,
+                        matriculeController: _matriculeController,
+                        bioController: _bioController,
+                        selectedLevel: _selectedLevel,
+                        onLevelChanged: (val) {
+                          setState(() => _selectedLevel = val ?? '');
+                        },
+                        agreedToTerms: _agreedToTerms,
+                        onAgreedToTermsChanged: (val) {
+                          setState(() => _agreedToTerms = val);
+                        },
+                        isDark: isDark,
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    _NavigationButtons(
-                      currentStep: _currentStep,
-                      isLoading: _isLoading,
-                      onNext: _nextStep,
-                      onBack: _previousStep,
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              _NavigationButtons(
+                currentStep: _currentStep,
+                isLoading: _isLoading,
+                onNext: _nextStep,
+                onBack: _previousStep,
               ),
               const SizedBox(height: AppSpacing.xxl),
               _RegisterFooter(onToggle: widget.istoggle, isDark: isDark),
@@ -305,96 +269,23 @@ class _RegisterFlowState extends State<RegisterFlow>
   }
 }
 
-class _BrandChip extends StatelessWidget {
-  const _BrandChip({required this.isDark});
-  final bool isDark;
-  @override
-  Widget build(BuildContext context) {
-    final primary = regIndigo(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: primary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(AppRadius.chip),
-        border: Border.all(color: primary.withOpacity(0.12)),
-      ),
-      child: const AppWordmark(fontSize: 16),
-    );
-  }
-}
-
-class _ProgressHeader extends StatelessWidget {
-  const _ProgressHeader({
-    required this.current,
-    required this.total,
-    required this.isDark,
-  });
-
-  final int current;
-  final int total;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = regIndigo(context);
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: List.generate(total, (index) {
-            final active = index == current;
-            final done = index < current;
-            return Expanded(
-              child: Container(
-                margin: EdgeInsets.only(
-                  right: index < total - 1 ? AppSpacing.sm : 0,
-                ),
-                height: AppSpacing.sm,
-                decoration: BoxDecoration(
-                  color: active || done ? primary : regBorderColor(isDark),
-                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                ),
-              ),
-            );
-          }),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          l10n.registerStepOf(current + 1, total),
-          style: GoogleFonts.outfit(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: regBodyColor(isDark),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _NavigationButtons extends StatelessWidget {
   const _NavigationButtons({
     required this.currentStep,
     required this.isLoading,
     required this.onNext,
     required this.onBack,
-    required this.isDark,
   });
 
   final int currentStep;
   final bool isLoading;
   final VoidCallback onNext;
   final VoidCallback onBack;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final primary = regIndigo(context);
     final l10n = AppLocalizations.of(context)!;
+    final isLastStep = currentStep == 1;
     return Row(
       children: [
         if (currentStep > 0)
@@ -402,7 +293,12 @@ class _NavigationButtons extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onBack,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: regBorderColor(isDark), width: 1.5),
+                side: BorderSide(
+                  color: regBorderColor(
+                    Theme.of(context).brightness == Brightness.dark,
+                  ),
+                  width: 1.5,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -413,7 +309,9 @@ class _NavigationButtons extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: regHeadingColor(isDark),
+                  color: regHeadingColor(
+                    Theme.of(context).brightness == Brightness.dark,
+                  ),
                 ),
               ),
             ),
@@ -421,37 +319,11 @@ class _NavigationButtons extends StatelessWidget {
         if (currentStep > 0) const SizedBox(width: AppSpacing.lg),
         Expanded(
           flex: 2,
-          child: ElevatedButton(
-            onPressed: isLoading ? null : onNext,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primary,
-              disabledBackgroundColor: primary.withOpacity(0.55),
-              foregroundColor: Colors.white,
-              elevation: 4,
-              shadowColor: primary.withOpacity(0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : Text(
-                    currentStep == 3 ? l10n.registerComplete : l10n.registerContinue,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+          child: AuthPrimaryButton(
+            label: isLastStep ? l10n.registerComplete : l10n.registerContinue,
+            isLoading: isLoading,
+            onPressed: onNext,
+            trailingIcon: isLastStep ? null : Icons.arrow_forward_rounded,
           ),
         ),
       ],
@@ -467,63 +339,32 @@ class _RegisterFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child:
-                  Divider(color: regBorderColor(isDark).withOpacity(0.5), thickness: 1),
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.alreadyRegistered,
+            style: GoogleFonts.outfit(
+              color: regBodyColor(isDark),
+              fontSize: 14.5,
+              fontWeight: FontWeight.w500,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text(
-                l10n.registerVerificationRequired,
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  color: regBodyColor(isDark).withOpacity(0.8),
-                  letterSpacing: 1.5,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            Expanded(
-              child:
-                  Divider(color: regBorderColor(isDark).withOpacity(0.5), thickness: 1),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xxl),
-        Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.alreadyRegistered,
-                style: GoogleFonts.outfit(
-                  color: regBodyColor(isDark),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () => onToggle(),
-                child: Text(
-                  l10n.signInToPortal,
-                  style: GoogleFonts.outfit(
-                    color: regIndigo(context),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                    decoration: TextDecoration.underline,
-                    decorationColor: regIndigo(context).withOpacity(0.3),
-                  ),
-                ),
-              ),
-            ],
           ),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.sm),
+          GestureDetector(
+            onTap: () => onToggle(),
+            child: Text(
+              l10n.signInToPortal,
+              style: GoogleFonts.outfit(
+                color: regIndigo(context),
+                fontWeight: FontWeight.w700,
+                fontSize: 14.5,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

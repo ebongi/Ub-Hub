@@ -7,6 +7,7 @@ import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -692,7 +693,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isProcessingTrial = false);
@@ -827,7 +828,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -993,9 +994,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {

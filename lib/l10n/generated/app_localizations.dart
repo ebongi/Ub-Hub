@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to continue your academic journey.'**
+  /// **'Please enter your details'**
   String get signInSubtitle;
 
   /// No description provided for @emailAddressLabel.
@@ -209,14 +209,8 @@ abstract class AppLocalizations {
   /// No description provided for @signInButton.
   ///
   /// In en, this message translates to:
-  /// **'Sign In'**
+  /// **'Login'**
   String get signInButton;
-
-  /// No description provided for @orDivider.
-  ///
-  /// In en, this message translates to:
-  /// **'OR'**
-  String get orDivider;
 
   /// No description provided for @noAccountPrompt.
   ///
@@ -233,20 +227,14 @@ abstract class AppLocalizations {
   /// No description provided for @registerTitle.
   ///
   /// In en, this message translates to:
-  /// **'Student Registration'**
+  /// **'Get started with us'**
   String get registerTitle;
 
   /// No description provided for @registerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Create your account in four guided steps designed for the academic workflow.'**
+  /// **'Please enter your details'**
   String get registerSubtitle;
-
-  /// No description provided for @registerStepOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Step {current} of {total}'**
-  String registerStepOf(int current, int total);
 
   /// No description provided for @registerBack.
   ///
@@ -257,20 +245,14 @@ abstract class AppLocalizations {
   /// No description provided for @registerContinue.
   ///
   /// In en, this message translates to:
-  /// **'Continue'**
+  /// **'Proceed'**
   String get registerContinue;
 
   /// No description provided for @registerComplete.
   ///
   /// In en, this message translates to:
-  /// **'Complete Registration'**
+  /// **'Register'**
   String get registerComplete;
-
-  /// No description provided for @registerVerificationRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'VERIFICATION REQUIRED'**
-  String get registerVerificationRequired;
 
   /// No description provided for @alreadyRegistered.
   ///
@@ -284,29 +266,53 @@ abstract class AppLocalizations {
   /// **'Sign In to Portal'**
   String get signInToPortal;
 
-  /// No description provided for @accountStepTitle.
+  /// No description provided for @personalDetailsStepLabel.
   ///
   /// In en, this message translates to:
-  /// **'Account'**
-  String get accountStepTitle;
+  /// **'Personal details'**
+  String get personalDetailsStepLabel;
 
-  /// No description provided for @accountStepDescription.
+  /// No description provided for @academicDetailsStepLabel.
   ///
   /// In en, this message translates to:
-  /// **'Secure your academic profile with a strong email and password.'**
-  String get accountStepDescription;
+  /// **'Academic details'**
+  String get academicDetailsStepLabel;
 
-  /// No description provided for @accountCredentialsTitle.
+  /// No description provided for @firstNameLabel.
   ///
   /// In en, this message translates to:
-  /// **'Account credentials'**
-  String get accountCredentialsTitle;
+  /// **'First Name'**
+  String get firstNameLabel;
 
-  /// No description provided for @accountCredentialsSubtitle.
+  /// No description provided for @firstNameHint.
   ///
   /// In en, this message translates to:
-  /// **'This section protects your portal access and your study records.'**
-  String get accountCredentialsSubtitle;
+  /// **'eg. John'**
+  String get firstNameHint;
+
+  /// No description provided for @firstNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'First name is required'**
+  String get firstNameRequired;
+
+  /// No description provided for @lastNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Name'**
+  String get lastNameLabel;
+
+  /// No description provided for @lastNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'eg. Doe'**
+  String get lastNameHint;
+
+  /// No description provided for @lastNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name is required'**
+  String get lastNameRequired;
 
   /// No description provided for @academicEmailLabel.
   ///
@@ -422,48 +428,6 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get passwordsDoNotMatch;
 
-  /// No description provided for @identityStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity'**
-  String get identityStepTitle;
-
-  /// No description provided for @identityStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your real name and contact details so the community can identify you.'**
-  String get identityStepDescription;
-
-  /// No description provided for @personalIdentityTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Personal identity'**
-  String get personalIdentityTitle;
-
-  /// No description provided for @personalIdentitySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This section makes your profile recognizable to classmates and admins.'**
-  String get personalIdentitySubtitle;
-
-  /// No description provided for @fullLegalNameLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Full Legal Name'**
-  String get fullLegalNameLabel;
-
-  /// No description provided for @firstLastNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'First and Last Name'**
-  String get firstLastNameHint;
-
-  /// No description provided for @fullNameRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Full name is required'**
-  String get fullNameRequired;
-
   /// No description provided for @phoneContactLabel.
   ///
   /// In en, this message translates to:
@@ -475,30 +439,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone number is required'**
   String get phoneRequired;
-
-  /// No description provided for @academicStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic'**
-  String get academicStepTitle;
-
-  /// No description provided for @academicStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your matricule and academic level to unlock the right resources.'**
-  String get academicStepDescription;
-
-  /// No description provided for @academicAffiliationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic affiliation'**
-  String get academicAffiliationTitle;
-
-  /// No description provided for @academicAffiliationSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This links your account to the correct educational track.'**
-  String get academicAffiliationSubtitle;
 
   /// No description provided for @studentMatriculeLabel.
   ///
@@ -541,30 +481,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resit'**
   String get academicLevelResit;
-
-  /// No description provided for @finalizeStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Finalize'**
-  String get finalizeStepTitle;
-
-  /// No description provided for @finalizeStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a short academic bio and accept our terms to complete your profile.'**
-  String get finalizeStepDescription;
-
-  /// No description provided for @finalizeProfileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Finalize profile'**
-  String get finalizeProfileTitle;
-
-  /// No description provided for @finalizeProfileSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This is the last step before your study account is ready.'**
-  String get finalizeProfileSubtitle;
 
   /// No description provided for @academicBioLabel.
   ///

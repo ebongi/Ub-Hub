@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/services/notification_model.dart';
@@ -309,7 +310,7 @@ class _NotificationsState extends State<Notifications> {
                           ),
                         );
                       }
-                      return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
+                      return ErrorView(onRetry: () => setState(() {}));
                     }
 
                     if (snapshot.connectionState == ConnectionState.waiting) {
