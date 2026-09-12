@@ -1101,6 +1101,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettingsLabel => 'Settings';
 
   @override
+  String get tourAvatarTitle => 'That\'s you!';
+
+  @override
+  String get tourAvatarDesc => 'Your profile picture and name.';
+
+  @override
+  String get tourAiCreditsTitle => 'AI Credits';
+
+  @override
+  String get tourAiCreditsDesc =>
+      'Tap to view or top up the credits you use to chat with the AI tutor.';
+
+  @override
+  String get tourNotificationsTitle => 'Notifications';
+
+  @override
+  String get tourNotificationsDesc =>
+      'Stay on top of friend requests, messages, and app updates.';
+
+  @override
+  String get tourWeeklyProgressTitle => 'Weekly Progress';
+
+  @override
+  String get tourWeeklyProgressDesc =>
+      'Track your study activity over the past week at a glance.';
+
+  @override
+  String get tourDepartmentsTitle => 'Departments & Faculties';
+
+  @override
+  String get tourDepartmentsDesc =>
+      'Browse courses and materials for your department, or explore others.';
+
+  @override
+  String get tourToolboxTitle => 'Toolbox';
+
+  @override
+  String get tourToolboxDesc =>
+      'All your study tools live here: flashcards, exam scheduling, focus timer, the Support Bot, and more.';
+
+  @override
+  String get tourChatFabTitle => 'Global Chat';
+
+  @override
+  String get tourChatFabDesc =>
+      'Jump into the open chat with other students at any time.';
+
+  @override
+  String get tourNavHomeTitle => 'Home';
+
+  @override
+  String get tourNavHomeDesc =>
+      'Your dashboard — departments, tools, and recent activity.';
+
+  @override
+  String get tourNavAiAssistantTitle => 'AI Assistant';
+
+  @override
+  String get tourNavAiAssistantDesc =>
+      'Chat with your AI-powered study assistant for explanations and help.';
+
+  @override
+  String get tourNavMessagesTitle => 'Messages';
+
+  @override
+  String get tourNavMessagesDesc =>
+      'Message friends and manage friend requests.';
+
+  @override
+  String get tourNavSettingsTitle => 'Settings';
+
+  @override
+  String get tourNavSettingsDesc =>
+      'Manage your profile, subscription, and app preferences.';
+
+  @override
   String get pressBackAgainToExit => 'Press back again to exit';
 
   @override

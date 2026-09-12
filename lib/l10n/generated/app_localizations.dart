@@ -2114,6 +2114,138 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettingsLabel;
 
+  /// No description provided for @tourAvatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s you!'**
+  String get tourAvatarTitle;
+
+  /// No description provided for @tourAvatarDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile picture and name.'**
+  String get tourAvatarDesc;
+
+  /// No description provided for @tourAiCreditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Credits'**
+  String get tourAiCreditsTitle;
+
+  /// No description provided for @tourAiCreditsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view or top up the credits you use to chat with the AI tutor.'**
+  String get tourAiCreditsDesc;
+
+  /// No description provided for @tourNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get tourNotificationsTitle;
+
+  /// No description provided for @tourNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on top of friend requests, messages, and app updates.'**
+  String get tourNotificationsDesc;
+
+  /// No description provided for @tourWeeklyProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Progress'**
+  String get tourWeeklyProgressTitle;
+
+  /// No description provided for @tourWeeklyProgressDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your study activity over the past week at a glance.'**
+  String get tourWeeklyProgressDesc;
+
+  /// No description provided for @tourDepartmentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments & Faculties'**
+  String get tourDepartmentsTitle;
+
+  /// No description provided for @tourDepartmentsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse courses and materials for your department, or explore others.'**
+  String get tourDepartmentsDesc;
+
+  /// No description provided for @tourToolboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toolbox'**
+  String get tourToolboxTitle;
+
+  /// No description provided for @tourToolboxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All your study tools live here: flashcards, exam scheduling, focus timer, the Support Bot, and more.'**
+  String get tourToolboxDesc;
+
+  /// No description provided for @tourChatFabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Chat'**
+  String get tourChatFabTitle;
+
+  /// No description provided for @tourChatFabDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump into the open chat with other students at any time.'**
+  String get tourChatFabDesc;
+
+  /// No description provided for @tourNavHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get tourNavHomeTitle;
+
+  /// No description provided for @tourNavHomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your dashboard — departments, tools, and recent activity.'**
+  String get tourNavHomeDesc;
+
+  /// No description provided for @tourNavAiAssistantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get tourNavAiAssistantTitle;
+
+  /// No description provided for @tourNavAiAssistantDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with your AI-powered study assistant for explanations and help.'**
+  String get tourNavAiAssistantDesc;
+
+  /// No description provided for @tourNavMessagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get tourNavMessagesTitle;
+
+  /// No description provided for @tourNavMessagesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Message friends and manage friend requests.'**
+  String get tourNavMessagesDesc;
+
+  /// No description provided for @tourNavSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tourNavSettingsTitle;
+
+  /// No description provided for @tourNavSettingsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your profile, subscription, and app preferences.'**
+  String get tourNavSettingsDesc;
+
   /// No description provided for @pressBackAgainToExit.
   ///
   /// In en, this message translates to:

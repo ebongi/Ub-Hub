@@ -1115,6 +1115,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navSettingsLabel => 'Paramètres';
 
   @override
+  String get tourAvatarTitle => 'C\'est vous !';
+
+  @override
+  String get tourAvatarDesc => 'Votre photo de profil et votre nom.';
+
+  @override
+  String get tourAiCreditsTitle => 'Crédits IA';
+
+  @override
+  String get tourAiCreditsDesc =>
+      'Appuyez pour consulter ou recharger les crédits utilisés pour discuter avec le tuteur IA.';
+
+  @override
+  String get tourNotificationsTitle => 'Notifications';
+
+  @override
+  String get tourNotificationsDesc =>
+      'Restez informé des demandes d\'amis, messages et mises à jour de l\'application.';
+
+  @override
+  String get tourWeeklyProgressTitle => 'Progression hebdomadaire';
+
+  @override
+  String get tourWeeklyProgressDesc =>
+      'Suivez votre activité d\'étude de la semaine en un coup d\'œil.';
+
+  @override
+  String get tourDepartmentsTitle => 'Départements et facultés';
+
+  @override
+  String get tourDepartmentsDesc =>
+      'Parcourez les cours et supports de votre département, ou explorez les autres.';
+
+  @override
+  String get tourToolboxTitle => 'Boîte à outils';
+
+  @override
+  String get tourToolboxDesc =>
+      'Tous vos outils d\'étude sont ici : cartes mémoire, planification d\'examens, minuteur de concentration, le Bot d\'assistance, et plus encore.';
+
+  @override
+  String get tourChatFabTitle => 'Discussion globale';
+
+  @override
+  String get tourChatFabDesc =>
+      'Rejoignez à tout moment la discussion ouverte avec d\'autres étudiants.';
+
+  @override
+  String get tourNavHomeTitle => 'Accueil';
+
+  @override
+  String get tourNavHomeDesc =>
+      'Votre tableau de bord — départements, outils et activité récente.';
+
+  @override
+  String get tourNavAiAssistantTitle => 'Assistant IA';
+
+  @override
+  String get tourNavAiAssistantDesc =>
+      'Discutez avec votre assistant d\'étude propulsé par l\'IA pour obtenir explications et aide.';
+
+  @override
+  String get tourNavMessagesTitle => 'Messages';
+
+  @override
+  String get tourNavMessagesDesc =>
+      'Envoyez des messages à vos amis et gérez les demandes d\'amis.';
+
+  @override
+  String get tourNavSettingsTitle => 'Paramètres';
+
+  @override
+  String get tourNavSettingsDesc =>
+      'Gérez votre profil, votre abonnement et les préférences de l\'application.';
+
+  @override
   String get pressBackAgainToExit =>
       'Appuyez à nouveau sur retour pour quitter';
 

@@ -13,6 +13,7 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_study/core/app_tour_keys.dart';
 
 class NavBar extends StatefulWidget {
   final int initialIndex;
@@ -137,41 +138,97 @@ class _NavBarState extends State<NavBar> {
           ),
           items: [
           BottomNavigationBarItem(
-            icon: _navIcon('houseUnselected.svg', unselectedColor),
-            activeIcon: _navIcon('houseSelected.svg', selectedColor),
+            icon: _tourWrapNavIcon(
+              index: _homeTabIndex,
+              isActiveVariant: false,
+              tourKey: AppTourKeys.navHome,
+              title: l10n.tourNavHomeTitle,
+              description: l10n.tourNavHomeDesc,
+              child: _navIcon('houseUnselected.svg', unselectedColor),
+            ),
+            activeIcon: _tourWrapNavIcon(
+              index: _homeTabIndex,
+              isActiveVariant: true,
+              tourKey: AppTourKeys.navHome,
+              title: l10n.tourNavHomeTitle,
+              description: l10n.tourNavHomeDesc,
+              child: _navIcon('houseSelected.svg', selectedColor),
+            ),
             label: l10n.navHomeLabel,
           ),
           BottomNavigationBarItem(
-            icon: _navIcon('aiUnselected.svg', unselectedColor),
-            activeIcon: _navIcon('aiSelected.svg', selectedColor),
+            icon: _tourWrapNavIcon(
+              index: _aiTabIndex,
+              isActiveVariant: false,
+              tourKey: AppTourKeys.navAiAssistant,
+              title: l10n.tourNavAiAssistantTitle,
+              description: l10n.tourNavAiAssistantDesc,
+              child: _navIcon('aiUnselected.svg', unselectedColor),
+            ),
+            activeIcon: _tourWrapNavIcon(
+              index: _aiTabIndex,
+              isActiveVariant: true,
+              tourKey: AppTourKeys.navAiAssistant,
+              title: l10n.tourNavAiAssistantTitle,
+              description: l10n.tourNavAiAssistantDesc,
+              child: _navIcon('aiSelected.svg', selectedColor),
+            ),
             label: l10n.navAiAssistantLabel,
           ),
           BottomNavigationBarItem(
-            icon: Consumer3<MessageProvider, List<FriendRequest>?, int>(
-              builder: (context, messageProvider, requests, unreadNotifications, child) {
-                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
-                return Badge(
-                  label: Text('$totalBadge'),
-                  isLabelVisible: totalBadge > 0,
-                  child: _navIcon('messageUnselected.svg', unselectedColor),
-                );
-              },
+            icon: _tourWrapNavIcon(
+              index: 2,
+              isActiveVariant: false,
+              tourKey: AppTourKeys.navMessages,
+              title: l10n.tourNavMessagesTitle,
+              description: l10n.tourNavMessagesDesc,
+              child: Consumer3<MessageProvider, List<FriendRequest>?, int>(
+                builder: (context, messageProvider, requests, unreadNotifications, child) {
+                  final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
+                  return Badge(
+                    label: Text('$totalBadge'),
+                    isLabelVisible: totalBadge > 0,
+                    child: _navIcon('messageUnselected.svg', unselectedColor),
+                  );
+                },
+              ),
             ),
-            activeIcon: Consumer3<MessageProvider, List<FriendRequest>?, int>(
-              builder: (context, messageProvider, requests, unreadNotifications, child) {
-                final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
-                return Badge(
-                  label: Text('$totalBadge'),
-                  isLabelVisible: totalBadge > 0,
-                  child: _navIcon('messageSelected.svg', selectedColor),
-                );
-              },
+            activeIcon: _tourWrapNavIcon(
+              index: 2,
+              isActiveVariant: true,
+              tourKey: AppTourKeys.navMessages,
+              title: l10n.tourNavMessagesTitle,
+              description: l10n.tourNavMessagesDesc,
+              child: Consumer3<MessageProvider, List<FriendRequest>?, int>(
+                builder: (context, messageProvider, requests, unreadNotifications, child) {
+                  final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
+                  return Badge(
+                    label: Text('$totalBadge'),
+                    isLabelVisible: totalBadge > 0,
+                    child: _navIcon('messageSelected.svg', selectedColor),
+                  );
+                },
+              ),
             ),
             label: l10n.navMessagesLabel,
           ),
           BottomNavigationBarItem(
-            icon: _navIcon('settingsUnselected.svg', unselectedColor),
-            activeIcon: _navIcon('settingsSelected.svg', selectedColor),
+            icon: _tourWrapNavIcon(
+              index: 3,
+              isActiveVariant: false,
+              tourKey: AppTourKeys.navSettings,
+              title: l10n.tourNavSettingsTitle,
+              description: l10n.tourNavSettingsDesc,
+              child: _navIcon('settingsUnselected.svg', unselectedColor),
+            ),
+            activeIcon: _tourWrapNavIcon(
+              index: 3,
+              isActiveVariant: true,
+              tourKey: AppTourKeys.navSettings,
+              title: l10n.tourNavSettingsTitle,
+              description: l10n.tourNavSettingsDesc,
+              child: _navIcon('settingsSelected.svg', selectedColor),
+            ),
             label: l10n.navSettingsLabel,
           ),
           ],
@@ -209,6 +266,10 @@ class _NavBarState extends State<NavBar> {
               l10n.navHomeLabel,
               selectedColor: selectedColor,
               unselectedColor: unselectedColor,
+              index: _homeTabIndex,
+              tourKey: AppTourKeys.navHome,
+              tourTitle: l10n.tourNavHomeTitle,
+              tourDesc: l10n.tourNavHomeDesc,
             ),
             _buildRailDestination(
               'aiUnselected.svg',
@@ -216,6 +277,10 @@ class _NavBarState extends State<NavBar> {
               l10n.navAiAssistantLabel,
               selectedColor: selectedColor,
               unselectedColor: unselectedColor,
+              index: _aiTabIndex,
+              tourKey: AppTourKeys.navAiAssistant,
+              tourTitle: l10n.tourNavAiAssistantTitle,
+              tourDesc: l10n.tourNavAiAssistantDesc,
             ),
             _buildRailDestination(
               'messageUnselected.svg',
@@ -224,6 +289,10 @@ class _NavBarState extends State<NavBar> {
               selectedColor: selectedColor,
               unselectedColor: unselectedColor,
               badgeCount: true,
+              index: 2,
+              tourKey: AppTourKeys.navMessages,
+              tourTitle: l10n.tourNavMessagesTitle,
+              tourDesc: l10n.tourNavMessagesDesc,
             ),
             _buildRailDestination(
               'settingsUnselected.svg',
@@ -231,6 +300,10 @@ class _NavBarState extends State<NavBar> {
               l10n.navSettingsLabel,
               selectedColor: selectedColor,
               unselectedColor: unselectedColor,
+              index: 3,
+              tourKey: AppTourKeys.navSettings,
+              tourTitle: l10n.tourNavSettingsTitle,
+              tourDesc: l10n.tourNavSettingsDesc,
             ),
           ],
         ),
@@ -290,6 +363,31 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
+  // Wraps [child] with the first-launch tour's Showcase for the given nav
+  // destination, but only for whichever of the icon/activeIcon pair is the
+  // one actually relevant to the current tab selection — BottomNavigationBar
+  // and NavigationRail always build both variants, so giving the same
+  // GlobalKey to both simultaneously would violate GlobalKey uniqueness.
+  Widget _tourWrapNavIcon({
+    required int index,
+    required bool isActiveVariant,
+    required GlobalKey tourKey,
+    required String title,
+    required String description,
+    required Widget child,
+  }) {
+    final shouldWrap = isActiveVariant ? _selectedIndex == index : _selectedIndex != index;
+    if (!shouldWrap) return child;
+    return tourShowcase(
+      context,
+      key: tourKey,
+      title: title,
+      description: description,
+      targetShapeBorder: const CircleBorder(),
+      child: child,
+    );
+  }
+
   // Renders one of the SVGs dropped in assets/icons/nav/, tinted to match
   // the selected/unselected color the rest of the nav bar uses.
   Widget _navIcon(String assetName, Color color) {
@@ -308,33 +406,53 @@ class _NavBarState extends State<NavBar> {
       String label, {
         required Color selectedColor,
         required Color unselectedColor,
+        required int index,
+        required GlobalKey tourKey,
+        required String tourTitle,
+        required String tourDesc,
         bool badgeCount = false,
       }) {
+    final unselectedChild = badgeCount
+        ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
+      builder: (context, messageProvider, requests, unreadNotifications, child) {
+        final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
+        return Badge(
+          label: Text('$totalBadge'),
+          isLabelVisible: totalBadge > 0,
+          child: _navIcon(unselectedAsset, unselectedColor),
+        );
+      },
+    )
+        : _navIcon(unselectedAsset, unselectedColor);
+    final selectedChild = badgeCount
+        ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
+      builder: (context, messageProvider, requests, unreadNotifications, child) {
+        final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
+        return Badge(
+          label: Text('$totalBadge'),
+          isLabelVisible: totalBadge > 0,
+          child: _navIcon(selectedAsset, selectedColor),
+        );
+      },
+    )
+        : _navIcon(selectedAsset, selectedColor);
     return NavigationRailDestination(
-      icon: badgeCount
-          ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
-        builder: (context, messageProvider, requests, unreadNotifications, child) {
-          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
-          return Badge(
-            label: Text('$totalBadge'),
-            isLabelVisible: totalBadge > 0,
-            child: _navIcon(unselectedAsset, unselectedColor),
-          );
-        },
-      )
-          : _navIcon(unselectedAsset, unselectedColor),
-      selectedIcon: badgeCount
-          ? Consumer3<MessageProvider, List<FriendRequest>?, int>(
-        builder: (context, messageProvider, requests, unreadNotifications, child) {
-          final totalBadge = messageProvider.unreadCount + (requests?.length ?? 0) + unreadNotifications;
-          return Badge(
-            label: Text('$totalBadge'),
-            isLabelVisible: totalBadge > 0,
-            child: _navIcon(selectedAsset, selectedColor),
-          );
-        },
-      )
-          : _navIcon(selectedAsset, selectedColor),
+      icon: _tourWrapNavIcon(
+        index: index,
+        isActiveVariant: false,
+        tourKey: tourKey,
+        title: tourTitle,
+        description: tourDesc,
+        child: unselectedChild,
+      ),
+      selectedIcon: _tourWrapNavIcon(
+        index: index,
+        isActiveVariant: true,
+        tourKey: tourKey,
+        title: tourTitle,
+        description: tourDesc,
+        child: selectedChild,
+      ),
       label: Text(label),
     );
   }

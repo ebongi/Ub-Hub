@@ -42,8 +42,55 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/core/responsive.dart';
+import 'package:go_study/core/app_tour_keys.dart';
+import 'package:go_study/services/app_tour_service.dart';
+import 'package:go_study/theme/app_text_styles.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../../../services/notification_service.dart';
+
+/// Wraps [child] with the first-launch guided tour's consistent styling
+/// (theme-driven so it matches light/dark mode and the user's accent color)
+/// and default Previous/Next tooltip actions.
+Showcase tourShowcase(
+  BuildContext context, {
+  required GlobalKey key,
+  required String title,
+  required String description,
+  required Widget child,
+  ShapeBorder targetShapeBorder = const RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(12)),
+  ),
+}) {
+  final theme = Theme.of(context);
+  final onPrimary = theme.colorScheme.onPrimary;
+  return Showcase(
+    key: key,
+    title: title,
+    description: description,
+    titleTextStyle: AppText.cardTitle(context).copyWith(color: onPrimary),
+    descTextStyle: AppText.body(context).copyWith(color: onPrimary),
+    tooltipBackgroundColor: theme.colorScheme.primary,
+    textColor: onPrimary,
+    targetShapeBorder: targetShapeBorder,
+    tooltipActionConfig: const TooltipActionConfig(
+      alignment: MainAxisAlignment.spaceBetween,
+      position: TooltipActionPosition.outside,
+    ),
+    // A Showcase's own `tooltipActions` fully replaces
+    // ShowcaseView.globalTooltipActions rather than merging with it, so
+    // "skip" needs to be listed here alongside previous/next on every step.
+    tooltipActions: [
+      TooltipActionButton(
+        type: TooltipDefaultActionType.previous,
+        hideActionWidgetForShowcase: [AppTourKeys.ordered.first],
+      ),
+      const TooltipActionButton(type: TooltipDefaultActionType.next),
+      const TooltipActionButton(type: TooltipDefaultActionType.skip),
+    ],
+    child: child,
+  );
+}
 
 class ToolItem {
   final String name;
@@ -82,6 +129,15 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
+
+    ShowcaseView.register(
+      enableAutoScroll: true,
+      skipIfTargetNotPresent: true,
+      onFinish: _markTourSeen,
+      onDismiss: (_) => _markTourSeen(),
+    );
+    _maybeStartAppTour();
+
     _maybeShowRatingPrompt();
 
     _loadRecentActivity();
@@ -116,6 +172,26 @@ class _HomeState extends State<Home> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
+  }
+
+  Future<void> _maybeStartAppTour() async {
+    final uid = Provider.of<UserModel>(context, listen: false).uid;
+    if (uid == null || await AppTourService.hasSeenTour(uid)) return;
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ShowcaseView.get().startShowCase(AppTourKeys.ordered);
+    });
+  }
+
+  void _markTourSeen() {
+    final uid = Provider.of<UserModel>(context, listen: false).uid;
+    if (uid != null) AppTourService.markSeen(uid);
   }
 
   // No longer needed, using Provider instead
@@ -278,30 +354,42 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                FadeInSlide(
-                  child: WeeklyProgressCard(supabaseClient: _supabase),
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.weeklyProgress,
+                  title: l10n.tourWeeklyProgressTitle,
+                  description: l10n.tourWeeklyProgressDesc,
+                  child: FadeInSlide(
+                    child: WeeklyProgressCard(supabaseClient: _supabase),
+                  ),
                 ),
-                SectionHeader(
-                  title: l10n.sectionDepartmentsFaculties,
-                  trailing: TextButton(
-                    onPressed: () {
-                      final deptProvider = context.read<DepartmentsProvider>();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider<DepartmentsProvider>.value(
-                            value: deptProvider,
-                            child: const AllDepartmentsScreen(),
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.departments,
+                  title: l10n.tourDepartmentsTitle,
+                  description: l10n.tourDepartmentsDesc,
+                  child: SectionHeader(
+                    title: l10n.sectionDepartmentsFaculties,
+                    trailing: TextButton(
+                      onPressed: () {
+                        final deptProvider = context.read<DepartmentsProvider>();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChangeNotifierProvider<DepartmentsProvider>.value(
+                              value: deptProvider,
+                              child: const AllDepartmentsScreen(),
+                            ),
                           ),
+                        );
+                      },
+                      child: Text(
+                        l10n.seeAllButton,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                      );
-                    },
-                    child: Text(
-                      l10n.seeAllButton,
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -376,24 +464,30 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                SectionHeader(
-                  title: l10n.sectionTools,
-                  trailing: TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AllToolsScreen(
-                          items: _toolboxItems(l10n),
-                          userProfile: _userProfile,
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.toolbox,
+                  title: l10n.tourToolboxTitle,
+                  description: l10n.tourToolboxDesc,
+                  child: SectionHeader(
+                    title: l10n.sectionTools,
+                    trailing: TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AllToolsScreen(
+                            items: _toolboxItems(l10n),
+                            userProfile: _userProfile,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Text(
-                      l10n.seeAllButton,
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.primary,
+                      child: Text(
+                        l10n.seeAllButton,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -411,25 +505,32 @@ class _HomeState extends State<Home> {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              SizedBox(
-                height: 50,
-                width: 50,
-                child: FloatingActionButton(
-                  heroTag: "chatFAB",
-                  tooltip: l10n.globalChatTooltip,
-                  backgroundColor: theme.colorScheme.secondary,
-                  onPressed: () {
-                    messageProvider.setChatOpen(true);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ChatScreen()),
-                    ).then((_) {
-                      messageProvider.setChatOpen(false);
-                    });
-                  },
-                  child: Icon(
-                    Icons.chat_rounded,
-                    color: theme.colorScheme.onSecondary,
+              tourShowcase(
+                context,
+                key: AppTourKeys.chatFab,
+                title: l10n.tourChatFabTitle,
+                description: l10n.tourChatFabDesc,
+                targetShapeBorder: const CircleBorder(),
+                child: SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: FloatingActionButton(
+                    heroTag: "chatFAB",
+                    tooltip: l10n.globalChatTooltip,
+                    backgroundColor: theme.colorScheme.secondary,
+                    onPressed: () {
+                      messageProvider.setChatOpen(true);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChatScreen()),
+                      ).then((_) {
+                        messageProvider.setChatOpen(false);
+                      });
+                    },
+                    child: Icon(
+                      Icons.chat_rounded,
+                      color: theme.colorScheme.onSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -1107,30 +1208,38 @@ class AppBarUser extends StatelessWidget {
         Consumer<UserModel>(
           builder: (context, value, child) {
             final avatarUrl = value.avatarUrl;
-            return Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  width: 2,
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
+              context,
+              key: AppTourKeys.avatar,
+              title: l10n.tourAvatarTitle,
+              description: l10n.tourAvatarDesc,
+              targetShapeBorder: const CircleBorder(),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    width: 2,
+                  ),
                 ),
-              ),
-              child: CircleAvatar(
-                radius: 25,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.primary.withOpacity(0.1),
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? CachedNetworkImageProvider(avatarUrl)
-                    : null,
-                child: (avatarUrl == null || avatarUrl.isEmpty)
-                    ? Icon(
-                        Icons.person_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 35,
-                      )
-                    : null,
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.1),
+                  backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(avatarUrl)
+                      : null,
+                  child: (avatarUrl == null || avatarUrl.isEmpty)
+                      ? Icon(
+                          Icons.person_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 35,
+                        )
+                      : null,
+                ),
               ),
             );
           },
@@ -1169,79 +1278,100 @@ class AppBarUser extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Consumer<UserModel>(
-          builder: (context, user, child) => GestureDetector(
-            onTap: () => Navigator.push(
+          builder: (context, user, child) {
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
               context,
-              MaterialPageRoute(builder: (context) => const SubscriptionPlansScreen()),
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              key: AppTourKeys.aiCredits,
+              title: l10n.tourAiCreditsTitle,
+              description: l10n.tourAiCreditsDesc,
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SubscriptionPlansScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${user.aiCredits}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: Row(
+            );
+          },
+        ),
+        const SizedBox(width: 4),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
+              context,
+              key: AppTourKeys.notifications,
+              title: l10n.tourNotificationsTitle,
+              description: l10n.tourNotificationsDesc,
+              targetShapeBorder: const CircleBorder(),
+              child: Stack(
                 children: [
-                  const Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    "${user.aiCredits}",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber[800],
+                  IconButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Notifications()),
                     ),
+                    icon: const Icon(Icons.notifications_outlined),
+                  ),
+                  StreamBuilder<int>(
+                    stream: NotificationService().unreadCountStream,
+                    builder: (context, snapshot) {
+                      final unreadCount = snapshot.data ?? 0;
+
+                      if (unreadCount == 0) return const SizedBox.shrink();
+
+                      return Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unreadCount > 9 ? '9+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const Notifications()),
-              ),
-              icon: const Icon(Icons.notifications_outlined),
-            ),
-            StreamBuilder<int>(
-              stream: NotificationService().unreadCountStream,
-              builder: (context, snapshot) {
-                final unreadCount = snapshot.data ?? 0;
-
-                if (unreadCount == 0) return const SizedBox.shrink();
-
-                return Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+            );
+          },
         ),
       ],
     );
