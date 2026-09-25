@@ -4,6 +4,11 @@ class CourseMaterial {
   final String? departmentId;
   final String title;
   final String? description;
+
+  /// The material's Storage object path (e.g. "course/CS101/notes.pdf"),
+  /// NOT a fetchable URL — the course_materials bucket is private. Resolve
+  /// a real, short-lived URL via DatabaseService.requestMaterialAccess()
+  /// before fetching the file (see secure_course_material_downloads.sql).
   final String fileUrl;
   final String fileName;
   final String fileType; // e.g., 'pdf', 'image', 'link'

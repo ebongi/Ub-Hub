@@ -377,20 +377,45 @@ class DatabaseService {
     return _supabase.storage.from('department_images').getPublicUrl(path);
   }
 
-  // Upload a material file (course or department) and get the public URL
+  // Upload a material file (course or department) and return its storage
+  // path. The bucket is private (see secure_course_material_downloads.sql —
+  // course_materials.file_url now stores this bare path, not a public URL);
+  // callers must go through requestMaterialAccess() + a signed URL to
+  // actually read the file back.
   Future<String> uploadMaterialFile(
     Uint8List fileData,
     String targetId, // courseCode or departmentId
     String fileName,
     bool isDepartment,
   ) async {
-    // Use the existing 'course_materials' bucket for all documents
     const folder = 'course_materials';
     final path = isDepartment
         ? 'department/$targetId/$fileName'
         : 'course/$targetId/$fileName';
     await _supabase.storage.from(folder).uploadBinary(path, fileData);
-    return _supabase.storage.from(folder).getPublicUrl(path);
+    return path;
+  }
+
+  /// Resolves a course material's file into a short-lived signed URL,
+  /// enforcing the same free-download/subscription/payment rules server-side
+  /// that the UI already gates on (SubscriptionService.canDownloadForFree) —
+  /// see request_material_access() in
+  /// supabase/migrations/secure_course_material_downloads.sql. Pass
+  /// [paymentRef] only after a Fapshi payment for this exact material has
+  /// succeeded; omit it for the free/owner/admin paths.
+  Future<String> requestMaterialAccess(
+    String materialId, {
+    String? paymentRef,
+  }) async {
+    final rows = await _supabase.rpc(
+      'request_material_access',
+      params: {'p_material_id': materialId, 'p_payment_ref': paymentRef},
+    );
+    final row = (rows as List).first as Map<String, dynamic>;
+    final path = row['storage_path'] as String;
+    return _supabase.storage
+        .from('course_materials')
+        .createSignedUrl(path, 600); // seconds — matches the RPC's 10-minute grant
   }
 
   // Create a new material record
@@ -708,16 +733,17 @@ class DatabaseService {
     await _supabase.from('tasks').delete().eq('id', taskId);
   }
 
-  /// Upgrade user to contributor role
-  Future<void> upgradeUserToContributor() async {
+  /// Upgrade user to contributor role. Requires a successful, unconsumed
+  /// 'contributor_upgrade' payment_transactions row for this user — a plain
+  /// client UPDATE of profiles.role is silently reverted by the
+  /// handle_profile_update trigger for non-admins, so this must go through
+  /// grant_contributor_role() (see secure_course_material_downloads.sql).
+  Future<void> upgradeUserToContributor(String paymentRef) async {
     if (uid == null) return;
-    await _supabase
-        .from('profiles')
-        .update({
-          'role': UserRole.contributor.name,
-          'upgraded_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', uid!);
+    await _supabase.rpc(
+      'grant_contributor_role',
+      params: {'p_payment_ref': paymentRef},
+    );
 
     await NotificationService().createNotification(
       title: 'Welcome Contributor!',
@@ -807,13 +833,6 @@ class DatabaseService {
         'tier': tier.name,
       },
     );
-  }
-
-  /// Increment free download count. Atomic server-side (`increment_free_download_count`
-  /// RPC), replacing the previous non-atomic read-then-write from Dart.
-  Future<void> incrementFreeDownloadCount() async {
-    if (uid == null) return;
-    await _supabase.rpc('increment_free_download_count');
   }
 
   /// Write-once: attaches the payment provider's transaction id to our own

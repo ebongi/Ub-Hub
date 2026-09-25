@@ -48,13 +48,13 @@ Future<void> openMaterialFile({
       dbService: dbService,
       userProfile: userProfile,
       material: material,
-      onGranted: () async {
-        await _secureForOffline(context: context, material: material);
+      onGranted: (signedUrl) async {
+        await _secureForOffline(context: context, material: material, signedUrl: signedUrl);
         if (!context.mounted) return;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => PDFViewerScreen(url: material.fileUrl, title: material.title),
+            builder: (_) => PDFViewerScreen(url: signedUrl, title: material.title),
           ),
         );
       },
@@ -82,9 +82,9 @@ Future<void> handleMaterialDownload({
     dbService: dbService,
     userProfile: userProfile,
     material: material,
-    onGranted: () async {
-      await _secureForOffline(context: context, material: material);
-      final uri = Uri.parse(material.fileUrl);
+    onGranted: (signedUrl) async {
+      await _secureForOffline(context: context, material: material, signedUrl: signedUrl);
+      final uri = Uri.parse(signedUrl);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else if (context.mounted) {
@@ -105,14 +105,15 @@ Future<void> _ensureAccessAndRun({
   required DatabaseService dbService,
   required UserProfile? userProfile,
   required CourseMaterial material,
-  required Future<void> Function() onGranted,
+  required Future<void> Function(String signedUrl) onGranted,
 }) async {
   final l10n = AppLocalizations.of(context)!;
   if (userProfile != null && SubscriptionService.canDownloadForFree(userProfile)) {
-    if (!userProfile.hasUnlimitedDownloads) {
-      await dbService.incrementFreeDownloadCount();
-    }
-    await onGranted();
+    // request_material_access() re-checks eligibility and consumes the free
+    // credit itself server-side — it's the actual gate now, this client
+    // check is only to skip straight past the payment dialog.
+    final signedUrl = await dbService.requestMaterialAccess(material.id);
+    await onGranted(signedUrl);
     return;
   }
 
@@ -257,7 +258,7 @@ Future<void> _processDownloadPayment({
   required DatabaseService dbService,
   required CourseMaterial material,
   required String phoneNumber,
-  required Future<void> Function() onGranted,
+  required Future<void> Function(String signedUrl) onGranted,
 }) async {
   final userId = dbService.uid;
   if (userId == null) throw "User not authenticated";
@@ -312,16 +313,24 @@ Future<void> _processDownloadPayment({
     throw "Payment failed or timed out.";
   }
 
-  await onGranted();
+  // Redeems the just-confirmed payment for a signed URL — request_material_access()
+  // re-verifies the payment server-side (status='success', not already consumed)
+  // rather than trusting that waitForSuccessfulPayment() alone.
+  final signedUrl = await dbService.requestMaterialAccess(
+    material.id,
+    paymentRef: paymentRef,
+  );
+  await onGranted(signedUrl);
 }
 
 Future<void> _secureForOffline({
   required BuildContext context,
   required CourseMaterial material,
+  required String signedUrl,
 }) async {
   try {
     await StorageService().downloadAndEncrypt(
-      material.fileUrl,
+      signedUrl,
       material.id,
       material.fileName,
     );

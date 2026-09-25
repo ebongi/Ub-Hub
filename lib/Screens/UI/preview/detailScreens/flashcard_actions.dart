@@ -80,8 +80,14 @@ Future<void> generateFlashcardsForMaterial({
   }
 
   try {
+    // Goes through the same access gate as opening/downloading the material
+    // (material_download_actions.dart) — the bucket is private, and this
+    // used to fetch material.fileUrl directly, letting flashcard generation
+    // read the full paid document for free. Also consumes a free-download
+    // credit or requires payment now, same as viewing/downloading it would.
+    final signedUrl = await dbService.requestMaterialAccess(material.id);
     final response = await http
-        .get(Uri.parse(material.fileUrl))
+        .get(Uri.parse(signedUrl))
         .timeout(const Duration(seconds: 30));
     if (response.statusCode != 200) {
       throw '${l10n.flashcardGenerationFailed} (${response.statusCode})';
