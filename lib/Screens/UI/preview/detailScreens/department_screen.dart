@@ -989,18 +989,28 @@ class _DepartmentScreenState extends State<DepartmentScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
     final isPending = material.id.isEmpty || material.id.startsWith('temp_');
+    final isAwaitingReview = !isPending && material.status == 'pending';
+    final isRejected = !isPending && material.status == 'rejected';
     final canManage =
         material.uploaderId == _dbService.uid ||
         _department?.adminId == _dbService.uid;
+    final statusColor = isAwaitingReview
+        ? Colors.amber[700]!
+        : (isPdf ? Colors.red[400]! : Colors.blue[400]!);
 
     return CompactListRow(
       title: material.title,
-      subtitle: material.description != null && material.description!.isNotEmpty
-          ? material.description
-          : null,
+      subtitle: isAwaitingReview
+          ? l10n.materialPendingReviewLabel
+          : isRejected
+          ? '${l10n.materialRejectedMessage}'
+                '${(material.rejectionReason?.isNotEmpty ?? false) ? ': ${material.rejectionReason}' : ''}'
+          : (material.description != null && material.description!.isNotEmpty
+                ? material.description
+                : null),
       icon: isPdf ? Icons.picture_as_pdf_rounded : Icons.description_rounded,
-      tint: isPdf ? Colors.red[400]! : Colors.blue[400]!,
-      iconBackgroundColor: (isPdf ? Colors.red : Colors.blue).withOpacity(0.1),
+      tint: isRejected ? Colors.grey : statusColor,
+      iconBackgroundColor: (isRejected ? Colors.grey : statusColor).withOpacity(0.1),
       isPending: isPending,
       onTap: () => openMaterialFile(
         context: context,
@@ -1850,9 +1860,12 @@ class _DepartmentScreenState extends State<DepartmentScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ErrorHandler.showSuccessSnackBar(
           context,
-          AppLocalizations.of(context)!.uploadSuccessfulMessage,
+          (_userProfile?.materialsPublishInstantly ?? false)
+              ? l10n.uploadSuccessfulMessage
+              : l10n.materialSubmittedForReviewMessage,
         );
       }
     } catch (e) {

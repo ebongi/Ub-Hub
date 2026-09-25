@@ -457,10 +457,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     final l10n = AppLocalizations.of(context)!;
     final isPdf = material.fileType.toLowerCase() == 'pdf';
     final isPending = material.id.isEmpty || material.id.startsWith('temp_');
+    final isAwaitingReview = !isPending && material.status == 'pending';
+    final isRejected = !isPending && material.status == 'rejected';
     final canManage =
         material.uploaderId == _dbService.uid ||
         widget.course.adminId == _dbService.uid;
-    final tint = isPdf ? Colors.red : Colors.blue;
+    final tint = isAwaitingReview
+        ? Colors.amber
+        : isRejected
+        ? Colors.grey
+        : (isPdf ? Colors.red : Colors.blue);
 
     Widget trailing;
     if (isPending) {
@@ -569,7 +575,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
     return CompactListRow(
       title: material.title,
-      subtitle: material.description,
+      subtitle: isAwaitingReview
+          ? l10n.materialPendingReviewLabel
+          : isRejected
+          ? '${l10n.materialRejectedMessage}'
+                '${(material.rejectionReason?.isNotEmpty ?? false) ? ': ${material.rejectionReason}' : ''}'
+          : material.description,
       icon: isPdf ? Icons.picture_as_pdf_outlined : Icons.description_outlined,
       tint: tint,
       trailing: trailing,
@@ -1133,9 +1144,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       await _dbService.addMaterial(material);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ErrorHandler.showSuccessSnackBar(
           context,
-          AppLocalizations.of(context)!.uploadSuccessfulMessage,
+          (_userProfile?.materialsPublishInstantly ?? false)
+              ? l10n.uploadSuccessfulMessage
+              : l10n.materialSubmittedForReviewMessage,
         );
       }
     } catch (e) {

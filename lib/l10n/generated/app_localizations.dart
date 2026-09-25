@@ -3053,8 +3053,74 @@ abstract class AppLocalizations {
   /// No description provided for @onlyContributorsCanUploadMessage.
   ///
   /// In en, this message translates to:
-  /// **'Only administrators can upload content.'**
+  /// **'Please wait for your profile to load and try again.'**
   String get onlyContributorsCanUploadMessage;
+
+  /// No description provided for @materialSubmittedForReviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted! An admin will review it shortly.'**
+  String get materialSubmittedForReviewMessage;
+
+  /// No description provided for @materialPendingReviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending review'**
+  String get materialPendingReviewLabel;
+
+  /// No description provided for @moderationQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation Queue'**
+  String get moderationQueueTitle;
+
+  /// No description provided for @moderationQueueSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review student submissions'**
+  String get moderationQueueSubtitle;
+
+  /// No description provided for @noSubmissionsPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions waiting for review'**
+  String get noSubmissionsPendingMessage;
+
+  /// No description provided for @approveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approveButton;
+
+  /// No description provided for @rejectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectButton;
+
+  /// No description provided for @rejectReasonDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject submission'**
+  String get rejectReasonDialogTitle;
+
+  /// No description provided for @rejectReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get rejectReasonHint;
+
+  /// No description provided for @materialApprovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get materialApprovedMessage;
+
+  /// No description provided for @materialRejectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get materialRejectedMessage;
 
   /// No description provided for @addMaterialTitle.
   ///

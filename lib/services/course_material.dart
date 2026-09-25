@@ -20,6 +20,14 @@ class CourseMaterial {
   final String? uploaderId;
   final double price;
 
+  /// 'pending' | 'published' | 'rejected' — server-decided at insert time
+  /// based on the uploader's role, never client-set (see
+  /// handle_course_material_insert in
+  /// supabase/migrations/hybrid_content_moderation.sql). Defaults to
+  /// 'published' so optimistic/temp entries never show as pending.
+  final String status;
+  final String? rejectionReason;
+
   CourseMaterial({
     this.id = '',
     this.courseId,
@@ -36,6 +44,8 @@ class CourseMaterial {
     this.linkedMaterialId,
     this.uploaderId,
     this.price = 0.0,
+    this.status = 'published',
+    this.rejectionReason,
   });
 
   factory CourseMaterial.fromSupabase(Map<String, dynamic> json) {
@@ -57,6 +67,8 @@ class CourseMaterial {
       linkedMaterialId: json['linked_material_id'],
       uploaderId: json['uploader_id'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] ?? 'published',
+      rejectionReason: json['rejection_reason'],
     );
   }
 

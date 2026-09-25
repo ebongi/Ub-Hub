@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 
+import 'package:go_study/Screens/UI/preview/Navigation/moderation_queue_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_composer_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
@@ -550,37 +551,61 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _ActionCard(
-              icon: Icons.person_rounded,
-              color: const Color(0xFF7C3AED),
-              title: l10n.myProfileTitle,
-              subtitle: l10n.reviewYourAccountSubtitle,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const Profile()),
+    return Column(
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _ActionCard(
+                  icon: Icons.person_rounded,
+                  color: const Color(0xFF7C3AED),
+                  title: l10n.myProfileTitle,
+                  subtitle: l10n.reviewYourAccountSubtitle,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Profile()),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ActionCard(
-              icon: Icons.newspaper_rounded,
-              color: const Color(0xFFEA580C),
-              title: l10n.homeToolNews,
-              subtitle: l10n.newsComposerNewTitle,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const NewsComposerScreen()),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ActionCard(
+                  icon: Icons.newspaper_rounded,
+                  color: const Color(0xFFEA580C),
+                  title: l10n.homeToolNews,
+                  subtitle: l10n.newsComposerNewTitle,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NewsComposerScreen()),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _ActionCard(
+                  icon: Icons.fact_check_rounded,
+                  color: const Color(0xFF0EA5E9),
+                  title: l10n.moderationQueueTitle,
+                  subtitle: l10n.moderationQueueSubtitle,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ModerationQueueScreen()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

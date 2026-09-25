@@ -1614,7 +1614,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlyContributorsCanUploadMessage =>
-      'Only administrators can upload content.';
+      'Please wait for your profile to load and try again.';
+
+  @override
+  String get materialSubmittedForReviewMessage =>
+      'Submitted! An admin will review it shortly.';
+
+  @override
+  String get materialPendingReviewLabel => 'Pending review';
+
+  @override
+  String get moderationQueueTitle => 'Moderation Queue';
+
+  @override
+  String get moderationQueueSubtitle => 'Review student submissions';
+
+  @override
+  String get noSubmissionsPendingMessage => 'No submissions waiting for review';
+
+  @override
+  String get approveButton => 'Approve';
+
+  @override
+  String get rejectButton => 'Reject';
+
+  @override
+  String get rejectReasonDialogTitle => 'Reject submission';
+
+  @override
+  String get rejectReasonHint => 'Reason (optional)';
+
+  @override
+  String get materialApprovedMessage => 'Approved';
+
+  @override
+  String get materialRejectedMessage => 'Rejected';
 
   @override
   String get addMaterialTitle => 'Add Material';

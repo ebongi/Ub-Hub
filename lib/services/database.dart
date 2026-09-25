@@ -418,26 +418,31 @@ class DatabaseService {
         .createSignedUrl(path, 600); // seconds — matches the RPC's 10-minute grant
   }
 
-  // Create a new material record
-  Future<String> addMaterial(CourseMaterial material) async {
-    final data = await _supabase
-        .from('course_materials')
-        .insert({
-          ...material.toSupabase(),
-          if (material.uploaderId == null && uid != null) 'uploader_id': uid,
-        })
-        .select()
-        .single();
-    final id = data['id'] as String;
-
-    // Broadcast to every student in the material's department (resolve via
-    // the course if the material wasn't uploaded directly to a department).
-    String? departmentId = material.departmentId;
-    if (departmentId == null && material.courseId != null) {
+  // Broadcasts a newly-published material to its department. Shared between
+  // addMaterial() (auto-published) and moderateMaterial() (approved out of
+  // the pending queue) — the only two places a row ever becomes 'published'.
+  //
+  // Deliberately does NOT award points here: award_points() always credits
+  // auth.uid() — the caller — with no target-user param. That's correct
+  // when addMaterial() calls it directly (the uploader is the caller), but
+  // moderateMaterial() runs as the approving *admin*, so reusing this for
+  // that path would wrongly credit the admin instead of the submitter.
+  // Points for moderated submissions would need award_points() extended
+  // with an admin-only target-user override — not done here.
+  Future<void> _broadcastNewMaterial({
+    required String id,
+    required String title,
+    String? courseId,
+    String? departmentId,
+    required String materialCategory,
+  }) async {
+    // Resolve via the course if the material wasn't uploaded directly to a
+    // department.
+    if (departmentId == null && courseId != null) {
       final course = await _supabase
           .from('courses')
           .select('department_id')
-          .eq('id', material.courseId!)
+          .eq('id', courseId)
           .maybeSingle();
       departmentId = course?['department_id'] as String?;
     }
@@ -452,28 +457,60 @@ class DatabaseService {
         await _broadcastCreate(
           recipientIds: recipientIds,
           title: 'New Material Uploaded',
-          body: 'New content "${material.title}" has been uploaded.',
+          body: 'New content "$title" has been uploaded.',
           type: NotificationType.material,
           data: {
             'materialId': id,
-            'courseId': material.courseId,
-            'category': material.materialCategory,
+            'courseId': courseId,
+            'category': materialCategory,
           },
           scope: 'department',
           scopeId: departmentId,
           pushTitle: 'New Material Uploaded 📚',
           pushData: {
             'materialId': id,
-            'courseId': material.courseId ?? '',
-            'category': material.materialCategory,
+            'courseId': courseId ?? '',
+            'category': materialCategory,
           },
         );
       } catch (_) {
         // Silently ignore — see comment above.
       }
     }
+  }
+
+  // Create a new material record. Whether it lands 'published' or 'pending'
+  // is decided server-side (handle_course_material_insert, see
+  // hybrid_content_moderation.sql) purely from the caller's role — the
+  // status echoed back below reflects that, not anything sent here.
+  Future<String> addMaterial(CourseMaterial material) async {
+    final data = await _supabase
+        .from('course_materials')
+        .insert({
+          ...material.toSupabase(),
+          if (material.uploaderId == null && uid != null) 'uploader_id': uid,
+        })
+        .select()
+        .single();
+    final id = data['id'] as String;
+
+    // A pending submission isn't public yet — no department-wide broadcast,
+    // no points (those happen once moderateMaterial() approves it).
+    if (data['status'] != 'published') {
+      return id;
+    }
+
+    await _broadcastNewMaterial(
+      id: id,
+      title: material.title,
+      courseId: material.courseId,
+      departmentId: material.departmentId,
+      materialCategory: material.materialCategory,
+    );
 
     // Best-effort — a points RPC hiccup shouldn't fail the upload itself.
+    // Only correct to call here: the caller (auth.uid(), which award_points
+    // always credits) is the uploader themselves.
     try {
       await PointsService().awardPoints('material_uploaded');
     } catch (_) {
@@ -486,6 +523,75 @@ class DatabaseService {
   // Delete a material record
   Future<void> deleteMaterial(String materialId) async {
     await _supabase.from('course_materials').delete().eq('id', materialId);
+  }
+
+  /// Materials awaiting admin review. RLS also lets a non-admin see their
+  /// own pending rows via the regular course/department streams, but this
+  /// one (every pending row, regardless of course/department) is only ever
+  /// meant to back the admin moderation queue.
+  Stream<List<CourseMaterial>> getPendingMaterials() {
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .eq('status', 'pending')
+        .order('uploaded_at', ascending: true)
+        .map(
+          (data) =>
+              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// Approves or rejects a pending material — the only way a 'pending' row
+  /// leaves that state (see moderate_material() in
+  /// hybrid_content_moderation.sql; admin-only, enforced server-side).
+  /// [reason] is shown to the submitter on rejection.
+  Future<void> moderateMaterial(
+    String materialId, {
+    required bool approve,
+    String? reason,
+  }) async {
+    await _supabase.rpc(
+      'moderate_material',
+      params: {
+        'p_material_id': materialId,
+        'p_decision': approve ? 'approve' : 'reject',
+        'p_reason': reason,
+      },
+    );
+
+    final row = await _supabase
+        .from('course_materials')
+        .select('name, course_id, department_id, material_category, uploader_id')
+        .eq('id', materialId)
+        .single();
+    final title = row['name'] as String;
+    final uploaderId = row['uploader_id'] as String?;
+
+    if (approve) {
+      await _broadcastNewMaterial(
+        id: materialId,
+        title: title,
+        courseId: row['course_id'] as String?,
+        departmentId: row['department_id'] as String?,
+        materialCategory: row['material_category'] as String,
+      );
+    }
+
+    if (uploaderId == null) return;
+    try {
+      await NotificationService().createNotification(
+        recipientId: uploaderId,
+        title: approve ? 'Material approved' : 'Material rejected',
+        body: approve
+            ? 'Your submission "$title" is now live.'
+            : 'Your submission "$title" was rejected'
+                  '${reason != null && reason.isNotEmpty ? ': $reason' : '.'}',
+        type: NotificationType.material,
+        data: {'materialId': materialId},
+      );
+    } catch (_) {
+      // Best-effort — a notification hiccup shouldn't fail moderation.
+    }
   }
 
   // Get materials for a specific course

@@ -1635,7 +1635,43 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onlyContributorsCanUploadMessage =>
-      'Seuls les administrateurs peuvent téléverser du contenu.';
+      'Veuillez attendre le chargement de votre profil et réessayer.';
+
+  @override
+  String get materialSubmittedForReviewMessage =>
+      'Envoyé ! Un administrateur l\'examinera bientôt.';
+
+  @override
+  String get materialPendingReviewLabel => 'En attente de validation';
+
+  @override
+  String get moderationQueueTitle => 'File de modération';
+
+  @override
+  String get moderationQueueSubtitle =>
+      'Examiner les soumissions des étudiants';
+
+  @override
+  String get noSubmissionsPendingMessage =>
+      'Aucune soumission en attente d\'examen';
+
+  @override
+  String get approveButton => 'Approuver';
+
+  @override
+  String get rejectButton => 'Rejeter';
+
+  @override
+  String get rejectReasonDialogTitle => 'Rejeter la soumission';
+
+  @override
+  String get rejectReasonHint => 'Raison (facultatif)';
+
+  @override
+  String get materialApprovedMessage => 'Approuvé';
+
+  @override
+  String get materialRejectedMessage => 'Rejeté';
 
   @override
   String get addMaterialTitle => 'Ajouter un document';

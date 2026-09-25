@@ -198,7 +198,16 @@ class UserProfile {
 
   bool get canCreateDepartment => role == UserRole.admin; // Only admins can create departments/faculties
 
-  bool get canUploadMaterial => role == UserRole.admin; // Only admins can upload course materials
+  /// Any signed-in user may submit a material — the resulting status
+  /// (published immediately vs. pending review) is decided server-side by
+  /// [materialsPublishInstantly]'s role check, mirrored in
+  /// handle_course_material_insert (hybrid_content_moderation.sql).
+  bool get canUploadMaterial => true;
+
+  /// Contributors (Class Reps) and admins publish immediately; everyone
+  /// else's submissions land as 'pending' for admin review.
+  bool get materialsPublishInstantly =>
+      role == UserRole.admin || role == UserRole.contributor;
 
   /// Central logic for the Hard Paywall: admins/contributors and active
   /// subscribers (including the active free trial) always have access; a
