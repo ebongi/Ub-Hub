@@ -667,6 +667,7 @@
   "rejectReasonHint": "Reason (optional)",
   "materialApprovedMessage": "Approved",
   "materialRejectedMessage": "Rejected",
+  "viewSubmissionLabel": "View content",
   "addMaterialTitle": "Add Material",
   "shareResourcesSubtitle": "Share resources with your peers",
   "categoryLabel": "Category",

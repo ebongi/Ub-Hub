@@ -2,7 +2,6 @@
 
 import 'dart:ui';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -1207,7 +1206,6 @@ class AppBarUser extends StatelessWidget {
       children: [
         Consumer<UserModel>(
           builder: (context, value, child) {
-            final avatarUrl = value.avatarUrl;
             final l10n = AppLocalizations.of(context)!;
             return tourShowcase(
               context,
@@ -1229,16 +1227,9 @@ class AppBarUser extends StatelessWidget {
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.primary.withOpacity(0.1),
-                  backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(avatarUrl)
-                      : null,
-                  child: (avatarUrl == null || avatarUrl.isEmpty)
-                      ? Icon(
-                          Icons.person_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 35,
-                        )
-                      : null,
+                  backgroundImage: const AssetImage(
+                    'assets/icons/android/play_store_512.png',
+                  ),
                 ),
               ),
             );

@@ -622,6 +622,7 @@
   "rejectReasonHint": "Raison (facultatif)",
   "materialApprovedMessage": "Approuvé",
   "materialRejectedMessage": "Rejeté",
+  "viewSubmissionLabel": "Voir le contenu",
   "addMaterialTitle": "Ajouter un document",
   "shareResourcesSubtitle": "Partagez des ressources avec vos pairs",
   "categoryLabel": "Catégorie",

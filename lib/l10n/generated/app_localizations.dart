@@ -3122,6 +3122,12 @@ abstract class AppLocalizations {
   /// **'Rejected'**
   String get materialRejectedMessage;
 
+  /// No description provided for @viewSubmissionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'View content'**
+  String get viewSubmissionLabel;
+
   /// No description provided for @addMaterialTitle.
   ///
   /// In en, this message translates to:

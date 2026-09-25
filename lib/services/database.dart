@@ -530,14 +530,21 @@ class DatabaseService {
   /// one (every pending row, regardless of course/department) is only ever
   /// meant to back the admin moderation queue.
   Stream<List<CourseMaterial>> getPendingMaterials() {
+    // Filters client-side rather than via .eq('status', 'pending') on the
+    // stream: SupabaseStreamBuilder only applies query-level filters to the
+    // initial fetch, not to later realtime UPDATE events — a row that's
+    // approved/rejected (status changes away from 'pending') would keep
+    // being emitted forever instead of dropping out of the list live.
+    // Re-filtering inside .map() re-evaluates on every emission instead.
     return _supabase
         .from('course_materials')
         .stream(primaryKey: ['id'])
-        .eq('status', 'pending')
         .order('uploaded_at', ascending: true)
         .map(
-          (data) =>
-              data.map((json) => CourseMaterial.fromSupabase(json)).toList(),
+          (data) => data
+              .map((json) => CourseMaterial.fromSupabase(json))
+              .where((m) => m.status == 'pending')
+              .toList(),
         );
   }
 

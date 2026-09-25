@@ -205,6 +205,26 @@ class _ModerationQueueScreenState extends State<ModerationQueueScreen> {
                                       color: Colors.grey,
                                     ),
                                   ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.visibility_outlined,
+                                      size: 14,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      l10n.viewSubmissionLabel,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),

@@ -1674,6 +1674,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get materialRejectedMessage => 'Rejeté';
 
   @override
+  String get viewSubmissionLabel => 'Voir le contenu';
+
+  @override
   String get addMaterialTitle => 'Ajouter un document';
 
   @override
