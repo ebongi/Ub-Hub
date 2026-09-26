@@ -31,7 +31,12 @@ ALTER TABLE courses
 --    supplies it. Credits the material's uploader_id, not auth.uid()
 --    (auth.uid() here is the approving admin) — this is exactly the gap
 --    flagged in DatabaseService._broadcastNewMaterial's comment.
+--
+--    Return type changes void -> INT, which Postgres won't let
+--    CREATE OR REPLACE do in place — drop the old signature first.
 -- ==========================================================================
+DROP FUNCTION IF EXISTS public.moderate_material(UUID, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION public.moderate_material(
     p_material_id UUID,
     p_decision TEXT,
