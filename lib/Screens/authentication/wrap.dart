@@ -46,6 +46,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
               name: user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'User',
               email: user.email,
             );
+            // If this account has a cached profile snapshot from a previous
+            // session, use it immediately instead of waiting on the live
+            // stream below — which never emits with no internet, leaving
+            // the app stuck on a loading spinner forever otherwise. The
+            // live stream still overwrites this with fresh data once it
+            // arrives.
+            userModel.tryUseCachedProfile(user.id);
             // Refresh notification listener for the new user
             NotificationService().refresh();
           });
@@ -77,6 +84,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 totalPoints: profile.totalPoints,
                 profileLoaded: true,
               );
+              // Refresh the offline-start snapshot with this live data —
+              // see tryUseCachedProfile above.
+              userModel.persistCache();
             });
           },
         );

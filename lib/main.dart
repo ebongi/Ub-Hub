@@ -93,7 +93,7 @@ Future<void> _mainImpl() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MessageProvider()),
-        ChangeNotifierProvider(create: (_) => UserModel()),
+        ChangeNotifierProvider(create: (_) => UserModel(prefs: prefs)),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(
             initialMode: initialThemeMode,
