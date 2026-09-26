@@ -329,11 +329,7 @@ Future<void> _secureForOffline({
   required String signedUrl,
 }) async {
   try {
-    await StorageService().downloadAndEncrypt(
-      signedUrl,
-      material.id,
-      material.fileName,
-    );
+    await StorageService().downloadAndEncrypt(signedUrl, material);
     if (context.mounted) {
       ErrorHandler.showSuccessSnackBar(
         context,
