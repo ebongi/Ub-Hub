@@ -4,6 +4,7 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/compact_list_row.dart';
+import 'package:go_study/Screens/Shared/bounty_badge.dart';
 import 'package:go_study/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
     show showAddCourseDialog;
 import 'package:go_study/Screens/UI/preview/detailScreens/course_detail_screen.dart';
@@ -525,70 +526,164 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           context,
           MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
         ),
-        trailing: isAdmin
-            ? PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  size: 20,
-                  color: colorScheme.primary,
-                ),
-                onSelected: (value) async {
-                  if (value == 'delete') {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(l10n.deleteCourseDialogTitle),
-                        content: Text(
-                          l10n.confirmDeleteMaterialBody(course.name),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(l10n.cancel),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              l10n.deleteButton,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed == true) {
-                      await _dbService.deleteCourse(course.id);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.courseDeletedMessage)),
-                        );
-                      }
-                    }
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          l10n.deleteCourseMenuItem,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
+        trailing: !course.hasBounty && !isAdmin
+            ? null
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (course.hasBounty) ...[
+                    BountyBadge(multiplier: course.bountyMultiplier),
+                    if (isAdmin) const SizedBox(width: AppSpacing.sm),
+                  ],
+                  if (isAdmin) _buildCourseMenu(course, l10n, colorScheme),
                 ],
-              )
-            : null,
+              ),
       ),
     );
+  }
+
+  Widget _buildCourseMenu(
+    Course course,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert_rounded, size: 20, color: colorScheme.primary),
+      onSelected: (value) async {
+        if (value == 'bounty') {
+          await _showSetBountyDialog(course, l10n);
+        } else if (value == 'delete') {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(l10n.deleteCourseDialogTitle),
+              content: Text(l10n.confirmDeleteMaterialBody(course.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(
+                    l10n.deleteButton,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            await _dbService.deleteCourse(course.id);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.courseDeletedMessage)),
+              );
+            }
+          }
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'bounty',
+          child: Row(
+            children: [
+              Icon(Icons.bolt_rounded, color: colorScheme.primary, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.setBountyMenuItem),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              const Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                l10n.deleteCourseMenuItem,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Admin-only dialog to set courses.bounty_multiplier (see
+  /// reward_material_approval_and_points_redemption.sql / BountyBadge).
+  /// The course list is a realtime .stream(), so the badge/subtitle updates
+  /// on its own once the write commits — no local refresh needed here.
+  Future<void> _showSetBountyDialog(Course course, AppLocalizations l10n) async {
+    final controller = TextEditingController(
+      text: course.bountyMultiplier == course.bountyMultiplier.roundToDouble()
+          ? course.bountyMultiplier.toInt().toString()
+          : course.bountyMultiplier.toString(),
+    );
+    final formKey = GlobalKey<FormState>();
+
+    final newMultiplier = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.setBountyDialogTitle),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.setBountyDialogBody(course.name)),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: l10n.bountyMultiplierFieldLabel),
+                validator: (value) {
+                  final parsed = double.tryParse(value?.trim() ?? '');
+                  if (parsed == null || parsed <= 0) {
+                    return l10n.bountyMultiplierInvalidMessage;
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.pop(context, double.parse(controller.text.trim()));
+              }
+            },
+            child: Text(l10n.saveButton),
+          ),
+        ],
+      ),
+    );
+
+    if (newMultiplier == null) return;
+
+    try {
+      await _dbService.setCourseBountyMultiplier(course.id, newMultiplier);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.bountyUpdatedMessage)),
+        );
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+    }
   }
 
   Widget _buildResourcesTab() {

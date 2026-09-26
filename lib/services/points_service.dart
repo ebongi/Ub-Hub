@@ -48,4 +48,18 @@ class PointsService {
     if (list.isEmpty) return null;
     return LeaderboardEntry.fromSupabase(list.first as Map<String, dynamic>);
   }
+
+  /// Spends accumulated points on the App Plan tier named by [tier]
+  /// ('monthly' or 'yearly') instead of paying via Fapshi. The point cost is
+  /// fixed server-side (see redeem_points_for_plan() in
+  /// reward_material_approval_and_points_redemption.sql), never trusted
+  /// from the client; this throws (via PostgrestException) if the caller's
+  /// balance is too low. Returns the new subscription expiry.
+  Future<DateTime> redeemPointsForPlan(String tier) async {
+    final result = await _supabase.rpc(
+      'redeem_points_for_plan',
+      params: {'p_tier': tier},
+    );
+    return DateTime.parse(result as String);
+  }
 }

@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/Screens/Shared/bounty_badge.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/material_download_actions.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
@@ -91,13 +92,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          widget.course.name,
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: isDark ? Colors.white : theme.colorScheme.primary,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                widget.course.name,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: isDark ? Colors.white : theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            if (widget.course.hasBounty) ...[
+              const SizedBox(width: 8),
+              BountyBadge(multiplier: widget.course.bountyMultiplier),
+            ],
+          ],
         ),
         actions: [
           IconButton(

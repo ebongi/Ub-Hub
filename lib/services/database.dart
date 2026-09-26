@@ -333,6 +333,18 @@ class DatabaseService {
     await _supabase.from('courses').delete().eq('id', courseId);
   }
 
+  /// Sets a course's approval-points bounty multiplier (courses.bounty_multiplier;
+  /// see reward_material_approval_and_points_redemption.sql). No RPC needed —
+  /// "Admins can manage courses" already covers this column, and only an
+  /// admin ever reaches the UI that calls this (see _buildCourseMenu in
+  /// department_screen.dart).
+  Future<void> setCourseBountyMultiplier(String courseId, double multiplier) async {
+    await _supabase
+        .from('courses')
+        .update({'bounty_multiplier': multiplier})
+        .eq('id', courseId);
+  }
+
   // Upload an image and get the public URL
   Future<String> uploadDepartmentImage(
     Uint8List imageData,
@@ -557,14 +569,22 @@ class DatabaseService {
     required bool approve,
     String? reason,
   }) async {
-    await _supabase.rpc(
-      'moderate_material',
-      params: {
-        'p_material_id': materialId,
-        'p_decision': approve ? 'approve' : 'reject',
-        'p_reason': reason,
-      },
-    );
+    // Points (if any) are computed and credited to the submitter server-side
+    // — see moderate_material() in
+    // reward_material_approval_and_points_redemption.sql. Never trust a
+    // client-side point value; this return is only used for the
+    // notification/push copy below.
+    final pointsAwarded =
+        (await _supabase.rpc(
+              'moderate_material',
+              params: {
+                'p_material_id': materialId,
+                'p_decision': approve ? 'approve' : 'reject',
+                'p_reason': reason,
+              },
+            )
+            as num?)?.toInt() ??
+        0;
 
     final row = await _supabase
         .from('course_materials')
@@ -585,19 +605,48 @@ class DatabaseService {
     }
 
     if (uploaderId == null) return;
+
+    final notifTitle = approve ? 'Document Approved! 🎉' : 'Material rejected';
+    final notifBody = approve
+        ? (pointsAwarded > 0
+              ? 'Your upload "$title" was published. You earned +$pointsAwarded study points!'
+              : 'Your submission "$title" is now live.')
+        : 'Your submission "$title" was rejected'
+              '${reason != null && reason.isNotEmpty ? ': $reason' : '.'}';
+    final notifType = approve ? NotificationType.reward : NotificationType.material;
+    final notifData = {
+      'materialId': materialId,
+      if (approve && pointsAwarded > 0) 'points': '$pointsAwarded',
+    };
+
     try {
       await NotificationService().createNotification(
         recipientId: uploaderId,
-        title: approve ? 'Material approved' : 'Material rejected',
-        body: approve
-            ? 'Your submission "$title" is now live.'
-            : 'Your submission "$title" was rejected'
-                  '${reason != null && reason.isNotEmpty ? ': $reason' : '.'}',
-        type: NotificationType.material,
-        data: {'materialId': materialId},
+        title: notifTitle,
+        body: notifBody,
+        type: notifType,
+        data: notifData,
       );
     } catch (_) {
       // Best-effort — a notification hiccup shouldn't fail moderation.
+    }
+
+    // Push for background/terminated devices — createNotification above only
+    // writes the in-app row. Uses the edge function's admin-only 'user'
+    // scope, safe here because moderateMaterial() itself only ever succeeds
+    // for an admin caller (moderate_material()'s is_admin() check above).
+    try {
+      await NotificationService().triggerPushViaEdgeFunction(
+        scope: 'user',
+        scopeId: uploaderId,
+        title: notifTitle,
+        body: notifBody,
+        type: notifType,
+        data: notifData,
+        insertNotification: false,
+      );
+    } catch (_) {
+      // Best-effort — a push hiccup shouldn't fail moderation.
     }
   }
 

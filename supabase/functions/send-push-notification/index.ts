@@ -152,6 +152,20 @@ async function resolveRecipients(
       ids = await resolveAllProfileIds(supabase);
       break;
     }
+    case "user": {
+      // A single targeted recipient (e.g. notifying a material's submitter
+      // after moderation) — mirrors "Admins can create notifications for
+      // anyone" on the notifications table. Admin-only since, unlike every
+      // other scope, this lets the caller name an arbitrary recipient
+      // instead of one derived from the caller's own relationships.
+      if (!scopeId) throw new Error("scope_id (user id) is required for scope 'user'");
+      const caller = await getCallerProfile(supabase, callerUid);
+      if (caller.role !== "admin") {
+        throw new Error("Only admins may target scope 'user'");
+      }
+      ids = [scopeId];
+      break;
+    }
     default:
       throw new Error(`Unknown scope: ${scope}`);
   }
@@ -212,7 +226,7 @@ serve(async (req: Request) => {
       data = {},
       insert_notification = false,
     } = body as {
-      scope: "room" | "dm" | "department" | "institution" | "all";
+      scope: "room" | "dm" | "department" | "institution" | "all" | "user";
       scope_id?: string;
       title: string;
       body: string;

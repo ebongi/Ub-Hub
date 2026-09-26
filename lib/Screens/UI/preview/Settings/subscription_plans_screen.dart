@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/subscription_service.dart';
+import 'package:go_study/services/points_service.dart';
 import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
@@ -450,20 +451,44 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             : Text(l10n.startFreeTrialButton),
       );
     } else {
-      actionButton = ElevatedButton(
-        onPressed: _isProcessing
-            ? null
-            : () => _handlePurchase(
-                  SubscriptionTier.monthly,
-                  price,
-                  'app_plan_subscription',
-                  (ref) => _db.upgradeSubscription(SubscriptionTier.monthly, paymentRef: ref),
-                ),
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        child: Text(l10n.subscribeButton),
+      actionButton = Column(
+        children: [
+          ElevatedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handlePurchase(
+                      SubscriptionTier.monthly,
+                      price,
+                      'app_plan_subscription',
+                      (ref) => _db.upgradeSubscription(SubscriptionTier.monthly, paymentRef: ref),
+                    ),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(l10n.subscribeButton),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handleRedeemWithPoints(
+                      SubscriptionTier.monthly,
+                      SubscriptionService.pointsCostMonthly,
+                      userModel,
+                    ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(l10n.redeemWithPointsButton(SubscriptionService.pointsCostMonthly)),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.yourPointsBalanceLabel(userModel.totalPoints),
+            style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+          ),
+        ],
       );
     }
 
@@ -534,20 +559,44 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
     final actionButton = isPaidActive
         ? const SizedBox.shrink()
-        : ElevatedButton(
-            onPressed: _isProcessing
-                ? null
-                : () => _handlePurchase(
-                      SubscriptionTier.yearly,
-                      price,
-                      'app_plan_subscription',
-                      (ref) => _db.upgradeSubscription(SubscriptionTier.yearly, paymentRef: ref),
-                    ),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-            child: Text(l10n.subscribeButton),
+        : Column(
+            children: [
+              ElevatedButton(
+                onPressed: _isProcessing
+                    ? null
+                    : () => _handlePurchase(
+                          SubscriptionTier.yearly,
+                          price,
+                          'app_plan_subscription',
+                          (ref) => _db.upgradeSubscription(SubscriptionTier.yearly, paymentRef: ref),
+                        ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(l10n.subscribeButton),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _isProcessing
+                    ? null
+                    : () => _handleRedeemWithPoints(
+                          SubscriptionTier.yearly,
+                          SubscriptionService.pointsCostYearly,
+                          userModel,
+                        ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(l10n.redeemWithPointsButton(SubscriptionService.pointsCostYearly)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.yourPointsBalanceLabel(userModel.totalPoints),
+                style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+              ),
+            ],
           );
 
     return Container(
@@ -1006,4 +1055,63 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     }
   }
 
+  /// Redeems accumulated points for [tier] instead of paying via Fapshi.
+  /// The cost is only ever enforced server-side (redeem_points_for_plan());
+  /// [pointsCost] here is purely for the confirm-dialog/balance copy.
+  Future<void> _handleRedeemWithPoints(
+    SubscriptionTier tier,
+    int pointsCost,
+    UserModel userModel,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (userModel.totalPoints < pointsCost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.insufficientPointsMessage(pointsCost))),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmRedeemPointsTitle),
+        content: Text(l10n.confirmRedeemPointsBody(pointsCost)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.redeemWithPointsButton(pointsCost)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() {
+      _isProcessing = true;
+      _processingTier = tier;
+    });
+    try {
+      await PointsService().redeemPointsForPlan(tier.name);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pointsRedeemedSuccessMessage)),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _processingTier = null;
+        });
+      }
+    }
+  }
 }

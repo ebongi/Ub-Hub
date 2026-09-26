@@ -5144,6 +5144,78 @@ abstract class AppLocalizations {
   /// **'AI features are billed separately and not included.'**
   String get aiFeaturesBilledSeparatelyShort;
 
+  /// No description provided for @redeemWithPointsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem with {points} pts'**
+  String redeemWithPointsButton(int points);
+
+  /// No description provided for @yourPointsBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance: {points} pts'**
+  String yourPointsBalanceLabel(int points);
+
+  /// No description provided for @insufficientPointsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {points} points to redeem this plan.'**
+  String insufficientPointsMessage(int points);
+
+  /// No description provided for @confirmRedeemPointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem points?'**
+  String get confirmRedeemPointsTitle;
+
+  /// No description provided for @confirmRedeemPointsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {points} points to activate this plan? This can\'t be undone.'**
+  String confirmRedeemPointsBody(int points);
+
+  /// No description provided for @pointsRedeemedSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan activated using your points!'**
+  String get pointsRedeemedSuccessMessage;
+
+  /// No description provided for @setBountyMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Points Bounty'**
+  String get setBountyMenuItem;
+
+  /// No description provided for @setBountyDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Points Bounty'**
+  String get setBountyDialogTitle;
+
+  /// No description provided for @setBountyDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost the approval points students earn for materials uploaded to \"{course}\". This multiplies the base +50 points (2 = double, 1 = no bounty).'**
+  String setBountyDialogBody(String course);
+
+  /// No description provided for @bountyMultiplierFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplier (e.g. 1, 1.5, 2)'**
+  String get bountyMultiplierFieldLabel;
+
+  /// No description provided for @bountyMultiplierInvalidMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number greater than 0'**
+  String get bountyMultiplierInvalidMessage;
+
+  /// No description provided for @bountyUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Points bounty updated'**
+  String get bountyUpdatedMessage;
+
   /// No description provided for @startYourFreeMonthTitle.
   ///
   /// In en, this message translates to:

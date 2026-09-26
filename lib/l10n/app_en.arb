@@ -1087,6 +1087,33 @@
     "placeholders": { "price": { "type": "int" } }
   },
   "aiFeaturesBilledSeparatelyShort": "AI features are billed separately and not included.",
+  "redeemWithPointsButton": "Redeem with {points} pts",
+  "@redeemWithPointsButton": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "yourPointsBalanceLabel": "Your balance: {points} pts",
+  "@yourPointsBalanceLabel": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "insufficientPointsMessage": "You need {points} points to redeem this plan.",
+  "@insufficientPointsMessage": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "confirmRedeemPointsTitle": "Redeem points?",
+  "confirmRedeemPointsBody": "Use {points} points to activate this plan? This can't be undone.",
+  "@confirmRedeemPointsBody": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "pointsRedeemedSuccessMessage": "Plan activated using your points!",
+  "setBountyMenuItem": "Set Points Bounty",
+  "setBountyDialogTitle": "Points Bounty",
+  "setBountyDialogBody": "Boost the approval points students earn for materials uploaded to \"{course}\". This multiplies the base +50 points (2 = double, 1 = no bounty).",
+  "@setBountyDialogBody": {
+    "placeholders": { "course": { "type": "String" } }
+  },
+  "bountyMultiplierFieldLabel": "Multiplier (e.g. 1, 1.5, 2)",
+  "bountyMultiplierInvalidMessage": "Enter a number greater than 0",
+  "bountyUpdatedMessage": "Points bounty updated",
   "startYourFreeMonthTitle": "Start Your Free Trial",
   "noPaymentRequiredTodaySubtitle": "No payment required today",
   "freeTrialTermsBody": "Your App Plan is free for the first 14 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.",

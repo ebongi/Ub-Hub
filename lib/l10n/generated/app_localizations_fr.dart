@@ -2798,6 +2798,52 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les fonctionnalités IA sont facturées séparément et non incluses.';
 
   @override
+  String redeemWithPointsButton(int points) {
+    return 'Échanger contre $points pts';
+  }
+
+  @override
+  String yourPointsBalanceLabel(int points) {
+    return 'Votre solde : $points pts';
+  }
+
+  @override
+  String insufficientPointsMessage(int points) {
+    return 'Il vous faut $points points pour échanger ce forfait.';
+  }
+
+  @override
+  String get confirmRedeemPointsTitle => 'Échanger vos points ?';
+
+  @override
+  String confirmRedeemPointsBody(int points) {
+    return 'Utiliser $points points pour activer ce forfait ? Cette action est irréversible.';
+  }
+
+  @override
+  String get pointsRedeemedSuccessMessage => 'Forfait activé avec vos points !';
+
+  @override
+  String get setBountyMenuItem => 'Définir la prime de points';
+
+  @override
+  String get setBountyDialogTitle => 'Prime de points';
+
+  @override
+  String setBountyDialogBody(String course) {
+    return 'Augmentez les points d\'approbation gagnés pour les documents envoyés dans « $course ». Ceci multiplie les +50 points de base (2 = double, 1 = aucune prime).';
+  }
+
+  @override
+  String get bountyMultiplierFieldLabel => 'Multiplicateur (ex. 1, 1.5, 2)';
+
+  @override
+  String get bountyMultiplierInvalidMessage => 'Entrez un nombre supérieur à 0';
+
+  @override
+  String get bountyUpdatedMessage => 'Prime de points mise à jour';
+
+  @override
   String get startYourFreeMonthTitle => 'Démarrez votre essai gratuit';
 
   @override

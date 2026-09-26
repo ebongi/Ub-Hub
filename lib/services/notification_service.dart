@@ -9,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_study/main.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/leaderboard_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -138,6 +139,17 @@ class NotificationService {
       );
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => const NewsFeedScreen()),
+      );
+    } else if (payload == 'reward') {
+      // UGC approval reward — reset to Home, then open the leaderboard
+      // (this app's point-balance/history view; see leaderboard_screen.dart)
+      // on top.
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const NavBar(initialIndex: 0)),
+        (route) => false,
+      );
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
       );
     } else {
       // Default navigation to Home
@@ -589,7 +601,9 @@ class NotificationService {
   /// reach. Valid scopes: 'room' (scopeId = room id; 'global' or a
   /// department id), 'dm' (scopeId = the `dm_<uid>_<uid>` room id), 'department'
   /// (scopeId = department id — caller must belong to it), 'institution'
-  /// (scopeId = institution id — admin only), 'all' (admin only).
+  /// (scopeId = institution id — admin only), 'all' (admin only), 'user'
+  /// (scopeId = target user id — admin only; e.g. notifying a single
+  /// material submitter after moderation).
   ///
   /// [insertNotification] tells the Edge Function whether to also write rows to
   /// the `notifications` table (set false when [createBroadcastNotification] has

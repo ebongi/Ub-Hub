@@ -2757,6 +2757,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'AI features are billed separately and not included.';
 
   @override
+  String redeemWithPointsButton(int points) {
+    return 'Redeem with $points pts';
+  }
+
+  @override
+  String yourPointsBalanceLabel(int points) {
+    return 'Your balance: $points pts';
+  }
+
+  @override
+  String insufficientPointsMessage(int points) {
+    return 'You need $points points to redeem this plan.';
+  }
+
+  @override
+  String get confirmRedeemPointsTitle => 'Redeem points?';
+
+  @override
+  String confirmRedeemPointsBody(int points) {
+    return 'Use $points points to activate this plan? This can\'t be undone.';
+  }
+
+  @override
+  String get pointsRedeemedSuccessMessage =>
+      'Plan activated using your points!';
+
+  @override
+  String get setBountyMenuItem => 'Set Points Bounty';
+
+  @override
+  String get setBountyDialogTitle => 'Points Bounty';
+
+  @override
+  String setBountyDialogBody(String course) {
+    return 'Boost the approval points students earn for materials uploaded to \"$course\". This multiplies the base +50 points (2 = double, 1 = no bounty).';
+  }
+
+  @override
+  String get bountyMultiplierFieldLabel => 'Multiplier (e.g. 1, 1.5, 2)';
+
+  @override
+  String get bountyMultiplierInvalidMessage => 'Enter a number greater than 0';
+
+  @override
+  String get bountyUpdatedMessage => 'Points bounty updated';
+
+  @override
   String get startYourFreeMonthTitle => 'Start Your Free Trial';
 
   @override

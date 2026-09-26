@@ -9,6 +9,7 @@ class Course {
   final DateTime? createdAt;
   final String? adminId;
   final DateTime? updatedAt;
+  final double bountyMultiplier;
 
   Course({
     this.id = '',
@@ -21,7 +22,13 @@ class Course {
     this.createdAt,
     this.adminId,
     this.updatedAt,
+    this.bountyMultiplier = 1.0,
   });
+
+  /// Whether uploads to this course currently earn boosted approval points
+  /// — see courses.bounty_multiplier in
+  /// reward_material_approval_and_points_redemption.sql.
+  bool get hasBounty => bountyMultiplier > 1.0;
 
   factory Course.fromSupabase(Map<String, dynamic> json) {
     return Course(
@@ -39,6 +46,7 @@ class Course {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
+      bountyMultiplier: (json['bounty_multiplier'] as num?)?.toDouble() ?? 1.0,
     );
   }
 
