@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/Shared/bounty_badge.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/ai_answer_actions.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/material_download_actions.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
@@ -641,100 +642,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         l10n.pastQuestionAnswersCountSubtitle(relatedAnswers.length),
         style: AppText.cardSubtitle(context),
       ),
-      trailing:
-          (question.uploaderId == _dbService.uid ||
-              widget.course.adminId == _dbService.uid)
-          ? PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert_rounded,
-                color: colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-              onSelected: (value) async {
-                if (value == 'delete') {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text(l10n.deletePastQuestionDialogTitle),
-                      content: Text(
-                        l10n.confirmDeleteMaterialBody(question.title),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            l10n.deleteButton,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) {
-                    await _dbService.deleteMaterial(question.id);
-                    if (mounted) {
-                      ErrorHandler.showSuccessSnackBar(
-                        context,
-                        l10n.pastQuestionDeletedMessage,
-                      );
-                    }
-                  }
-                } else if (value == 'download') {
-                  handleMaterialDownload(
-                    context: context,
-                    dbService: _dbService,
-                    userProfile: _userProfile,
-                    material: question,
-                  );
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'download',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.download_rounded, size: 20),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(l10n.downloadMenuItem),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        l10n.deleteButton,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          : IconButton(
-              icon: Icon(
-                Icons.download_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
-              onPressed: () => handleMaterialDownload(
-                context: context,
-                dbService: _dbService,
-                userProfile: _userProfile,
-                material: question,
-              ),
-            ),
+      trailing: _buildPastQuestionMenu(question, l10n, colorScheme),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -799,6 +707,129 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  /// Kebab menu shared by every viewer of a past question — View, Ask AI to
+  /// Answer, and Download for everyone; Delete only for the uploader/admin.
+  /// Replaces the old owner-only PopupMenuButton / everyone-else bare
+  /// download IconButton split, since view+AI-answer need to be reachable
+  /// regardless of who's looking.
+  Widget _buildPastQuestionMenu(
+    CourseMaterial question,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    final canManage =
+        question.uploaderId == _dbService.uid || widget.course.adminId == _dbService.uid;
+
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert_rounded,
+        color: colorScheme.onSurfaceVariant,
+        size: 20,
+      ),
+      onSelected: (value) async {
+        if (value == 'view') {
+          openMaterialFile(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'ask_ai') {
+          askAiToAnswerQuestion(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'download') {
+          handleMaterialDownload(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'delete') {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(l10n.deletePastQuestionDialogTitle),
+              content: Text(l10n.confirmDeleteMaterialBody(question.title)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(
+                    l10n.deleteButton,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            await _dbService.deleteMaterial(question.id);
+            if (mounted) {
+              ErrorHandler.showSuccessSnackBar(context, l10n.pastQuestionDeletedMessage);
+            }
+          }
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'view',
+          child: Row(
+            children: [
+              const Icon(Icons.visibility_outlined, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.viewMenuItem),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'ask_ai',
+          child: Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.askAiToAnswerMenuItem),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'download',
+          child: Row(
+            children: [
+              const Icon(Icons.download_rounded, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.downloadMenuItem),
+            ],
+          ),
+        ),
+        if (canManage)
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  l10n.deleteButton,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

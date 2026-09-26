@@ -8,6 +8,7 @@ import 'package:go_study/Screens/Shared/bounty_badge.dart';
 import 'package:go_study/Screens/UI/preview/ComputerCourses/add_course_dialog.dart'
     show showAddCourseDialog;
 import 'package:go_study/Screens/UI/preview/detailScreens/course_detail_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/ai_answer_actions.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/material_download_actions.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/flashcard_actions.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/flashcard_study_screen.dart';
@@ -1038,19 +1039,7 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                         ),
                         style: AppText.cardSubtitle(context),
                       ),
-                      trailing: IconButton(
-                        icon: Icon(
-                          Icons.download_rounded,
-                          color: isDark ? Colors.white70 : colorScheme.primary,
-                          size: 20,
-                        ),
-                        onPressed: () => handleMaterialDownload(
-                          context: context,
-                          dbService: _dbService,
-                          userProfile: _userProfile,
-                          material: q,
-                        ),
-                      ),
+                      trailing: _buildPastQuestionMenu(q, colorScheme),
                       children: [
                         if (relatedAnswers.isEmpty)
                           Padding(
@@ -1120,6 +1109,120 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           },
         );
       },
+    );
+  }
+
+  /// Kebab menu for a past question tile — View, Ask AI to Answer and
+  /// Download for everyone; Delete only for the uploader/department admin.
+  /// Mirrors CourseDetailScreen._buildPastQuestionMenu.
+  Widget _buildPastQuestionMenu(CourseMaterial question, ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
+    final canManage =
+        question.uploaderId == _dbService.uid || _department?.adminId == _dbService.uid;
+
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert_rounded, color: colorScheme.primary, size: 20),
+      onSelected: (value) async {
+        if (value == 'view') {
+          openMaterialFile(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'ask_ai') {
+          askAiToAnswerQuestion(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'download') {
+          handleMaterialDownload(
+            context: context,
+            dbService: _dbService,
+            userProfile: _userProfile,
+            material: question,
+          );
+        } else if (value == 'delete') {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(l10n.deleteMaterialDialogTitle),
+              content: Text(l10n.confirmDeleteMaterialBody(question.title)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(l10n.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(
+                    l10n.deleteButton,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            await _dbService.deleteMaterial(question.id);
+            if (mounted) {
+              ErrorHandler.showSuccessSnackBar(context, l10n.materialDeletedMessage);
+            }
+          }
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'view',
+          child: Row(
+            children: [
+              const Icon(Icons.visibility_outlined, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.viewMenuItem),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'ask_ai',
+          child: Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.askAiToAnswerMenuItem),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'download',
+          child: Row(
+            children: [
+              const Icon(Icons.download_rounded, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text(l10n.downloadMenuItem),
+            ],
+          ),
+        ),
+        if (canManage)
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  l10n.deleteButton,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 

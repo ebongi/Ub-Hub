@@ -62,6 +62,11 @@ abstract class AIService {
   /// Summarizes a document. [pdfSource] is either its extracted plain text
   /// (`String`, preferred) or its raw PDF bytes (`Uint8List`).
   Future<String> summarizePdf(dynamic pdfSource);
+
+  /// Answers the exam question(s) contained in a document (e.g. a past
+  /// question paper), step by step. [pdfSource] is either its extracted
+  /// plain text (`String`, preferred) or its raw PDF bytes (`Uint8List`).
+  Future<String> answerQuestion(dynamic pdfSource);
 }
 
 enum QuestionDifficulty { low, intermediate, advanced }

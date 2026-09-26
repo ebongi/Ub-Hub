@@ -2189,6 +2189,26 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les fiches ne peuvent être générées qu\'à partir de documents PDF';
 
   @override
+  String get viewMenuItem => 'Voir';
+
+  @override
+  String get askAiToAnswerMenuItem => 'Demander à l\'IA de répondre';
+
+  @override
+  String get aiAnswerPdfOnlyMessage =>
+      'Les réponses IA ne sont disponibles que pour les documents PDF.';
+
+  @override
+  String get generatingAiAnswerMessage => 'Génération d\'une réponse IA…';
+
+  @override
+  String get aiAnswerSheetTitle => 'Réponse de l\'IA';
+
+  @override
+  String get aiAnswerSheetSubtitle =>
+      'Généré par l\'IA — vérifiez toujours les détails importants.';
+
+  @override
   String get flashcardQuestionLabel => 'QUESTION';
 
   @override

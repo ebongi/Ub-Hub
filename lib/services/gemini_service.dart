@@ -313,4 +313,29 @@ Format the response in professional Markdown.
       return "Sorry, I encountered an error summarizing the PDF. ${ErrorHandler.getFriendlyMessage(e)}";
     }
   }
+
+  @override
+  Future<String> answerQuestion(dynamic pdfSource) async {
+    final bool isText = pdfSource is String;
+    final prompt = isText
+        ? """
+You are an expert educator. The study material below contains one or more past exam questions. Answer every question thoroughly and correctly, exactly as a top-scoring student would in an exam — show your working step by step where applicable.
+
+Format your response in professional Markdown. Use LaTeX for all math expressions (\$inline\$ and \$\$block\$\$).
+
+PAST QUESTION(S):
+$pdfSource
+"""
+        : """
+You are an expert educator. The attached document contains one or more past exam questions. Answer every question thoroughly and correctly, exactly as a top-scoring student would in an exam — show your working step by step where applicable.
+
+Format your response in professional Markdown. Use LaTeX for all math expressions (\$inline\$ and \$\$block\$\$).
+""";
+
+    return sendMessage(
+      prompt,
+      attachments: isText ? null : [DataPart('application/pdf', pdfSource as Uint8List)],
+      creditCost: 3,
+    );
+  }
 }
