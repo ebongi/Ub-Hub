@@ -65,6 +65,20 @@ class FriendsService {
     return 'dm_${sorted[0]}_${sorted[1]}';
   }
 
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  /// Guards against building a raw `.or()` PostgREST filter string out of a
+  /// value that isn't actually a UUID — otherwise a caller-supplied id
+  /// containing filter syntax (commas, parens, colons) could reshape the
+  /// query instead of just being compared against.
+  static void _assertValidUuid(String id) {
+    if (!_uuidPattern.hasMatch(id)) {
+      throw ArgumentError.value(id, 'userId', 'Expected a UUID');
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Send a friend request
   // ---------------------------------------------------------------------------
@@ -99,11 +113,14 @@ class FriendsService {
   // Respond to an incoming friend request
   // ---------------------------------------------------------------------------
   Future<void> respondToRequest(String requestId, bool accept) async {
-    // 1. Fetch request details to get sender_id and receiver (me) name
+    // 1. Fetch request details to get sender_id and receiver (me) name.
+    // Scoped to receiver_id = me as defense in depth alongside RLS, so this
+    // can only ever act on a request actually addressed to the caller.
     final request = await _supabase
         .from('friend_requests')
         .select('sender_id, receiver_id')
         .eq('id', requestId)
+        .eq('receiver_id', _myId)
         .single();
 
     final senderId = request['sender_id'] as String;
@@ -121,7 +138,8 @@ class FriendsService {
     await _supabase
         .from('friend_requests')
         .update({'status': accept ? 'accepted' : 'declined'})
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .eq('receiver_id', _myId);
 
     // 4. Trigger notification to the original sender
     if (accept) {
@@ -139,6 +157,7 @@ class FriendsService {
   // Remove a friend (delete the accepted request row)
   // ---------------------------------------------------------------------------
   Future<void> removeFriend(String otherUserId) async {
+    _assertValidUuid(otherUserId);
     // Delete whichever direction the accepted row exists
     await _supabase
         .from('friend_requests')
@@ -321,6 +340,7 @@ class FriendsService {
   // Returns: 'none' | 'pending_sent' | 'pending_received' | 'accepted'
   // ---------------------------------------------------------------------------
   Future<String> getRelationshipStatus(String otherUserId) async {
+    _assertValidUuid(otherUserId);
     final rows = await _supabase
         .from('friend_requests')
         .select('id, sender_id, status')

@@ -4,6 +4,7 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/private_chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/user_search_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -160,10 +161,18 @@ class _DmScreenState extends State<DmScreen> {
                           request: req,
                           theme: theme,
                           onAccept: () async {
-                            await _friendsService.respondToRequest(req.id, true);
+                            try {
+                              await _friendsService.respondToRequest(req.id, true);
+                            } catch (e) {
+                              if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                            }
                           },
                           onDecline: () async {
-                            await _friendsService.respondToRequest(req.id, false);
+                            try {
+                              await _friendsService.respondToRequest(req.id, false);
+                            } catch (e) {
+                              if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                            }
                           },
                         ),
                       ),
@@ -343,7 +352,11 @@ class _DmScreenState extends State<DmScreen> {
                   borderRadius: BorderRadius.circular(14)),
               onTap: () async {
                 Navigator.pop(context);
-                await _friendsService.removeFriend(friend.id);
+                try {
+                  await _friendsService.removeFriend(friend.id);
+                } catch (e) {
+                  if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                }
               },
             ),
             const SizedBox(height: 12),
