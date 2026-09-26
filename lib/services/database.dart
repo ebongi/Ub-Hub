@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,7 +18,9 @@ import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/school.dart';
 import 'package:go_study/services/recent_activity_service.dart';
 import 'package:go_study/services/marketplace_listing.dart';
-import 'package:go_study/services/bot_knowledge.dart';
+import 'package:go_study/services/news_post.dart';
+import 'package:go_study/services/flashcard_model.dart';
+import 'package:go_study/services/points_service.dart';
 
 class DatabaseService {
   final String? uid;
@@ -35,6 +38,7 @@ class DatabaseService {
     String? department,
     String? bio,
     String? avatarUrl,
+    bool? studyRemindersEnabled,
   }) async {
     if (uid == null) return;
     return await _supabase.from('profiles').upsert({
@@ -47,6 +51,8 @@ class DatabaseService {
       if (department != null) 'department': department,
       if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (studyRemindersEnabled != null)
+        'study_reminders_enabled': studyRemindersEnabled,
     });
   }
 
@@ -58,11 +64,12 @@ class DatabaseService {
         .eq('id', uid!)
         .map((data) {
           if (data.isEmpty) {
-            final authUser = Supabase.instance.client.auth.currentUser;
-            final parsedName =
-                authUser?.userMetadata?['name'] ??
-                authUser?.email?.split('@').first;
-            return UserProfile(id: uid!, name: parsedName);
+            // Route through fromSupabase so createdAt falls back to
+            // auth.currentUser.createdAt (see profile.dart) instead of
+            // staying null — a null createdAt fails hasAccess's new-account
+            // grace window and wrongly paywalls a user whose profiles row
+            // hasn't been created yet (a signup-vs-profile-insert race).
+            return UserProfile.fromSupabase({'id': uid});
           }
           return UserProfile.fromSupabase(data.first);
         });
@@ -204,6 +211,45 @@ class DatabaseService {
     return rows.map((r) => r['id'] as String).toList();
   }
 
+  /// Fires the "new content" broadcast pair together — an in-app
+  /// notification row (visible in the recipient's notification list) plus
+  /// an FCM push (for background/terminated devices) — since neither
+  /// depends on the other's result. Each create-content method still
+  /// resolves its own [recipientIds] (the DB-row audience) and
+  /// [scope]/[scopeId] (the push audience, resolved server-side by the edge
+  /// function) since their broadcast semantics differ.
+  Future<void> _broadcastCreate({
+    required List<String> recipientIds,
+    required String title,
+    required String body,
+    required NotificationType type,
+    required String scope,
+    String? scopeId,
+    Map<String, dynamic>? data,
+    String? pushTitle,
+    Map<String, dynamic>? pushData,
+  }) async {
+    await Future.wait([
+      NotificationService().createBroadcastNotification(
+        recipientIds: recipientIds,
+        title: title,
+        body: body,
+        type: type,
+        data: data,
+        excludeUserId: uid,
+      ),
+      NotificationService().triggerPushViaEdgeFunction(
+        scope: scope,
+        scopeId: scopeId,
+        title: pushTitle ?? title,
+        body: body,
+        type: type,
+        data: pushData ?? data,
+        insertNotification: false,
+      ),
+    ]);
+  }
+
   // Create a new department
   Future<String> createDepartment(Department department) async {
     final data = await _supabase
@@ -226,13 +272,14 @@ class DatabaseService {
       final institutionId = school?['institution_id'] as String?;
       if (institutionId != null) {
         final recipientIds = await _getStudentIdsInInstitution(institutionId);
-        await NotificationService().createBroadcastNotification(
+        await _broadcastCreate(
           recipientIds: recipientIds,
           title: 'New Department',
           body: 'A new department "${department.name}" has been added.',
           type: NotificationType.department,
           data: {'departmentId': id},
-          excludeUserId: uid,
+          scope: 'institution',
+          scopeId: institutionId,
         );
       }
     } catch (_) {
@@ -264,14 +311,15 @@ class DatabaseService {
       final recipientIds = await _getStudentIdsInDepartment(
         course.departmentId,
       );
-      await NotificationService().createBroadcastNotification(
+      await _broadcastCreate(
         recipientIds: recipientIds,
         title: 'New Course',
         body:
             'A new course "${course.name}" (${course.code}) is now available.',
         type: NotificationType.course,
         data: {'courseId': id, 'departmentId': course.departmentId},
-        excludeUserId: uid,
+        scope: 'department',
+        scopeId: course.departmentId,
       );
     } catch (_) {
       // Silently ignore — see comment above.
@@ -283,6 +331,18 @@ class DatabaseService {
   // Delete a course
   Future<void> deleteCourse(String courseId) async {
     await _supabase.from('courses').delete().eq('id', courseId);
+  }
+
+  /// Sets a course's approval-points bounty multiplier (courses.bounty_multiplier;
+  /// see reward_material_approval_and_points_redemption.sql). No RPC needed —
+  /// "Admins can manage courses" already covers this column, and only an
+  /// admin ever reaches the UI that calls this (see _buildCourseMenu in
+  /// department_screen.dart).
+  Future<void> setCourseBountyMultiplier(String courseId, double multiplier) async {
+    await _supabase
+        .from('courses')
+        .update({'bounty_multiplier': multiplier})
+        .eq('id', courseId);
   }
 
   // Upload an image and get the public URL
@@ -329,42 +389,72 @@ class DatabaseService {
     return _supabase.storage.from('department_images').getPublicUrl(path);
   }
 
-  // Upload a material file (course or department) and get the public URL
+  // Upload a material file (course or department) and return its storage
+  // path. The bucket is private (see secure_course_material_downloads.sql —
+  // course_materials.file_url now stores this bare path, not a public URL);
+  // callers must go through requestMaterialAccess() + a signed URL to
+  // actually read the file back.
   Future<String> uploadMaterialFile(
     Uint8List fileData,
     String targetId, // courseCode or departmentId
     String fileName,
     bool isDepartment,
   ) async {
-    // Use the existing 'course_materials' bucket for all documents
     const folder = 'course_materials';
     final path = isDepartment
         ? 'department/$targetId/$fileName'
         : 'course/$targetId/$fileName';
     await _supabase.storage.from(folder).uploadBinary(path, fileData);
-    return _supabase.storage.from(folder).getPublicUrl(path);
+    return path;
   }
 
-  // Create a new material record
-  Future<String> addMaterial(CourseMaterial material) async {
-    final data = await _supabase
+  /// Resolves a course material's file into a short-lived signed URL,
+  /// enforcing the same free-download/subscription/payment rules server-side
+  /// that the UI already gates on (SubscriptionService.canDownloadForFree) —
+  /// see request_material_access() in
+  /// supabase/migrations/secure_course_material_downloads.sql. Pass
+  /// [paymentRef] only after a Fapshi payment for this exact material has
+  /// succeeded; omit it for the free/owner/admin paths.
+  Future<String> requestMaterialAccess(
+    String materialId, {
+    String? paymentRef,
+  }) async {
+    final rows = await _supabase.rpc(
+      'request_material_access',
+      params: {'p_material_id': materialId, 'p_payment_ref': paymentRef},
+    );
+    final row = (rows as List).first as Map<String, dynamic>;
+    final path = row['storage_path'] as String;
+    return _supabase.storage
         .from('course_materials')
-        .insert({
-          ...material.toSupabase(),
-          if (material.uploaderId == null && uid != null) 'uploader_id': uid,
-        })
-        .select()
-        .single();
-    final id = data['id'] as String;
+        .createSignedUrl(path, 600); // seconds — matches the RPC's 10-minute grant
+  }
 
-    // Broadcast to every student in the material's department (resolve via
-    // the course if the material wasn't uploaded directly to a department).
-    String? departmentId = material.departmentId;
-    if (departmentId == null && material.courseId != null) {
+  // Broadcasts a newly-published material to its department. Shared between
+  // addMaterial() (auto-published) and moderateMaterial() (approved out of
+  // the pending queue) — the only two places a row ever becomes 'published'.
+  //
+  // Deliberately does NOT award points here: award_points() always credits
+  // auth.uid() — the caller — with no target-user param. That's correct
+  // when addMaterial() calls it directly (the uploader is the caller), but
+  // moderateMaterial() runs as the approving *admin*, so reusing this for
+  // that path would wrongly credit the admin instead of the submitter.
+  // Points for moderated submissions would need award_points() extended
+  // with an admin-only target-user override — not done here.
+  Future<void> _broadcastNewMaterial({
+    required String id,
+    required String title,
+    String? courseId,
+    String? departmentId,
+    required String materialCategory,
+  }) async {
+    // Resolve via the course if the material wasn't uploaded directly to a
+    // department.
+    if (departmentId == null && courseId != null) {
       final course = await _supabase
           .from('courses')
           .select('department_id')
-          .eq('id', material.courseId!)
+          .eq('id', courseId)
           .maybeSingle();
       departmentId = course?['department_id'] as String?;
     }
@@ -376,21 +466,67 @@ class DatabaseService {
       // let a rejected broadcast fail the upload itself.
       try {
         final recipientIds = await _getStudentIdsInDepartment(departmentId);
-        await NotificationService().createBroadcastNotification(
+        await _broadcastCreate(
           recipientIds: recipientIds,
           title: 'New Material Uploaded',
-          body: 'New content "${material.title}" has been uploaded.',
+          body: 'New content "$title" has been uploaded.',
           type: NotificationType.material,
           data: {
             'materialId': id,
-            'courseId': material.courseId,
-            'category': material.materialCategory,
+            'courseId': courseId,
+            'category': materialCategory,
           },
-          excludeUserId: uid,
+          scope: 'department',
+          scopeId: departmentId,
+          pushTitle: 'New Material Uploaded 📚',
+          pushData: {
+            'materialId': id,
+            'courseId': courseId ?? '',
+            'category': materialCategory,
+          },
         );
       } catch (_) {
         // Silently ignore — see comment above.
       }
+    }
+  }
+
+  // Create a new material record. Whether it lands 'published' or 'pending'
+  // is decided server-side (handle_course_material_insert, see
+  // hybrid_content_moderation.sql) purely from the caller's role — the
+  // status echoed back below reflects that, not anything sent here.
+  Future<String> addMaterial(CourseMaterial material) async {
+    final data = await _supabase
+        .from('course_materials')
+        .insert({
+          ...material.toSupabase(),
+          if (material.uploaderId == null && uid != null) 'uploader_id': uid,
+        })
+        .select()
+        .single();
+    final id = data['id'] as String;
+
+    // A pending submission isn't public yet — no department-wide broadcast,
+    // no points (those happen once moderateMaterial() approves it).
+    if (data['status'] != 'published') {
+      return id;
+    }
+
+    await _broadcastNewMaterial(
+      id: id,
+      title: material.title,
+      courseId: material.courseId,
+      departmentId: material.departmentId,
+      materialCategory: material.materialCategory,
+    );
+
+    // Best-effort — a points RPC hiccup shouldn't fail the upload itself.
+    // Only correct to call here: the caller (auth.uid(), which award_points
+    // always credits) is the uploader themselves.
+    try {
+      await PointsService().awardPoints('material_uploaded');
+    } catch (_) {
+      // Silently ignore.
     }
 
     return id;
@@ -399,6 +535,119 @@ class DatabaseService {
   // Delete a material record
   Future<void> deleteMaterial(String materialId) async {
     await _supabase.from('course_materials').delete().eq('id', materialId);
+  }
+
+  /// Materials awaiting admin review. RLS also lets a non-admin see their
+  /// own pending rows via the regular course/department streams, but this
+  /// one (every pending row, regardless of course/department) is only ever
+  /// meant to back the admin moderation queue.
+  Stream<List<CourseMaterial>> getPendingMaterials() {
+    // Filters client-side rather than via .eq('status', 'pending') on the
+    // stream: SupabaseStreamBuilder only applies query-level filters to the
+    // initial fetch, not to later realtime UPDATE events — a row that's
+    // approved/rejected (status changes away from 'pending') would keep
+    // being emitted forever instead of dropping out of the list live.
+    // Re-filtering inside .map() re-evaluates on every emission instead.
+    return _supabase
+        .from('course_materials')
+        .stream(primaryKey: ['id'])
+        .order('uploaded_at', ascending: true)
+        .map(
+          (data) => data
+              .map((json) => CourseMaterial.fromSupabase(json))
+              .where((m) => m.status == 'pending')
+              .toList(),
+        );
+  }
+
+  /// Approves or rejects a pending material — the only way a 'pending' row
+  /// leaves that state (see moderate_material() in
+  /// hybrid_content_moderation.sql; admin-only, enforced server-side).
+  /// [reason] is shown to the submitter on rejection.
+  Future<void> moderateMaterial(
+    String materialId, {
+    required bool approve,
+    String? reason,
+  }) async {
+    // Points (if any) are computed and credited to the submitter server-side
+    // — see moderate_material() in
+    // reward_material_approval_and_points_redemption.sql. Never trust a
+    // client-side point value; this return is only used for the
+    // notification/push copy below.
+    final pointsAwarded =
+        (await _supabase.rpc(
+              'moderate_material',
+              params: {
+                'p_material_id': materialId,
+                'p_decision': approve ? 'approve' : 'reject',
+                'p_reason': reason,
+              },
+            )
+            as num?)?.toInt() ??
+        0;
+
+    final row = await _supabase
+        .from('course_materials')
+        .select('name, course_id, department_id, material_category, uploader_id')
+        .eq('id', materialId)
+        .single();
+    final title = row['name'] as String;
+    final uploaderId = row['uploader_id'] as String?;
+
+    if (approve) {
+      await _broadcastNewMaterial(
+        id: materialId,
+        title: title,
+        courseId: row['course_id'] as String?,
+        departmentId: row['department_id'] as String?,
+        materialCategory: row['material_category'] as String,
+      );
+    }
+
+    if (uploaderId == null) return;
+
+    final notifTitle = approve ? 'Document Approved! 🎉' : 'Material rejected';
+    final notifBody = approve
+        ? (pointsAwarded > 0
+              ? 'Your upload "$title" was published. You earned +$pointsAwarded study points!'
+              : 'Your submission "$title" is now live.')
+        : 'Your submission "$title" was rejected'
+              '${reason != null && reason.isNotEmpty ? ': $reason' : '.'}';
+    final notifType = approve ? NotificationType.reward : NotificationType.material;
+    final notifData = {
+      'materialId': materialId,
+      if (approve && pointsAwarded > 0) 'points': '$pointsAwarded',
+    };
+
+    try {
+      await NotificationService().createNotification(
+        recipientId: uploaderId,
+        title: notifTitle,
+        body: notifBody,
+        type: notifType,
+        data: notifData,
+      );
+    } catch (_) {
+      // Best-effort — a notification hiccup shouldn't fail moderation.
+    }
+
+    // Push for background/terminated devices — createNotification above only
+    // writes the in-app row. Uses the edge function's admin-only 'user'
+    // scope, safe here because moderateMaterial() itself only ever succeeds
+    // for an admin caller (moderate_material()'s is_admin() check above).
+    try {
+      await NotificationService().triggerPushViaEdgeFunction(
+        scope: 'user',
+        scopeId: uploaderId,
+        title: notifTitle,
+        body: notifBody,
+        type: notifType,
+        data: notifData,
+        insertNotification: false,
+      );
+    } catch (_) {
+      // Best-effort — a push hiccup shouldn't fail moderation.
+    }
   }
 
   // Get materials for a specific course
@@ -436,6 +685,97 @@ class DatabaseService {
         .filter('id', 'in', '(${ids.join(",")})');
 
     return data.map((json) => CourseMaterial.fromSupabase(json)).toList();
+  }
+
+  // ==================== Flashcard Deck Methods ====================
+  //
+  // Decks are private to their creator (RLS: auth.uid() = user_id). Supabase
+  // realtime streams take a single filter, so we filter by the FK server-side
+  // and drop anyone else's rows client-side.
+
+  /// Decks the current user generated, filtered by a single foreign-key
+  /// column ('material_id', 'course_id', or 'department_id') — the three
+  /// public getters below only differ in which column they filter on.
+  Stream<List<FlashcardDeck>> _getDecksFiltered(String column, String value) {
+    return _supabase
+        .from('flashcard_decks')
+        .stream(primaryKey: ['id'])
+        .eq(column, value)
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data
+              .map((json) => FlashcardDeck.fromSupabase(json))
+              .where((d) => d.userId == uid)
+              .toList(),
+        );
+  }
+
+  /// Decks the current user generated from a specific material.
+  Stream<List<FlashcardDeck>> getDecksForMaterial(String materialId) =>
+      _getDecksFiltered('material_id', materialId);
+
+  /// Decks the current user generated from any of a course's materials.
+  Stream<List<FlashcardDeck>> getDecksForCourse(String courseId) =>
+      _getDecksFiltered('course_id', courseId);
+
+  /// Decks the current user generated from any of a department's materials.
+  Stream<List<FlashcardDeck>> getDecksForDepartment(String departmentId) =>
+      _getDecksFiltered('department_id', departmentId);
+
+  /// The cards of a deck, in study order.
+  Future<List<Flashcard>> getCards(String deckId) async {
+    final List<dynamic> data = await _supabase
+        .from('flashcards')
+        .select()
+        .eq('deck_id', deckId)
+        .order('position', ascending: true);
+
+    return data.map((json) => Flashcard.fromSupabase(json)).toList();
+  }
+
+  /// Persists a generated deck and its cards, returning the stored deck.
+  Future<FlashcardDeck> createDeckWithCards({
+    required String materialId,
+    String? courseId,
+    String? departmentId,
+    required String title,
+    required List<Flashcard> cards,
+  }) async {
+    final deck = FlashcardDeck(
+      materialId: materialId,
+      courseId: courseId,
+      departmentId: departmentId,
+      userId: uid ?? '',
+      title: title,
+      cardCount: cards.length,
+    );
+
+    final row = await _supabase
+        .from('flashcard_decks')
+        .insert(deck.toSupabase())
+        .select()
+        .single();
+
+    final stored = FlashcardDeck.fromSupabase(row);
+
+    if (cards.isNotEmpty) {
+      await _supabase.from('flashcards').insert([
+        for (int i = 0; i < cards.length; i++)
+          {
+            'deck_id': stored.id,
+            'question': cards[i].question,
+            'answer': cards[i].answer,
+            'position': i,
+          },
+      ]);
+    }
+
+    return stored;
+  }
+
+  /// Deletes a deck (its cards cascade).
+  Future<void> deleteDeck(String deckId) async {
+    await _supabase.from('flashcard_decks').delete().eq('id', deckId);
   }
 
   // Get exams for the current user
@@ -555,16 +895,17 @@ class DatabaseService {
     await _supabase.from('tasks').delete().eq('id', taskId);
   }
 
-  /// Upgrade user to contributor role
-  Future<void> upgradeUserToContributor() async {
+  /// Upgrade user to contributor role. Requires a successful, unconsumed
+  /// 'contributor_upgrade' payment_transactions row for this user — a plain
+  /// client UPDATE of profiles.role is silently reverted by the
+  /// handle_profile_update trigger for non-admins, so this must go through
+  /// grant_contributor_role() (see secure_course_material_downloads.sql).
+  Future<void> upgradeUserToContributor(String paymentRef) async {
     if (uid == null) return;
-    await _supabase
-        .from('profiles')
-        .update({
-          'role': UserRole.contributor.name,
-          'upgraded_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', uid!);
+    await _supabase.rpc(
+      'grant_contributor_role',
+      params: {'p_payment_ref': paymentRef},
+    );
 
     await NotificationService().createNotification(
       title: 'Welcome Contributor!',
@@ -574,23 +915,21 @@ class DatabaseService {
     );
   }
 
-  /// Upgrade user subscription tier
-  Future<void> upgradeSubscription(SubscriptionTier tier) async {
+  /// Upgrade user subscription tier. Requires `paymentRef` to point at a
+  /// `payment_transactions` row (owned by this user) that the server has
+  /// already confirmed as `status='success'` — enforced by the
+  /// `grant_subscription` RPC, so this can't be forged by a direct write.
+  Future<void> upgradeSubscription(
+    SubscriptionTier tier, {
+    required String paymentRef,
+  }) async {
     if (uid == null) return;
 
-    // Monthly lasts for 30 days, Yearly for 365 days
-    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
-    final expiry = DateTime.now().add(Duration(days: durationDays));
-
-    await _supabase
-        .from('profiles')
-        .update({
-          'subscription_tier': tier.name,
-          'subscription_expiry': expiry.toIso8601String(),
-          'subscription_is_trial': false, // Any paid purchase/renewal clears the trial flag
-          'free_download_count': 0, // Reset count on upgrade/renewal
-        })
-        .eq('id', uid!);
+    final result = await _supabase.rpc(
+      'grant_subscription',
+      params: {'p_tier': tier.name, 'p_payment_ref': paymentRef},
+    );
+    final expiry = DateTime.parse(result as String);
 
     await NotificationService().createNotification(
       title: 'Subscription Activated',
@@ -601,82 +940,77 @@ class DatabaseService {
     );
   }
 
-  /// Activate the App Plan's one-time free trial month. Sets the same
-  /// subscription_tier/subscription_expiry fields as a paid App Plan
-  /// purchase, but marks the period as a trial (subscription_is_trial=true)
-  /// and never touches ai_subscription_expiry, so it never grants free AI.
-  /// Guarded by `.eq('trial_used', false)` so it can only ever run once per
-  /// account.
-  Future<void> startFreeMonthlyTrial() async {
+  /// Activate the App Plan's one-time free trial via the `claim_free_trial`
+  /// RPC, which is guarded server-side by `trial_used = false` so it can
+  /// only ever run once per account.
+  Future<void> startFreeTrial() async {
     if (uid == null) return;
 
-    final expiry = DateTime.now().add(const Duration(days: 30));
-
-    final updated = await _supabase
-        .from('profiles')
-        .update({
-          'subscription_tier': SubscriptionTier.monthly.name,
-          'subscription_expiry': expiry.toIso8601String(),
-          'subscription_is_trial': true,
-          'trial_used': true,
-          'free_download_count': 0,
-        })
-        .eq('id', uid!)
-        .eq('trial_used', false)
-        .select();
-
-    if (updated.isEmpty) {
-      throw Exception('Free trial already used');
+    DateTime expiry;
+    try {
+      final result = await _supabase.rpc('claim_free_trial');
+      expiry = DateTime.parse(result as String);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('already used')) {
+        throw Exception('Free trial already used');
+      }
+      rethrow;
     }
 
     await NotificationService().createNotification(
       title: 'Free Trial Activated',
       body:
-          'Your free App Plan month is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
+          'Your free App Plan trial is now active until ${DateFormat.yMMMd().format(expiry)}. AI features are billed separately.',
       type: NotificationType.subscription,
-      data: {'tier': SubscriptionTier.monthly.name, 'expiry': expiry.toIso8601String(), 'trial': 'true'},
+      data: {
+        'tier': SubscriptionTier.monthly.name,
+        'expiry': expiry.toIso8601String(),
+        'trial': 'true',
+      },
     );
   }
 
   /// Activate the separately-purchased Unlimited AI subscription (always
   /// paid, never free). Independent of subscription_tier/subscription_expiry
-  /// (the App Plan). Duration depends on the chosen AI tier: 30 days for
-  /// monthly, 365 for yearly.
-  Future<void> purchaseAISubscription(SubscriptionTier tier) async {
+  /// (the App Plan). Requires `paymentRef` — see [upgradeSubscription].
+  Future<void> purchaseAISubscription(
+    SubscriptionTier tier, {
+    required String paymentRef,
+  }) async {
     if (uid == null) return;
 
-    final durationDays = tier == SubscriptionTier.monthly ? 30 : 365;
-    final expiry = DateTime.now().add(Duration(days: durationDays));
-
-    await _supabase
-        .from('profiles')
-        .update({'ai_subscription_expiry': expiry.toIso8601String()})
-        .eq('id', uid!);
+    final result = await _supabase.rpc(
+      'grant_ai_subscription',
+      params: {'p_tier': tier.name, 'p_payment_ref': paymentRef},
+    );
+    final expiry = DateTime.parse(result as String);
 
     await NotificationService().createNotification(
       title: 'AI Subscription Activated',
-      body: 'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
+      body:
+          'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry)}.',
       type: NotificationType.subscription,
-      data: {'ai_subscription_expiry': expiry.toIso8601String(), 'tier': tier.name},
+      data: {
+        'ai_subscription_expiry': expiry.toIso8601String(),
+        'tier': tier.name,
+      },
     );
   }
 
-  /// Increment free download count for Silver users
-  Future<void> incrementFreeDownloadCount() async {
+  /// Write-once: attaches the payment provider's transaction id to our own
+  /// pending `payment_transactions` row right after `collectPayment`
+  /// returns one, so the fapshi-proxy edge function can later find this row
+  /// by that id alone when it reconciles a confirmed payment server-side.
+  Future<void> attachPaymentProviderRef(
+    String paymentRef,
+    String providerTransId,
+  ) async {
     if (uid == null) return;
-
-    final profile = await _supabase
-        .from('profiles')
-        .select('free_download_count')
-        .eq('id', uid!)
-        .single();
-
-    final currentCount = profile['free_download_count'] as int? ?? 0;
-
     await _supabase
-        .from('profiles')
-        .update({'free_download_count': currentCount + 1})
-        .eq('id', uid!);
+        .from('payment_transactions')
+        .update({'fapshi_trans_id': providerTransId})
+        .eq('payment_ref', paymentRef)
+        .eq('user_id', uid!);
   }
 
   /// Deduct AI credits from the user's account. Delegates to the
@@ -697,23 +1031,16 @@ class DatabaseService {
     }
   }
 
-  /// Add AI credits to the user's account
-  Future<void> addAICredits(int amount) async {
+  /// Add AI credits to the user's account. Requires `paymentRef` — see
+  /// [upgradeSubscription].
+  Future<void> addAICredits(int amount, {required String paymentRef}) async {
     if (uid == null) return;
 
-    final profile = await _supabase
-        .from('profiles')
-        .select('ai_credits')
-        .eq('id', uid!)
-        .single();
+    await _supabase.rpc(
+      'grant_ai_credits',
+      params: {'p_amount': amount, 'p_payment_ref': paymentRef},
+    );
 
-    final currentCredits = profile['ai_credits'] as int? ?? 0;
-
-    await _supabase
-        .from('profiles')
-        .update({'ai_credits': currentCredits + amount})
-        .eq('id', uid!);
-        
     await NotificationService().createNotification(
       title: 'Credits Added!',
       body: '$amount AI credits have been added to your account.',
@@ -894,27 +1221,57 @@ class DatabaseService {
   // ==================== Custom Bot Knowledge Methods ====================
 
   /// Get all knowledge entries for a user (including global ones)
-  Stream<List<BotKnowledge>> getBotKnowledge(String userId) {
-    return _supabase
-        .from('bot_knowledge')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
-        .map((data) {
-          return data
-              .map((json) => BotKnowledge.fromSupabase(json))
-              .where((k) => k.userId == userId || k.isGlobal)
-              .toList();
-        });
+  static const String _botKnowledgeBucket = 'bot_knowledge';
+  static const String _botKnowledgeFileName = 'knowledge.txt';
+
+  /// In-memory cache of the shared knowledge document for this app session —
+  /// static since the document is global (not per-uid), and DatabaseService
+  /// is instantiated fresh per screen. Avoids re-downloading the whole file
+  /// from Storage every time a chat/manager screen opens.
+  static String? _sharedBotKnowledgeCache;
+
+  /// The single shared knowledge document every user's UB Support Bot chat
+  /// reads from — one file in Storage, not a per-user table, so everyone
+  /// gets identical answers. Returns '' if it hasn't been uploaded yet.
+  Future<String> getSharedBotKnowledge() async {
+    final cached = _sharedBotKnowledgeCache;
+    if (cached != null) return cached;
+    try {
+      final bytes = await _supabase.storage
+          .from(_botKnowledgeBucket)
+          .download(_botKnowledgeFileName);
+      final content = utf8.decode(bytes);
+      _sharedBotKnowledgeCache = content;
+      return content;
+    } on StorageException catch (e) {
+      // Supabase Storage doesn't reliably surface a missing-object 404 in
+      // `statusCode` — it's sometimes wrapped in an outer error (observed:
+      // statusCode "400" with the real `{"statusCode":"404",...,"code":
+      // "NoSuchKey"}` JSON nested inside `message` as a string), so check
+      // the message text too instead of trusting `statusCode` alone.
+      final notFound = e.statusCode == '404' ||
+          e.message.contains('404') ||
+          e.message.contains('NoSuchKey') ||
+          e.message.contains('not_found');
+      if (notFound) return '';
+      rethrow;
+    }
   }
 
-  /// Add a new knowledge entry
-  Future<void> addBotKnowledge(BotKnowledge knowledge) async {
-    await _supabase.from('bot_knowledge').insert(knowledge.toSupabase());
-  }
-
-  /// Delete a knowledge entry
-  Future<void> deleteBotKnowledge(String id) async {
-    await _supabase.from('bot_knowledge').delete().eq('id', id);
+  /// Admin-only: replace the shared knowledge document. RLS on
+  /// storage.objects enforces is_admin() for this bucket server-side.
+  Future<void> updateSharedBotKnowledge(String content) async {
+    await _supabase.storage
+        .from(_botKnowledgeBucket)
+        .uploadBinary(
+          _botKnowledgeFileName,
+          Uint8List.fromList(utf8.encode(content)),
+          fileOptions: const FileOptions(
+            contentType: 'text/plain',
+            upsert: true,
+          ),
+        );
+    _sharedBotKnowledgeCache = content;
   }
 
   // ==================== Grade Tracking / Predictor Methods ====================
@@ -965,47 +1322,46 @@ class DatabaseService {
         );
   }
 
-  /// Get latest university news
-  Stream<List<NewsArticle>> getUniversityNews({String? institutionId}) {
-    final query = _supabase.from('university_news').stream(primaryKey: ['id']);
-
-    if (institutionId != null) {
-      return query
-          .eq('institution_id', institutionId)
-          .order('created_at', ascending: false)
-          .map(
-            (data) =>
-                data.map((json) => NewsArticle.fromSupabase(json)).toList(),
-          );
-    }
-
-    return query
-        .order('created_at', ascending: false)
-        .map(
-          (data) => data.map((json) => NewsArticle.fromSupabase(json)).toList(),
-        );
-  }
   // ==================== Admin Management Methods ====================
+
+  /// Escapes a value for safe embedding inside a PostgREST `.or()` filter
+  /// string. Wrapping in double quotes (per PostgREST's embedded-filter
+  /// syntax) stops characters like `,`, `.`, `(` and `)` in user-typed
+  /// search text from being parsed as filter/column separators.
+  String _sanitizeIlikeValue(String value) {
+    return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+  }
 
   /// Search users for admin purposes (can search by name, matricule, or department)
   Future<List<UserProfile>> adminSearchUsers(String query) async {
     if (query.trim().isEmpty) return [];
 
+    final safeQuery = _sanitizeIlikeValue(query);
+    final results = await _supabase
+        .from('profiles')
+        .select()
+        .or(
+          'name.ilike."%$safeQuery%",matricule.ilike."%$safeQuery%",department.ilike."%$safeQuery%"',
+        )
+        .limit(30);
+
+    return (results as List)
+        .map((json) => UserProfile.fromSupabase(json))
+        .toList();
+  }
+
+  /// Total number of registered user profiles, for the admin dashboard's
+  /// stat card.
+  Future<int> getTotalUsersCount() async {
     try {
-      final results = await _supabase
+      final response = await _supabase
           .from('profiles')
           .select()
-          .or(
-            'name.ilike.%$query%,matricule.ilike.%$query%,department.ilike.%$query%',
-          )
-          .limit(30);
-
-      return (results as List)
-          .map((json) => UserProfile.fromSupabase(json))
-          .toList();
+          .count(CountOption.exact);
+      return response.count;
     } catch (e) {
-      print('Error searching users: $e');
-      return [];
+      print('Error fetching total users count: $e');
+      return 0;
     }
   }
 
@@ -1023,5 +1379,179 @@ class DatabaseService {
       recipientId: userId,
       notifySelf: false,
     );
+  }
+
+  // ==================== News Feature Methods ====================
+
+  /// Live feed of published news posts, newest first.
+  Stream<List<NewsPost>> getNewsFeed() {
+    return _supabase
+        .from('news_posts')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map(
+          (data) => data.map((json) => NewsPost.fromSupabase(json)).toList(),
+        );
+  }
+
+  /// One post by id (used by a push-notification deep link / refresh).
+  Future<NewsPost?> getNewsPost(String id) async {
+    final data = await _supabase
+        .from('news_posts')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    if (data == null) return null;
+    return NewsPost.fromSupabase(data);
+  }
+
+  /// Live view of a single post by id — lets a detail screen reflect
+  /// like_count/comment_count changes made by other users in real time,
+  /// instead of staying frozen at the snapshot passed in at navigation time.
+  Stream<NewsPost?> getNewsPostStream(String id) {
+    return _supabase
+        .from('news_posts')
+        .stream(primaryKey: ['id'])
+        .eq('id', id)
+        .map((data) => data.isEmpty ? null : NewsPost.fromSupabase(data.first));
+  }
+
+  /// The set of post ids the current user has liked. One cheap stream for the
+  /// whole feed — the public like tally lives in `news_posts.like_count`.
+  Stream<Set<String>> myLikedNewsPostIds() {
+    if (uid == null) return Stream.value(<String>{});
+    return _supabase
+        .from('news_likes')
+        .stream(primaryKey: ['post_id', 'user_id'])
+        .eq('user_id', uid!)
+        .map((rows) => rows.map((r) => r['post_id'] as String).toSet());
+  }
+
+  /// Add or remove the current user's like on [postId]. The `like_count`
+  /// column is kept in sync by a DB trigger.
+  Future<void> setNewsLike(String postId, bool liked) async {
+    if (uid == null) return;
+    if (liked) {
+      await _supabase.from('news_likes').upsert({
+        'post_id': postId,
+        'user_id': uid,
+      });
+    } else {
+      await _supabase
+          .from('news_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', uid!);
+    }
+  }
+
+  /// Live comment thread for a post, oldest first.
+  Stream<List<NewsComment>> getNewsComments(String postId) {
+    return _supabase
+        .from('news_comments')
+        .stream(primaryKey: ['id'])
+        .eq('post_id', postId)
+        .order('created_at')
+        .map(
+          (data) => data.map((json) => NewsComment.fromSupabase(json)).toList(),
+        );
+  }
+
+  Future<void> addNewsComment({
+    required String postId,
+    required String content,
+    String? authorName,
+    String? authorAvatarUrl,
+  }) async {
+    if (uid == null) return;
+    await _supabase
+        .from('news_comments')
+        .insert(
+          NewsComment(
+            postId: postId,
+            userId: uid!,
+            authorName: authorName,
+            authorAvatarUrl: authorAvatarUrl,
+            content: content,
+          ).toSupabase(),
+        );
+  }
+
+  Future<void> deleteNewsComment(String id) async {
+    await _supabase.from('news_comments').delete().eq('id', id);
+  }
+
+  /// Ids of every profile — the broadcast audience for a new post.
+  Future<List<String>> _getAllProfileIds() async {
+    final rows = await _supabase.from('profiles').select('id');
+    return rows.map((r) => r['id'] as String).toList();
+  }
+
+  /// Create a news post (admin only — enforced by RLS) and broadcast it to
+  /// every other student: an in-app notification row plus an FCM push for
+  /// background/terminated devices. Best-effort — a notification failure
+  /// never blocks the post itself (same contract as [createCourse]).
+  Future<String> createNewsPost(NewsPost post) async {
+    final data = await _supabase
+        .from('news_posts')
+        .insert(post.toSupabase())
+        .select()
+        .single();
+
+    final id = data['id'] as String;
+    final preview = post.body.length > 140
+        ? '${post.body.substring(0, 140).trimRight()}…'
+        : post.body;
+
+    try {
+      final recipientIds = await _getAllProfileIds();
+      await _broadcastCreate(
+        recipientIds: recipientIds,
+        title: post.title,
+        body: preview,
+        type: NotificationType.news,
+        data: {'newsPostId': id},
+        scope: 'all',
+        pushTitle: '📰 ${post.title}',
+      );
+    } catch (_) {
+      // Silently ignore — see contract above.
+    }
+
+    return id;
+  }
+
+  /// Edit an existing post. No re-broadcast.
+  Future<void> updateNewsPost(NewsPost post) async {
+    await _supabase
+        .from('news_posts')
+        .update(post.toSupabase())
+        .eq('id', post.id);
+  }
+
+  /// Delete a post. Its comments and likes cascade away in the DB.
+  Future<void> deleteNewsPost(String id) async {
+    await _supabase.from('news_posts').delete().eq('id', id);
+  }
+
+  /// Upload a news cover image and return its public URL. Reuses the public
+  /// `department_images` bucket, like [uploadMarketplaceImage].
+  Future<String> uploadNewsImage(Uint8List imageData, String seed) async {
+    final cleanName =
+        '${DateTime.now().millisecondsSinceEpoch}_${seed.replaceAll(RegExp(r'\s+'), '_')}';
+    final path = 'news/$cleanName.jpg';
+
+    await _supabase.storage
+        .from('department_images')
+        .uploadBinary(
+          path,
+          imageData,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
+        );
+
+    return _supabase.storage.from('department_images').getPublicUrl(path);
   }
 }

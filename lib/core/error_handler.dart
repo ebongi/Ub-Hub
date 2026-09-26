@@ -17,13 +17,23 @@ class ErrorHandler {
         case 'PGRST204':
           return 'A required database column is missing. Please contact support.';
         default:
-          return 'Database error: ${error.message}';
+          return 'Something went wrong. Please try again.';
       }
     }
 
     if (error is AuthException) {
-      // Handle Supabase Auth errors
-      return error.message;
+      // Handle Supabase Auth errors — only pass through messages we know are
+      // safe/useful for users; anything else could leak internal details.
+      const safeAuthMessages = [
+        'Invalid login credentials',
+        'Email not confirmed',
+        'User already registered',
+        'Password should be at least',
+        'Email rate limit exceeded',
+      ];
+      final msg = error.message;
+      if (safeAuthMessages.any(msg.contains)) return msg;
+      return "We couldn't complete that request. Please try again.";
     }
 
     if (error is SocketException || error.toString().contains('SocketException')) {

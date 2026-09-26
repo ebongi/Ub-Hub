@@ -46,7 +46,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWelcomeBack => 'Welcome back';
 
   @override
-  String get signInSubtitle => 'Sign in to continue your academic journey.';
+  String get signInSubtitle => 'Please enter your details';
 
   @override
   String get emailAddressLabel => 'Email Address';
@@ -67,10 +67,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get signInButton => 'Sign In';
-
-  @override
-  String get orDivider => 'OR';
+  String get signInButton => 'Login';
 
   @override
   String get noAccountPrompt => 'Don\'t have an account?';
@@ -79,28 +76,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signUpLink => 'Sign Up';
 
   @override
-  String get registerTitle => 'Student Registration';
+  String get registerTitle => 'Get started with us';
 
   @override
-  String get registerSubtitle =>
-      'Create your account in four guided steps designed for the academic workflow.';
-
-  @override
-  String registerStepOf(int current, int total) {
-    return 'Step $current of $total';
-  }
+  String get registerSubtitle => 'Please enter your details';
 
   @override
   String get registerBack => 'Back';
 
   @override
-  String get registerContinue => 'Continue';
+  String get registerContinue => 'Proceed';
 
   @override
-  String get registerComplete => 'Complete Registration';
-
-  @override
-  String get registerVerificationRequired => 'VERIFICATION REQUIRED';
+  String get registerComplete => 'Register';
 
   @override
   String get alreadyRegistered => 'Already registered?';
@@ -109,18 +97,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInToPortal => 'Sign In to Portal';
 
   @override
-  String get accountStepTitle => 'Account';
+  String get personalDetailsStepLabel => 'Personal details';
 
   @override
-  String get accountStepDescription =>
-      'Secure your academic profile with a strong email and password.';
+  String get academicDetailsStepLabel => 'Academic details';
 
   @override
-  String get accountCredentialsTitle => 'Account credentials';
+  String get firstNameLabel => 'First Name';
 
   @override
-  String get accountCredentialsSubtitle =>
-      'This section protects your portal access and your study records.';
+  String get firstNameHint => 'eg. John';
+
+  @override
+  String get firstNameRequired => 'First name is required';
+
+  @override
+  String get lastNameLabel => 'Last Name';
+
+  @override
+  String get lastNameHint => 'eg. Doe';
+
+  @override
+  String get lastNameRequired => 'Last name is required';
 
   @override
   String get academicEmailLabel => 'Academic Email';
@@ -181,47 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get identityStepTitle => 'Identity';
-
-  @override
-  String get identityStepDescription =>
-      'Add your real name and contact details so the community can identify you.';
-
-  @override
-  String get personalIdentityTitle => 'Personal identity';
-
-  @override
-  String get personalIdentitySubtitle =>
-      'This section makes your profile recognizable to classmates and admins.';
-
-  @override
-  String get fullLegalNameLabel => 'Full Legal Name';
-
-  @override
-  String get firstLastNameHint => 'First and Last Name';
-
-  @override
-  String get fullNameRequired => 'Full name is required';
-
-  @override
   String get phoneContactLabel => 'Phone Contact';
 
   @override
   String get phoneRequired => 'Phone number is required';
-
-  @override
-  String get academicStepTitle => 'Academic';
-
-  @override
-  String get academicStepDescription =>
-      'Connect your university, matricule, and study level to unlock the right resources.';
-
-  @override
-  String get academicAffiliationTitle => 'Academic affiliation';
-
-  @override
-  String get academicAffiliationSubtitle =>
-      'This links your account to the correct educational track.';
 
   @override
   String get studentMatriculeLabel => 'Student Matricule';
@@ -242,52 +203,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelectLevel => 'Please select a level';
 
   @override
-  String get assignedInstitutionLabel => 'Assigned Institution';
-
-  @override
-  String get selectYourUniversityHint => 'Select your University';
-
-  @override
-  String get pleaseSelectUniversity => 'Please select your university';
-
-  @override
   String get academicLevelResit => 'Resit';
-
-  @override
-  String get finalizeStepTitle => 'Finalize';
-
-  @override
-  String get finalizeStepDescription =>
-      'Complete your profile with your department and a short academic bio.';
-
-  @override
-  String get finalizeProfileTitle => 'Finalize profile';
-
-  @override
-  String get finalizeProfileSubtitle =>
-      'This is the last step before your study account is ready.';
 
   @override
   String get academicBioLabel => 'Academic Bio';
 
   @override
   String get academicBioHint => 'Briefly describe your academic interests...';
-
-  @override
-  String get academicDepartmentLabel => 'Academic Department';
-
-  @override
-  String get selectInstitutionFirstHint =>
-      'Select an institution in the previous step to load departments.';
-
-  @override
-  String get chooseYourDepartmentHint => 'Choose your Department';
-
-  @override
-  String get pleaseSelectDepartment => 'Please select your department';
-
-  @override
-  String get noDepartmentsFound => 'No departments found for this institution.';
 
   @override
   String get agreeToTermsPrefix => 'I agree to the ';
@@ -352,10 +274,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termsOfServiceTitle => 'Terms of Service';
 
   @override
-  String get termsOfServiceSubtitle => 'The rules for using GO Study';
+  String get termsOfServiceSubtitle => 'The rules for using GoStudy';
 
   @override
-  String get supportGoStudyTitle => 'Support Go Study';
+  String get supportGoStudyTitle => 'Support GoStudy';
 
   @override
   String get supportGoStudySubtitle =>
@@ -395,6 +317,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountButton => 'Delete Account';
+
+  @override
+  String get deleteAccountWarningTitle => 'Before you go...';
+
+  @override
+  String get deleteAccountWarningBody =>
+      'Deleting your account permanently removes:\n\n• Your profile and account details\n• All uploaded study materials and marketplace listings\n• Your AI chat history\n• Any remaining AI credits and active subscription — these are forfeited, not refunded\n• Exam schedules and course selections\n\nThis cannot be undone.';
+
+  @override
+  String get deleteAccountWarningContinueButton => 'I understand, continue';
 
   @override
   String get deleteAccountDialogTitle => 'Delete your account?';
@@ -563,6 +495,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gemmaChatInfoDeviceBody =>
       'Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app\'s performance.';
+
+  @override
+  String get sectionUniversities => 'Universities';
+
+  @override
+  String get noUniversitiesAvailable => 'No universities available yet.';
+
+  @override
+  String get switchUniversityTitle => 'Switch university?';
+
+  @override
+  String switchUniversityBody(String name) {
+    return 'Switching to $name will change your available departments and course content. Continue?';
+  }
+
+  @override
+  String get switchUniversityConfirmButton => 'Switch';
+
+  @override
+  String aboutInstitutionTooltip(String name) {
+    return 'About $name';
+  }
+
+  @override
+  String get institutionTypeUniversityBadge => 'University';
+
+  @override
+  String get seeAllButton => 'See all';
 
   @override
   String get sectionDepartmentsFaculties => 'Departments & Faculties';
@@ -1024,16 +984,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get howCanIHelpTodayMessage => 'How can I help you today?';
 
   @override
-  String get quickStarterCalculus => '📈 Help me with calculus';
+  String get quickStarterFlashcards => 'Create flashcards from a file';
 
   @override
-  String get quickStarterStudyPlan => '📝 Write a study plan';
+  String get quickStarterExplainConcept => 'Explain a concept';
 
   @override
-  String get quickStarterProjectIdeas => '💡 Project ideas';
-
-  @override
-  String get quickStarterSummarizeNotes => '📚 Summarize notes';
+  String get quickStarterLearningSession => 'Start a learning session';
 
   @override
   String get thinkingLabel => 'Thinking';
@@ -1068,6 +1025,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showThinkingLabel => 'Show Thinking';
+
+  @override
+  String get assistantBetaBadge => 'BETA';
+
+  @override
+  String get assistantStatusActive => 'Active';
+
+  @override
+  String get assistantStatusOffline => 'Not downloaded';
+
+  @override
+  String get assistantStudyHint => 'What do you want to study?';
+
+  @override
+  String get assistantChatHistoryLabel => 'Chat history';
+
+  @override
+  String get assistantWelcomeGreeting =>
+      'Hi! How can I help you today? You can create flashcards, review your material, or learn something new.';
+
+  @override
+  String assistantMessagesRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You can send up to $count more messages',
+      one: 'You can send 1 more message',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get codeCopiedToClipboard => 'Code copied to clipboard';
@@ -1114,6 +1101,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSettingsLabel => 'Settings';
 
   @override
+  String get tourAvatarTitle => 'That\'s you!';
+
+  @override
+  String get tourAvatarDesc => 'Your profile picture and name.';
+
+  @override
+  String get tourAiCreditsTitle => 'AI Credits';
+
+  @override
+  String get tourAiCreditsDesc =>
+      'Tap to view or top up the credits you use to chat with the AI tutor.';
+
+  @override
+  String get tourNotificationsTitle => 'Notifications';
+
+  @override
+  String get tourNotificationsDesc =>
+      'Stay on top of friend requests, messages, and app updates.';
+
+  @override
+  String get tourWeeklyProgressTitle => 'Weekly Progress';
+
+  @override
+  String get tourWeeklyProgressDesc =>
+      'Track your study activity over the past week at a glance.';
+
+  @override
+  String get tourDepartmentsTitle => 'Departments & Faculties';
+
+  @override
+  String get tourDepartmentsDesc =>
+      'Browse courses and materials for your department, or explore others.';
+
+  @override
+  String get tourToolboxTitle => 'Toolbox';
+
+  @override
+  String get tourToolboxDesc =>
+      'All your study tools live here: flashcards, exam scheduling, focus timer, the Support Bot, and more.';
+
+  @override
+  String get tourChatFabTitle => 'Global Chat';
+
+  @override
+  String get tourChatFabDesc =>
+      'Jump into the open chat with other students at any time.';
+
+  @override
+  String get tourNavHomeTitle => 'Home';
+
+  @override
+  String get tourNavHomeDesc =>
+      'Your dashboard — departments, tools, and recent activity.';
+
+  @override
+  String get tourNavAiAssistantTitle => 'AI Assistant';
+
+  @override
+  String get tourNavAiAssistantDesc =>
+      'Chat with your AI-powered study assistant for explanations and help.';
+
+  @override
+  String get tourNavMessagesTitle => 'Messages';
+
+  @override
+  String get tourNavMessagesDesc =>
+      'Message friends and manage friend requests.';
+
+  @override
+  String get tourNavSettingsTitle => 'Settings';
+
+  @override
+  String get tourNavSettingsDesc =>
+      'Manage your profile, subscription, and app preferences.';
+
+  @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get studentPortalTitle => 'Student Portal';
 
   @override
@@ -1133,6 +1199,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allDepartmentsTitle => 'All Departments';
+
+  @override
+  String get allToolsTitle => 'All Tools';
 
   @override
   String get searchForDepartmentHint => 'Search for a department...';
@@ -1341,6 +1410,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roleLabelContributor => 'Contributor';
 
   @override
+  String get roleLabelViewer => 'Viewer';
+
+  @override
   String promoteToRoleTitle(String role) {
     return 'Promote to $role';
   }
@@ -1349,6 +1421,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String promoteUserConfirmBody(String name, String role) {
     return 'Promote $name to $role?';
   }
+
+  @override
+  String demoteToRoleTitle(String role) {
+    return 'Demote to $role';
+  }
+
+  @override
+  String demoteUserConfirmBody(String name, String role) {
+    return 'Demote $name to $role?';
+  }
+
+  @override
+  String get demoteButton => 'Demote';
 
   @override
   String get thisUserFallback => 'this user';
@@ -1360,6 +1445,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String userIsNowRoleLabel(String name, String role) {
     return '$name is now a $role';
   }
+
+  @override
+  String get searchResultsErrorTitle => 'Couldn\'t load results';
+
+  @override
+  String get totalUsersStatLabel => 'Total Users';
+
+  @override
+  String get totalDepartmentsStatLabel => 'Departments';
 
   @override
   String get globalChatTitle => 'Global Chat';
@@ -1375,7 +1469,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalChatDescription =>
-      'This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.';
+      'This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.';
 
   @override
   String get gotItButton => 'Got it';
@@ -1520,7 +1614,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlyContributorsCanUploadMessage =>
-      'Only contributors and admins can upload content.';
+      'Please wait for your profile to load and try again.';
+
+  @override
+  String get materialSubmittedForReviewMessage =>
+      'Submitted! An admin will review it shortly.';
+
+  @override
+  String get materialPendingReviewLabel => 'Pending review';
+
+  @override
+  String get moderationQueueTitle => 'Moderation Queue';
+
+  @override
+  String get moderationQueueSubtitle => 'Review student submissions';
+
+  @override
+  String get noSubmissionsPendingMessage => 'No submissions waiting for review';
+
+  @override
+  String get approveButton => 'Approve';
+
+  @override
+  String get rejectButton => 'Reject';
+
+  @override
+  String get rejectReasonDialogTitle => 'Reject submission';
+
+  @override
+  String get rejectReasonHint => 'Reason (optional)';
+
+  @override
+  String get materialApprovedMessage => 'Approved';
+
+  @override
+  String get materialRejectedMessage => 'Rejected';
+
+  @override
+  String get viewSubmissionLabel => 'View content';
 
   @override
   String get addMaterialTitle => 'Add Material';
@@ -1845,7 +1976,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trialExpiredBody =>
-      'Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.';
+      'Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.';
 
   @override
   String get viewUpgradePlansButton => 'View Upgrade Plans';
@@ -1886,7 +2017,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescriptionBody =>
-      'GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.';
+      'GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.';
 
   @override
   String versionLabel(String version) {
@@ -1905,7 +2036,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutDialogDescription =>
-      'GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.';
+      'GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.';
 
   @override
   String get eventsCalendarTitle => 'Events Calendar';
@@ -1998,6 +2129,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToGeneratorButton => 'BACK TO GENERATOR';
+
+  @override
+  String get generateFlashcardsButton => 'Generate flashcards';
+
+  @override
+  String get flashcardsTitle => 'Flashcards';
+
+  @override
+  String get flashcardCountQuestion => 'How many cards?';
+
+  @override
+  String get generatingFlashcardsMessage => 'Generating flashcards…';
+
+  @override
+  String get flashcardGenerationFailed =>
+      'Couldn\'t generate flashcards. Please try again.';
+
+  @override
+  String get flashcardServiceUnavailable =>
+      'The AI service is unavailable right now. Please try again in a moment.';
+
+  @override
+  String get aiServiceUnavailable =>
+      'The AI service is unavailable right now. Please try again in a moment.';
+
+  @override
+  String get flashcardsPdfOnlyMessage =>
+      'Flashcards can only be generated from PDF materials';
+
+  @override
+  String get viewMenuItem => 'View';
+
+  @override
+  String get askAiToAnswerMenuItem => 'Ask AI to Answer';
+
+  @override
+  String get aiAnswerPdfOnlyMessage =>
+      'AI answers are only available for PDF documents.';
+
+  @override
+  String get generatingAiAnswerMessage => 'Generating an AI answer…';
+
+  @override
+  String get aiAnswerSheetTitle => 'AI Answer';
+
+  @override
+  String get aiAnswerSheetSubtitle =>
+      'Generated by AI — always double-check important details.';
+
+  @override
+  String get flashcardQuestionLabel => 'QUESTION';
+
+  @override
+  String get flashcardAnswerLabel => 'ANSWER';
+
+  @override
+  String get tapToFlipHint => 'Tap the card to flip';
+
+  @override
+  String get stillLearningButton => 'Still learning';
+
+  @override
+  String get studyAgainButton => 'Study again';
+
+  @override
+  String flashcardsMasteredLabel(int mastered, int total) {
+    return 'You mastered $mastered of $total';
+  }
+
+  @override
+  String deckCardCountLabel(int count) {
+    return '$count cards';
+  }
+
+  @override
+  String get deleteDeckDialogTitle => 'Delete deck?';
+
+  @override
+  String confirmDeleteDeckBody(String title) {
+    return 'Delete the deck \"$title\"? This cannot be undone.';
+  }
 
   @override
   String get materialsTabLabel => 'Materials';
@@ -2117,7 +2329,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facultyHint => 'Faculty';
 
   @override
-  String get enterYourFacultyValidator => 'Enter your faculty';
+  String get selectYourFacultyValidator => 'Select your faculty';
+
+  @override
+  String get facultyOtherOption => 'Other';
+
+  @override
+  String get otherFacultyHint => 'Enter your faculty/school name';
+
+  @override
+  String get enterYourOtherFacultyValidator => 'Enter your faculty/school name';
 
   @override
   String get departmentHint => 'Department';
@@ -2187,6 +2408,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusFormerStudent => 'Former Student';
+
+  @override
+  String get formerStudentSurchargeNotice =>
+      'Former students pay a 30% surcharge on the fee above.';
 
   @override
   String get ubKnowledgeBaseTitle => 'UB Knowledge Base';
@@ -2534,7 +2759,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentPlanBadge => 'CURRENT PLAN';
 
   @override
-  String get firstMonthFreeBadge => 'FIRST MONTH FREE';
+  String get firstMonthFreeBadge => '2 WEEKS FREE';
 
   @override
   String get startFreeTrialButton => 'Start Free Trial';
@@ -2544,7 +2769,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String freeMonthThenPriceLabel(int price) {
-    return 'Free for 1 month, then $price XAF / month';
+    return 'Free for 2 weeks, then $price XAF / month';
   }
 
   @override
@@ -2552,14 +2777,61 @@ class AppLocalizationsEn extends AppLocalizations {
       'AI features are billed separately and not included.';
 
   @override
-  String get startYourFreeMonthTitle => 'Start Your Free Month';
+  String redeemWithPointsButton(int points) {
+    return 'Redeem with $points pts';
+  }
+
+  @override
+  String yourPointsBalanceLabel(int points) {
+    return 'Your balance: $points pts';
+  }
+
+  @override
+  String insufficientPointsMessage(int points) {
+    return 'You need $points points to redeem this plan.';
+  }
+
+  @override
+  String get confirmRedeemPointsTitle => 'Redeem points?';
+
+  @override
+  String confirmRedeemPointsBody(int points) {
+    return 'Use $points points to activate this plan? This can\'t be undone.';
+  }
+
+  @override
+  String get pointsRedeemedSuccessMessage =>
+      'Plan activated using your points!';
+
+  @override
+  String get setBountyMenuItem => 'Set Points Bounty';
+
+  @override
+  String get setBountyDialogTitle => 'Points Bounty';
+
+  @override
+  String setBountyDialogBody(String course) {
+    return 'Boost the approval points students earn for materials uploaded to \"$course\". This multiplies the base +50 points (2 = double, 1 = no bounty).';
+  }
+
+  @override
+  String get bountyMultiplierFieldLabel => 'Multiplier (e.g. 1, 1.5, 2)';
+
+  @override
+  String get bountyMultiplierInvalidMessage => 'Enter a number greater than 0';
+
+  @override
+  String get bountyUpdatedMessage => 'Points bounty updated';
+
+  @override
+  String get startYourFreeMonthTitle => 'Start Your Free Trial';
 
   @override
   String get noPaymentRequiredTodaySubtitle => 'No payment required today';
 
   @override
   String freeTrialTermsBody(int price) {
-    return 'Your App Plan is free for the first 30 days, then renews at $price XAF/month. AI features are billed separately and are not included in this trial.';
+    return 'Your App Plan is free for the first 14 days, then renews at $price XAF/month. AI features are billed separately and are not included in this trial.';
   }
 
   @override
@@ -2658,4 +2930,210 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get testCreditsPackTitle => 'Test Credits';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionNotifications => 'Push Notifications';
+
+  @override
+  String get settingsSectionLanguage => 'Language';
+
+  @override
+  String get settingsSectionAccount => 'Account';
+
+  @override
+  String get settingsSectionSupport => 'Support';
+
+  @override
+  String get settingsSectionLegal => 'Legal';
+
+  @override
+  String get editButton => 'Edit';
+
+  @override
+  String get newsAdminNewPostButton => 'New Post';
+
+  @override
+  String get newsAuthorFallback => 'Announcement';
+
+  @override
+  String get newsComposerNewTitle => 'New Post';
+
+  @override
+  String get newsComposerEditTitle => 'Edit Post';
+
+  @override
+  String get newsTitleFieldLabel => 'Title';
+
+  @override
+  String get newsTitleFieldHint => 'A short, clear headline';
+
+  @override
+  String get newsTitleRequiredValidator => 'A title is required';
+
+  @override
+  String get newsBodyFieldLabel => 'Details';
+
+  @override
+  String get newsBodyFieldHint => 'Write the announcement…';
+
+  @override
+  String get newsBodyRequiredValidator => 'Some details are required';
+
+  @override
+  String get newsUploadCoverLabel => 'Cover image (optional)';
+
+  @override
+  String get newsPublishButton => 'Publish';
+
+  @override
+  String get newsPostPublishedSnack => 'Post published';
+
+  @override
+  String get newsPostUpdatedSnack => 'Post updated';
+
+  @override
+  String get newsAdminOnlyMessage => 'Only admins can post news.';
+
+  @override
+  String get newsDeletePostTitle => 'Delete this post?';
+
+  @override
+  String get newsDeletePostBody =>
+      'The post and all of its likes and comments will be permanently removed.';
+
+  @override
+  String get newsDeleteCommentTitle => 'Delete comment?';
+
+  @override
+  String get newsDeleteCommentBody =>
+      'This comment will be permanently removed.';
+
+  @override
+  String get newsNoCommentsYet => 'No comments yet. Be the first.';
+
+  @override
+  String get newsCommentHintText => 'Add a comment…';
+
+  @override
+  String get newsSendCommentTooltip => 'Send';
+
+  @override
+  String newsCommentsHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comments',
+      one: '1 comment',
+      zero: 'Comments',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressWeekRange(String start, String end) {
+    return '$start - $end';
+  }
+
+  @override
+  String get weeklyProgressTodayPill => 'Today';
+
+  @override
+  String get weeklyProgressTodayPillTooltip => 'Back to this week';
+
+  @override
+  String get weeklyProgressPrevWeekTooltip => 'Previous week';
+
+  @override
+  String get weeklyProgressNextWeekTooltip => 'Next week';
+
+  @override
+  String weeklyProgressNextExam(String date) {
+    return 'Next exam on $date';
+  }
+
+  @override
+  String get weeklyProgressNoUpcomingExams => 'No upcoming exams';
+
+  @override
+  String get weeklyProgressExamRowFallbackSubtitle => 'Tap to schedule one';
+
+  @override
+  String weeklyProgressTasksRemainingToday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks remaining today',
+      one: '1 task remaining today',
+      zero: 'All tasks done for today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksToday => 'No tasks due today';
+
+  @override
+  String weeklyProgressCompletedYesterday(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks completed yesterday',
+      one: '1 task completed yesterday',
+      zero: 'No tasks completed yesterday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNoTasksYesterday => 'No tasks were due yesterday';
+
+  @override
+  String weeklyProgressDueTomorrow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks due tomorrow',
+      one: '1 task due tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weeklyProgressNothingTomorrow => 'Nothing scheduled for tomorrow';
+
+  @override
+  String weeklyProgressCompletedOnPastDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks completed on $day',
+      one: '1 task completed on $day',
+      zero: 'No tasks completed on $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNoTasksOnPastDate(String day) {
+    return 'No tasks were due on $day';
+  }
+
+  @override
+  String weeklyProgressDueOnFutureDate(int count, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks due on $day',
+      one: '1 task due on $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklyProgressNothingOnFutureDate(String day) {
+    return 'Nothing scheduled for $day';
+  }
 }

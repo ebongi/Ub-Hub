@@ -63,6 +63,7 @@ class UserProfile {
   final bool trialUsed;
   final bool isTrialSubscription;
   final DateTime? aiSubscriptionExpiry;
+  final int totalPoints;
 
   UserProfile({
     required this.id,
@@ -84,6 +85,7 @@ class UserProfile {
     this.trialUsed = false,
     this.isTrialSubscription = false,
     this.aiSubscriptionExpiry,
+    this.totalPoints = 0,
   });
 
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
@@ -123,6 +125,7 @@ class UserProfile {
       aiSubscriptionExpiry: json['ai_subscription_expiry'] != null
           ? DateTime.parse(json['ai_subscription_expiry'])
           : null,
+      totalPoints: json['total_points'] ?? 0,
     );
   }
 
@@ -147,21 +150,39 @@ class UserProfile {
       'trial_used': trialUsed,
       'subscription_is_trial': isTrialSubscription,
       'ai_subscription_expiry': aiSubscriptionExpiry?.toIso8601String(),
+      'total_points': totalPoints,
     };
   }
 
-  bool get isSubscribed => true; // Always treat as subscribed/active in free community beta
+  /// How long a brand-new account gets full access before the paywall
+  /// applies, even with subscription_tier still 'free' and no trial
+  /// claimed yet — enough time to discover and tap "Start Free Trial".
+  /// Keep in sync with the SQL `INTERVAL '3 days'` in
+  /// supabase/migrations/reconcile_paywall_with_trial_model.sql.
+  static const _newAccountGraceWindow = Duration(days: 3);
+
+  /// True while the App Plan (subscription_tier/subscription_expiry) is an
+  /// active paid period or the active free trial.
+  bool get isSubscribed =>
+      (subscriptionTier != SubscriptionTier.free &&
+          subscriptionExpiry != null &&
+          subscriptionExpiry!.isAfter(DateTime.now())) ||
+      isTrialActive;
 
   /// True while the current App Plan period (subscription_tier/subscription_expiry)
-  /// is the free trial month, rather than a paid period.
+  /// is the free trial, rather than a paid period.
   bool get isTrialActive =>
       isTrialSubscription &&
       subscriptionExpiry != null &&
       subscriptionExpiry!.isAfter(DateTime.now());
 
+  /// Kept in sync with the `INTERVAL '14 days'` in
+  /// supabase/migrations/shorten_free_trial_to_two_weeks.sql.
+  static const _trialLength = Duration(days: 14);
+
   int get trialDaysRemaining {
     if (!isTrialActive) return 0;
-    return subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+    return subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, _trialLength.inDays);
   }
 
   String trialTimeLeft(AppLocalizations l10n) {
@@ -170,19 +191,41 @@ class UserProfile {
     return days > 0 ? l10n.daysRemainingLabel(days) : l10n.endingTodayLabel;
   }
 
-  bool get hasUnlimitedDownloads => true; // Everyone gets unlimited downloads
+  /// Admins/contributors get unlimited downloads regardless of subscription
+  /// tier, matching the exemption `hasAccess`/`canUseAI` already grant them.
+  bool get hasUnlimitedDownloads =>
+      role == UserRole.admin || role == UserRole.contributor || isSubscribed;
 
   bool get canCreateDepartment => role == UserRole.admin; // Only admins can create departments/faculties
 
-  bool get canUploadMaterial => true; // Everyone can help build the platform by uploading notes/study guides
+  /// Any signed-in user may submit a material — the resulting status
+  /// (published immediately vs. pending review) is decided server-side by
+  /// [materialsPublishInstantly]'s role check, mirrored in
+  /// handle_course_material_insert (hybrid_content_moderation.sql).
+  bool get canUploadMaterial => true;
 
-  /// Central logic for the Hard Paywall.
-  /// In the free community version, access is granted unconditionally to all users.
-  bool get hasAccess => true;
+  /// Contributors (Class Reps) and admins publish immediately; everyone
+  /// else's submissions land as 'pending' for admin review.
+  bool get materialsPublishInstantly =>
+      role == UserRole.admin || role == UserRole.contributor;
+
+  /// Central logic for the Hard Paywall: admins/contributors and active
+  /// subscribers (including the active free trial) always have access; a
+  /// brand-new account also has access for `_newAccountGraceWindow` — on top
+  /// of the free trial, not in place of it — so it isn't paywalled the
+  /// instant it signs up.
+  bool get hasAccess {
+    if (role == UserRole.admin || role == UserRole.contributor) return true;
+    if (isSubscribed) return true;
+    if (createdAt != null && DateTime.now().difference(createdAt!) < _newAccountGraceWindow) {
+      return true;
+    }
+    return false;
+  }
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of the App Plan's subscriptionTier/subscriptionExpiry, so
-  /// the App Plan's free trial month never grants free AI.
+  /// the App Plan's free trial never grants free AI.
   bool get hasUnlimitedAI =>
       aiSubscriptionExpiry != null && aiSubscriptionExpiry!.isAfter(DateTime.now());
 

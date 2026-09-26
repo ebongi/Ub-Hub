@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Chatbot/chatbot_screen.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/ai_sync_service.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import 'package:go_study/services/ai_service.dart';
@@ -43,10 +47,20 @@ void main() {
   });
 
   Widget createChatbotScreen() {
-    return MaterialApp(
-      home: ChatbotScreen(
-        aiService: mockAIService,
-        syncService: mockSyncService,
+    return ChangeNotifierProvider<UserModel>(
+      create: (_) => UserModel(name: 'Test User'),
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ChatbotScreen(
+          aiService: mockAIService,
+          syncService: mockSyncService,
+        ),
       ),
     );
   }
@@ -55,7 +69,7 @@ void main() {
     await tester.pumpWidget(createChatbotScreen());
     await tester.pump();
 
-    expect(find.text('How can I help you today?'), findsOneWidget);
+    expect(find.textContaining('How can I help you today'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
   });
 

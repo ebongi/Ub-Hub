@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/core/responsive.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
@@ -51,6 +52,12 @@ class UserModel extends ChangeNotifier {
   bool _trialUsed;
   bool _isTrialSubscription;
   DateTime? _aiSubscriptionExpiry;
+  int _totalPoints;
+
+  // Offline-start support: see tryUseCachedProfile/persistCache below.
+  final SharedPreferences? _prefs;
+  String? _cachedUid;
+  static const _cacheKey = 'cached_user_profile_v1';
 
   UserModel({
     String? uid,
@@ -73,6 +80,8 @@ class UserModel extends ChangeNotifier {
     bool trialUsed = false,
     bool isTrialSubscription = false,
     DateTime? aiSubscriptionExpiry,
+    int totalPoints = 0,
+    SharedPreferences? prefs,
   }) : _uid = uid,
        _name = name,
        _email = email,
@@ -92,7 +101,11 @@ class UserModel extends ChangeNotifier {
        _createdAt = createdAt,
        _trialUsed = trialUsed,
        _isTrialSubscription = isTrialSubscription,
-       _aiSubscriptionExpiry = aiSubscriptionExpiry;
+       _aiSubscriptionExpiry = aiSubscriptionExpiry,
+       _totalPoints = totalPoints,
+       _prefs = prefs {
+    if (prefs != null) _hydrateFromCache();
+  }
   // Gettters
   String? get uid => _uid;
   String? get name => _name;
@@ -114,12 +127,14 @@ class UserModel extends ChangeNotifier {
   bool get trialUsed => _trialUsed;
   bool get isTrialSubscription => _isTrialSubscription;
   DateTime? get aiSubscriptionExpiry => _aiSubscriptionExpiry;
+  int get totalPoints => _totalPoints;
 
   /// True while a separately-purchased Unlimited AI subscription is active.
   /// Independent of subscriptionTier/subscriptionExpiry (the App Plan), so
-  /// the App Plan's free trial month never grants free AI.
+  /// the App Plan's free trial never grants free AI.
   bool get hasUnlimitedAI =>
-      _aiSubscriptionExpiry != null && _aiSubscriptionExpiry!.isAfter(DateTime.now());
+      _aiSubscriptionExpiry != null &&
+      _aiSubscriptionExpiry!.isAfter(DateTime.now());
 
   bool get canUseAI {
     if (role == UserRole.admin) return true;
@@ -128,17 +143,151 @@ class UserModel extends ChangeNotifier {
   }
 
   /// True while the current App Plan period (subscriptionTier/subscriptionExpiry)
-  /// is the free trial month, rather than a paid period.
+  /// is the free trial, rather than a paid period.
   bool get isTrialActive =>
       _isTrialSubscription &&
       _subscriptionExpiry != null &&
       _subscriptionExpiry!.isAfter(DateTime.now());
 
-  bool get hasAccess => true; // Always allow access in free version
+  /// True while the App Plan (subscriptionTier/subscriptionExpiry) is an
+  /// active paid period or the active free trial. Mirrors
+  /// UserProfile.isSubscribed in lib/services/profile.dart.
+  bool get isSubscribed =>
+      (_subscriptionTier != SubscriptionTier.free &&
+          _subscriptionExpiry != null &&
+          _subscriptionExpiry!.isAfter(DateTime.now())) ||
+      isTrialActive;
+
+  /// New-account grace window, kept in sync with UserProfile's copy in
+  /// lib/services/profile.dart (and the SQL is_authorized() function). On
+  /// top of the free trial, not in place of it.
+  static const _newAccountGraceWindow = Duration(days: 3);
+
+  /// Kept in sync with UserProfile's copy in lib/services/profile.dart and
+  /// the `INTERVAL '14 days'` in
+  /// supabase/migrations/shorten_free_trial_to_two_weeks.sql.
+  static const _trialLength = Duration(days: 14);
+
+  /// Central logic for the Hard Paywall. Mirrors UserProfile.hasAccess.
+  bool get hasAccess {
+    if (_role == UserRole.admin || _role == UserRole.contributor) return true;
+    if (isSubscribed) return true;
+    if (_createdAt != null &&
+        DateTime.now().difference(_createdAt!) < _newAccountGraceWindow) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Whether the realtime profile stream has delivered its first snapshot
+  /// yet for the currently logged-in user. Lets `AuthWrapper` distinguish
+  /// "no real data yet" (show a loader) from "real data says no access"
+  /// (show PaywallScreen) — without it, every login/app-resume would flash
+  /// PaywallScreen for a frame since the default field values (free tier,
+  /// no createdAt) evaluate hasAccess == false.
+  bool _profileLoaded = false;
+  bool get profileLoaded => _profileLoaded;
+
+  /// Populates fields from the last snapshot `persistCache()` saved, without
+  /// marking [profileLoaded] true yet — `AuthWrapper` only trusts this once
+  /// [tryUseCachedProfile] confirms it belongs to the account that's
+  /// actually signed in. Corrupt/missing/old-shape cache is silently
+  /// ignored, same as having no cache at all.
+  void _hydrateFromCache() {
+    try {
+      final raw = _prefs?.getString(_cacheKey);
+      if (raw == null) return;
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      _cachedUid = map['uid'] as String?;
+      _name = map['name'] as String?;
+      _email = map['email'] as String?;
+      _matricule = map['matricule'] as String?;
+      _phonenumber = map['phoneNumber'] as String?;
+      _avatarUrl = map['avatarUrl'] as String?;
+      _institutionId = map['institutionId'] as String?;
+      _institutionName = map['institutionName'] as String?;
+      _bio = map['bio'] as String?;
+      _department = map['department'] as String?;
+      _level = map['level'] as String?;
+      _role = UserRole.fromString(map['role'] as String?);
+      _subscriptionTier = SubscriptionTier.fromString(map['subscriptionTier'] as String?);
+      _subscriptionExpiry = _parseDate(map['subscriptionExpiry']);
+      _freeDownloadCount = (map['freeDownloadCount'] as num?)?.toInt() ?? 0;
+      _aiCredits = (map['aiCredits'] as num?)?.toInt() ?? 0;
+      _createdAt = _parseDate(map['createdAt']);
+      _trialUsed = map['trialUsed'] as bool? ?? false;
+      _isTrialSubscription = map['isTrialSubscription'] as bool? ?? false;
+      _aiSubscriptionExpiry = _parseDate(map['aiSubscriptionExpiry']);
+      _totalPoints = (map['totalPoints'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      // Corrupt/old cache shape — behaves as if there were no cache.
+      _cachedUid = null;
+    }
+  }
+
+  static DateTime? _parseDate(dynamic value) =>
+      value is String ? DateTime.tryParse(value) : null;
+
+  /// Unblocks `AuthWrapper` immediately using the cached snapshot above,
+  /// if — and only if — it belongs to the account now actually signed in
+  /// (`currentUid`). Without this, a cold start with no internet hangs
+  /// forever: `AuthWrapper` waits on the live realtime profile stream,
+  /// which never emits offline, and there is otherwise no fallback. The
+  /// live stream still overwrites this with fresh data (and re-persists
+  /// the cache) once/if it does arrive — this is only a stand-in until then.
+  bool tryUseCachedProfile(String currentUid) {
+    if (_profileLoaded || _cachedUid == null || _cachedUid != currentUid) {
+      return false;
+    }
+    _uid = currentUid;
+    _profileLoaded = true;
+    notifyListeners();
+    return true;
+  }
+
+  /// Saves the current snapshot so the next cold start can use
+  /// [tryUseCachedProfile] instead of blocking on the live stream. Call
+  /// this after every live profile update (see AuthWrapper).
+  Future<void> persistCache() async {
+    final prefs = _prefs;
+    if (prefs == null || _uid == null) return;
+    // Keep in-memory state consistent with what's about to be on disk, so a
+    // same-session re-login (e.g. a token refresh) can still short-circuit
+    // via tryUseCachedProfile instead of falling through to the live wait.
+    _cachedUid = _uid;
+    final map = {
+      'uid': _uid,
+      'name': _name,
+      'email': _email,
+      'matricule': _matricule,
+      'phoneNumber': _phonenumber,
+      'avatarUrl': _avatarUrl,
+      'institutionId': _institutionId,
+      'institutionName': _institutionName,
+      'bio': _bio,
+      'department': _department,
+      'level': _level,
+      'role': _role.name,
+      'subscriptionTier': _subscriptionTier.name,
+      'subscriptionExpiry': _subscriptionExpiry?.toIso8601String(),
+      'freeDownloadCount': _freeDownloadCount,
+      'aiCredits': _aiCredits,
+      'createdAt': _createdAt?.toIso8601String(),
+      'trialUsed': _trialUsed,
+      'isTrialSubscription': _isTrialSubscription,
+      'aiSubscriptionExpiry': _aiSubscriptionExpiry?.toIso8601String(),
+      'totalPoints': _totalPoints,
+    };
+    try {
+      await prefs.setString(_cacheKey, jsonEncode(map));
+    } catch (_) {
+      // Best-effort — a caching failure shouldn't affect the live session.
+    }
+  }
 
   int get trialDaysRemaining {
     if (!isTrialActive) return 0;
-    return _subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, 30);
+    return _subscriptionExpiry!.difference(DateTime.now()).inDays.clamp(0, _trialLength.inDays);
   }
 
   String trialTimeLeft(AppLocalizations l10n) {
@@ -183,6 +332,8 @@ class UserModel extends ChangeNotifier {
     bool? trialUsed,
     bool? isTrialSubscription,
     DateTime? aiSubscriptionExpiry,
+    bool? profileLoaded,
+    int? totalPoints,
   }) {
     if (uid != null) _uid = uid;
     if (name != null) _name = name;
@@ -203,7 +354,10 @@ class UserModel extends ChangeNotifier {
     if (createdAt != null) _createdAt = createdAt;
     if (trialUsed != null) _trialUsed = trialUsed;
     if (isTrialSubscription != null) _isTrialSubscription = isTrialSubscription;
-    if (aiSubscriptionExpiry != null) _aiSubscriptionExpiry = aiSubscriptionExpiry;
+    if (aiSubscriptionExpiry != null)
+      _aiSubscriptionExpiry = aiSubscriptionExpiry;
+    if (profileLoaded != null) _profileLoaded = profileLoaded;
+    if (totalPoints != null) _totalPoints = totalPoints;
     notifyListeners();
   }
 }
@@ -605,6 +759,7 @@ class AuthDropdown extends StatelessWidget {
 
     return DropdownButtonFormField<String>(
       value: value.isEmpty ? null : value,
+      isExpanded: true,
       items: items.map((String item) {
         return DropdownMenuItem<String>(
           value: item,
@@ -614,6 +769,8 @@ class AuthDropdown extends StatelessWidget {
               fontSize: 16,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),

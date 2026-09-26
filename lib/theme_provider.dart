@@ -10,8 +10,8 @@ class ThemeProvider extends ChangeNotifier {
   Color get accentColor => _accentColor;
 
   ThemeProvider({ThemeMode? initialMode, Color? initialColor})
-      : _themeMode = initialMode ?? ThemeMode.system,
-        _accentColor = initialColor ?? Colors.blue;
+    : _themeMode = initialMode ?? ThemeMode.system,
+      _accentColor = initialColor ?? Colors.blue;
 
   void toggleTheme(bool isDarkMode) async {
     _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
@@ -35,91 +35,155 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   ThemeData get lightTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentColor,
-          primary: _accentColor,
-          surface: const Color(0xFFF8FAFC),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFFF8FAFC),
-          centerTitle: false,
-          elevation: 0,
-          titleTextStyle: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF0F172A),
-          ),
-          iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.grey.shade200),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-        ),
-      );
+    useMaterial3: true,
+    brightness: Brightness.light,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _accentColor,
+      primary: _accentColor,
+      surface: const Color(0xFFF8FAFC),
+    ),
+    scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme),
+    appBarTheme: AppBarTheme(
+      backgroundColor: const Color(0xFFF8FAFC),
+      centerTitle: false,
+      elevation: 0,
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF0F172A),
+      ),
+      iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+    ),
+    listTileTheme: ListTileThemeData(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      minLeadingWidth: 24,
+      iconColor: const Color(0xFF0F172A),
+    ),
+    dividerTheme: DividerThemeData(
+      thickness: 1,
+      space: 1,
+      color: Colors.grey.shade200,
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: _accentColor,
+      unselectedItemColor: Colors.grey[500],
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: Colors.white,
+      selectedIconTheme: IconThemeData(color: _accentColor),
+      unselectedIconTheme: IconThemeData(color: Colors.grey[500]),
+      selectedLabelTextStyle: TextStyle(
+        color: _accentColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+      ),
+      unselectedLabelTextStyle: TextStyle(
+        color: Colors.grey[500],
+        fontWeight: FontWeight.normal,
+        fontSize: 12,
+      ),
+    ),
+  );
 
   ThemeData get darkTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentColor,
-          brightness: Brightness.dark,
-          primary: _accentColor,
-          surface: const Color(0xFF1E293B),
-          background: const Color(0xFF0F172A),
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
-        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF0F172A),
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withOpacity(0.05)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF1E293B),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          hintStyle: const TextStyle(color: Colors.white38),
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-      );
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _accentColor,
+      brightness: Brightness.dark,
+      primary: _accentColor,
+      surface: const Color(0xFF1E293B),
+      background: const Color(0xFF0F172A),
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0F172A),
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+    appBarTheme: AppBarTheme(
+      backgroundColor: const Color(0xFF0F172A),
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
+      ),
+      iconTheme: const IconThemeData(color: Colors.white),
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: const Color(0xFF1E293B),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF1E293B),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      hintStyle: const TextStyle(color: Colors.white38),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: const Color(0xFF0F172A),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+    listTileTheme: const ListTileThemeData(
+      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+      minLeadingWidth: 24,
+      iconColor: Colors.white,
+    ),
+    dividerTheme: DividerThemeData(
+      thickness: 1,
+      space: 1,
+      color: Colors.white.withOpacity(0.08),
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: const Color(0xFF0F172A),
+      selectedItemColor: _accentColor,
+      unselectedItemColor: Colors.white38,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: const Color(0xFF0F172A),
+      selectedIconTheme: IconThemeData(color: _accentColor),
+      unselectedIconTheme: const IconThemeData(color: Colors.white38),
+      selectedLabelTextStyle: TextStyle(
+        color: _accentColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+      ),
+      unselectedLabelTextStyle: const TextStyle(
+        color: Colors.white38,
+        fontWeight: FontWeight.normal,
+        fontSize: 12,
+      ),
+    ),
+  );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:go_study/core/error_view.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/language_exercise.dart';
 import 'package:go_study/services/language_exercise_service.dart';
@@ -75,9 +76,7 @@ class _LanguagePracticeTabState extends State<LanguagePracticeTab> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError || _byLevel == null) {
-          return Center(
-            child: Text(l10n.errorLoadingMessages(snapshot.error.toString())),
-          );
+          return ErrorView(onRetry: () => setState(() => _loadFuture = _load()));
         }
 
         final byLevel = _byLevel!;

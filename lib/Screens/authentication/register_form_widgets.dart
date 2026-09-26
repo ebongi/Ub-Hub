@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/theme/app_spacing.dart';
 
 Color regIndigo(BuildContext context) => Theme.of(context).colorScheme.primary;
 const Color regSlate900 = Color(0xFF0F172A);
@@ -17,9 +18,9 @@ Color regHeadingColor(bool isDark) => isDark ? Colors.white : regSlate900;
 Color regBodyColor(bool isDark) =>
     isDark ? Colors.white.withOpacity(0.55) : regSlate500;
 Color regBorderColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.1) : regSlate300;
+    isDark ? Colors.white.withOpacity(0.14) : regSlate300;
 Color regFieldFill(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.06) : regSlate100;
+    isDark ? Colors.white.withOpacity(0.04) : Colors.white;
 Color regIconColor(bool isDark) =>
     isDark ? Colors.white.withOpacity(0.4) : regSlate500;
 
@@ -61,13 +62,13 @@ class RegistrationField extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.outfit(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white.withOpacity(0.8) : regSlate700,
-              letterSpacing: 0.2,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white.withOpacity(0.75) : regSlate700,
+              letterSpacing: 0.1,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         TextFormField(
           controller: controller,
@@ -77,7 +78,7 @@ class RegistrationField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           style: GoogleFonts.outfit(
-            fontSize: 15.5,
+            fontSize: 15,
             color: isDark ? Colors.white.withOpacity(0.95) : regSlate900,
           ),
           decoration: InputDecoration(
@@ -86,27 +87,26 @@ class RegistrationField extends StatelessWidget {
               fontSize: 15,
               color: isDark ? Colors.white.withOpacity(0.25) : regSlate300,
             ),
-            prefixIcon: Icon(icon, color: primary.withOpacity(0.7), size: 20),
+            prefixIcon: Icon(icon, color: regIconColor(isDark), size: 19),
             suffixIcon: suffixIcon != null
                 ? Padding(
-                    padding: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.only(right: 4),
                     child: suffixIcon,
                   )
                 : null,
             filled: true,
             fillColor: regFieldFill(isDark),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 18,
+              horizontal: 16,
+              vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: regBorderColor(isDark)),
+              borderSide: BorderSide(color: regBorderColor(isDark), width: 1.2),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  BorderSide(color: regBorderColor(isDark).withOpacity(0.8)),
+              borderSide: BorderSide(color: regBorderColor(isDark), width: 1.2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -114,8 +114,7 @@ class RegistrationField extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -123,7 +122,7 @@ class RegistrationField extends StatelessWidget {
             ),
             errorStyle: GoogleFonts.outfit(
               color: const Color(0xFFEF4444),
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -167,13 +166,13 @@ class RegistrationDropdown<T> extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.outfit(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white.withOpacity(0.8) : regSlate700,
-              letterSpacing: 0.2,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white.withOpacity(0.75) : regSlate700,
+              letterSpacing: 0.1,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         DropdownButtonFormField<T>(
           isExpanded: true,
@@ -189,21 +188,20 @@ class RegistrationDropdown<T> extends StatelessWidget {
               fontSize: 15,
               color: isDark ? Colors.white.withOpacity(0.25) : regSlate300,
             ),
-            prefixIcon: Icon(icon, color: primary.withOpacity(0.7), size: 20),
+            prefixIcon: Icon(icon, color: regIconColor(isDark), size: 19),
             filled: true,
             fillColor: regFieldFill(isDark),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 18,
+              horizontal: 16,
+              vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: regBorderColor(isDark)),
+              borderSide: BorderSide(color: regBorderColor(isDark), width: 1.2),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  BorderSide(color: regBorderColor(isDark).withOpacity(0.8)),
+              borderSide: BorderSide(color: regBorderColor(isDark), width: 1.2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -211,8 +209,7 @@ class RegistrationDropdown<T> extends StatelessWidget {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -220,7 +217,7 @@ class RegistrationDropdown<T> extends StatelessWidget {
             ),
             errorStyle: GoogleFonts.outfit(
               color: const Color(0xFFEF4444),
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -230,136 +227,132 @@ class RegistrationDropdown<T> extends StatelessWidget {
   }
 }
 
-class RegistrationPageHeader extends StatelessWidget {
-  const RegistrationPageHeader({
+/// Shared full-width primary CTA for the auth flow (Login / Proceed /
+/// Register), so all three read as one consistent button family. Pass
+/// [trailingIcon] for "Proceed"-style continue actions (matches the design
+/// reference); leave it null for terminal actions like Login/Register.
+class AuthPrimaryButton extends StatelessWidget {
+  const AuthPrimaryButton({
     super.key,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.isDark,
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+    this.trailingIcon,
   });
 
-  final String title;
-  final String description;
-  final IconData icon;
-  final bool isDark;
+  final String label;
+  final bool isLoading;
+  final VoidCallback onPressed;
+  final IconData? trailingIcon;
 
   @override
   Widget build(BuildContext context) {
     final primary = regIndigo(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: regSurfaceColor(isDark),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: regBorderColor(isDark).withOpacity(0.6)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [primary, primary.withOpacity(0.75)],
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          disabledBackgroundColor: primary.withOpacity(0.55),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.2,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  if (trailingIcon != null) ...[
+                    const SizedBox(width: 8),
+                    Icon(trailingIcon, size: 18, color: Colors.white),
+                  ],
+                ],
               ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: regHeadingColor(isDark),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12.8,
-                    height: 1.45,
-                    color: regBodyColor(isDark),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 }
 
-class RegistrationSectionFocus extends StatelessWidget {
-  const RegistrationSectionFocus({
+/// Two-node segmented tracker with a centered current-step label, echoing
+/// the design reference's dashed "step name on the line" progress marker.
+class AuthStepTracker extends StatelessWidget {
+  const AuthStepTracker({
     super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
+    required this.currentStep,
+    required this.stepLabels,
     required this.isDark,
   });
 
-  final String title;
-  final String subtitle;
-  final IconData icon;
+  final int currentStep;
+  final List<String> stepLabels;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: regIndigo(context).withOpacity(isDark ? 0.12 : 0.05),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: regIndigo(context).withOpacity(0.12)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: regIndigo(context),
-              borderRadius: BorderRadius.circular(14),
+    final primary = regIndigo(context);
+    final pending = regBorderColor(isDark);
+
+    Widget node(int index) {
+      final done = index <= currentStep;
+      return Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: done ? primary : Colors.transparent,
+          border: Border.all(color: done ? primary : pending, width: 1.6),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            node(0),
+            Expanded(
+              child: Container(
+                height: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                color: currentStep >= 1 ? primary : pending,
+              ),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            node(1),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          stepLabels[currentStep],
+          style: GoogleFonts.outfit(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: primary,
+            letterSpacing: 0.2,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: regHeadingColor(isDark),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12.5,
-                    height: 1.4,
-                    color: regBodyColor(isDark),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

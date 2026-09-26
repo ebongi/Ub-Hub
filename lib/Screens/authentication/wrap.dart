@@ -5,12 +5,14 @@ import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/navigationbar.dart';
 import 'package:go_study/Screens/authentication/authenticate.dart';
+import 'package:go_study/Screens/authentication/paywall_screen.dart';
 
 
 import 'package:provider/provider.dart';
 
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/points_service.dart';
 import 'dart:async';
 
 class AuthWrapper extends StatefulWidget {
@@ -44,6 +46,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
               name: user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'User',
               email: user.email,
             );
+            // If this account has a cached profile snapshot from a previous
+            // session, use it immediately instead of waiting on the live
+            // stream below — which never emits with no internet, leaving
+            // the app stuck on a loading spinner forever otherwise. The
+            // live stream still overwrites this with fresh data once it
+            // arrives.
+            userModel.tryUseCachedProfile(user.id);
             // Refresh notification listener for the new user
             NotificationService().refresh();
           });
@@ -72,10 +81,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 trialUsed: profile.trialUsed,
                 isTrialSubscription: profile.isTrialSubscription,
                 aiSubscriptionExpiry: profile.aiSubscriptionExpiry,
+                totalPoints: profile.totalPoints,
+                profileLoaded: true,
               );
+              // Refresh the offline-start snapshot with this live data —
+              // see tryUseCachedProfile above.
+              userModel.persistCache();
             });
           },
         );
+
+        // Daily login bonus — idempotent server-side (capped at once per
+        // calendar day in award_points()), so no local "already awarded
+        // today" tracking is needed here.
+        PointsService().awardPoints('daily_login').catchError((_) => 0);
 
 
       } else {
@@ -83,6 +102,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
         _profileSubscription = null;
         // Cleanup notification listener on logout
         NotificationService().clear();
+        // Reset so the next login doesn't briefly reuse this (long-lived)
+        // UserModel instance's stale profileLoaded=true from a previous session.
+        Provider.of<UserModel>(context, listen: false).update(profileLoaded: false);
       }
       _previousUser = user;
     }
@@ -102,9 +124,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (user == null) {
       // Show the widget that toggles between Sign In and Register
       return const Authenticate();
-    } else {
-      // If logged in, show the home screen immediately in this free community version
-      return const NavBar();
     }
+
+    final userModel = Provider.of<UserModel>(context);
+    if (!userModel.profileLoaded) {
+      // Real profile data (subscription/trial state) hasn't arrived from
+      // the realtime stream yet — avoid flashing PaywallScreen based on
+      // UserModel's pre-login default values.
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (!userModel.hasAccess) {
+      return const PaywallScreen();
+    }
+    return const NavBar();
   }
 }

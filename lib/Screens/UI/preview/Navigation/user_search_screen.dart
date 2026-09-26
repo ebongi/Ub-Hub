@@ -5,6 +5,7 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/core/error_handler.dart';
 
 /// Search for other users by name and send/view friend requests.
 class UserSearchScreen extends StatefulWidget {
@@ -97,8 +98,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     } catch (e) {
       setState(() => _statusCache[user.id] = 'none');
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }

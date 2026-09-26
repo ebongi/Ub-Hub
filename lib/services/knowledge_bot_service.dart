@@ -1,6 +1,5 @@
 import 'package:go_study/services/gemini_client.dart';
 import 'package:go_study/services/gemini_service.dart';
-import 'package:go_study/services/bot_knowledge.dart';
 
 const String _kSystemPersona = """
 You are the official 'UB Support Bot', a dedicated customer service assistant for the University of Buea.
@@ -16,6 +15,10 @@ GUIDELINES:
 5. Format: Use clear, polite language. Use bullet points if necessary.
 """;
 
+/// Answers questions from a single shared knowledge document (see
+/// DatabaseService.getSharedBotKnowledge) — every user's Support Bot reads
+/// the exact same text, so there is no per-user relevance ranking to do;
+/// the whole document is passed as context on every question.
 class KnowledgeBotService {
   // Stateless per-question client: each question is an independent
   // retrieval-augmented lookup, not a multi-turn conversation, so there's
@@ -24,29 +27,33 @@ class KnowledgeBotService {
   // in every message body).
   final GeminiService _geminiService;
 
+  // The whole document is stuffed into every question's prompt (no
+  // chunking/retrieval — see the class doc above), so an admin pasting in
+  // an entire multi-hundred-page PDF would otherwise make every question
+  // slower and pricier without bound. This caps it to a size that's
+  // generous for FAQ/handbook-style content while keeping worst-case
+  // prompt size bounded.
+  static const int maxKnowledgeChars = 100000;
+
   KnowledgeBotService({GeminiService? geminiService})
     : _geminiService =
           geminiService ??
           GeminiService(client: GeminiProxyOneShotClient(_kSystemPersona));
 
-  Stream<String> streamQuestion(
-    String question,
-    List<BotKnowledge> knowledge,
-  ) async* {
-    if (knowledge.isEmpty) {
-      yield "Hello! I am the University of Buea Support Bot. Please add some knowledge snippets first!";
+  Stream<String> streamQuestion(String question, String knowledge) async* {
+    if (knowledge.trim().isEmpty) {
+      yield "Hello! I am the University of Buea Support Bot. The knowledge base hasn't been set up yet — please check back soon!";
       return;
     }
 
-    final relevantKnowledge = _getRelevantSnippets(question, knowledge);
-    final context = relevantKnowledge
-        .map((k) => "### ${k.title}\n${k.content}")
-        .join("\n\n");
+    final truncated = knowledge.length > maxKnowledgeChars
+        ? knowledge.substring(0, maxKnowledgeChars)
+        : knowledge;
 
     final prompt =
         """
 CONTEXT:
-$context
+$truncated
 
 USER QUESTION:
 $question
@@ -54,39 +61,4 @@ $question
 
     yield* _geminiService.streamMessage(prompt);
   }
-
-  /// Simple keyword-based relevance ranking to find the best context
-  List<BotKnowledge> _getRelevantSnippets(
-    String query,
-    List<BotKnowledge> allKnowledge,
-  ) {
-    if (allKnowledge.length <= 5) return allKnowledge;
-
-    final queryWords = query
-        .toLowerCase()
-        .split(RegExp(r'\W+'))
-        .where((w) => w.length > 3)
-        .toSet();
-
-    // Sort knowledge by how many query words they contain
-    final scoredKnowledge = allKnowledge.map((k) {
-      final content = ("${k.title} ${k.content}").toLowerCase();
-      int score = 0;
-      for (final word in queryWords) {
-        if (content.contains(word)) score++;
-      }
-      return _ScoredKnowledge(k, score);
-    }).toList();
-
-    scoredKnowledge.sort((a, b) => b.score.compareTo(a.score));
-
-    // Return top 5 most relevant snippets
-    return scoredKnowledge.take(5).map((sk) => sk.knowledge).toList();
-  }
-}
-
-class _ScoredKnowledge {
-  final BotKnowledge knowledge;
-  final int score;
-  _ScoredKnowledge(this.knowledge, this.score);
 }

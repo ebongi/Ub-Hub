@@ -4,6 +4,7 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/private_chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/user_search_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/services/friends_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -24,11 +25,18 @@ class _DmScreenState extends State<DmScreen> {
   late final String _myId;
   bool _requestsExpanded = true;
 
+  /// Cached once so switching _requestsExpanded (or any other rebuild)
+  /// doesn't tear down and recreate the underlying realtime subscription.
+  late final Stream<List<FriendRequest>> _pendingRequestsStream;
+  late final Stream<List<FriendProfile>> _friendsStream;
+
   @override
   void initState() {
     super.initState();
     _friendsService = FriendsService();
     _myId = sb.Supabase.instance.client.auth.currentUser?.id ?? '';
+    _pendingRequestsStream = _friendsService.getPendingRequestsStream();
+    _friendsStream = _friendsService.getFriendsStream();
   }
 
   void _openSearch() {
@@ -94,7 +102,7 @@ class _DmScreenState extends State<DmScreen> {
           children: [
             // ─── Pending Requests Section ─────────────────────────────────────
             StreamBuilder<List<FriendRequest>>(
-              stream: _friendsService.getPendingRequestsStream(),
+              stream: _pendingRequestsStream,
               builder: (context, snapshot) {
                 final requests = snapshot.data ?? [];
                 if (requests.isEmpty) return const SizedBox.shrink();
@@ -153,10 +161,18 @@ class _DmScreenState extends State<DmScreen> {
                           request: req,
                           theme: theme,
                           onAccept: () async {
-                            await _friendsService.respondToRequest(req.id, true);
+                            try {
+                              await _friendsService.respondToRequest(req.id, true);
+                            } catch (e) {
+                              if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                            }
                           },
                           onDecline: () async {
-                            await _friendsService.respondToRequest(req.id, false);
+                            try {
+                              await _friendsService.respondToRequest(req.id, false);
+                            } catch (e) {
+                              if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                            }
                           },
                         ),
                       ),
@@ -174,7 +190,7 @@ class _DmScreenState extends State<DmScreen> {
             // ─── Friends / Conversations List ─────────────────────────────────
             Expanded(
               child: StreamBuilder<List<FriendProfile>>(
-                stream: _friendsService.getFriendsStream(),
+                stream: _friendsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -336,7 +352,11 @@ class _DmScreenState extends State<DmScreen> {
                   borderRadius: BorderRadius.circular(14)),
               onTap: () async {
                 Navigator.pop(context);
-                await _friendsService.removeFriend(friend.id);
+                try {
+                  await _friendsService.removeFriend(friend.id);
+                } catch (e) {
+                  if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+                }
               },
             ),
             const SizedBox(height: 12),

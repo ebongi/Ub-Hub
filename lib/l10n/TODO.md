@@ -19,7 +19,9 @@ mapper. Never let a translated string become the persisted value.
 
 - Infra: `main.dart`, `locale_provider.dart`, `l10n.yaml`, ARB files
 - Onboarding: `onboarding_screen.dart`
-- Auth: `signin.dart`, `register_flow.dart`, all 4 `register_steps/*.dart`
+- Auth: `signin.dart`, `register_flow.dart`, both `register_steps/*.dart`
+  (`personal_details_step.dart`, `academic_details_step.dart` — the 4-step
+  wizard was collapsed to 2 steps in the Medlio-style redesign)
 - `settings_screen.dart` (incl. Language picker tile)
 - `home.dart`
 - Toolbox: `task_manager_screen.dart`, `exam_schedule_screen.dart`,

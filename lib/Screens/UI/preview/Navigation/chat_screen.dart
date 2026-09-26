@@ -11,6 +11,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/core/error_view.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatService? chatService;
@@ -153,9 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           _optimisticMessages.removeWhere((m) => m.id == tempId);
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }
@@ -266,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text(l10n.errorLoadingMessages(snapshot.error.toString())));
+                  return ErrorView(onRetry: () => setState(() {}));
                 }
 
                 final serverMessages = snapshot.data ?? [];

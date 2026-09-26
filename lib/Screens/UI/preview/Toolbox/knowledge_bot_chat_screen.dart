@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
-import 'package:go_study/services/bot_knowledge.dart';
 import 'package:go_study/services/knowledge_bot_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
@@ -28,7 +27,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
   late final DatabaseService _dbService;
   final _botService = KnowledgeBotService();
   final _currentUser = Supabase.instance.client.auth.currentUser;
-  List<BotKnowledge> _knowledgeBase = [];
+  String _knowledgeText = '';
   bool _welcomeMessageAdded = false;
 
   @override
@@ -51,15 +50,22 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     }
   }
 
-  void _loadKnowledge() {
-    _dbService.getBotKnowledge(_currentUser!.id).listen((data) {
-      if (mounted) setState(() => _knowledgeBase = data);
-    });
+  Future<void> _loadKnowledge() async {
+    final text = await _dbService.getSharedBotKnowledge();
+    if (mounted) setState(() => _knowledgeText = text);
   }
 
   void _sendMessage() async {
     final text = _inputController.text.trim();
     if (text.isEmpty || _isLoading) return;
+
+    // Set the guard (and clear the input) before the await below, so a
+    // fast double-tap on Send can't slip a second call through while the
+    // first is still awaiting the usage-gate check.
+    setState(() {
+      _isLoading = true;
+      _inputController.clear();
+    });
 
     final userModel = Provider.of<UserModel>(context, listen: false);
     final profile = UserProfile(
@@ -72,7 +78,10 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     );
 
     final canProceed = await AIUsageGate.checkAndShow(context, profile);
-    if (!canProceed) return;
+    if (!canProceed) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     final userMsgId = "user_${DateTime.now().millisecondsSinceEpoch}";
     final botMsgId = "bot_${DateTime.now().millisecondsSinceEpoch}";
@@ -83,8 +92,6 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
         'text': text,
         'isBot': false,
       });
-      _isLoading = true;
-      _inputController.clear();
     });
 
     _scrollToBottom();
@@ -103,7 +110,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
       bool firstChunk = true;
 
       // Start the stream
-      final stream = _botService.streamQuestion(text, _knowledgeBase);
+      final stream = _botService.streamQuestion(text, _knowledgeText);
       
       await for (final chunk in stream) {
         if (chunk == "OUT_OF_CREDITS") {
@@ -122,7 +129,10 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
                 firstChunk = false;
               }
             });
-            _scrollToBottom();
+            // Follow the growing response without an animation: a token
+            // can arrive many times a second, and restarting an animated
+            // scroll on every one of them fights itself and burns frames.
+            _scrollToBottomInstant();
           }
         }
       }
@@ -170,6 +180,14 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     });
   }
 
+  void _scrollToBottomInstant() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -185,6 +203,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final isAdmin = Provider.of<UserModel>(context).role == UserRole.admin;
 
     return Scaffold(
       appBar: AppBar(
@@ -202,14 +221,15 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_suggest_rounded),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const KnowledgeManagerScreen()),
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.settings_suggest_rounded),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const KnowledgeManagerScreen()),
+              ),
+              tooltip: l10n.manageKnowledgeTooltip,
             ),
-            tooltip: l10n.manageKnowledgeTooltip,
-          ),
         ],
       ),
       body: Container(
@@ -250,7 +270,7 @@ class _KnowledgeBotChatScreenState extends State<KnowledgeBotChatScreen> {
     final theme = Theme.of(context);
     return FadeInSlide(
       key: ValueKey(key),
-      delay: 50,
+      delay: 0,
       duration: const Duration(milliseconds: 200),
       child: Align(
         alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,

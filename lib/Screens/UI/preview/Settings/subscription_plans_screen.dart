@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/subscription_service.dart';
+import 'package:go_study/services/points_service.dart';
 import 'package:go_study/services/fapshi_service.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/payment_models.dart';
 import 'package:go_study/services/auth.dart';
+import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
@@ -200,7 +202,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               price: SubscriptionService.aiMonthlyPrice,
               color: Colors.orange,
               isCurrent: userModel.hasUnlimitedAI,
-              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.monthly),
+              itemType: 'ai_subscription',
+              onSuccess: (ref) => _db.purchaseAISubscription(SubscriptionTier.monthly, paymentRef: ref),
             ),
             const SizedBox(height: 16),
             _buildTierCard(
@@ -210,7 +213,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
               price: SubscriptionService.aiYearlyPrice,
               color: Colors.deepOrange,
               isCurrent: userModel.hasUnlimitedAI,
-              onSuccess: () => _db.purchaseAISubscription(SubscriptionTier.yearly),
+              itemType: 'ai_subscription',
+              onSuccess: (ref) => _db.purchaseAISubscription(SubscriptionTier.yearly, paymentRef: ref),
             ),
             const SizedBox(height: 32),
             Text(
@@ -315,7 +319,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     required double price,
     required Color color,
     required bool isCurrent,
-    required Future<void> Function() onSuccess,
+    required String itemType,
+    required Future<void> Function(String paymentRef) onSuccess,
     List<String>? features,
     bool isPremium = false,
   }) {
@@ -387,7 +392,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
           ElevatedButton(
             onPressed: isCurrent || _isProcessing
                 ? null
-                : () => _handlePurchase(tier, price, onSuccess),
+                : () => _handlePurchase(tier, price, itemType, onSuccess),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -410,7 +415,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
         userModel.subscriptionExpiry != null &&
         userModel.subscriptionExpiry!.isAfter(DateTime.now());
 
-    // Guards against offering a free monthly trial to someone who already
+    // Guards against offering a free trial to someone who already
     // pays for the yearly App Plan (their trialUsed can still be false if
     // they bought yearly directly without ever touching the monthly tier).
     final isOnOtherPaidTier = userModel.subscriptionTier == SubscriptionTier.yearly &&
@@ -446,19 +451,44 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             : Text(l10n.startFreeTrialButton),
       );
     } else {
-      actionButton = ElevatedButton(
-        onPressed: _isProcessing
-            ? null
-            : () => _handlePurchase(
-                  SubscriptionTier.monthly,
-                  price,
-                  () => _db.upgradeSubscription(SubscriptionTier.monthly),
-                ),
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        child: Text(l10n.subscribeButton),
+      actionButton = Column(
+        children: [
+          ElevatedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handlePurchase(
+                      SubscriptionTier.monthly,
+                      price,
+                      'app_plan_subscription',
+                      (ref) => _db.upgradeSubscription(SubscriptionTier.monthly, paymentRef: ref),
+                    ),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(l10n.subscribeButton),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: _isProcessing
+                ? null
+                : () => _handleRedeemWithPoints(
+                      SubscriptionTier.monthly,
+                      SubscriptionService.pointsCostMonthly,
+                      userModel,
+                    ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(l10n.redeemWithPointsButton(SubscriptionService.pointsCostMonthly)),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.yourPointsBalanceLabel(userModel.totalPoints),
+            style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+          ),
+        ],
       );
     }
 
@@ -529,19 +559,44 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
     final actionButton = isPaidActive
         ? const SizedBox.shrink()
-        : ElevatedButton(
-            onPressed: _isProcessing
-                ? null
-                : () => _handlePurchase(
-                      SubscriptionTier.yearly,
-                      price,
-                      () => _db.upgradeSubscription(SubscriptionTier.yearly),
-                    ),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-            child: Text(l10n.subscribeButton),
+        : Column(
+            children: [
+              ElevatedButton(
+                onPressed: _isProcessing
+                    ? null
+                    : () => _handlePurchase(
+                          SubscriptionTier.yearly,
+                          price,
+                          'app_plan_subscription',
+                          (ref) => _db.upgradeSubscription(SubscriptionTier.yearly, paymentRef: ref),
+                        ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(l10n.subscribeButton),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _isProcessing
+                    ? null
+                    : () => _handleRedeemWithPoints(
+                          SubscriptionTier.yearly,
+                          SubscriptionService.pointsCostYearly,
+                          userModel,
+                        ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(l10n.redeemWithPointsButton(SubscriptionService.pointsCostYearly)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.yourPointsBalanceLabel(userModel.totalPoints),
+                style: GoogleFonts.outfit(fontSize: 12, color: theme.hintColor),
+              ),
+            ],
           );
 
     return Container(
@@ -669,13 +724,15 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
     setState(() => _isProcessingTrial = true);
     try {
-      await _db.startFreeMonthlyTrial();
+      await _db.startFreeTrial();
       if (mounted) {
         // Reflect the new trial state immediately instead of waiting on the
         // realtime profile stream, so the button disappears right away.
+        // Kept in sync with the `INTERVAL '14 days'` in
+        // supabase/migrations/shorten_free_trial_to_two_weeks.sql.
         Provider.of<UserModel>(context, listen: false).update(
           subscriptionTier: SubscriptionTier.monthly,
-          subscriptionExpiry: DateTime.now().add(const Duration(days: 30)),
+          subscriptionExpiry: DateTime.now().add(const Duration(days: 14)),
           trialUsed: true,
           isTrialSubscription: true,
         );
@@ -685,7 +742,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isProcessingTrial = false);
@@ -764,8 +821,24 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   Future<void> _processCreditPurchase(double amount, int credits, String phone) async {
     setState(() => _isProcessing = true);
     final l10n = AppLocalizations.of(context)!;
+    final userId = _db.uid;
 
     try {
+      if (userId == null) throw "User not authenticated";
+
+      final paymentRef = FapshiService.generatePaymentRef();
+      await _db.createPaymentTransaction(PaymentTransaction(
+        id: '',
+        userId: userId,
+        paymentRef: paymentRef,
+        amount: amount,
+        currency: FapshiService.getCurrency(),
+        status: PaymentStatus.pending,
+        itemType: 'ai_credits',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+
       final response = await FapshiService.collectPayment(
         amount: amount,
         phoneNumber: FapshiService.formatPhoneNumber(phone),
@@ -774,6 +847,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       final paymentId = response['paymentId'];
       final redirectUrl = response['redirectUrl'];
+      if (paymentId == null) throw "Failed to initiate payment";
+
+      await _db.attachPaymentProviderRef(paymentRef, paymentId.toString());
 
       if (redirectUrl != null) {
         final uri = Uri.parse(redirectUrl);
@@ -787,18 +863,21 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
-        await _db.addAICredits(credits);
+        await _db.addAICredits(credits, paymentRef: paymentRef);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.creditsAddedSuccessfullyMessage(credits))),
           );
         }
       } else {
+        // The edge function already flips a confirmed payment to 'success'
+        // server-side; only non-success outcomes need recording here.
+        await _db.updatePaymentStatus(paymentRef, status);
         throw "Payment was not successful";
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -810,7 +889,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   Future<void> _handlePurchase(
     SubscriptionTier tier,
     double amount,
-    Future<void> Function() onSuccess,
+    String itemType,
+    Future<void> Function(String paymentRef) onSuccess,
   ) async {
     final phoneController = TextEditingController();
     final l10n = AppLocalizations.of(context)!;
@@ -887,23 +967,40 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     );
 
     if (proceed == true && phoneController.text.isNotEmpty) {
-      _processPayment(tier, amount, phoneController.text.trim(), onSuccess);
+      _processPayment(tier, amount, itemType, phoneController.text.trim(), onSuccess);
     }
   }
 
   Future<void> _processPayment(
     SubscriptionTier tier,
     double amount,
+    String itemType,
     String phone,
-    Future<void> Function() onSuccess,
+    Future<void> Function(String paymentRef) onSuccess,
   ) async {
     setState(() {
       _isProcessing = true;
       _processingTier = tier;
     });
     final l10n = AppLocalizations.of(context)!;
+    final userId = _db.uid;
 
     try {
+      if (userId == null) throw "User not authenticated";
+
+      final paymentRef = FapshiService.generatePaymentRef();
+      await _db.createPaymentTransaction(PaymentTransaction(
+        id: '',
+        userId: userId,
+        paymentRef: paymentRef,
+        amount: amount,
+        currency: FapshiService.getCurrency(),
+        status: PaymentStatus.pending,
+        itemType: itemType,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+
       final response = await FapshiService.collectPayment(
         amount: amount,
         phoneNumber: FapshiService.formatPhoneNumber(phone),
@@ -912,6 +1009,9 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
       final paymentId = response['paymentId'] ?? response['id'];
       final redirectUrl = response['redirectUrl'];
+      if (paymentId == null) throw "Failed to initiate payment";
+
+      await _db.attachPaymentProviderRef(paymentRef, paymentId.toString());
 
       if (redirectUrl != null) {
         final uri = Uri.parse(redirectUrl);
@@ -925,23 +1025,25 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       final status = await FapshiService.waitForSuccessfulPayment(paymentId);
 
       if (status == PaymentStatus.success) {
-        await onSuccess();
+        await onSuccess(paymentRef);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.subscriptionActivatedMessage)),
           );
           Navigator.pop(context);
         }
-      } else if (status == PaymentStatus.cancelled) {
-        throw "Payment was cancelled";
       } else {
+        // The edge function already flips a confirmed payment to 'success'
+        // server-side; only non-success outcomes need recording here.
+        await _db.updatePaymentStatus(paymentRef, status);
+        if (status == PaymentStatus.cancelled) {
+          throw "Payment was cancelled";
+        }
         throw "Payment timed out or failed. Please try again.";
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
@@ -953,4 +1055,63 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
     }
   }
 
+  /// Redeems accumulated points for [tier] instead of paying via Fapshi.
+  /// The cost is only ever enforced server-side (redeem_points_for_plan());
+  /// [pointsCost] here is purely for the confirm-dialog/balance copy.
+  Future<void> _handleRedeemWithPoints(
+    SubscriptionTier tier,
+    int pointsCost,
+    UserModel userModel,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (userModel.totalPoints < pointsCost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.insufficientPointsMessage(pointsCost))),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.confirmRedeemPointsTitle),
+        content: Text(l10n.confirmRedeemPointsBody(pointsCost)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.redeemWithPointsButton(pointsCost)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() {
+      _isProcessing = true;
+      _processingTier = tier;
+    });
+    try {
+      await PointsService().redeemPointsForPlan(tier.name);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pointsRedeemedSuccessMessage)),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) ErrorHandler.showErrorSnackBar(context, e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _processingTier = null;
+        });
+      }
+    }
+  }
 }

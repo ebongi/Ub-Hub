@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_study/core/error_handler.dart';
 
 Future<void> showSupportDialog(BuildContext context) async {
   final amountController = TextEditingController();
@@ -177,6 +178,11 @@ Future<void> showSupportDialog(BuildContext context) async {
                               throw Exception('Payment initiation failed');
                             }
 
+                            await dbService.attachPaymentProviderRef(
+                              paymentRef,
+                              nkwaPaymentId.toString(),
+                            );
+
                             if (redirectUrl != null) {
                               final uri = Uri.parse(redirectUrl);
                               if (await canLaunchUrl(uri)) {
@@ -197,13 +203,14 @@ Future<void> showSupportDialog(BuildContext context) async {
                               },
                             );
 
-                            // 4. Update status
-                            await dbService.updatePaymentStatus(
-                              paymentRef,
-                              status,
-                            );
-
                             if (status != PaymentStatus.success) {
+                              // The edge function already flips a confirmed
+                              // payment to 'success' server-side; only
+                              // non-success outcomes need recording here.
+                              await dbService.updatePaymentStatus(
+                                paymentRef,
+                                status,
+                              );
                               throw Exception(
                                 'Payment was not successful (Status: ${status.name})',
                               );
@@ -223,17 +230,7 @@ Future<void> showSupportDialog(BuildContext context) async {
                           } catch (e) {
                             setDialogState(() => isLoading = false);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e
-                                        .toString()
-                                        .replaceAll('Exception:', '')
-                                        .trim(),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              ErrorHandler.showErrorSnackBar(context, e);
                             }
                           }
                         },

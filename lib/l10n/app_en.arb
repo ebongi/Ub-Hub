@@ -13,38 +13,33 @@
   "onboardingPage4Body": "Track tasks, prepare for exams, use AI support, and stay organized with tools designed for an academic workflow.",
 
   "signInWelcomeBack": "Welcome back",
-  "signInSubtitle": "Sign in to continue your academic journey.",
+  "signInSubtitle": "Please enter your details",
   "emailAddressLabel": "Email address",
   "emailAddressHint": "you@university.edu",
   "pleaseEnterEmail": "Please enter your email",
   "passwordLabel": "Password",
   "minimumSixCharacters": "Minimum 6 characters",
   "forgotPassword": "Forgot password?",
-  "signInButton": "Sign In",
-  "orDivider": "OR",
+  "signInButton": "Login",
   "noAccountPrompt": "Don't have an account?",
   "signUpLink": "Sign Up",
 
-  "registerTitle": "Student Registration",
-  "registerSubtitle": "Create your account in four guided steps designed for the academic workflow.",
-  "registerStepOf": "Step {current} of {total}",
-  "@registerStepOf": {
-    "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
+  "registerTitle": "Get started with us",
+  "registerSubtitle": "Please enter your details",
   "registerBack": "Back",
-  "registerContinue": "Continue",
-  "registerComplete": "Complete Registration",
-  "registerVerificationRequired": "VERIFICATION REQUIRED",
+  "registerContinue": "Proceed",
+  "registerComplete": "Register",
   "alreadyRegistered": "Already registered?",
   "signInToPortal": "Sign In to Portal",
+  "personalDetailsStepLabel": "Personal details",
+  "academicDetailsStepLabel": "Academic details",
 
-  "accountStepTitle": "Account",
-  "accountStepDescription": "Secure your academic profile with a strong email and password.",
-  "accountCredentialsTitle": "Account credentials",
-  "accountCredentialsSubtitle": "This section protects your portal access and your study records.",
+  "firstNameLabel": "First Name",
+  "firstNameHint": "eg. John",
+  "firstNameRequired": "First name is required",
+  "lastNameLabel": "Last Name",
+  "lastNameHint": "eg. Doe",
+  "lastNameRequired": "Last name is required",
   "academicEmailLabel": "Academic Email",
   "academicEmailHint": "student@university.edu",
   "pleaseEnterValidEmail": "Please enter a valid email",
@@ -65,42 +60,19 @@
   "repeatPasswordHint": "Repeat password",
   "passwordsDoNotMatch": "Passwords do not match",
 
-  "identityStepTitle": "Identity",
-  "identityStepDescription": "Add your real name and contact details so the community can identify you.",
-  "personalIdentityTitle": "Personal identity",
-  "personalIdentitySubtitle": "This section makes your profile recognizable to classmates and admins.",
-  "fullLegalNameLabel": "Full Legal Name",
-  "firstLastNameHint": "First and Last Name",
-  "fullNameRequired": "Full name is required",
   "phoneContactLabel": "Phone Contact",
   "phoneRequired": "Phone number is required",
 
-  "academicStepTitle": "Academic",
-  "academicStepDescription": "Connect your university, matricule, and study level to unlock the right resources.",
-  "academicAffiliationTitle": "Academic affiliation",
-  "academicAffiliationSubtitle": "This links your account to the correct educational track.",
   "studentMatriculeLabel": "Student Matricule",
   "officialUniversityIdHint": "Official University ID",
   "matriculeRequired": "Matricule is required",
   "currentAcademicLevelLabel": "Current Academic Level",
   "selectYourLevelHint": "Select your level",
   "pleaseSelectLevel": "Please select your level",
-  "assignedInstitutionLabel": "Assigned Institution",
-  "selectYourUniversityHint": "Select your University",
-  "pleaseSelectUniversity": "Please select your university",
   "academicLevelResit": "Resit",
 
-  "finalizeStepTitle": "Finalize",
-  "finalizeStepDescription": "Complete your profile with your department and a short academic bio.",
-  "finalizeProfileTitle": "Finalize profile",
-  "finalizeProfileSubtitle": "This is the last step before your study account is ready.",
   "academicBioLabel": "Academic Bio",
   "academicBioHint": "Briefly describe your academic interests...",
-  "academicDepartmentLabel": "Academic Department",
-  "selectInstitutionFirstHint": "Select an institution in the previous step to load departments.",
-  "chooseYourDepartmentHint": "Choose your Department",
-  "pleaseSelectDepartment": "Please select your department",
-  "noDepartmentsFound": "No departments found for this institution.",
   "agreeToTermsPrefix": "I agree to the ",
   "termsOfServiceLink": "Terms of Service",
   "andSeparator": " and ",
@@ -126,8 +98,8 @@
   "privacyPolicyTitle": "Privacy Policy",
   "privacyPolicySubtitle": "How we protect and use your data",
   "termsOfServiceTitle": "Terms of Service",
-  "termsOfServiceSubtitle": "The rules for using GO Study",
-  "supportGoStudyTitle": "Support Go Study",
+  "termsOfServiceSubtitle": "The rules for using GoStudy",
+  "supportGoStudyTitle": "Support GoStudy",
   "supportGoStudySubtitle": "Sponsor development or volunteer to help",
   "supportOptionsDialogBody": "Choose how you'd like to support development.",
   "chatOnWhatsAppButton": "Chat on WhatsApp",
@@ -140,6 +112,9 @@
   "aboutSubtitle": "Learn more about the application ",
   "logout": "Logout",
   "deleteAccountButton": "Delete Account",
+  "deleteAccountWarningTitle": "Before you go...",
+  "deleteAccountWarningBody": "Deleting your account permanently removes:\n\n• Your profile and account details\n• All uploaded study materials and marketplace listings\n• Your AI chat history\n• Any remaining AI credits and active subscription — these are forfeited, not refunded\n• Exam schedules and course selections\n\nThis cannot be undone.",
+  "deleteAccountWarningContinueButton": "I understand, continue",
   "deleteAccountDialogTitle": "Delete your account?",
   "deleteAccountDialogBody": "This permanently deletes your account and all your data — profile, tasks, grades, exams, payment history, and chat history. This cannot be undone.",
   "deleteAccountTypeToConfirm": "Type DELETE to confirm.",
@@ -209,6 +184,24 @@
   "gemmaChatInfoDeviceTitle": "Is your phone ready?",
   "gemmaChatInfoDeviceBody": "Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app's performance.",
 
+  "sectionUniversities": "Universities",
+  "noUniversitiesAvailable": "No universities available yet.",
+  "switchUniversityTitle": "Switch university?",
+  "switchUniversityBody": "Switching to {name} will change your available departments and course content. Continue?",
+  "@switchUniversityBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "switchUniversityConfirmButton": "Switch",
+  "aboutInstitutionTooltip": "About {name}",
+  "@aboutInstitutionTooltip": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "institutionTypeUniversityBadge": "University",
+  "seeAllButton": "See all",
   "sectionDepartmentsFaculties": "Departments & Faculties",
   "sectionTools": "TOOLS",
   "noDepartmentsAvailable": "No departments available yet.",
@@ -420,10 +413,9 @@
   "deleteChatConfirmBody": "Are you sure you want to delete this conversation? All messages will be permanently removed.",
   "aiAssistantTitle": "AI Assistant",
   "howCanIHelpTodayMessage": "How can I help you today?",
-  "quickStarterCalculus": "📈 Help me with calculus",
-  "quickStarterStudyPlan": "📝 Write a study plan",
-  "quickStarterProjectIdeas": "💡 Project ideas",
-  "quickStarterSummarizeNotes": "📚 Summarize notes",
+  "quickStarterFlashcards": "Create flashcards from a file",
+  "quickStarterExplainConcept": "Explain a concept",
+  "quickStarterLearningSession": "Start a learning session",
   "thinkingLabel": "Thinking",
   "stopButton": "Stop",
   "askAiHint": "Ask AI",
@@ -435,6 +427,18 @@
   "clearAllChatsConfirmBody": "Are you sure you want to delete all conversations? This action will permanently remove your entire chat history.",
   "clearAllButton": "Clear All",
   "showThinkingLabel": "Show Thinking",
+  "assistantBetaBadge": "BETA",
+  "assistantStatusActive": "Active",
+  "assistantStatusOffline": "Not downloaded",
+  "assistantStudyHint": "What do you want to study?",
+  "assistantChatHistoryLabel": "Chat history",
+  "assistantWelcomeGreeting": "Hi! How can I help you today? You can create flashcards, review your material, or learn something new.",
+  "assistantMessagesRemaining": "{count, plural, =1{You can send 1 more message} other{You can send up to {count} more messages}}",
+  "@assistantMessagesRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "codeCopiedToClipboard": "Code copied to clipboard",
   "copyButton": "Copy",
   "privateChatTitle": "Private Chat",
@@ -452,6 +456,29 @@
   "navAiAssistantLabel": "AI Assistant",
   "navMessagesLabel": "Messages",
   "navSettingsLabel": "Settings",
+  "tourAvatarTitle": "That's you!",
+  "tourAvatarDesc": "Your profile picture and name.",
+  "tourAiCreditsTitle": "AI Credits",
+  "tourAiCreditsDesc": "Tap to view or top up the credits you use to chat with the AI tutor.",
+  "tourNotificationsTitle": "Notifications",
+  "tourNotificationsDesc": "Stay on top of friend requests, messages, and app updates.",
+  "tourWeeklyProgressTitle": "Weekly Progress",
+  "tourWeeklyProgressDesc": "Track your study activity over the past week at a glance.",
+  "tourDepartmentsTitle": "Departments & Faculties",
+  "tourDepartmentsDesc": "Browse courses and materials for your department, or explore others.",
+  "tourToolboxTitle": "Toolbox",
+  "tourToolboxDesc": "All your study tools live here: flashcards, exam scheduling, focus timer, the Support Bot, and more.",
+  "tourChatFabTitle": "Global Chat",
+  "tourChatFabDesc": "Jump into the open chat with other students at any time.",
+  "tourNavHomeTitle": "Home",
+  "tourNavHomeDesc": "Your dashboard — departments, tools, and recent activity.",
+  "tourNavAiAssistantTitle": "AI Assistant",
+  "tourNavAiAssistantDesc": "Chat with your AI-powered study assistant for explanations and help.",
+  "tourNavMessagesTitle": "Messages",
+  "tourNavMessagesDesc": "Message friends and manage friend requests.",
+  "tourNavSettingsTitle": "Settings",
+  "tourNavSettingsDesc": "Manage your profile, subscription, and app preferences.",
+  "pressBackAgainToExit": "Press back again to exit",
   "studentPortalTitle": "Student Portal",
   "syncingAcademicDataLabel": "Syncing Academic Data...",
   "reloadPageMenuItem": "Reload Page",
@@ -459,6 +486,7 @@
   "linkCopiedToClipboard": "Link copied to clipboard",
   "openInExternalBrowserMenuItem": "Open in External Browser",
   "allDepartmentsTitle": "All Departments",
+  "allToolsTitle": "All Tools",
   "searchForDepartmentHint": "Search for a department...",
   "newDeptButton": "New Dept",
   "findFriendsTitle": "Find Friends",
@@ -514,7 +542,6 @@
   "roleAdmin": "ADMIN",
   "roleContributor": "CONTRIBUTOR",
   "roleViewer": "VIEWER",
-  "adminDashboardTitle": "Admin Dashboard",
   "adminAccessRequired": "Admin access required.",
   "manageDepartmentsTitle": "Manage departments",
   "manageUsersTitle": "Manage users",
@@ -536,6 +563,7 @@
   "noMatriculeFallback": "No matricule",
   "roleLabelAdmin": "Admin",
   "roleLabelContributor": "Contributor",
+  "roleLabelViewer": "Viewer",
   "promoteToRoleTitle": "Promote to {role}",
   "@promoteToRoleTitle": {
     "placeholders": { "role": { "type": "String" } }
@@ -544,17 +572,29 @@
   "@promoteUserConfirmBody": {
     "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
   },
+  "demoteToRoleTitle": "Demote to {role}",
+  "@demoteToRoleTitle": {
+    "placeholders": { "role": { "type": "String" } }
+  },
+  "demoteUserConfirmBody": "Demote {name} to {role}?",
+  "@demoteUserConfirmBody": {
+    "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
+  },
+  "demoteButton": "Demote",
   "thisUserFallback": "this user",
   "promoteButton": "Promote",
   "userIsNowRoleLabel": "{name} is now a {role}",
   "@userIsNowRoleLabel": {
     "placeholders": { "name": { "type": "String" }, "role": { "type": "String" } }
   },
+  "searchResultsErrorTitle": "Couldn't load results",
+  "totalUsersStatLabel": "Total Users",
+  "totalDepartmentsStatLabel": "Departments",
   "globalChatTitle": "Global Chat",
   "activeNowLabel": "Active Now",
   "aboutGlobalChatLabel": "About Global Chat",
   "connectWithPeersSubtitle": "Connect with your peers",
-  "globalChatDescription": "This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.",
+  "globalChatDescription": "This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.",
   "gotItButton": "Got it",
   "errorLoadingMessages": "Error: {error}",
   "@errorLoadingMessages": {
@@ -615,7 +655,19 @@
   "@verifiedAnswerFeeSubtitle": {
     "placeholders": { "fee": { "type": "int" } }
   },
-  "onlyContributorsCanUploadMessage": "Only contributors and admins can upload content.",
+  "onlyContributorsCanUploadMessage": "Please wait for your profile to load and try again.",
+  "materialSubmittedForReviewMessage": "Submitted! An admin will review it shortly.",
+  "materialPendingReviewLabel": "Pending review",
+  "moderationQueueTitle": "Moderation Queue",
+  "moderationQueueSubtitle": "Review student submissions",
+  "noSubmissionsPendingMessage": "No submissions waiting for review",
+  "approveButton": "Approve",
+  "rejectButton": "Reject",
+  "rejectReasonDialogTitle": "Reject submission",
+  "rejectReasonHint": "Reason (optional)",
+  "materialApprovedMessage": "Approved",
+  "materialRejectedMessage": "Rejected",
+  "viewSubmissionLabel": "View content",
   "addMaterialTitle": "Add Material",
   "shareResourcesSubtitle": "Share resources with your peers",
   "categoryLabel": "Category",
@@ -738,7 +790,7 @@
   "feedbackBodyText": "Found a bug? Have a suggestion? Send us an email and help us make Ub-Hub better.",
   "sendEmailButton": "Send Email",
   "trialPeriodEndedTitle": "Trial Period Ended",
-  "trialExpiredBody": "Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
+  "trialExpiredBody": "Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.",
   "viewUpgradePlansButton": "View Upgrade Plans",
   "addCourseTitle": "Add Course",
   "organizeAcademicContentSubtitle": "Organize your academic content",
@@ -753,7 +805,7 @@
   "pleaseSelectLevel": "Please select a level",
   "userNotAuthenticatedMessage": "User not authenticated",
   "aboutAppTitle": "About App",
-  "appDescriptionBody": "GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
+  "appDescriptionBody": "GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.",
   "versionLabel": "Version {version}",
   "@versionLabel": {
     "placeholders": { "version": { "type": "String" } }
@@ -761,7 +813,7 @@
   "licensesLegalTitle": "Licenses & Legal",
   "openSourceLibrariesSubtitle": "Open source libraries and legal info",
   "appLegaleseCopyright": "© 2026 Jovial Studio",
-  "aboutDialogDescription": "GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
+  "aboutDialogDescription": "GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.",
   "eventsCalendarTitle": "Events Calendar",
   "eventIdLabel": "Event ID",
   "eventNameLabel": "Event Name",
@@ -799,6 +851,38 @@
     "placeholders": { "percent": { "type": "int" } }
   },
   "backToGeneratorButton": "BACK TO GENERATOR",
+  "generateFlashcardsButton": "Generate flashcards",
+  "flashcardsTitle": "Flashcards",
+  "flashcardCountQuestion": "How many cards?",
+  "generatingFlashcardsMessage": "Generating flashcards…",
+  "flashcardGenerationFailed": "Couldn't generate flashcards. Please try again.",
+  "flashcardServiceUnavailable": "The AI service is unavailable right now. Please try again in a moment.",
+  "aiServiceUnavailable": "The AI service is unavailable right now. Please try again in a moment.",
+  "flashcardsPdfOnlyMessage": "Flashcards can only be generated from PDF materials",
+  "viewMenuItem": "View",
+  "askAiToAnswerMenuItem": "Ask AI to Answer",
+  "aiAnswerPdfOnlyMessage": "AI answers are only available for PDF documents.",
+  "generatingAiAnswerMessage": "Generating an AI answer…",
+  "aiAnswerSheetTitle": "AI Answer",
+  "aiAnswerSheetSubtitle": "Generated by AI — always double-check important details.",
+  "flashcardQuestionLabel": "QUESTION",
+  "flashcardAnswerLabel": "ANSWER",
+  "tapToFlipHint": "Tap the card to flip",
+  "stillLearningButton": "Still learning",
+  "studyAgainButton": "Study again",
+  "flashcardsMasteredLabel": "You mastered {mastered} of {total}",
+  "@flashcardsMasteredLabel": {
+    "placeholders": { "mastered": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "deckCardCountLabel": "{count} cards",
+  "@deckCardCountLabel": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "deleteDeckDialogTitle": "Delete deck?",
+  "confirmDeleteDeckBody": "Delete the deck \"{title}\"? This cannot be undone.",
+  "@confirmDeleteDeckBody": {
+    "placeholders": { "title": { "type": "String" } }
+  },
   "materialsTabLabel": "Materials",
   "practiceTabLabel": "Practice",
   "selectLevelLabel": "Select a level",
@@ -841,7 +925,10 @@
   "matriculeNumberHint": "Matricule Number",
   "enterYourMatriculeValidator": "Enter your matricule",
   "facultyHint": "Faculty",
-  "enterYourFacultyValidator": "Enter your faculty",
+  "selectYourFacultyValidator": "Select your faculty",
+  "facultyOtherOption": "Other",
+  "otherFacultyHint": "Enter your faculty/school name",
+  "enterYourOtherFacultyValidator": "Enter your faculty/school name",
   "departmentHint": "Department",
   "enterYourDepartmentValidator": "Enter your department",
   "applicationOptionsSectionTitle": "Application Options",
@@ -864,6 +951,7 @@
   "applicationSubmittedMessage": "Application submitted! Redirecting to WhatsApp...",
   "statusCurrentStudent": "Current Student",
   "statusFormerStudent": "Former Student",
+  "formerStudentSurchargeNotice": "Former students pay a 30% surcharge on the fee above.",
   "ubKnowledgeBaseTitle": "UB Knowledge Base",
   "noUbKnowledgeYet": "No UB knowledge added yet",
   "addUniversityFactsSubtitle": "Add university facts for the bot to learn!",
@@ -997,17 +1085,44 @@
     "placeholders": { "time": { "type": "String" } }
   },
   "currentPlanBadge": "CURRENT PLAN",
-  "firstMonthFreeBadge": "FIRST MONTH FREE",
+  "firstMonthFreeBadge": "2 WEEKS FREE",
   "startFreeTrialButton": "Start Free Trial",
   "subscribeButton": "Subscribe",
-  "freeMonthThenPriceLabel": "Free for 1 month, then {price} XAF / month",
+  "freeMonthThenPriceLabel": "Free for 2 weeks, then {price} XAF / month",
   "@freeMonthThenPriceLabel": {
     "placeholders": { "price": { "type": "int" } }
   },
   "aiFeaturesBilledSeparatelyShort": "AI features are billed separately and not included.",
-  "startYourFreeMonthTitle": "Start Your Free Month",
+  "redeemWithPointsButton": "Redeem with {points} pts",
+  "@redeemWithPointsButton": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "yourPointsBalanceLabel": "Your balance: {points} pts",
+  "@yourPointsBalanceLabel": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "insufficientPointsMessage": "You need {points} points to redeem this plan.",
+  "@insufficientPointsMessage": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "confirmRedeemPointsTitle": "Redeem points?",
+  "confirmRedeemPointsBody": "Use {points} points to activate this plan? This can't be undone.",
+  "@confirmRedeemPointsBody": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "pointsRedeemedSuccessMessage": "Plan activated using your points!",
+  "setBountyMenuItem": "Set Points Bounty",
+  "setBountyDialogTitle": "Points Bounty",
+  "setBountyDialogBody": "Boost the approval points students earn for materials uploaded to \"{course}\". This multiplies the base +50 points (2 = double, 1 = no bounty).",
+  "@setBountyDialogBody": {
+    "placeholders": { "course": { "type": "String" } }
+  },
+  "bountyMultiplierFieldLabel": "Multiplier (e.g. 1, 1.5, 2)",
+  "bountyMultiplierInvalidMessage": "Enter a number greater than 0",
+  "bountyUpdatedMessage": "Points bounty updated",
+  "startYourFreeMonthTitle": "Start Your Free Trial",
   "noPaymentRequiredTodaySubtitle": "No payment required today",
-  "freeTrialTermsBody": "Your App Plan is free for the first 30 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.",
+  "freeTrialTermsBody": "Your App Plan is free for the first 14 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.",
   "@freeTrialTermsBody": {
     "placeholders": { "price": { "type": "int" } }
   },
@@ -1055,5 +1170,108 @@
   "contributorUpgradeTermsBody": "Pay 5000 XAF once to unlock unlimited downloads, uploads, and all premium features forever.",
   "momoOmNumberLabel": "Momo/OM Number",
   "youAreNowContributorMessage": "You are now a Contributor!",
-  "testCreditsPackTitle": "Test Credits"
+  "testCreditsPackTitle": "Test Credits",
+  "settingsSectionAppearance": "Appearance",
+  "settingsSectionNotifications": "Push Notifications",
+  "settingsSectionLanguage": "Language",
+  "settingsSectionAccount": "Account",
+  "settingsSectionSupport": "Support",
+  "settingsSectionLegal": "Legal",
+
+  "editButton": "Edit",
+  "newsAdminNewPostButton": "New Post",
+  "newsAuthorFallback": "Announcement",
+  "newsComposerNewTitle": "New Post",
+  "newsComposerEditTitle": "Edit Post",
+  "newsTitleFieldLabel": "Title",
+  "newsTitleFieldHint": "A short, clear headline",
+  "newsTitleRequiredValidator": "A title is required",
+  "newsBodyFieldLabel": "Details",
+  "newsBodyFieldHint": "Write the announcement…",
+  "newsBodyRequiredValidator": "Some details are required",
+  "newsUploadCoverLabel": "Cover image (optional)",
+  "newsPublishButton": "Publish",
+  "newsPostPublishedSnack": "Post published",
+  "newsPostUpdatedSnack": "Post updated",
+  "newsAdminOnlyMessage": "Only admins can post news.",
+  "newsDeletePostTitle": "Delete this post?",
+  "newsDeletePostBody": "The post and all of its likes and comments will be permanently removed.",
+  "newsDeleteCommentTitle": "Delete comment?",
+  "newsDeleteCommentBody": "This comment will be permanently removed.",
+  "newsNoCommentsYet": "No comments yet. Be the first.",
+  "newsCommentHintText": "Add a comment…",
+  "newsSendCommentTooltip": "Send",
+  "newsCommentsHeader": "{count, plural, =0{Comments} =1{1 comment} other{{count} comments}}",
+  "@newsCommentsHeader": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "weeklyProgressWeekRange": "{start} - {end}",
+  "@weeklyProgressWeekRange": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "weeklyProgressTodayPill": "Today",
+  "weeklyProgressTodayPillTooltip": "Back to this week",
+  "weeklyProgressPrevWeekTooltip": "Previous week",
+  "weeklyProgressNextWeekTooltip": "Next week",
+  "weeklyProgressNextExam": "Next exam on {date}",
+  "@weeklyProgressNextExam": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "weeklyProgressNoUpcomingExams": "No upcoming exams",
+  "weeklyProgressExamRowFallbackSubtitle": "Tap to schedule one",
+  "weeklyProgressTasksRemainingToday": "{count, plural, =0{All tasks done for today} =1{1 task remaining today} other{{count} tasks remaining today}}",
+  "@weeklyProgressTasksRemainingToday": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "weeklyProgressNoTasksToday": "No tasks due today",
+  "weeklyProgressCompletedYesterday": "{count, plural, =0{No tasks completed yesterday} =1{1 task completed yesterday} other{{count} tasks completed yesterday}}",
+  "@weeklyProgressCompletedYesterday": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "weeklyProgressNoTasksYesterday": "No tasks were due yesterday",
+  "weeklyProgressDueTomorrow": "{count, plural, =1{1 task due tomorrow} other{{count} tasks due tomorrow}}",
+  "@weeklyProgressDueTomorrow": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "weeklyProgressNothingTomorrow": "Nothing scheduled for tomorrow",
+  "weeklyProgressCompletedOnPastDate": "{count, plural, =0{No tasks completed on {day}} =1{1 task completed on {day}} other{{count} tasks completed on {day}}}",
+  "@weeklyProgressCompletedOnPastDate": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "day": { "type": "String" }
+    }
+  },
+  "weeklyProgressNoTasksOnPastDate": "No tasks were due on {day}",
+  "@weeklyProgressNoTasksOnPastDate": {
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+  "weeklyProgressDueOnFutureDate": "{count, plural, =1{1 task due on {day}} other{{count} tasks due on {day}}}",
+  "@weeklyProgressDueOnFutureDate": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "day": { "type": "String" }
+    }
+  },
+  "weeklyProgressNothingOnFutureDate": "Nothing scheduled for {day}",
+  "@weeklyProgressNothingOnFutureDate": {
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  }
 }

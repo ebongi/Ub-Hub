@@ -2,33 +2,11 @@ import 'package:animate_do/animate_do.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_study/core/app_wordmark.dart';
 import 'package:go_study/core/error_handler.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────────────
-const Color _indigo = Color(0xFF4F46E5);
-const Color _slate900 = Color(0xFF0F172A);
-const Color _slate700 = Color(0xFF334155);
-const Color _slate500 = Color(0xFF64748B);
-const Color _slate300 = Color(0xFFCBD5E1);
-const Color _slate100 = Color(0xFFF1F5F9);
-
-// ── Dark mode equivalents ─────────────────────────────────────────────────────
-Color _bgColor(bool isDark) =>
-    isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
-Color _surfaceColor(bool isDark) =>
-    isDark ? const Color(0xFF1E293B) : Colors.white;
-Color _headingColor(bool isDark) =>
-    isDark ? Colors.white : _slate900;
-Color _bodyColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.55) : _slate500;
-Color _borderColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.1) : _slate300;
-Color _fieldFill(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.06) : _slate100;
-Color _iconColor(bool isDark) =>
-    isDark ? Colors.white.withOpacity(0.4) : _slate500;
+import 'package:go_study/Screens/authentication/register_form_widgets.dart';
 
 class Signin extends StatefulWidget {
   final Authentication? authService;
@@ -134,7 +112,7 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: _bgColor(isDark),
+      backgroundColor: regBgColor(isDark),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -143,18 +121,18 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // ── Brand chip ─────────────────────────────────────────────
+                // ── Wordmark ───────────────────────────────────────────────
                 SlideTransition(
                   position: _headerSlide,
                   child: FadeTransition(
                     opacity: _headerFade,
-                    child: _BrandChip(isDark: isDark),
+                    child: const AppWordmark(fontSize: 20),
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 36),
 
                 // ── Heading ────────────────────────────────────────────────
                 SlideTransition(
@@ -167,12 +145,12 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
 
                 const SizedBox(height: 32),
 
-                // ── Form card ──────────────────────────────────────────────
+                // ── Fields ─────────────────────────────────────────────────
                 SlideTransition(
                   position: _cardSlide,
                   child: FadeTransition(
                     opacity: _cardFade,
-                    child: _FormCard(
+                    child: _SignInFields(
                       emailController: _emailController,
                       passwordController: _passwordController,
                       viewPassword: _viewPassword,
@@ -201,57 +179,6 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
   }
 }
 
-// ── Brand chip ────────────────────────────────────────────────────────────────
-class _BrandChip extends StatelessWidget {
-  final bool isDark;
-  const _BrandChip({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: _indigo,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(
-            Icons.school_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text.rich(
-          TextSpan(
-            text: 'Go',
-            style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: _indigo,
-              letterSpacing: 0.2,
-            ),
-            children: [
-              TextSpan(
-                text: 'Study',
-                style: GoogleFonts.outfit(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w400,
-                  color: isDark ? Colors.white.withOpacity(0.8) : _slate700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // ── Header section ────────────────────────────────────────────────────────────
 class _SignInHeader extends StatelessWidget {
   final bool isDark;
@@ -268,7 +195,7 @@ class _SignInHeader extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 30,
             fontWeight: FontWeight.w800,
-            color: _headingColor(isDark),
+            color: regHeadingColor(isDark),
             height: 1.15,
             letterSpacing: -0.3,
           ),
@@ -278,7 +205,7 @@ class _SignInHeader extends StatelessWidget {
           l10n.signInSubtitle,
           style: GoogleFonts.outfit(
             fontSize: 14.5,
-            color: _bodyColor(isDark),
+            color: regBodyColor(isDark),
             fontWeight: FontWeight.w400,
             height: 1.5,
           ),
@@ -288,8 +215,8 @@ class _SignInHeader extends StatelessWidget {
   }
 }
 
-// ── Form card ─────────────────────────────────────────────────────────────────
-class _FormCard extends StatelessWidget {
+// ── Fields ────────────────────────────────────────────────────────────────────
+class _SignInFields extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final bool viewPassword;
@@ -298,7 +225,7 @@ class _FormCard extends StatelessWidget {
   final VoidCallback onTogglePassword;
   final VoidCallback onSignIn;
 
-  const _FormCard({
+  const _SignInFields({
     required this.emailController,
     required this.passwordController,
     required this.viewPassword,
@@ -311,262 +238,93 @@ class _FormCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: _surfaceColor(isDark),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _borderColor(isDark), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Email
-          FadeInDown(
-            duration: const Duration(milliseconds: 350),
-            delay: const Duration(milliseconds: 50),
-            child: _EduField(
-              label: l10n.emailAddressLabel,
-              hint: l10n.emailAddressHint,
-              icon: Icons.alternate_email_rounded,
-              controller: emailController,
-              isDark: isDark,
-              keyboardType: TextInputType.emailAddress,
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return l10n.pleaseEnterEmail;
-                }
-                return null;
-              },
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Password
-          FadeInDown(
-            duration: const Duration(milliseconds: 350),
-            delay: const Duration(milliseconds: 120),
-            child: _EduField(
-              label: l10n.passwordLabel,
-              hint: '••••••••',
-              icon: Icons.lock_outline_rounded,
-              controller: passwordController,
-              isDark: isDark,
-              obscureText: !viewPassword,
-              suffixIcon: GestureDetector(
-                onTap: onTogglePassword,
-                child: Icon(
-                  viewPassword
-                      ? Icons.visibility_rounded
-                      : Icons.visibility_off_rounded,
-                  color: _iconColor(isDark),
-                  size: 20,
-                ),
-              ),
-              validator: (v) =>
-                  v == null || v.length < 6 ? l10n.minimumSixCharacters : null,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Forgot password
-          FadeInDown(
-            duration: const Duration(milliseconds: 350),
-            delay: const Duration(milliseconds: 180),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(0, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  l10n.forgotPassword,
-                  style: GoogleFonts.outfit(
-                    fontSize: 13,
-                    color: _indigo,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Sign in button
-          FadeInDown(
-            duration: const Duration(milliseconds: 350),
-            delay: const Duration(milliseconds: 230),
-            child: _PrimaryButton(
-              label: l10n.signInButton,
-              isLoading: isLoading,
-              onPressed: onSignIn,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Reusable educational field ─────────────────────────────────────────────────
-class _EduField extends StatelessWidget {
-  final String label;
-  final String hint;
-  final IconData icon;
-  final TextEditingController controller;
-  final bool isDark;
-  final bool obscureText;
-  final TextInputType keyboardType;
-  final Widget? suffixIcon;
-  final String? Function(String?)? validator;
-
-  const _EduField({
-    required this.label,
-    required this.hint,
-    required this.icon,
-    required this.controller,
-    required this.isDark,
-    this.obscureText = false,
-    this.keyboardType = TextInputType.text,
-    this.suffixIcon,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white.withOpacity(0.7) : _slate700,
-            letterSpacing: 0.1,
+        FadeInDown(
+          duration: const Duration(milliseconds: 350),
+          delay: const Duration(milliseconds: 50),
+          child: RegistrationField(
+            label: l10n.emailAddressLabel,
+            hint: l10n.emailAddressHint,
+            icon: Icons.alternate_email_rounded,
+            controller: emailController,
+            isDark: isDark,
+            keyboardType: TextInputType.emailAddress,
+            validator: (v) {
+              if (v == null || v.isEmpty) {
+                return l10n.pleaseEnterEmail;
+              }
+              return null;
+            },
           ),
         ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          validator: validator,
-          style: GoogleFonts.outfit(
-            fontSize: 15,
-            color: isDark ? Colors.white.withOpacity(0.9) : _slate900,
+
+        const SizedBox(height: 20),
+
+        FadeInDown(
+          duration: const Duration(milliseconds: 350),
+          delay: const Duration(milliseconds: 120),
+          child: RegistrationField(
+            label: l10n.passwordLabel,
+            hint: '••••••••',
+            icon: Icons.lock_outline_rounded,
+            controller: passwordController,
+            isDark: isDark,
+            obscureText: !viewPassword,
+            suffixIcon: GestureDetector(
+              onTap: onTogglePassword,
+              child: Icon(
+                viewPassword
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                color: regIconColor(isDark),
+                size: 20,
+              ),
+            ),
+            validator: (v) =>
+                v == null || v.length < 6 ? l10n.minimumSixCharacters : null,
           ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.outfit(
-              fontSize: 15,
-              color: isDark ? Colors.white.withOpacity(0.2) : _slate300,
+        ),
+
+        const SizedBox(height: 8),
+
+        FadeInDown(
+          duration: const Duration(milliseconds: 350),
+          delay: const Duration(milliseconds: 180),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 30),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                l10n.forgotPassword,
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: regIndigo(context),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            prefixIcon: Icon(icon, color: _iconColor(isDark), size: 19),
-            suffixIcon: suffixIcon != null
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: suffixIcon,
-                  )
-                : null,
-            filled: true,
-            fillColor: _fieldFill(isDark),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _borderColor(isDark)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _borderColor(isDark)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _indigo, width: 1.8),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.6),
-            ),
-            errorStyle: GoogleFonts.outfit(
-              color: const Color(0xFFEF4444),
-              fontSize: 12,
-            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        FadeInDown(
+          duration: const Duration(milliseconds: 350),
+          delay: const Duration(milliseconds: 230),
+          child: AuthPrimaryButton(
+            label: l10n.signInButton,
+            isLoading: isLoading,
+            onPressed: onSignIn,
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Primary button ─────────────────────────────────────────────────────────────
-class _PrimaryButton extends StatelessWidget {
-  final String label;
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  const _PrimaryButton({
-    required this.label,
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _indigo,
-          disabledBackgroundColor: _indigo.withOpacity(0.55),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2.2,
-                ),
-              )
-            : Text(
-                label,
-                style: GoogleFonts.outfit(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.3,
-                ),
-              ),
-      ),
     );
   }
 }
@@ -580,70 +338,31 @@ class _SignInFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        // OR divider
-        Row(
-          children: [
-            Expanded(
-              child: Divider(
-                color: _borderColor(isDark),
-                thickness: 1,
-              ),
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.noAccountPrompt,
+            style: GoogleFonts.outfit(
+              color: regBodyColor(isDark),
+              fontSize: 14.5,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Text(
-                l10n.orDivider,
-                style: GoogleFonts.outfit(
-                  fontSize: 11,
-                  color: _bodyColor(isDark),
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Divider(
-                color: _borderColor(isDark),
-                thickness: 1,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 20),
-
-        // Sign up link
-        Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.noAccountPrompt,
-                style: GoogleFonts.outfit(
-                  color: _bodyColor(isDark),
-                  fontSize: 14.5,
-                ),
-              ),
-              const SizedBox(width: 5),
-              GestureDetector(
-                onTap: () => onToggle(),
-                child: Text(
-                  l10n.signUpLink,
-                  style: GoogleFonts.outfit(
-                    color: _indigo,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.5,
-                  ),
-                ),
-              ),
-            ],
           ),
-        ),
-
-        const SizedBox(height: 16),
-      ],
+          const SizedBox(width: 5),
+          GestureDetector(
+            onTap: () => onToggle(),
+            child: Text(
+              l10n.signUpLink,
+              style: GoogleFonts.outfit(
+                color: regIndigo(context),
+                fontWeight: FontWeight.w700,
+                fontSize: 14.5,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

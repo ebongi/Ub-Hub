@@ -61,16 +61,22 @@ android {
             }
         }
     }
-    // Size-variant comparison (temporary, edited between test builds — see
-    // conversation with the size-reduction work): guarantees stripping
-    // regardless of whether a lib came from Flutter's own output or a
-    // plugin AAR, unlike ndk.abiFilters which Flutter's Gradle plugin
-    // silently overrides.
+    // Release ABI policy: exclude only x86_64 (emulator-only, no real
+    // devices ship it). arm64-v8a and armeabi-v7a are both kept — Play
+    // Store serves per-device ABI splits from the app bundle, so 64-bit
+    // devices don't pay for the 32-bit lib; dropping armeabi-v7a instead
+    // made the app entirely unavailable on the many budget/low-RAM devices
+    // (e.g. Samsung A10/A-series) that ship a 32-bit-only Android userspace
+    // despite a 64-bit-capable SoC — Play's device catalog filters those
+    // out at the store-listing level, not as a crash.
+    // Uses packaging.excludes rather than ndk.abiFilters because the
+    // Flutter Gradle plugin silently overrides abiFilters, and this way
+    // stripping applies to plugin AARs' bundled libs too, not just
+    // Flutter's own output.
     packaging {
         jniLibs {
             excludes += setOf(
                 "lib/x86_64/**",
-                "lib/armeabi-v7a/**",
                 // MediaPipe vision/image-generation tasks — flutter_gemma is
                 // used here for text-only chat (see GEMMA_MIGRATION_TODO.md),
                 // these appear unreachable. Verify on-device before trusting.
@@ -115,6 +121,18 @@ dependencies {
     // See https://firebase.google.com/docs/android/setup#available-libraries for more
     
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+
+    // integration_test is a dev_dependency in pubspec.yaml, so Flutter's Gradle
+    // plugin (PluginHandler.kt's configurePluginProject) deliberately keeps its
+    // native module off the *release* classpath. But GeneratedPluginRegistrant.java
+    // (flutter_plugins.dart's _writeAndroidPluginRegistrant) registers every
+    // method-channel plugin unconditionally, with no dev_dependency filtering —
+    // that mismatch breaks `flutter build appbundle --release` outright ("package
+    // dev.flutter.plugins.integration_test does not exist"), confirmed against
+    // this project's Flutter 3.44.9 SDK source. Pulling the module onto the
+    // release classpath too is the workaround; it's only ever instantiated from
+    // instrumented test runs, so this has no effect on the shipped app's behavior.
+    "releaseApi"(project(":integration_test"))
 }
 
 flutter {

@@ -2,13 +2,15 @@
 
 import 'dart:ui';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
+import 'package:go_study/Screens/Shared/content_media_card.dart';
+import 'package:go_study/Screens/Shared/department_ui_data.dart';
+import 'package:go_study/Screens/Shared/section_header.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/portalScreen.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/weekly_progress_card.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:go_study/Screens/UI/preview/Settings/rating.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
@@ -20,11 +22,13 @@ import 'package:go_study/Screens/UI/preview/Toolbox/news_feed_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/offline_library_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/performance_tracker_screen.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/task_manager_screen.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/department.dart';
 import 'package:go_study/services/departments_provider.dart';
+import 'package:go_study/services/institution.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/services/quote_service.dart';
@@ -37,8 +41,55 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_study/core/responsive.dart';
+import 'package:go_study/core/app_tour_keys.dart';
+import 'package:go_study/services/app_tour_service.dart';
+import 'package:go_study/theme/app_text_styles.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../../../services/notification_service.dart';
+
+/// Wraps [child] with the first-launch guided tour's consistent styling
+/// (theme-driven so it matches light/dark mode and the user's accent color)
+/// and default Previous/Next tooltip actions.
+Showcase tourShowcase(
+  BuildContext context, {
+  required GlobalKey key,
+  required String title,
+  required String description,
+  required Widget child,
+  ShapeBorder targetShapeBorder = const RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(12)),
+  ),
+}) {
+  final theme = Theme.of(context);
+  final onPrimary = theme.colorScheme.onPrimary;
+  return Showcase(
+    key: key,
+    title: title,
+    description: description,
+    titleTextStyle: AppText.cardTitle(context).copyWith(color: onPrimary),
+    descTextStyle: AppText.body(context).copyWith(color: onPrimary),
+    tooltipBackgroundColor: theme.colorScheme.primary,
+    textColor: onPrimary,
+    targetShapeBorder: targetShapeBorder,
+    tooltipActionConfig: const TooltipActionConfig(
+      alignment: MainAxisAlignment.spaceBetween,
+      position: TooltipActionPosition.outside,
+    ),
+    // A Showcase's own `tooltipActions` fully replaces
+    // ShowcaseView.globalTooltipActions rather than merging with it, so
+    // "skip" needs to be listed here alongside previous/next on every step.
+    tooltipActions: [
+      TooltipActionButton(
+        type: TooltipDefaultActionType.previous,
+        hideActionWidgetForShowcase: [AppTourKeys.ordered.first],
+      ),
+      const TooltipActionButton(type: TooltipDefaultActionType.next),
+      const TooltipActionButton(type: TooltipDefaultActionType.skip),
+    ],
+    child: child,
+  );
+}
 
 class ToolItem {
   final String name;
@@ -77,7 +128,15 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _supabase = widget.supabaseClient ?? Supabase.instance.client;
-    _checkStudyReminders();
+
+    ShowcaseView.register(
+      enableAutoScroll: true,
+      skipIfTargetNotPresent: true,
+      onFinish: _markTourSeen,
+      onDismiss: (_) => _markTourSeen(),
+    );
+    _maybeStartAppTour();
+
     _maybeShowRatingPrompt();
 
     _loadRecentActivity();
@@ -89,12 +148,13 @@ class _HomeState extends State<Home> {
           _userProfile = profile;
         });
 
-        // Fetch institution name if available
-        String? institutionName;
-        if (profile.institutionId != null) {
-          final inst = await db.getInstitution(profile.institutionId!);
-          institutionName = inst?.name;
-        }
+        // Fetch institution name — falls back to the default institution
+        // (kDefaultInstitutionId) so a user who hasn't picked one yet still
+        // sees a real name here instead of the generic portal label.
+        final inst = await db.getInstitution(
+          profile.institutionId ?? kDefaultInstitutionId,
+        );
+        final institutionName = inst?.name;
 
         // Sync with global UserModel provider
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -111,6 +171,26 @@ class _HomeState extends State<Home> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
+  }
+
+  Future<void> _maybeStartAppTour() async {
+    final uid = Provider.of<UserModel>(context, listen: false).uid;
+    if (uid == null || await AppTourService.hasSeenTour(uid)) return;
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ShowcaseView.get().startShowCase(AppTourKeys.ordered);
+    });
+  }
+
+  void _markTourSeen() {
+    final uid = Provider.of<UserModel>(context, listen: false).uid;
+    if (uid != null) AppTourService.markSeen(uid);
   }
 
   // No longer needed, using Provider instead
@@ -223,13 +303,6 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> _checkStudyReminders() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('study_reminders') ?? false) {
-      await NotificationService().scheduleStudyReminders();
-    }
-  }
-
   static const int _kRatingPromptAppOpenThreshold = 5;
 
   Future<void> _maybeShowRatingPrompt() async {
@@ -270,8 +343,8 @@ class _HomeState extends State<Home> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: 5),
-                Consumer<DepartmentsProvider>(
-                  builder: (context, departmentsProvider, child) {
+                Consumer2<DepartmentsProvider, UserModel>(
+                  builder: (context, departmentsProvider, userModel, child) {
                     return IntroWidget(
                       userProfile: _userProfile,
                       recentActivity: _recentActivity,
@@ -280,9 +353,48 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                ViewSection(title: l10n.sectionDepartmentsFaculties),
-                Consumer<DepartmentsProvider>(
-                  builder: (context, departmentsProvider, child) {
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.weeklyProgress,
+                  title: l10n.tourWeeklyProgressTitle,
+                  description: l10n.tourWeeklyProgressDesc,
+                  child: FadeInSlide(
+                    child: WeeklyProgressCard(supabaseClient: _supabase),
+                  ),
+                ),
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.departments,
+                  title: l10n.tourDepartmentsTitle,
+                  description: l10n.tourDepartmentsDesc,
+                  child: SectionHeader(
+                    title: l10n.sectionDepartmentsFaculties,
+                    trailing: TextButton(
+                      onPressed: () {
+                        final deptProvider = context.read<DepartmentsProvider>();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChangeNotifierProvider<DepartmentsProvider>.value(
+                              value: deptProvider,
+                              child: const AllDepartmentsScreen(),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        l10n.seeAllButton,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Consumer2<DepartmentsProvider, UserModel>(
+                  builder: (context, departmentsProvider, userModel, child) {
                     final departments = departmentsProvider.departments;
 
                     if (departments == null) {
@@ -351,8 +463,35 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
-                ViewSection(title: l10n.sectionTools),
-                ToolboxSection(items: _toolboxItems(l10n), userProfile: _userProfile),
+                tourShowcase(
+                  context,
+                  key: AppTourKeys.toolbox,
+                  title: l10n.tourToolboxTitle,
+                  description: l10n.tourToolboxDesc,
+                  child: SectionHeader(
+                    title: l10n.sectionTools,
+                    trailing: TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AllToolsScreen(
+                            items: _toolboxItems(l10n),
+                            userProfile: _userProfile,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.seeAllButton,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                ToolboxRow(items: _toolboxItems(l10n)),
                 const SizedBox(height: 20), // Padding for FAB
               ]),
             ),
@@ -365,25 +504,32 @@ class _HomeState extends State<Home> {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              SizedBox(
-                height: 50,
-                width: 50,
-                child: FloatingActionButton(
-                  heroTag: "chatFAB",
-                  tooltip: l10n.globalChatTooltip,
-                  backgroundColor: theme.colorScheme.secondary,
-                  onPressed: () {
-                    messageProvider.setChatOpen(true);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ChatScreen()),
-                    ).then((_) {
-                      messageProvider.setChatOpen(false);
-                    });
-                  },
-                  child: Icon(
-                    Icons.chat_rounded,
-                    color: theme.colorScheme.onSecondary,
+              tourShowcase(
+                context,
+                key: AppTourKeys.chatFab,
+                title: l10n.tourChatFabTitle,
+                description: l10n.tourChatFabDesc,
+                targetShapeBorder: const CircleBorder(),
+                child: SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: FloatingActionButton(
+                    heroTag: "chatFAB",
+                    tooltip: l10n.globalChatTooltip,
+                    backgroundColor: theme.colorScheme.secondary,
+                    onPressed: () {
+                      messageProvider.setChatOpen(true);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChatScreen()),
+                      ).then((_) {
+                        messageProvider.setChatOpen(false);
+                      });
+                    },
+                    child: Icon(
+                      Icons.chat_rounded,
+                      color: theme.colorScheme.onSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -549,77 +695,165 @@ class ToolboxSection extends StatelessWidget {
     );
   }
 
-  void _showComingSoonDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF0F172A)
-            : Colors.white,
-        title: Text(
-          "Feature in development",
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          "UB Support is being developed and will be available soon.",
-          style: GoogleFonts.outfit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "OK",
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
-            ),
+  void _showComingSoonDialog(BuildContext context) => showToolComingSoonDialog(context);
+}
+
+void showToolComingSoonDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF0F172A)
+          : Colors.white,
+      title: Text(
+        "Feature in development",
+        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+      ),
+      content: Text(
+        "UB Support is being developed and will be available soon.",
+        style: GoogleFonts.outfit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            "OK",
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
           ),
-        ],
+        ),
+      ],
+    ),
+  );
+}
+
+/// Compact horizontal row of tool tiles, shown on the home screen instead
+/// of the full [ToolboxSection] grid — a single scrollable row instead of
+/// several rows of static grid, so the Tools section takes up much less
+/// vertical space. The full grid lives on [AllToolsScreen], reachable via
+/// the "See all" link next to the section header.
+class ToolboxRow extends StatelessWidget {
+  const ToolboxRow({super.key, required this.items});
+
+  final List<ToolItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 88,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final tool = items[index];
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: FadeInSlide(
+              delay: index * 0.03,
+              child: ScaleButton(
+                onTap: () {
+                  if (tool.comingSoon) {
+                    showToolComingSoonDialog(context);
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => tool.widget),
+                    );
+                  }
+                },
+                child: SizedBox(
+                  width: 76,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? theme.colorScheme.surfaceContainerLow
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.05)
+                                    : Colors.grey.withOpacity(0.15),
+                              ),
+                            ),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(9),
+                                decoration: BoxDecoration(
+                                  color: tool.brandColor.withOpacity(isDark ? 0.15 : 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(tool.icon, size: 18, color: tool.brandColor),
+                              ),
+                            ),
+                          ),
+                          if (tool.comingSoon)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: Icon(
+                                Icons.lock_clock_rounded,
+                                size: 14,
+                                color: Colors.grey.withOpacity(0.8),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        tool.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: tool.comingSoon
+                              ? (isDark ? Colors.white54 : Colors.black45)
+                              : (isDark ? Colors.white : Colors.black87),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
-
 }
 
-// Helper to map department names to UI properties
-// Helper to map department names to UI properties
-class DepartmentUIData {
-  final IconData icon;
-  final Color primaryColor;
-  final Color secondaryColor;
+/// Dedicated screen showing every tool, as the full grid — reached via the
+/// "See all" link next to the Tools section header on the home screen.
+class AllToolsScreen extends StatelessWidget {
+  const AllToolsScreen({super.key, required this.items, this.userProfile});
 
-  DepartmentUIData({
-    required this.icon,
-    required this.primaryColor,
-    required this.secondaryColor,
-  });
+  final List<ToolItem> items;
+  final UserProfile? userProfile;
 
-  static DepartmentUIData fromDepartmentName(String name) {
-    switch (name.toLowerCase().trim()) {
-      case 'computer science':
-        return DepartmentUIData(
-          icon: Icons.computer_rounded,
-          primaryColor: const Color(0xFF2563EB), // Blue 600
-          secondaryColor: const Color(0xFF60A5FA), // Blue 400
-        );
-      case 'mathematics':
-        return DepartmentUIData(
-          icon: Icons.functions_rounded,
-          primaryColor: const Color(0xFF059669), // Emerald 600
-          secondaryColor: const Color(0xFF34D399), // Emerald 400
-        );
-      case 'physics':
-        return DepartmentUIData(
-          icon: Icons.science_rounded,
-          primaryColor: const Color(0xFF7C3AED), // Violet 600
-          secondaryColor: const Color(0xFFA78BFA), // Violet 400
-        );
-      default:
-        return DepartmentUIData(
-          icon: Icons.account_balance_rounded,
-          primaryColor: const Color(0xFF475569), // Slate 600
-          secondaryColor: const Color(0xFF94A3B8), // Slate 400
-        );
-    }
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.allToolsTitle)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: ToolboxSection(items: items, userProfile: userProfile),
+      ),
+    );
   }
 }
 
@@ -635,8 +869,6 @@ class DepartmentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     // Proportional to actual screen width (not just a mobile/tablet flag),
     // so a small phone gets a noticeably smaller card than a large one
     // instead of the same fixed size — with a per-bucket clamp so tablet
@@ -646,11 +878,11 @@ class DepartmentSection extends StatelessWidget {
         : context.isTablet
         ? context.widthPct(32).clamp(220.0, 260.0)
         : 260.0;
-    final cardHeight = cardWidth * 0.78;
+    // Image (16:10) plus the title/action text block below it.
+    final cardHeight = cardWidth / 1.6 + 100;
 
-    return Container(
+    return SizedBox(
       height: cardHeight,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -678,126 +910,14 @@ class DepartmentSection extends StatelessWidget {
                     onDepartmentDeleted?.call();
                   }
                 },
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: isDark
-                        ? theme.colorScheme.surfaceContainerLow
-                        : Colors.white,
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey.withOpacity(0.15),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Background Image or subtle placeholder
-                      Positioned.fill(
-                        child:
-                            (department.imageUrl != null &&
-                                department.imageUrl!.isNotEmpty)
-                            ? CachedNetworkImage(
-                                imageUrl: department.imageUrl!,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  color: uiData.primaryColor.withOpacity(0.1),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: uiData.primaryColor.withOpacity(0.05),
-                                ),
-                              )
-                            : Container(
-                                color: uiData.primaryColor.withOpacity(0.05),
-                              ),
-                      ),
-                      // Gradient Overlay for text readability
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.05),
-                                Colors.black.withOpacity(0.6),
-                              ],
-                              stops: const [0.4, 0.6, 1.0],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Content
-                      Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Icon Badge
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                ),
-                              ),
-                              child: SvgPicture.asset(
-                                'assets/images/department.svg',
-                                colorFilter: const ColorFilter.mode(
-                                  Colors.white,
-                                  BlendMode.srcIn,
-                                ),
-                                width: 18,
-                                height: 18,
-                              ),
-                            ),
-                            const Spacer(),
-                            // Department Name
-                            Text(
-                              department.name,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                height: 1.15,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            // Action Label
-                            Row(
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context)!.exploreResources,
-                                  style: GoogleFonts.outfit(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 12,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                child: ContentMediaCard(
+                  title: department.name,
+                  subtitle: department.description,
+                  actionLabel: AppLocalizations.of(context)!.exploreResources,
+                  imageUrl: department.imageUrl,
+                  icon: uiData.icon,
+                  primaryColor: uiData.primaryColor,
+                  secondaryColor: uiData.secondaryColor,
                 ),
               ),
             ),
@@ -959,14 +1079,16 @@ class _IntroWidgetState extends State<IntroWidget> {
         ),
         Builder(
           builder: (context) {
+            Department? matchedDepartment;
             bool showRecentActivity = false;
             if (widget.recentActivity != null) {
               if (widget.departments == null) {
                 showRecentActivity = true;
               } else {
-                showRecentActivity = widget.departments!.any(
-                  (d) => d.id == widget.recentActivity!.id,
-                );
+                matchedDepartment = widget.departments!
+                    .where((d) => d.id == widget.recentActivity!.id)
+                    .firstOrNull;
+                showRecentActivity = matchedDepartment != null;
               }
             }
 
@@ -1075,23 +1197,6 @@ class _IntroWidgetState extends State<IntroWidget> {
   }
 }
 
-class ViewSection extends StatelessWidget {
-  const ViewSection({super.key, required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-}
-
 class AppBarUser extends StatelessWidget {
   const AppBarUser({super.key});
 
@@ -1101,31 +1206,31 @@ class AppBarUser extends StatelessWidget {
       children: [
         Consumer<UserModel>(
           builder: (context, value, child) {
-            final avatarUrl = value.avatarUrl;
-            return Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  width: 2,
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
+              context,
+              key: AppTourKeys.avatar,
+              title: l10n.tourAvatarTitle,
+              description: l10n.tourAvatarDesc,
+              targetShapeBorder: const CircleBorder(),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    width: 2,
+                  ),
                 ),
-              ),
-              child: CircleAvatar(
-                radius: 25,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.primary.withOpacity(0.1),
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
-                    : null,
-                child: (avatarUrl == null || avatarUrl.isEmpty)
-                    ? Icon(
-                        Icons.person_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 35,
-                      )
-                    : null,
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.1),
+                  backgroundImage: const AssetImage(
+                    'assets/icons/android/play_store_512.png',
+                  ),
+                ),
               ),
             );
           },
@@ -1164,79 +1269,100 @@ class AppBarUser extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Consumer<UserModel>(
-          builder: (context, user, child) => GestureDetector(
-            onTap: () => Navigator.push(
+          builder: (context, user, child) {
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
               context,
-              MaterialPageRoute(builder: (context) => const SubscriptionPlansScreen()),
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              key: AppTourKeys.aiCredits,
+              title: l10n.tourAiCreditsTitle,
+              description: l10n.tourAiCreditsDesc,
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SubscriptionPlansScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${user.aiCredits}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: Row(
+            );
+          },
+        ),
+        const SizedBox(width: 4),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return tourShowcase(
+              context,
+              key: AppTourKeys.notifications,
+              title: l10n.tourNotificationsTitle,
+              description: l10n.tourNotificationsDesc,
+              targetShapeBorder: const CircleBorder(),
+              child: Stack(
                 children: [
-                  const Icon(Icons.bolt_rounded, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    "${user.aiCredits}",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber[800],
+                  IconButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Notifications()),
                     ),
+                    icon: const Icon(Icons.notifications_outlined),
+                  ),
+                  StreamBuilder<int>(
+                    stream: NotificationService().unreadCountStream,
+                    builder: (context, snapshot) {
+                      final unreadCount = snapshot.data ?? 0;
+
+                      if (unreadCount == 0) return const SizedBox.shrink();
+
+                      return Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unreadCount > 9 ? '9+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Stack(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const Notifications()),
-              ),
-              icon: const Icon(Icons.notifications_outlined),
-            ),
-            StreamBuilder<int>(
-              stream: NotificationService().unreadCountStream,
-              builder: (context, snapshot) {
-                final unreadCount = snapshot.data ?? 0;
-
-                if (unreadCount == 0) return const SizedBox.shrink();
-
-                return Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+            );
+          },
         ),
       ],
     );

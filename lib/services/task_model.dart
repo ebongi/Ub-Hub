@@ -9,6 +9,7 @@ class TodoTask {
   final String priority; // Low, Medium, High
   final String category;
   final bool isDone;
+  final DateTime? completedAt;
   final DateTime? createdAt;
 
   TodoTask({
@@ -22,6 +23,7 @@ class TodoTask {
     this.priority = "Medium",
     this.category = "Personal",
     this.isDone = false,
+    this.completedAt,
     this.createdAt,
   });
 
@@ -41,6 +43,9 @@ class TodoTask {
       priority: json['priority'] ?? 'Medium',
       category: json['category'] ?? 'Personal',
       isDone: json['is_done'] ?? false,
+      completedAt: json['completed_at'] != null
+          ? DateTime.parse(json['completed_at'])
+          : null,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -58,6 +63,9 @@ class TodoTask {
       'priority': priority,
       'category': category,
       'is_done': isDone,
+      // Written unconditionally (value or null) so un-checking a task clears the
+      // timestamp — updateTask does a partial .update().
+      'completed_at': completedAt?.toIso8601String(),
       if (id.isNotEmpty) 'id': id,
     };
   }

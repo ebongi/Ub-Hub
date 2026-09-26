@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to continue your academic journey.'**
+  /// **'Please enter your details'**
   String get signInSubtitle;
 
   /// No description provided for @emailAddressLabel.
@@ -209,14 +209,8 @@ abstract class AppLocalizations {
   /// No description provided for @signInButton.
   ///
   /// In en, this message translates to:
-  /// **'Sign In'**
+  /// **'Login'**
   String get signInButton;
-
-  /// No description provided for @orDivider.
-  ///
-  /// In en, this message translates to:
-  /// **'OR'**
-  String get orDivider;
 
   /// No description provided for @noAccountPrompt.
   ///
@@ -233,20 +227,14 @@ abstract class AppLocalizations {
   /// No description provided for @registerTitle.
   ///
   /// In en, this message translates to:
-  /// **'Student Registration'**
+  /// **'Get started with us'**
   String get registerTitle;
 
   /// No description provided for @registerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Create your account in four guided steps designed for the academic workflow.'**
+  /// **'Please enter your details'**
   String get registerSubtitle;
-
-  /// No description provided for @registerStepOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Step {current} of {total}'**
-  String registerStepOf(int current, int total);
 
   /// No description provided for @registerBack.
   ///
@@ -257,20 +245,14 @@ abstract class AppLocalizations {
   /// No description provided for @registerContinue.
   ///
   /// In en, this message translates to:
-  /// **'Continue'**
+  /// **'Proceed'**
   String get registerContinue;
 
   /// No description provided for @registerComplete.
   ///
   /// In en, this message translates to:
-  /// **'Complete Registration'**
+  /// **'Register'**
   String get registerComplete;
-
-  /// No description provided for @registerVerificationRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'VERIFICATION REQUIRED'**
-  String get registerVerificationRequired;
 
   /// No description provided for @alreadyRegistered.
   ///
@@ -284,29 +266,53 @@ abstract class AppLocalizations {
   /// **'Sign In to Portal'**
   String get signInToPortal;
 
-  /// No description provided for @accountStepTitle.
+  /// No description provided for @personalDetailsStepLabel.
   ///
   /// In en, this message translates to:
-  /// **'Account'**
-  String get accountStepTitle;
+  /// **'Personal details'**
+  String get personalDetailsStepLabel;
 
-  /// No description provided for @accountStepDescription.
+  /// No description provided for @academicDetailsStepLabel.
   ///
   /// In en, this message translates to:
-  /// **'Secure your academic profile with a strong email and password.'**
-  String get accountStepDescription;
+  /// **'Academic details'**
+  String get academicDetailsStepLabel;
 
-  /// No description provided for @accountCredentialsTitle.
+  /// No description provided for @firstNameLabel.
   ///
   /// In en, this message translates to:
-  /// **'Account credentials'**
-  String get accountCredentialsTitle;
+  /// **'First Name'**
+  String get firstNameLabel;
 
-  /// No description provided for @accountCredentialsSubtitle.
+  /// No description provided for @firstNameHint.
   ///
   /// In en, this message translates to:
-  /// **'This section protects your portal access and your study records.'**
-  String get accountCredentialsSubtitle;
+  /// **'eg. John'**
+  String get firstNameHint;
+
+  /// No description provided for @firstNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'First name is required'**
+  String get firstNameRequired;
+
+  /// No description provided for @lastNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Name'**
+  String get lastNameLabel;
+
+  /// No description provided for @lastNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'eg. Doe'**
+  String get lastNameHint;
+
+  /// No description provided for @lastNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name is required'**
+  String get lastNameRequired;
 
   /// No description provided for @academicEmailLabel.
   ///
@@ -422,48 +428,6 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get passwordsDoNotMatch;
 
-  /// No description provided for @identityStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity'**
-  String get identityStepTitle;
-
-  /// No description provided for @identityStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your real name and contact details so the community can identify you.'**
-  String get identityStepDescription;
-
-  /// No description provided for @personalIdentityTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Personal identity'**
-  String get personalIdentityTitle;
-
-  /// No description provided for @personalIdentitySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This section makes your profile recognizable to classmates and admins.'**
-  String get personalIdentitySubtitle;
-
-  /// No description provided for @fullLegalNameLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Full Legal Name'**
-  String get fullLegalNameLabel;
-
-  /// No description provided for @firstLastNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'First and Last Name'**
-  String get firstLastNameHint;
-
-  /// No description provided for @fullNameRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Full name is required'**
-  String get fullNameRequired;
-
   /// No description provided for @phoneContactLabel.
   ///
   /// In en, this message translates to:
@@ -475,30 +439,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone number is required'**
   String get phoneRequired;
-
-  /// No description provided for @academicStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic'**
-  String get academicStepTitle;
-
-  /// No description provided for @academicStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect your university, matricule, and study level to unlock the right resources.'**
-  String get academicStepDescription;
-
-  /// No description provided for @academicAffiliationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic affiliation'**
-  String get academicAffiliationTitle;
-
-  /// No description provided for @academicAffiliationSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This links your account to the correct educational track.'**
-  String get academicAffiliationSubtitle;
 
   /// No description provided for @studentMatriculeLabel.
   ///
@@ -536,53 +476,11 @@ abstract class AppLocalizations {
   /// **'Please select a level'**
   String get pleaseSelectLevel;
 
-  /// No description provided for @assignedInstitutionLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Assigned Institution'**
-  String get assignedInstitutionLabel;
-
-  /// No description provided for @selectYourUniversityHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select your University'**
-  String get selectYourUniversityHint;
-
-  /// No description provided for @pleaseSelectUniversity.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select your university'**
-  String get pleaseSelectUniversity;
-
   /// No description provided for @academicLevelResit.
   ///
   /// In en, this message translates to:
   /// **'Resit'**
   String get academicLevelResit;
-
-  /// No description provided for @finalizeStepTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Finalize'**
-  String get finalizeStepTitle;
-
-  /// No description provided for @finalizeStepDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete your profile with your department and a short academic bio.'**
-  String get finalizeStepDescription;
-
-  /// No description provided for @finalizeProfileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Finalize profile'**
-  String get finalizeProfileTitle;
-
-  /// No description provided for @finalizeProfileSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'This is the last step before your study account is ready.'**
-  String get finalizeProfileSubtitle;
 
   /// No description provided for @academicBioLabel.
   ///
@@ -595,36 +493,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Briefly describe your academic interests...'**
   String get academicBioHint;
-
-  /// No description provided for @academicDepartmentLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Academic Department'**
-  String get academicDepartmentLabel;
-
-  /// No description provided for @selectInstitutionFirstHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select an institution in the previous step to load departments.'**
-  String get selectInstitutionFirstHint;
-
-  /// No description provided for @chooseYourDepartmentHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your Department'**
-  String get chooseYourDepartmentHint;
-
-  /// No description provided for @pleaseSelectDepartment.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select your department'**
-  String get pleaseSelectDepartment;
-
-  /// No description provided for @noDepartmentsFound.
-  ///
-  /// In en, this message translates to:
-  /// **'No departments found for this institution.'**
-  String get noDepartmentsFound;
 
   /// No description provided for @agreeToTermsPrefix.
   ///
@@ -743,13 +611,13 @@ abstract class AppLocalizations {
   /// No description provided for @termsOfServiceSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The rules for using GO Study'**
+  /// **'The rules for using GoStudy'**
   String get termsOfServiceSubtitle;
 
   /// No description provided for @supportGoStudyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Support Go Study'**
+  /// **'Support GoStudy'**
   String get supportGoStudyTitle;
 
   /// No description provided for @supportGoStudySubtitle.
@@ -823,6 +691,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Account'**
   String get deleteAccountButton;
+
+  /// No description provided for @deleteAccountWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you go...'**
+  String get deleteAccountWarningTitle;
+
+  /// No description provided for @deleteAccountWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account permanently removes:\n\n• Your profile and account details\n• All uploaded study materials and marketplace listings\n• Your AI chat history\n• Any remaining AI credits and active subscription — these are forfeited, not refunded\n• Exam schedules and course selections\n\nThis cannot be undone.'**
+  String get deleteAccountWarningBody;
+
+  /// No description provided for @deleteAccountWarningContinueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, continue'**
+  String get deleteAccountWarningContinueButton;
 
   /// No description provided for @deleteAccountDialogTitle.
   ///
@@ -1129,6 +1015,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only download this if your phone is a reasonably recent, mid-range or higher device with enough free storage. On older or budget phones, offline AI may run slowly or affect the rest of the app\'s performance.'**
   String get gemmaChatInfoDeviceBody;
+
+  /// No description provided for @sectionUniversities.
+  ///
+  /// In en, this message translates to:
+  /// **'Universities'**
+  String get sectionUniversities;
+
+  /// No description provided for @noUniversitiesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No universities available yet.'**
+  String get noUniversitiesAvailable;
+
+  /// No description provided for @switchUniversityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch university?'**
+  String get switchUniversityTitle;
+
+  /// No description provided for @switchUniversityBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to {name} will change your available departments and course content. Continue?'**
+  String switchUniversityBody(String name);
+
+  /// No description provided for @switchUniversityConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchUniversityConfirmButton;
+
+  /// No description provided for @aboutInstitutionTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About {name}'**
+  String aboutInstitutionTooltip(String name);
+
+  /// No description provided for @institutionTypeUniversityBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'University'**
+  String get institutionTypeUniversityBadge;
+
+  /// No description provided for @seeAllButton.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAllButton;
 
   /// No description provided for @sectionDepartmentsFaculties.
   ///
@@ -1970,29 +1904,23 @@ abstract class AppLocalizations {
   /// **'How can I help you today?'**
   String get howCanIHelpTodayMessage;
 
-  /// No description provided for @quickStarterCalculus.
+  /// No description provided for @quickStarterFlashcards.
   ///
   /// In en, this message translates to:
-  /// **'📈 Help me with calculus'**
-  String get quickStarterCalculus;
+  /// **'Create flashcards from a file'**
+  String get quickStarterFlashcards;
 
-  /// No description provided for @quickStarterStudyPlan.
+  /// No description provided for @quickStarterExplainConcept.
   ///
   /// In en, this message translates to:
-  /// **'📝 Write a study plan'**
-  String get quickStarterStudyPlan;
+  /// **'Explain a concept'**
+  String get quickStarterExplainConcept;
 
-  /// No description provided for @quickStarterProjectIdeas.
+  /// No description provided for @quickStarterLearningSession.
   ///
   /// In en, this message translates to:
-  /// **'💡 Project ideas'**
-  String get quickStarterProjectIdeas;
-
-  /// No description provided for @quickStarterSummarizeNotes.
-  ///
-  /// In en, this message translates to:
-  /// **'📚 Summarize notes'**
-  String get quickStarterSummarizeNotes;
+  /// **'Start a learning session'**
+  String get quickStarterLearningSession;
 
   /// No description provided for @thinkingLabel.
   ///
@@ -2059,6 +1987,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show Thinking'**
   String get showThinkingLabel;
+
+  /// No description provided for @assistantBetaBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'BETA'**
+  String get assistantBetaBadge;
+
+  /// No description provided for @assistantStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get assistantStatusActive;
+
+  /// No description provided for @assistantStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded'**
+  String get assistantStatusOffline;
+
+  /// No description provided for @assistantStudyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to study?'**
+  String get assistantStudyHint;
+
+  /// No description provided for @assistantChatHistoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get assistantChatHistoryLabel;
+
+  /// No description provided for @assistantWelcomeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! How can I help you today? You can create flashcards, review your material, or learn something new.'**
+  String get assistantWelcomeGreeting;
+
+  /// No description provided for @assistantMessagesRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You can send 1 more message} other{You can send up to {count} more messages}}'**
+  String assistantMessagesRemaining(int count);
 
   /// No description provided for @codeCopiedToClipboard.
   ///
@@ -2144,6 +2114,144 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get navSettingsLabel;
 
+  /// No description provided for @tourAvatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s you!'**
+  String get tourAvatarTitle;
+
+  /// No description provided for @tourAvatarDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile picture and name.'**
+  String get tourAvatarDesc;
+
+  /// No description provided for @tourAiCreditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Credits'**
+  String get tourAiCreditsTitle;
+
+  /// No description provided for @tourAiCreditsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view or top up the credits you use to chat with the AI tutor.'**
+  String get tourAiCreditsDesc;
+
+  /// No description provided for @tourNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get tourNotificationsTitle;
+
+  /// No description provided for @tourNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on top of friend requests, messages, and app updates.'**
+  String get tourNotificationsDesc;
+
+  /// No description provided for @tourWeeklyProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Progress'**
+  String get tourWeeklyProgressTitle;
+
+  /// No description provided for @tourWeeklyProgressDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your study activity over the past week at a glance.'**
+  String get tourWeeklyProgressDesc;
+
+  /// No description provided for @tourDepartmentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments & Faculties'**
+  String get tourDepartmentsTitle;
+
+  /// No description provided for @tourDepartmentsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse courses and materials for your department, or explore others.'**
+  String get tourDepartmentsDesc;
+
+  /// No description provided for @tourToolboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toolbox'**
+  String get tourToolboxTitle;
+
+  /// No description provided for @tourToolboxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All your study tools live here: flashcards, exam scheduling, focus timer, the Support Bot, and more.'**
+  String get tourToolboxDesc;
+
+  /// No description provided for @tourChatFabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Chat'**
+  String get tourChatFabTitle;
+
+  /// No description provided for @tourChatFabDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump into the open chat with other students at any time.'**
+  String get tourChatFabDesc;
+
+  /// No description provided for @tourNavHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get tourNavHomeTitle;
+
+  /// No description provided for @tourNavHomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your dashboard — departments, tools, and recent activity.'**
+  String get tourNavHomeDesc;
+
+  /// No description provided for @tourNavAiAssistantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get tourNavAiAssistantTitle;
+
+  /// No description provided for @tourNavAiAssistantDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with your AI-powered study assistant for explanations and help.'**
+  String get tourNavAiAssistantDesc;
+
+  /// No description provided for @tourNavMessagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get tourNavMessagesTitle;
+
+  /// No description provided for @tourNavMessagesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Message friends and manage friend requests.'**
+  String get tourNavMessagesDesc;
+
+  /// No description provided for @tourNavSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tourNavSettingsTitle;
+
+  /// No description provided for @tourNavSettingsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your profile, subscription, and app preferences.'**
+  String get tourNavSettingsDesc;
+
+  /// No description provided for @pressBackAgainToExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// No description provided for @studentPortalTitle.
   ///
   /// In en, this message translates to:
@@ -2185,6 +2293,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All Departments'**
   String get allDepartmentsTitle;
+
+  /// No description provided for @allToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All Tools'**
+  String get allToolsTitle;
 
   /// No description provided for @searchForDepartmentHint.
   ///
@@ -2582,6 +2696,12 @@ abstract class AppLocalizations {
   /// **'Contributor'**
   String get roleLabelContributor;
 
+  /// No description provided for @roleLabelViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewer'**
+  String get roleLabelViewer;
+
   /// No description provided for @promoteToRoleTitle.
   ///
   /// In en, this message translates to:
@@ -2593,6 +2713,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Promote {name} to {role}?'**
   String promoteUserConfirmBody(String name, String role);
+
+  /// No description provided for @demoteToRoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote to {role}'**
+  String demoteToRoleTitle(String role);
+
+  /// No description provided for @demoteUserConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote {name} to {role}?'**
+  String demoteUserConfirmBody(String name, String role);
+
+  /// No description provided for @demoteButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote'**
+  String get demoteButton;
 
   /// No description provided for @thisUserFallback.
   ///
@@ -2611,6 +2749,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} is now a {role}'**
   String userIsNowRoleLabel(String name, String role);
+
+  /// No description provided for @searchResultsErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load results'**
+  String get searchResultsErrorTitle;
+
+  /// No description provided for @totalUsersStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Users'**
+  String get totalUsersStatLabel;
+
+  /// No description provided for @totalDepartmentsStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Departments'**
+  String get totalDepartmentsStatLabel;
 
   /// No description provided for @globalChatTitle.
   ///
@@ -2639,7 +2795,7 @@ abstract class AppLocalizations {
   /// No description provided for @globalChatDescription.
   ///
   /// In en, this message translates to:
-  /// **'This is a real-time chat room for all users of GO-Study specific for this course. Please be respectful and follow community guidelines.'**
+  /// **'This is a real-time chat room for all users of GoStudy specific for this course. Please be respectful and follow community guidelines.'**
   String get globalChatDescription;
 
   /// No description provided for @gotItButton.
@@ -2897,8 +3053,80 @@ abstract class AppLocalizations {
   /// No description provided for @onlyContributorsCanUploadMessage.
   ///
   /// In en, this message translates to:
-  /// **'Only contributors and admins can upload content.'**
+  /// **'Please wait for your profile to load and try again.'**
   String get onlyContributorsCanUploadMessage;
+
+  /// No description provided for @materialSubmittedForReviewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted! An admin will review it shortly.'**
+  String get materialSubmittedForReviewMessage;
+
+  /// No description provided for @materialPendingReviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending review'**
+  String get materialPendingReviewLabel;
+
+  /// No description provided for @moderationQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderation Queue'**
+  String get moderationQueueTitle;
+
+  /// No description provided for @moderationQueueSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review student submissions'**
+  String get moderationQueueSubtitle;
+
+  /// No description provided for @noSubmissionsPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions waiting for review'**
+  String get noSubmissionsPendingMessage;
+
+  /// No description provided for @approveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approveButton;
+
+  /// No description provided for @rejectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectButton;
+
+  /// No description provided for @rejectReasonDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject submission'**
+  String get rejectReasonDialogTitle;
+
+  /// No description provided for @rejectReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get rejectReasonHint;
+
+  /// No description provided for @materialApprovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get materialApprovedMessage;
+
+  /// No description provided for @materialRejectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get materialRejectedMessage;
+
+  /// No description provided for @viewSubmissionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'View content'**
+  String get viewSubmissionLabel;
 
   /// No description provided for @addMaterialTitle.
   ///
@@ -3497,7 +3725,7 @@ abstract class AppLocalizations {
   /// No description provided for @trialExpiredBody.
   ///
   /// In en, this message translates to:
-  /// **'Your 4-day free access to  GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.'**
+  /// **'Your free access to GoStudy has expired. Upgrade to a premium plan to unlock your academic dashboard, UB Support Bot, and unlimited materials.'**
   String get trialExpiredBody;
 
   /// No description provided for @viewUpgradePlansButton.
@@ -3575,7 +3803,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescriptionBody.
   ///
   /// In en, this message translates to:
-  /// **'GO-Study is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.'**
+  /// **'GoStudy is your ultimate academic companion, specifically tailored for the University of Buea student community. From AI-driven study plans to real-time exam schedules and global peer collaboration, we empower you with the technical tools needed to navigate your academic journey with excellence and ease.'**
   String get appDescriptionBody;
 
   /// No description provided for @versionLabel.
@@ -3605,7 +3833,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutDialogDescription.
   ///
   /// In en, this message translates to:
-  /// **'GO-Study is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.'**
+  /// **'GoStudy is an academic companion designed for students at the University of Buea. It provides easy access to resources, AI-powered study assistance, course management, and peer collaboration tools to help you excel in your academic journey.'**
   String get aboutDialogDescription;
 
   /// No description provided for @eventsCalendarTitle.
@@ -3775,6 +4003,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BACK TO GENERATOR'**
   String get backToGeneratorButton;
+
+  /// No description provided for @generateFlashcardsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate flashcards'**
+  String get generateFlashcardsButton;
+
+  /// No description provided for @flashcardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashcards'**
+  String get flashcardsTitle;
+
+  /// No description provided for @flashcardCountQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How many cards?'**
+  String get flashcardCountQuestion;
+
+  /// No description provided for @generatingFlashcardsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating flashcards…'**
+  String get generatingFlashcardsMessage;
+
+  /// No description provided for @flashcardGenerationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t generate flashcards. Please try again.'**
+  String get flashcardGenerationFailed;
+
+  /// No description provided for @flashcardServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI service is unavailable right now. Please try again in a moment.'**
+  String get flashcardServiceUnavailable;
+
+  /// No description provided for @aiServiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI service is unavailable right now. Please try again in a moment.'**
+  String get aiServiceUnavailable;
+
+  /// No description provided for @flashcardsPdfOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashcards can only be generated from PDF materials'**
+  String get flashcardsPdfOnlyMessage;
+
+  /// No description provided for @viewMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewMenuItem;
+
+  /// No description provided for @askAiToAnswerMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI to Answer'**
+  String get askAiToAnswerMenuItem;
+
+  /// No description provided for @aiAnswerPdfOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'AI answers are only available for PDF documents.'**
+  String get aiAnswerPdfOnlyMessage;
+
+  /// No description provided for @generatingAiAnswerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating an AI answer…'**
+  String get generatingAiAnswerMessage;
+
+  /// No description provided for @aiAnswerSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Answer'**
+  String get aiAnswerSheetTitle;
+
+  /// No description provided for @aiAnswerSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated by AI — always double-check important details.'**
+  String get aiAnswerSheetSubtitle;
+
+  /// No description provided for @flashcardQuestionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'QUESTION'**
+  String get flashcardQuestionLabel;
+
+  /// No description provided for @flashcardAnswerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ANSWER'**
+  String get flashcardAnswerLabel;
+
+  /// No description provided for @tapToFlipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the card to flip'**
+  String get tapToFlipHint;
+
+  /// No description provided for @stillLearningButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Still learning'**
+  String get stillLearningButton;
+
+  /// No description provided for @studyAgainButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Study again'**
+  String get studyAgainButton;
+
+  /// No description provided for @flashcardsMasteredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You mastered {mastered} of {total}'**
+  String flashcardsMasteredLabel(int mastered, int total);
+
+  /// No description provided for @deckCardCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cards'**
+  String deckCardCountLabel(int count);
+
+  /// No description provided for @deleteDeckDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete deck?'**
+  String get deleteDeckDialogTitle;
+
+  /// No description provided for @confirmDeleteDeckBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the deck \"{title}\"? This cannot be undone.'**
+  String confirmDeleteDeckBody(String title);
 
   /// No description provided for @materialsTabLabel.
   ///
@@ -3998,11 +4364,29 @@ abstract class AppLocalizations {
   /// **'Faculty'**
   String get facultyHint;
 
-  /// No description provided for @enterYourFacultyValidator.
+  /// No description provided for @selectYourFacultyValidator.
   ///
   /// In en, this message translates to:
-  /// **'Enter your faculty'**
-  String get enterYourFacultyValidator;
+  /// **'Select your faculty'**
+  String get selectYourFacultyValidator;
+
+  /// No description provided for @facultyOtherOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get facultyOtherOption;
+
+  /// No description provided for @otherFacultyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your faculty/school name'**
+  String get otherFacultyHint;
+
+  /// No description provided for @enterYourOtherFacultyValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your faculty/school name'**
+  String get enterYourOtherFacultyValidator;
 
   /// No description provided for @departmentHint.
   ///
@@ -4135,6 +4519,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Former Student'**
   String get statusFormerStudent;
+
+  /// No description provided for @formerStudentSurchargeNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Former students pay a 30% surcharge on the fee above.'**
+  String get formerStudentSurchargeNotice;
 
   /// No description provided for @ubKnowledgeBaseTitle.
   ///
@@ -4763,7 +5153,7 @@ abstract class AppLocalizations {
   /// No description provided for @firstMonthFreeBadge.
   ///
   /// In en, this message translates to:
-  /// **'FIRST MONTH FREE'**
+  /// **'2 WEEKS FREE'**
   String get firstMonthFreeBadge;
 
   /// No description provided for @startFreeTrialButton.
@@ -4781,7 +5171,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeMonthThenPriceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Free for 1 month, then {price} XAF / month'**
+  /// **'Free for 2 weeks, then {price} XAF / month'**
   String freeMonthThenPriceLabel(int price);
 
   /// No description provided for @aiFeaturesBilledSeparatelyShort.
@@ -4790,10 +5180,82 @@ abstract class AppLocalizations {
   /// **'AI features are billed separately and not included.'**
   String get aiFeaturesBilledSeparatelyShort;
 
+  /// No description provided for @redeemWithPointsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem with {points} pts'**
+  String redeemWithPointsButton(int points);
+
+  /// No description provided for @yourPointsBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance: {points} pts'**
+  String yourPointsBalanceLabel(int points);
+
+  /// No description provided for @insufficientPointsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {points} points to redeem this plan.'**
+  String insufficientPointsMessage(int points);
+
+  /// No description provided for @confirmRedeemPointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem points?'**
+  String get confirmRedeemPointsTitle;
+
+  /// No description provided for @confirmRedeemPointsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {points} points to activate this plan? This can\'t be undone.'**
+  String confirmRedeemPointsBody(int points);
+
+  /// No description provided for @pointsRedeemedSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan activated using your points!'**
+  String get pointsRedeemedSuccessMessage;
+
+  /// No description provided for @setBountyMenuItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Points Bounty'**
+  String get setBountyMenuItem;
+
+  /// No description provided for @setBountyDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Points Bounty'**
+  String get setBountyDialogTitle;
+
+  /// No description provided for @setBountyDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost the approval points students earn for materials uploaded to \"{course}\". This multiplies the base +50 points (2 = double, 1 = no bounty).'**
+  String setBountyDialogBody(String course);
+
+  /// No description provided for @bountyMultiplierFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplier (e.g. 1, 1.5, 2)'**
+  String get bountyMultiplierFieldLabel;
+
+  /// No description provided for @bountyMultiplierInvalidMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number greater than 0'**
+  String get bountyMultiplierInvalidMessage;
+
+  /// No description provided for @bountyUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Points bounty updated'**
+  String get bountyUpdatedMessage;
+
   /// No description provided for @startYourFreeMonthTitle.
   ///
   /// In en, this message translates to:
-  /// **'Start Your Free Month'**
+  /// **'Start Your Free Trial'**
   String get startYourFreeMonthTitle;
 
   /// No description provided for @noPaymentRequiredTodaySubtitle.
@@ -4805,7 +5267,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeTrialTermsBody.
   ///
   /// In en, this message translates to:
-  /// **'Your App Plan is free for the first 30 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.'**
+  /// **'Your App Plan is free for the first 14 days, then renews at {price} XAF/month. AI features are billed separately and are not included in this trial.'**
   String freeTrialTermsBody(int price);
 
   /// No description provided for @freeTrialActivatedMessage.
@@ -4969,6 +5431,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test Credits'**
   String get testCreditsPackTitle;
+
+  /// No description provided for @settingsSectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsSectionAppearance;
+
+  /// No description provided for @settingsSectionNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Push Notifications'**
+  String get settingsSectionNotifications;
+
+  /// No description provided for @settingsSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsSectionLanguage;
+
+  /// No description provided for @settingsSectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settingsSectionAccount;
+
+  /// No description provided for @settingsSectionSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get settingsSectionSupport;
+
+  /// No description provided for @settingsSectionLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get settingsSectionLegal;
+
+  /// No description provided for @editButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButton;
+
+  /// No description provided for @newsAdminNewPostButton.
+  ///
+  /// In en, this message translates to:
+  /// **'New Post'**
+  String get newsAdminNewPostButton;
+
+  /// No description provided for @newsAuthorFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcement'**
+  String get newsAuthorFallback;
+
+  /// No description provided for @newsComposerNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Post'**
+  String get newsComposerNewTitle;
+
+  /// No description provided for @newsComposerEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Post'**
+  String get newsComposerEditTitle;
+
+  /// No description provided for @newsTitleFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get newsTitleFieldLabel;
+
+  /// No description provided for @newsTitleFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A short, clear headline'**
+  String get newsTitleFieldHint;
+
+  /// No description provided for @newsTitleRequiredValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'A title is required'**
+  String get newsTitleRequiredValidator;
+
+  /// No description provided for @newsBodyFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get newsBodyFieldLabel;
+
+  /// No description provided for @newsBodyFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the announcement…'**
+  String get newsBodyFieldHint;
+
+  /// No description provided for @newsBodyRequiredValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details are required'**
+  String get newsBodyRequiredValidator;
+
+  /// No description provided for @newsUploadCoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover image (optional)'**
+  String get newsUploadCoverLabel;
+
+  /// No description provided for @newsPublishButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get newsPublishButton;
+
+  /// No description provided for @newsPostPublishedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Post published'**
+  String get newsPostPublishedSnack;
+
+  /// No description provided for @newsPostUpdatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Post updated'**
+  String get newsPostUpdatedSnack;
+
+  /// No description provided for @newsAdminOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only admins can post news.'**
+  String get newsAdminOnlyMessage;
+
+  /// No description provided for @newsDeletePostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get newsDeletePostTitle;
+
+  /// No description provided for @newsDeletePostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The post and all of its likes and comments will be permanently removed.'**
+  String get newsDeletePostBody;
+
+  /// No description provided for @newsDeleteCommentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete comment?'**
+  String get newsDeleteCommentTitle;
+
+  /// No description provided for @newsDeleteCommentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This comment will be permanently removed.'**
+  String get newsDeleteCommentBody;
+
+  /// No description provided for @newsNoCommentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Be the first.'**
+  String get newsNoCommentsYet;
+
+  /// No description provided for @newsCommentHintText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a comment…'**
+  String get newsCommentHintText;
+
+  /// No description provided for @newsSendCommentTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get newsSendCommentTooltip;
+
+  /// No description provided for @newsCommentsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Comments} =1{1 comment} other{{count} comments}}'**
+  String newsCommentsHeader(int count);
+
+  /// No description provided for @weeklyProgressWeekRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} - {end}'**
+  String weeklyProgressWeekRange(String start, String end);
+
+  /// No description provided for @weeklyProgressTodayPill.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get weeklyProgressTodayPill;
+
+  /// No description provided for @weeklyProgressTodayPillTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to this week'**
+  String get weeklyProgressTodayPillTooltip;
+
+  /// No description provided for @weeklyProgressPrevWeekTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous week'**
+  String get weeklyProgressPrevWeekTooltip;
+
+  /// No description provided for @weeklyProgressNextWeekTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get weeklyProgressNextWeekTooltip;
+
+  /// No description provided for @weeklyProgressNextExam.
+  ///
+  /// In en, this message translates to:
+  /// **'Next exam on {date}'**
+  String weeklyProgressNextExam(String date);
+
+  /// No description provided for @weeklyProgressNoUpcomingExams.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming exams'**
+  String get weeklyProgressNoUpcomingExams;
+
+  /// No description provided for @weeklyProgressExamRowFallbackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to schedule one'**
+  String get weeklyProgressExamRowFallbackSubtitle;
+
+  /// No description provided for @weeklyProgressTasksRemainingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{All tasks done for today} =1{1 task remaining today} other{{count} tasks remaining today}}'**
+  String weeklyProgressTasksRemainingToday(int count);
+
+  /// No description provided for @weeklyProgressNoTasksToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks due today'**
+  String get weeklyProgressNoTasksToday;
+
+  /// No description provided for @weeklyProgressCompletedYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No tasks completed yesterday} =1{1 task completed yesterday} other{{count} tasks completed yesterday}}'**
+  String weeklyProgressCompletedYesterday(int count);
+
+  /// No description provided for @weeklyProgressNoTasksYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks were due yesterday'**
+  String get weeklyProgressNoTasksYesterday;
+
+  /// No description provided for @weeklyProgressDueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task due tomorrow} other{{count} tasks due tomorrow}}'**
+  String weeklyProgressDueTomorrow(int count);
+
+  /// No description provided for @weeklyProgressNothingTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled for tomorrow'**
+  String get weeklyProgressNothingTomorrow;
+
+  /// No description provided for @weeklyProgressCompletedOnPastDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No tasks completed on {day}} =1{1 task completed on {day}} other{{count} tasks completed on {day}}}'**
+  String weeklyProgressCompletedOnPastDate(int count, String day);
+
+  /// No description provided for @weeklyProgressNoTasksOnPastDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks were due on {day}'**
+  String weeklyProgressNoTasksOnPastDate(String day);
+
+  /// No description provided for @weeklyProgressDueOnFutureDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task due on {day}} other{{count} tasks due on {day}}}'**
+  String weeklyProgressDueOnFutureDate(int count, String day);
+
+  /// No description provided for @weeklyProgressNothingOnFutureDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled for {day}'**
+  String weeklyProgressNothingOnFutureDate(String day);
 }
 
 class _AppLocalizationsDelegate

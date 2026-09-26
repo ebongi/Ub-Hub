@@ -4,6 +4,11 @@ class CourseMaterial {
   final String? departmentId;
   final String title;
   final String? description;
+
+  /// The material's Storage object path (e.g. "course/CS101/notes.pdf"),
+  /// NOT a fetchable URL — the course_materials bucket is private. Resolve
+  /// a real, short-lived URL via DatabaseService.requestMaterialAccess()
+  /// before fetching the file (see secure_course_material_downloads.sql).
   final String fileUrl;
   final String fileName;
   final String fileType; // e.g., 'pdf', 'image', 'link'
@@ -14,6 +19,14 @@ class CourseMaterial {
   final String? linkedMaterialId; // ID of the linked question or answer
   final String? uploaderId;
   final double price;
+
+  /// 'pending' | 'published' | 'rejected' — server-decided at insert time
+  /// based on the uploader's role, never client-set (see
+  /// handle_course_material_insert in
+  /// supabase/migrations/hybrid_content_moderation.sql). Defaults to
+  /// 'published' so optimistic/temp entries never show as pending.
+  final String status;
+  final String? rejectionReason;
 
   CourseMaterial({
     this.id = '',
@@ -31,6 +44,8 @@ class CourseMaterial {
     this.linkedMaterialId,
     this.uploaderId,
     this.price = 0.0,
+    this.status = 'published',
+    this.rejectionReason,
   });
 
   factory CourseMaterial.fromSupabase(Map<String, dynamic> json) {
@@ -52,6 +67,8 @@ class CourseMaterial {
       linkedMaterialId: json['linked_material_id'],
       uploaderId: json['uploader_id'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] ?? 'published',
+      rejectionReason: json['rejection_reason'],
     );
   }
 
