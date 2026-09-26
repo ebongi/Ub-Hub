@@ -442,25 +442,13 @@ class _DepartmentScreenState extends State<DepartmentScreen>
           rows.add(_CourseRow.header(_sectionHeaderFor(level, l10n)));
           final levelCourses = allCourses.where((c) => c.level == level).toList();
           for (var i = 0; i < levelCourses.length; i++) {
-            rows.add(
-              _CourseRow.course(
-                levelCourses[i],
-                i * 0.05,
-                isLastInSection: i == levelCourses.length - 1,
-              ),
-            );
+            rows.add(_CourseRow.course(levelCourses[i], i * 0.05));
           }
         }
         if (others.isNotEmpty) {
           rows.add(_CourseRow.header(l10n.otherCoursesHeader));
           for (var i = 0; i < others.length; i++) {
-            rows.add(
-              _CourseRow.course(
-                others[i],
-                i * 0.05,
-                isLastInSection: i == others.length - 1,
-              ),
-            );
+            rows.add(_CourseRow.course(others[i], i * 0.05));
           }
         }
 
@@ -475,11 +463,9 @@ class _DepartmentScreenState extends State<DepartmentScreen>
                 child: _buildLevelHeader(row.headerText!),
               );
             }
-            return Column(
-              children: [
-                _buildCourseTile(row.course!, delay: row.delay),
-                if (!row.isLastInSection) const Divider(),
-              ],
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _buildCourseTile(row.course!, delay: row.delay),
             );
           },
         );
@@ -509,35 +495,129 @@ class _DepartmentScreenState extends State<DepartmentScreen>
 
   Widget _buildCourseTile(Course course, {double delay = 0}) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final isPending = course.id.startsWith('temp_');
     final isAdmin =
         _department?.adminId == Supabase.instance.client.auth.currentUser?.id;
 
+    final initials = course.code.isNotEmpty
+        ? course.code.substring(0, course.code.length >= 2 ? 2 : 1).toUpperCase()
+        : (course.name.isNotEmpty ? course.name[0].toUpperCase() : '?');
+
     return FadeInSlide(
       delay: delay,
-      child: CompactListRow(
-        title: course.name,
-        subtitle: course.code,
-        icon: Icons.school_outlined,
-        tint: colorScheme.primary,
-        isPending: isPending,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
-        ),
-        trailing: !course.hasBounty && !isAdmin
-            ? null
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (course.hasBounty) ...[
-                    BountyBadge(multiplier: course.bountyMultiplier),
-                    if (isAdmin) const SizedBox(width: AppSpacing.sm),
-                  ],
-                  if (isAdmin) _buildCourseMenu(course, l10n, colorScheme),
+      child: Opacity(
+        opacity: isPending ? 0.6 : 1.0,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            onTap: isPending
+                ? null
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+                    ),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? Colors.black : colorScheme.shadow)
+                        .withOpacity(isDark ? 0.25 : 0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
                 ],
               ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [colorScheme.primary, colorScheme.secondary],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      initials,
+                      style: GoogleFonts.outfit(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          course.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.cardTitle(context),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppRadius.chip),
+                              ),
+                              child: Text(
+                                course.code,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            if (course.semester != null && course.semester!.isNotEmpty)
+                              Text(
+                                course.semester!,
+                                style: AppText.cardSubtitle(context),
+                              ),
+                            if (course.hasBounty)
+                              BountyBadge(multiplier: course.bountyMultiplier),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  if (isAdmin)
+                    _buildCourseMenu(course, l10n, colorScheme)
+                  else
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -2101,13 +2181,10 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 class _CourseRow {
   const _CourseRow.header(this.headerText)
       : course = null,
-        delay = 0,
-        isLastInSection = false;
-  const _CourseRow.course(this.course, this.delay, {required this.isLastInSection})
-      : headerText = null;
+        delay = 0;
+  const _CourseRow.course(this.course, this.delay) : headerText = null;
 
   final String? headerText;
   final Course? course;
   final double delay;
-  final bool isLastInSection;
 }
