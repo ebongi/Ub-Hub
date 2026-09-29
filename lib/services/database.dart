@@ -1350,6 +1350,22 @@ class DatabaseService {
         .toList();
   }
 
+  /// Page through every user profile, newest signups first — the Users
+  /// tab's default "browse everyone" view, as opposed to [adminSearchUsers]'s
+  /// filtered one. Returns fewer than [limit] rows (possibly none) once the
+  /// end of the table is reached.
+  Future<List<UserProfile>> adminListUsers({int limit = 30, int offset = 0}) async {
+    final results = await _supabase
+        .from('profiles')
+        .select()
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
+    return (results as List)
+        .map((json) => UserProfile.fromSupabase(json))
+        .toList();
+  }
+
   /// Total number of registered user profiles, for the admin dashboard's
   /// stat card.
   Future<int> getTotalUsersCount() async {
@@ -1379,6 +1395,210 @@ class DatabaseService {
       recipientId: userId,
       notifySelf: false,
     );
+  }
+
+  // ==================== Admin Subscription Management ====================
+  //
+  // Grant/extend/revoke another user's App Plan, AI subscription, AI credits,
+  // free-download count, and trial eligibility. Every write goes through a
+  // SECURITY DEFINER RPC (supabase/migrations/*_add_admin_subscription_management.sql)
+  // that re-checks is_admin() server-side, so these can't be forged by a
+  // non-admin even if this client-side call were bypassed.
+
+  /// Grant/extend the target user's App Plan. Pass `tier: 'free'` to revoke
+  /// (days/isTrial/extend are ignored in that case). Returns the new expiry,
+  /// or null when revoked.
+  Future<DateTime?> adminSetSubscription(
+    String userId, {
+    required String tier,
+    int days = 0,
+    bool isTrial = false,
+    bool extend = false,
+  }) async {
+    final result = await _supabase.rpc(
+      'admin_set_subscription',
+      params: {
+        'p_user_id': userId,
+        'p_tier': tier,
+        'p_days': days,
+        'p_is_trial': isTrial,
+        'p_extend': extend,
+      },
+    );
+    final expiry = result == null ? null : DateTime.parse(result as String);
+
+    await NotificationService().createNotification(
+      title: tier == 'free' ? 'Subscription Updated' : 'Subscription Activated',
+      body: tier == 'free'
+          ? 'Your App Plan subscription has been ended by an admin.'
+          : 'Your ${tier.toUpperCase()} App Plan is now active until ${DateFormat.yMMMd().format(expiry!)}.',
+      type: NotificationType.subscription,
+      recipientId: userId,
+      notifySelf: false,
+      data: {'tier': tier, if (expiry != null) 'expiry': expiry.toIso8601String()},
+    );
+
+    return expiry;
+  }
+
+  /// Grant/extend the target user's Unlimited AI subscription. Pass
+  /// `days: 0` to revoke. Returns the new expiry, or null when revoked.
+  Future<DateTime?> adminSetAiSubscription(
+    String userId, {
+    required int days,
+    bool extend = false,
+  }) async {
+    final result = await _supabase.rpc(
+      'admin_set_ai_subscription',
+      params: {'p_user_id': userId, 'p_days': days, 'p_extend': extend},
+    );
+    final expiry = result == null ? null : DateTime.parse(result as String);
+
+    await NotificationService().createNotification(
+      title: days > 0 ? 'AI Subscription Activated' : 'AI Subscription Updated',
+      body: days > 0
+          ? 'Your Unlimited AI subscription is now active until ${DateFormat.yMMMd().format(expiry!)}.'
+          : 'Your Unlimited AI subscription has been ended by an admin.',
+      type: NotificationType.subscription,
+      recipientId: userId,
+      notifySelf: false,
+      data: {if (expiry != null) 'ai_subscription_expiry': expiry.toIso8601String()},
+    );
+
+    return expiry;
+  }
+
+  /// Add (or, with a negative delta, remove) AI credits from the target
+  /// user's balance. Returns the new balance.
+  Future<int> adminAdjustAiCredits(String userId, int delta) async {
+    final result = await _supabase.rpc(
+      'admin_adjust_ai_credits',
+      params: {'p_user_id': userId, 'p_delta': delta},
+    );
+    final newBalance = result as int;
+
+    await NotificationService().createNotification(
+      title: 'AI Credits Updated',
+      body: delta >= 0
+          ? 'An admin added $delta AI credits to your account. New balance: $newBalance.'
+          : 'An admin adjusted your AI credits by $delta. New balance: $newBalance.',
+      type: NotificationType.subscription,
+      recipientId: userId,
+      notifySelf: false,
+    );
+
+    return newBalance;
+  }
+
+  /// Reset the target user's free-download counter back to 0.
+  Future<void> adminResetFreeDownloads(String userId) async {
+    await _supabase.rpc(
+      'admin_reset_free_downloads',
+      params: {'p_user_id': userId},
+    );
+  }
+
+  /// Let the target user reclaim their free trial (they still have to claim
+  /// it themselves via the existing paywall flow).
+  Future<void> adminResetTrialEligibility(String userId) async {
+    await _supabase.rpc(
+      'admin_reset_trial_eligibility',
+      params: {'p_user_id': userId},
+    );
+
+    await NotificationService().createNotification(
+      title: 'Free Trial Available',
+      body: 'An admin has made your free trial available again.',
+      type: NotificationType.subscription,
+      recipientId: userId,
+      notifySelf: false,
+    );
+  }
+
+  /// Total/this-month revenue and successful-payment count, for the
+  /// Subscriptions tab. Admin-only server-side (admin_revenue_summary RPC).
+  Future<Map<String, num>> adminGetRevenueSummary() async {
+    final rows = await _supabase.rpc('admin_revenue_summary') as List;
+    if (rows.isEmpty) {
+      return {'totalRevenue': 0, 'monthRevenue': 0, 'successfulCount': 0};
+    }
+    final row = rows.first as Map<String, dynamic>;
+    return {
+      'totalRevenue': (row['total_revenue'] as num?) ?? 0,
+      'monthRevenue': (row['month_revenue'] as num?) ?? 0,
+      'successfulCount': (row['successful_count'] as num?) ?? 0,
+    };
+  }
+
+  /// The most recent payment transactions across all users, newest first —
+  /// requires the admin-only "Admins can view all transactions" RLS policy.
+  Future<List<PaymentTransaction>> adminGetRecentTransactions({
+    int limit = 50,
+  }) async {
+    final results = await _supabase
+        .from('payment_transactions')
+        .select()
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return (results as List)
+        .map((json) => PaymentTransaction.fromSupabase(json))
+        .toList();
+  }
+
+  /// Batch-resolve profiles by id, for displaying the payer's name/matricule
+  /// next to a transaction without a SQL join.
+  Future<Map<String, UserProfile>> adminGetProfilesByIds(
+    List<String> userIds,
+  ) async {
+    if (userIds.isEmpty) return {};
+    final results = await _supabase
+        .from('profiles')
+        .select()
+        .inFilter('id', userIds.toSet().toList());
+
+    return {
+      for (final json in (results as List))
+        (json['id'] as String): UserProfile.fromSupabase(json),
+    };
+  }
+
+  /// Counts of currently-active App Plan (monthly/yearly/trial) and AI
+  /// subscribers, for the Subscriptions tab's stat cards.
+  Future<Map<String, int>> adminGetSubscriptionStats() async {
+    final nowIso = DateTime.now().toIso8601String();
+
+    final monthlyResponse = await _supabase
+        .from('profiles')
+        .select()
+        .eq('subscription_tier', 'monthly')
+        .eq('subscription_is_trial', false)
+        .gt('subscription_expiry', nowIso)
+        .count(CountOption.exact);
+    final yearlyResponse = await _supabase
+        .from('profiles')
+        .select()
+        .eq('subscription_tier', 'yearly')
+        .gt('subscription_expiry', nowIso)
+        .count(CountOption.exact);
+    final trialResponse = await _supabase
+        .from('profiles')
+        .select()
+        .eq('subscription_is_trial', true)
+        .gt('subscription_expiry', nowIso)
+        .count(CountOption.exact);
+    final aiResponse = await _supabase
+        .from('profiles')
+        .select()
+        .gt('ai_subscription_expiry', nowIso)
+        .count(CountOption.exact);
+
+    return {
+      'activeMonthly': monthlyResponse.count,
+      'activeYearly': yearlyResponse.count,
+      'activeTrial': trialResponse.count,
+      'activeAi': aiResponse.count,
+    };
   }
 
   // ==================== News Feature Methods ====================

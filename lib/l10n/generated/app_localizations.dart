@@ -554,6 +554,288 @@ abstract class AppLocalizations {
   /// **'Manage users, roles, and departments'**
   String get adminDashboardSubtitle;
 
+  /// No description provided for @controlCenterOverviewTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get controlCenterOverviewTab;
+
+  /// No description provided for @controlCenterUsersTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get controlCenterUsersTab;
+
+  /// No description provided for @controlCenterSubscriptionsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get controlCenterSubscriptionsTab;
+
+  /// No description provided for @controlCenterContentTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get controlCenterContentTab;
+
+  /// No description provided for @allUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All Users'**
+  String get allUsersTitle;
+
+  /// No description provided for @loadMoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Load More'**
+  String get loadMoreButton;
+
+  /// No description provided for @activeSubscribersStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Subscribers'**
+  String get activeSubscribersStatLabel;
+
+  /// No description provided for @monthlyRevenueStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue (Month)'**
+  String get monthlyRevenueStatLabel;
+
+  /// No description provided for @manageSubscriptionTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get manageSubscriptionTooltip;
+
+  /// No description provided for @subscriptionManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription & Entitlements'**
+  String get subscriptionManagementTitle;
+
+  /// No description provided for @appPlanSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Plan'**
+  String get appPlanSectionTitle;
+
+  /// No description provided for @aiSubscriptionSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited AI'**
+  String get aiSubscriptionSectionTitle;
+
+  /// No description provided for @aiCreditsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Credits'**
+  String get aiCreditsSectionTitle;
+
+  /// No description provided for @freeDownloadsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Downloads'**
+  String get freeDownloadsSectionTitle;
+
+  /// No description provided for @trialEligibilitySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Trial'**
+  String get trialEligibilitySectionTitle;
+
+  /// No description provided for @currentPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {tier}'**
+  String currentPlanLabel(String tier);
+
+  /// No description provided for @expiresOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String expiresOnLabel(String date);
+
+  /// No description provided for @noActivePlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No active plan'**
+  String get noActivePlanLabel;
+
+  /// No description provided for @aiSubscriptionInactiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Not active'**
+  String get aiSubscriptionInactiveLabel;
+
+  /// No description provided for @freeDownloadsUsedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 5 free downloads used'**
+  String freeDownloadsUsedLabel(int count);
+
+  /// No description provided for @trialUsedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Free trial already used'**
+  String get trialUsedLabel;
+
+  /// No description provided for @trialAvailableLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Free trial available'**
+  String get trialAvailableLabel;
+
+  /// No description provided for @trialActiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial active'**
+  String get trialActiveLabel;
+
+  /// No description provided for @terminateTrialButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminate Trial'**
+  String get terminateTrialButton;
+
+  /// No description provided for @grantMonthlyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Monthly'**
+  String get grantMonthlyButton;
+
+  /// No description provided for @grantYearlyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Yearly'**
+  String get grantYearlyButton;
+
+  /// No description provided for @extend30DaysButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend +30 Days'**
+  String get extend30DaysButton;
+
+  /// No description provided for @revokeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revokeButton;
+
+  /// No description provided for @addCreditsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Credits'**
+  String get addCreditsButton;
+
+  /// No description provided for @removeCreditsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Credits'**
+  String get removeCreditsButton;
+
+  /// No description provided for @resetToZeroButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to 0'**
+  String get resetToZeroButton;
+
+  /// No description provided for @resetTrialButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Trial'**
+  String get resetTrialButton;
+
+  /// No description provided for @creditsAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get creditsAmountHint;
+
+  /// No description provided for @confirmActionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirmActionButton;
+
+  /// No description provided for @confirmAdminActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Action'**
+  String get confirmAdminActionTitle;
+
+  /// No description provided for @confirmAdminActionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} for {name}?'**
+  String confirmAdminActionBody(String action, String name);
+
+  /// No description provided for @adminActionSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Done — {name}\'s account has been updated.'**
+  String adminActionSuccessMessage(String name);
+
+  /// No description provided for @activeMonthlyStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Plan'**
+  String get activeMonthlyStatLabel;
+
+  /// No description provided for @activeYearlyStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Plan'**
+  String get activeYearlyStatLabel;
+
+  /// No description provided for @activeTrialStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'On Free Trial'**
+  String get activeTrialStatLabel;
+
+  /// No description provided for @activeAiStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Subscribers'**
+  String get activeAiStatLabel;
+
+  /// No description provided for @totalRevenueStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Revenue'**
+  String get totalRevenueStatLabel;
+
+  /// No description provided for @successfulPaymentsStatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Successful Payments'**
+  String get successfulPaymentsStatLabel;
+
+  /// No description provided for @recentTransactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transactions'**
+  String get recentTransactionsTitle;
+
+  /// No description provided for @noTransactionsYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactionsYetMessage;
+
+  /// No description provided for @adminGrantBadgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin action'**
+  String get adminGrantBadgeLabel;
+
+  /// No description provided for @transactionsLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load transactions'**
+  String get transactionsLoadErrorTitle;
+
   /// No description provided for @aiCreditsPlansTitle.
   ///
   /// In en, this message translates to:

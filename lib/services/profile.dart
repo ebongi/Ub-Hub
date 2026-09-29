@@ -88,11 +88,56 @@ class UserProfile {
     this.totalPoints = 0,
   });
 
+  UserProfile copyWith({
+    SubscriptionTier? subscriptionTier,
+    DateTime? subscriptionExpiry,
+    bool clearSubscriptionExpiry = false,
+    int? freeDownloadCount,
+    int? aiCredits,
+    bool? trialUsed,
+    bool? isTrialSubscription,
+    DateTime? aiSubscriptionExpiry,
+    bool clearAiSubscriptionExpiry = false,
+  }) {
+    return UserProfile(
+      id: id,
+      name: name,
+      matricule: matricule,
+      phoneNumber: phoneNumber,
+      level: level,
+      role: role,
+      subscriptionTier: subscriptionTier ?? this.subscriptionTier,
+      subscriptionExpiry: clearSubscriptionExpiry
+          ? null
+          : (subscriptionExpiry ?? this.subscriptionExpiry),
+      freeDownloadCount: freeDownloadCount ?? this.freeDownloadCount,
+      upgradedAt: upgradedAt,
+      createdAt: createdAt,
+      aiCredits: aiCredits ?? this.aiCredits,
+      avatarUrl: avatarUrl,
+      institutionId: institutionId,
+      bio: bio,
+      department: department,
+      trialUsed: trialUsed ?? this.trialUsed,
+      isTrialSubscription: isTrialSubscription ?? this.isTrialSubscription,
+      aiSubscriptionExpiry: clearAiSubscriptionExpiry
+          ? null
+          : (aiSubscriptionExpiry ?? this.aiSubscriptionExpiry),
+      totalPoints: totalPoints,
+    );
+  }
+
   factory UserProfile.fromSupabase(Map<String, dynamic> json) {
     String? parsedName = json['name'];
-    if (parsedName == null || parsedName.trim().isEmpty) {
-      final user = Supabase.instance.client.auth.currentUser;
-      parsedName = user?.userMetadata?['name'] ?? user?.email?.split('@').first;
+    // The auth-metadata fallback below only makes sense when this row IS the
+    // signed-in user's own profile — otherwise (e.g. an admin browsing other
+    // users) it would wrongly substitute the ADMIN's own name/email onto
+    // every other blank-name row. Leave it null for anyone else; callers
+    // already fall back to a generic "Unknown user" label for display.
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if ((parsedName == null || parsedName.trim().isEmpty) &&
+        json['id'] == currentUser?.id) {
+      parsedName = currentUser?.userMetadata?['name'] ?? currentUser?.email?.split('@').first;
     }
 
     return UserProfile(

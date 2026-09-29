@@ -6,8 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:provider/provider.dart';
 
+import 'package:go_study/Screens/UI/preview/Navigation/admin_subscriptions_tab.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/admin_user_subscription_sheet.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/moderation_queue_screen.dart';
-import 'package:go_study/Screens/UI/preview/Navigation/profile.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/news_composer_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/all_departments_screen.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
@@ -35,7 +36,7 @@ class AdminPanel extends StatefulWidget {
   State<AdminPanel> createState() => _AdminPanelState();
 }
 
-class _AdminPanelState extends State<AdminPanel> {
+class _AdminPanelState extends State<AdminPanel> with SingleTickerProviderStateMixin {
   final DatabaseService _db = DatabaseService(
     uid: Authentication().currentUser?.id,
   );
@@ -46,12 +47,55 @@ class _AdminPanelState extends State<AdminPanel> {
   String _lastQuery = '';
   Timer? _debounce;
   int _searchToken = 0;
+  late final TabController _tabController = TabController(length: 4, vsync: this);
+
+  // "Browse everyone" state for the Users tab's default (no search query)
+  // view — separate from the search-results state above.
+  static const _usersPageSize = 30;
+  final List<UserProfile> _allUsers = [];
+  bool _isLoadingAllUsers = false;
+  bool _hasMoreUsers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllUsers();
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAllUsers({bool reset = false}) async {
+    if (reset) {
+      setState(() {
+        _allUsers.clear();
+        _hasMoreUsers = true;
+      });
+    }
+    if (_isLoadingAllUsers || !_hasMoreUsers) return;
+
+    setState(() => _isLoadingAllUsers = true);
+    try {
+      final page = await _db.adminListUsers(
+        limit: _usersPageSize,
+        offset: _allUsers.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _allUsers.addAll(page);
+        _hasMoreUsers = page.length == _usersPageSize;
+        _isLoadingAllUsers = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingAllUsers = false);
+      ErrorHandler.showErrorSnackBar(context, e);
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -191,6 +235,22 @@ class _AdminPanelState extends State<AdminPanel> {
     final l10n = AppLocalizations.of(context)!;
     final userModel = Provider.of<UserModel>(context);
 
+    if (userModel.role != UserRole.admin) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(
+            l10n.adminDashboardTitle,
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+        ),
+        body: Center(child: Text(l10n.adminAccessRequired)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -201,113 +261,210 @@ class _AdminPanelState extends State<AdminPanel> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+          tabs: [
+            Tab(text: l10n.controlCenterOverviewTab),
+            Tab(text: l10n.controlCenterUsersTab),
+            Tab(text: l10n.controlCenterSubscriptionsTab),
+            Tab(text: l10n.controlCenterContentTab),
+          ],
+        ),
       ),
-      body: userModel.role != UserRole.admin
-          ? Center(child: Text(l10n.adminAccessRequired))
-          : CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _DashboardHero(userModel: userModel),
-                      const SizedBox(height: AppSpacing.lg),
-                      _StatsRow(db: _db),
-                      const SizedBox(height: AppSpacing.lg),
-                      const _QuickActions(),
-                      SectionHeader(
-                        title: l10n.manageDepartmentsTitle,
-                        trailing: TextButton(
-                          onPressed: () => _openAllDepartments(context),
-                          child: Text(
-                            l10n.seeAllButton,
-                            style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildOverviewTab(userModel),
+          _buildUsersTab(context, theme, l10n),
+          AdminSubscriptionsTab(db: _db),
+          _buildContentTab(theme, l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab(UserModel userModel) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        _DashboardHero(userModel: userModel),
+        const SizedBox(height: AppSpacing.lg),
+        _StatsRow(db: _db),
+        const SizedBox(height: AppSpacing.md),
+        _SubscriptionSummaryRow(db: _db),
+      ],
+    );
+  }
+
+  Widget _buildUsersTab(BuildContext context, ThemeData theme, AppLocalizations l10n) {
+    final isSearchActive = _searchController.text.trim().isNotEmpty;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SearchCard(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                theme: theme,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                isSearchActive ? l10n.manageUsersTitle : l10n.allUsersTitle,
+                style: AppText.sectionTitle(context),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: isSearchActive
+              ? _buildSearchResultsList(theme, l10n)
+              : _buildAllUsersList(theme, l10n),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResultsList(ThemeData theme, AppLocalizations l10n) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      itemCount: _isSearching || _hasSearchError
+          ? 1
+          : (_searchResults.isEmpty ? 1 : _searchResults.length),
+      itemBuilder: (context, index) {
+        if (_isSearching) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (_hasSearchError) {
+          return ErrorView(
+            icon: Icons.wifi_off_rounded,
+            title: l10n.searchResultsErrorTitle,
+            onRetry: () => _handleSearch(_lastQuery),
+          );
+        }
+        if (_searchResults.isEmpty) {
+          return _EmptyState(query: _searchController.text, theme: theme);
+        }
+        return _buildUserCard(_searchResults[index], theme);
+      },
+    );
+  }
+
+  Widget _buildAllUsersList(ThemeData theme, AppLocalizations l10n) {
+    if (_allUsers.isEmpty && _isLoadingAllUsers) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_allUsers.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.noUsersFound,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: theme.hintColor),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _loadAllUsers(reset: true),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        itemCount: _allUsers.length + 1,
+        itemBuilder: (context, index) {
+          if (index == _allUsers.length) {
+            if (!_hasMoreUsers) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: _isLoadingAllUsers
+                    ? const CircularProgressIndicator()
+                    : OutlinedButton(
+                        onPressed: _loadAllUsers,
+                        child: Text(
+                          l10n.loadMoreButton,
+                          style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
                         ),
                       ),
-                      _DepartmentsSection(
-                        db: _db,
-                        onManageDepartments: () => _openAllDepartments(context),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _SearchCard(
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        theme: theme,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        l10n.manageUsersTitle,
-                        style: AppText.sectionTitle(context),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ]),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (_isSearching) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 40),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        if (_hasSearchError) {
-                          return ErrorView(
-                            icon: Icons.wifi_off_rounded,
-                            title: AppLocalizations.of(context)!.searchResultsErrorTitle,
-                            onRetry: () => _handleSearch(_lastQuery),
-                          );
-                        }
-                        if (_searchResults.isEmpty) {
-                          return _EmptyState(
-                            query: _searchController.text,
-                            theme: theme,
-                          );
-                        }
-                        return _UserCard(
-                          user: _searchResults[index],
-                          theme: theme,
-                          onPromoteToContributor: () => _confirmAndUpdateRole(
-                            _searchResults[index],
-                            UserRole.contributor,
-                            isPromotion: true,
-                          ),
-                          onPromoteToAdmin: () => _confirmAndUpdateRole(
-                            _searchResults[index],
-                            UserRole.admin,
-                            isPromotion: true,
-                          ),
-                          onDemoteToViewer: () => _confirmAndUpdateRole(
-                            _searchResults[index],
-                            UserRole.viewer,
-                            isPromotion: false,
-                          ),
-                          onDemoteToContributor: () => _confirmAndUpdateRole(
-                            _searchResults[index],
-                            UserRole.contributor,
-                            isPromotion: false,
-                          ),
-                        );
-                      },
-                      childCount: _isSearching || _hasSearchError
-                          ? 1
-                          : (_searchResults.isEmpty
-                                ? 1
-                                : _searchResults.length),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              ],
+              ),
+            );
+          }
+          return _buildUserCard(_allUsers[index], theme);
+        },
+      ),
+    );
+  }
+
+  Widget _buildUserCard(UserProfile user, ThemeData theme) {
+    return _UserCard(
+      user: user,
+      theme: theme,
+      onPromoteToContributor: () => _confirmAndUpdateRole(
+        user,
+        UserRole.contributor,
+        isPromotion: true,
+      ),
+      onPromoteToAdmin: () => _confirmAndUpdateRole(
+        user,
+        UserRole.admin,
+        isPromotion: true,
+      ),
+      onDemoteToViewer: () => _confirmAndUpdateRole(
+        user,
+        UserRole.viewer,
+        isPromotion: false,
+      ),
+      onDemoteToContributor: () => _confirmAndUpdateRole(
+        user,
+        UserRole.contributor,
+        isPromotion: false,
+      ),
+      onManageSubscription: () => showAdminUserSubscriptionSheet(
+        context,
+        user: user,
+        db: _db,
+        onChanged: () {
+          if (_searchController.text.trim().isNotEmpty) {
+            _handleSearch(_lastQuery);
+          } else {
+            _loadAllUsers(reset: true);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildContentTab(ThemeData theme, AppLocalizations l10n) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        SectionHeader(
+          title: l10n.manageDepartmentsTitle,
+          trailing: TextButton(
+            onPressed: () => _openAllDepartments(context),
+            child: Text(
+              l10n.seeAllButton,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: theme.colorScheme.primary,
+              ),
             ),
+          ),
+        ),
+        _DepartmentsSection(
+          db: _db,
+          onManageDepartments: () => _openAllDepartments(context),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const _QuickActions(),
+      ],
     );
   }
 }
@@ -545,67 +702,97 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+class _SubscriptionSummaryRow extends StatelessWidget {
+  const _SubscriptionSummaryRow({required this.db});
+
+  final DatabaseService db;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return FutureBuilder<List<Object>>(
+      future: Future.wait([
+        db.adminGetSubscriptionStats(),
+        db.adminGetRevenueSummary(),
+      ]),
+      builder: (context, snapshot) {
+        final stats = snapshot.data?[0] as Map<String, int>?;
+        final revenue = snapshot.data?[1] as Map<String, num>?;
+        final activeSubscribers = stats == null
+            ? null
+            : (stats['activeMonthly'] ?? 0) +
+                (stats['activeYearly'] ?? 0) +
+                (stats['activeTrial'] ?? 0);
+        final monthRevenue = revenue?['monthRevenue'];
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
+        return Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.workspace_premium_rounded,
+                color: const Color(0xFF9333EA),
+                label: l10n.activeSubscribersStatLabel,
+                value: activeSubscribers?.toString() ?? '—',
+                isLoading: isLoading,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.payments_rounded,
+                color: const Color(0xFF16A34A),
+                label: l10n.monthlyRevenueStatLabel,
+                value: monthRevenue == null
+                    ? '—'
+                    : '${monthRevenue.toStringAsFixed(0)} XAF',
+                isLoading: isLoading,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _QuickActions extends StatelessWidget {
   const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _ActionCard(
-                  icon: Icons.person_rounded,
-                  color: const Color(0xFF7C3AED),
-                  title: l10n.myProfileTitle,
-                  subtitle: l10n.reviewYourAccountSubtitle,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Profile()),
-                  ),
-                ),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _ActionCard(
+              icon: Icons.newspaper_rounded,
+              color: const Color(0xFFEA580C),
+              title: l10n.homeToolNews,
+              subtitle: l10n.newsComposerNewTitle,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NewsComposerScreen()),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ActionCard(
-                  icon: Icons.newspaper_rounded,
-                  color: const Color(0xFFEA580C),
-                  title: l10n.homeToolNews,
-                  subtitle: l10n.newsComposerNewTitle,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const NewsComposerScreen()),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _ActionCard(
-                  icon: Icons.fact_check_rounded,
-                  color: const Color(0xFF0EA5E9),
-                  title: l10n.moderationQueueTitle,
-                  subtitle: l10n.moderationQueueSubtitle,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ModerationQueueScreen()),
-                  ),
-                ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _ActionCard(
+              icon: Icons.fact_check_rounded,
+              color: const Color(0xFF0EA5E9),
+              title: l10n.moderationQueueTitle,
+              subtitle: l10n.moderationQueueSubtitle,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ModerationQueueScreen()),
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -859,6 +1046,7 @@ class _UserCard extends StatelessWidget {
     required this.onPromoteToAdmin,
     required this.onDemoteToViewer,
     required this.onDemoteToContributor,
+    required this.onManageSubscription,
   });
 
   final UserProfile user;
@@ -867,6 +1055,7 @@ class _UserCard extends StatelessWidget {
   final VoidCallback onPromoteToAdmin;
   final VoidCallback onDemoteToViewer;
   final VoidCallback onDemoteToContributor;
+  final VoidCallback onManageSubscription;
 
   @override
   Widget build(BuildContext context) {
@@ -937,6 +1126,14 @@ class _UserCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                tooltip: AppLocalizations.of(context)!.manageSubscriptionTooltip,
+                icon: Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+                onPressed: onManageSubscription,
               ),
             ],
           ),

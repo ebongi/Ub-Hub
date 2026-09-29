@@ -246,6 +246,158 @@ class AppLocalizationsFr extends AppLocalizations {
       'Gérez les utilisateurs, rôles et départements';
 
   @override
+  String get controlCenterOverviewTab => 'Aperçu';
+
+  @override
+  String get controlCenterUsersTab => 'Utilisateurs';
+
+  @override
+  String get controlCenterSubscriptionsTab => 'Abonnements';
+
+  @override
+  String get controlCenterContentTab => 'Contenu';
+
+  @override
+  String get allUsersTitle => 'Tous les utilisateurs';
+
+  @override
+  String get loadMoreButton => 'Charger plus';
+
+  @override
+  String get activeSubscribersStatLabel => 'Abonnés actifs';
+
+  @override
+  String get monthlyRevenueStatLabel => 'Revenus (mois)';
+
+  @override
+  String get manageSubscriptionTooltip => 'Gérer l\'abonnement';
+
+  @override
+  String get subscriptionManagementTitle => 'Abonnement et droits';
+
+  @override
+  String get appPlanSectionTitle => 'Forfait application';
+
+  @override
+  String get aiSubscriptionSectionTitle => 'IA illimitée';
+
+  @override
+  String get aiCreditsSectionTitle => 'Crédits IA';
+
+  @override
+  String get freeDownloadsSectionTitle => 'Téléchargements gratuits';
+
+  @override
+  String get trialEligibilitySectionTitle => 'Essai gratuit';
+
+  @override
+  String currentPlanLabel(String tier) {
+    return 'Actuel : $tier';
+  }
+
+  @override
+  String expiresOnLabel(String date) {
+    return 'Expire le $date';
+  }
+
+  @override
+  String get noActivePlanLabel => 'Aucun forfait actif';
+
+  @override
+  String get aiSubscriptionInactiveLabel => 'Non actif';
+
+  @override
+  String freeDownloadsUsedLabel(int count) {
+    return '$count téléchargements gratuits utilisés sur 5';
+  }
+
+  @override
+  String get trialUsedLabel => 'Essai gratuit déjà utilisé';
+
+  @override
+  String get trialAvailableLabel => 'Essai gratuit disponible';
+
+  @override
+  String get trialActiveLabel => 'Essai en cours';
+
+  @override
+  String get terminateTrialButton => 'Mettre fin à l\'essai';
+
+  @override
+  String get grantMonthlyButton => 'Accorder mensuel';
+
+  @override
+  String get grantYearlyButton => 'Accorder annuel';
+
+  @override
+  String get extend30DaysButton => 'Prolonger de 30 jours';
+
+  @override
+  String get revokeButton => 'Révoquer';
+
+  @override
+  String get addCreditsButton => 'Ajouter des crédits';
+
+  @override
+  String get removeCreditsButton => 'Retirer des crédits';
+
+  @override
+  String get resetToZeroButton => 'Réinitialiser à 0';
+
+  @override
+  String get resetTrialButton => 'Réinitialiser l\'essai';
+
+  @override
+  String get creditsAmountHint => 'Montant';
+
+  @override
+  String get confirmActionButton => 'Confirmer';
+
+  @override
+  String get confirmAdminActionTitle => 'Confirmer l\'action';
+
+  @override
+  String confirmAdminActionBody(String action, String name) {
+    return '$action pour $name ?';
+  }
+
+  @override
+  String adminActionSuccessMessage(String name) {
+    return 'Terminé — le compte de $name a été mis à jour.';
+  }
+
+  @override
+  String get activeMonthlyStatLabel => 'Plan mensuel';
+
+  @override
+  String get activeYearlyStatLabel => 'Plan annuel';
+
+  @override
+  String get activeTrialStatLabel => 'En essai gratuit';
+
+  @override
+  String get activeAiStatLabel => 'Abonnés IA';
+
+  @override
+  String get totalRevenueStatLabel => 'Revenus totaux';
+
+  @override
+  String get successfulPaymentsStatLabel => 'Paiements réussis';
+
+  @override
+  String get recentTransactionsTitle => 'Transactions récentes';
+
+  @override
+  String get noTransactionsYetMessage => 'Aucune transaction pour le moment';
+
+  @override
+  String get adminGrantBadgeLabel => 'Action admin';
+
+  @override
+  String get transactionsLoadErrorTitle =>
+      'Impossible de charger les transactions';
+
+  @override
   String get aiCreditsPlansTitle => 'Crédits IA et forfaits';
 
   @override

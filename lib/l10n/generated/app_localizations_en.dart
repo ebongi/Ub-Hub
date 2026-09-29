@@ -244,6 +244,157 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminDashboardSubtitle => 'Manage users, roles, and departments';
 
   @override
+  String get controlCenterOverviewTab => 'Overview';
+
+  @override
+  String get controlCenterUsersTab => 'Users';
+
+  @override
+  String get controlCenterSubscriptionsTab => 'Subscriptions';
+
+  @override
+  String get controlCenterContentTab => 'Content';
+
+  @override
+  String get allUsersTitle => 'All Users';
+
+  @override
+  String get loadMoreButton => 'Load More';
+
+  @override
+  String get activeSubscribersStatLabel => 'Active Subscribers';
+
+  @override
+  String get monthlyRevenueStatLabel => 'Revenue (Month)';
+
+  @override
+  String get manageSubscriptionTooltip => 'Manage subscription';
+
+  @override
+  String get subscriptionManagementTitle => 'Subscription & Entitlements';
+
+  @override
+  String get appPlanSectionTitle => 'App Plan';
+
+  @override
+  String get aiSubscriptionSectionTitle => 'Unlimited AI';
+
+  @override
+  String get aiCreditsSectionTitle => 'AI Credits';
+
+  @override
+  String get freeDownloadsSectionTitle => 'Free Downloads';
+
+  @override
+  String get trialEligibilitySectionTitle => 'Free Trial';
+
+  @override
+  String currentPlanLabel(String tier) {
+    return 'Current: $tier';
+  }
+
+  @override
+  String expiresOnLabel(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get noActivePlanLabel => 'No active plan';
+
+  @override
+  String get aiSubscriptionInactiveLabel => 'Not active';
+
+  @override
+  String freeDownloadsUsedLabel(int count) {
+    return '$count of 5 free downloads used';
+  }
+
+  @override
+  String get trialUsedLabel => 'Free trial already used';
+
+  @override
+  String get trialAvailableLabel => 'Free trial available';
+
+  @override
+  String get trialActiveLabel => 'Trial active';
+
+  @override
+  String get terminateTrialButton => 'Terminate Trial';
+
+  @override
+  String get grantMonthlyButton => 'Grant Monthly';
+
+  @override
+  String get grantYearlyButton => 'Grant Yearly';
+
+  @override
+  String get extend30DaysButton => 'Extend +30 Days';
+
+  @override
+  String get revokeButton => 'Revoke';
+
+  @override
+  String get addCreditsButton => 'Add Credits';
+
+  @override
+  String get removeCreditsButton => 'Remove Credits';
+
+  @override
+  String get resetToZeroButton => 'Reset to 0';
+
+  @override
+  String get resetTrialButton => 'Reset Trial';
+
+  @override
+  String get creditsAmountHint => 'Amount';
+
+  @override
+  String get confirmActionButton => 'Confirm';
+
+  @override
+  String get confirmAdminActionTitle => 'Confirm Action';
+
+  @override
+  String confirmAdminActionBody(String action, String name) {
+    return '$action for $name?';
+  }
+
+  @override
+  String adminActionSuccessMessage(String name) {
+    return 'Done — $name\'s account has been updated.';
+  }
+
+  @override
+  String get activeMonthlyStatLabel => 'Monthly Plan';
+
+  @override
+  String get activeYearlyStatLabel => 'Yearly Plan';
+
+  @override
+  String get activeTrialStatLabel => 'On Free Trial';
+
+  @override
+  String get activeAiStatLabel => 'AI Subscribers';
+
+  @override
+  String get totalRevenueStatLabel => 'Total Revenue';
+
+  @override
+  String get successfulPaymentsStatLabel => 'Successful Payments';
+
+  @override
+  String get recentTransactionsTitle => 'Recent Transactions';
+
+  @override
+  String get noTransactionsYetMessage => 'No transactions yet';
+
+  @override
+  String get adminGrantBadgeLabel => 'Admin action';
+
+  @override
+  String get transactionsLoadErrorTitle => 'Couldn\'t load transactions';
+
+  @override
   String get aiCreditsPlansTitle => 'AI Credits & Plans';
 
   @override
