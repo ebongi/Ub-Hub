@@ -12,3 +12,6 @@ verify_jwt = true
 
 [functions.send-study-reminder]
 verify_jwt = true
+
+[functions.send-upload-nudge]
+verify_jwt = true
