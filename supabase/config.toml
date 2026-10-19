@@ -15,3 +15,6 @@ verify_jwt = true
 
 [functions.send-upload-nudge]
 verify_jwt = true
+
+[functions.send-weekly-greeting]
+verify_jwt = true

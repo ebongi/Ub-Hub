@@ -212,14 +212,21 @@ class NotificationService {
     }
     _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
 
-    // Foreground messages. Broadcast types (material/course/department) also
+    // Foreground messages. Broadcast types (material/course/department/news/
+    // system, incl. the scheduled upload nudge and weekly greeting) also
     // arrive as `notifications` table rows, whose realtime subscription
     // (_listenForNotifications) already shows an alert — showing them here too
     // would double up. Chat ('message') has no such row, so show it.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final data = message.data;
       final type = (data['type'] ?? '').toString();
-      const shownViaRealtime = {'material', 'course', 'department', 'news'};
+      const shownViaRealtime = {
+        'material',
+        'course',
+        'department',
+        'news',
+        'system',
+      };
       if (shownViaRealtime.contains(type)) return;
 
       final title = data['title'] ?? message.notification?.title;
