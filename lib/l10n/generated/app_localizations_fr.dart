@@ -3427,4 +3427,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String nextClassHoursMinutes(int hours, int minutes) {
     return '$hours h $minutes min';
   }
+
+  @override
+  String get timetableBatteryNote =>
+      'Si les rappels n\'arrivent pas à l\'heure, réglez la consommation de batterie de GoStudy sur « Sans restriction » et autorisez le démarrage automatique dans les paramètres de votre téléphone. Certains téléphones empêchent les applications d\'envoyer des alertes en arrière-plan.';
 }

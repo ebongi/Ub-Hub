@@ -157,6 +157,21 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
               style: theme.textTheme.bodyMedium),
         ),
         Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline,
+                  size: 16, color: theme.textTheme.bodySmall?.color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(l10n.timetableBatteryNote,
+                    style: theme.textTheme.bodySmall),
+              ),
+            ],
+          ),
+        ),
+        Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             controller: _searchController,

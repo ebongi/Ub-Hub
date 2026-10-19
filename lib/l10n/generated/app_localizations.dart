@@ -6145,6 +6145,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours} h {minutes} min'**
   String nextClassHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @timetableBatteryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If reminders don\'t arrive on time, set GoStudy\'s battery usage to \"Unrestricted\" and allow auto-start in your phone\'s settings. Some phones stop apps from sending alerts in the background.'**
+  String get timetableBatteryNote;
 }
 
 class _AppLocalizationsDelegate

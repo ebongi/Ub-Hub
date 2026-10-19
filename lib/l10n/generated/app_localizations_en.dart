@@ -3378,4 +3378,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String nextClassHoursMinutes(int hours, int minutes) {
     return '$hours h $minutes min';
   }
+
+  @override
+  String get timetableBatteryNote =>
+      'If reminders don\'t arrive on time, set GoStudy\'s battery usage to \"Unrestricted\" and allow auto-start in your phone\'s settings. Some phones stop apps from sending alerts in the background.';
 }
