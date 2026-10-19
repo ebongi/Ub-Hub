@@ -1358,5 +1358,42 @@
     "placeholders": {
       "count": { "type": "int" }
     }
+  },
+  "nextClassPromptTitle": "Never miss a class",
+  "nextClassPromptBody": "Pick your courses to see your next class and where it is.",
+  "nextClassNowLabel": "Now",
+  "nextClassNextLabel": "Next",
+  "nextClassToday": "Today",
+  "nextClassTomorrow": "Tomorrow",
+  "nextClassEndsIn": "Ends in {duration}",
+  "@nextClassEndsIn": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "nextClassInDuration": "In {duration}",
+  "@nextClassInDuration": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "nextClassMinutes": "{count} min",
+  "@nextClassMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "nextClassHours": "{hours} h",
+  "@nextClassHours": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "nextClassHoursMinutes": "{hours} h {minutes} min",
+  "@nextClassHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
   }
 }

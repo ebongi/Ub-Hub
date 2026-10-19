@@ -6079,6 +6079,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{count} more'**
   String timetableMoreSlots(int count);
+
+  /// No description provided for @nextClassPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Never miss a class'**
+  String get nextClassPromptTitle;
+
+  /// No description provided for @nextClassPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your courses to see your next class and where it is.'**
+  String get nextClassPromptBody;
+
+  /// No description provided for @nextClassNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get nextClassNowLabel;
+
+  /// No description provided for @nextClassNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextClassNextLabel;
+
+  /// No description provided for @nextClassToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get nextClassToday;
+
+  /// No description provided for @nextClassTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get nextClassTomorrow;
+
+  /// No description provided for @nextClassEndsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends in {duration}'**
+  String nextClassEndsIn(String duration);
+
+  /// No description provided for @nextClassInDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'In {duration}'**
+  String nextClassInDuration(String duration);
+
+  /// No description provided for @nextClassMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String nextClassMinutes(int count);
+
+  /// No description provided for @nextClassHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String nextClassHours(int hours);
+
+  /// No description provided for @nextClassHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String nextClassHoursMinutes(int hours, int minutes);
 }
 
 class _AppLocalizationsDelegate

@@ -1132,5 +1132,16 @@
   "timetableSaveError": "Impossible de mettre à jour vos rappels. Réessayez.",
   "timetableRetry": "Réessayer",
   "timetableSelectedCount": "{count} sélectionné(s)",
-  "timetableMoreSlots": "+{count} de plus"
+  "timetableMoreSlots": "+{count} de plus",
+  "nextClassPromptTitle": "Ne ratez aucun cours",
+  "nextClassPromptBody": "Choisissez vos cours pour voir votre prochain cours et où il a lieu.",
+  "nextClassNowLabel": "En cours",
+  "nextClassNextLabel": "Ensuite",
+  "nextClassToday": "Aujourd'hui",
+  "nextClassTomorrow": "Demain",
+  "nextClassEndsIn": "Se termine dans {duration}",
+  "nextClassInDuration": "Dans {duration}",
+  "nextClassMinutes": "{count} min",
+  "nextClassHours": "{hours} h",
+  "nextClassHoursMinutes": "{hours} h {minutes} min"
 }

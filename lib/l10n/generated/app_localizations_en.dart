@@ -3334,4 +3334,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String timetableMoreSlots(int count) {
     return '+$count more';
   }
+
+  @override
+  String get nextClassPromptTitle => 'Never miss a class';
+
+  @override
+  String get nextClassPromptBody =>
+      'Pick your courses to see your next class and where it is.';
+
+  @override
+  String get nextClassNowLabel => 'Now';
+
+  @override
+  String get nextClassNextLabel => 'Next';
+
+  @override
+  String get nextClassToday => 'Today';
+
+  @override
+  String get nextClassTomorrow => 'Tomorrow';
+
+  @override
+  String nextClassEndsIn(String duration) {
+    return 'Ends in $duration';
+  }
+
+  @override
+  String nextClassInDuration(String duration) {
+    return 'In $duration';
+  }
+
+  @override
+  String nextClassMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String nextClassHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String nextClassHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
 }

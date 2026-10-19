@@ -11,6 +11,7 @@ import 'package:go_study/Screens/Shared/section_header.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/chat_screen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/portalScreen.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/weekly_progress_card.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/next_class_card.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
 import 'package:go_study/Screens/UI/preview/Settings/rating.dart';
 import 'package:go_study/Screens/UI/preview/Toolbox/TranscriptScreen.dart';
@@ -353,6 +354,7 @@ class _HomeState extends State<Home> {
                     );
                   },
                 ),
+                const NextClassCard(),
                 tourShowcase(
                   context,
                   key: AppTourKeys.weeklyProgress,
