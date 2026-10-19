@@ -67,14 +67,14 @@ void main() {
 
     expect(find.text('CSC301'), findsOneWidget);
     expect(find.text('PHY203'), findsOneWidget);
-    expect(find.widgetWithText(FilterChip, 'PHYSICS'), findsOneWidget);
+    expect(find.byKey(const ValueKey('dept-pill-PHYSICS')), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilterChip, 'PHYSICS'));
+    await tester.tap(find.byKey(const ValueKey('dept-pill-PHYSICS')));
     await tester.pumpAndSettle();
     expect(find.text('PHY203'), findsOneWidget);
     expect(find.text('CSC301'), findsNothing);
 
-    await tester.tap(find.widgetWithText(FilterChip, 'PHYSICS'));
+    await tester.tap(find.byKey(const ValueKey('dept-pill-PHYSICS')));
     await tester.enterText(find.byType(TextField), 'csc2');
     await tester.pumpAndSettle();
     expect(find.text('CSC205'), findsOneWidget);
@@ -122,7 +122,8 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(FilterChip, 'Selected only (1)'));
+    expect(find.text('Selected only (1)'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('selected-only-pill')));
     await tester.pumpAndSettle();
     expect(find.text('PHY203'), findsOneWidget);
     expect(find.text('CSC301'), findsNothing);
