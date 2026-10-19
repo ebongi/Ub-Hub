@@ -26,6 +26,7 @@ class NavBar extends StatefulWidget {
 class _NavBarState extends State<NavBar> {
   static const int _aiTabIndex = 1;
   static const int _homeTabIndex = 0;
+  static const int _messagesTabIndex = 2;
 
   late int _selectedIndex;
 
@@ -69,6 +70,11 @@ class _NavBarState extends State<NavBar> {
       if (_selectedIndex != _aiTabIndex) _previousIndex = _selectedIndex;
       _selectedIndex = index;
     });
+    // Opening the Messages tab is "reading" the messages that arrived while
+    // elsewhere; without this the badge only cleared by entering a chat room.
+    if (index == _messagesTabIndex) {
+      context.read<MessageProvider>().resetUnreadCount();
+    }
   }
 
   Future<void> _handleBackPress() async {
