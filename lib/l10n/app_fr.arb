@@ -1119,5 +1119,18 @@
   "weeklyProgressCompletedOnPastDate": "{count, plural, =0{Aucune tâche terminée le {day}} =1{1 tâche terminée le {day}} other{{count} tâches terminées le {day}}}",
   "weeklyProgressNoTasksOnPastDate": "Aucune tâche prévue le {day}",
   "weeklyProgressDueOnFutureDate": "{count, plural, =1{1 tâche prévue le {day}} other{{count} tâches prévues le {day}}}",
-  "weeklyProgressNothingOnFutureDate": "Rien de prévu le {day}"
+  "weeklyProgressNothingOnFutureDate": "Rien de prévu le {day}",
+  "timetableRemindersTitle": "Rappels de cours",
+  "timetableRemindersSubtitle": "Soyez prévenu avant le début de vos cours",
+  "timetableRemindersIntro": "Choisissez les cours pour lesquels vous voulez un rappel. Vous serez prévenu 15 minutes avant chaque cours.",
+  "timetableSearchHint": "Rechercher un code de cours",
+  "timetableFilterAll": "Tous les départements",
+  "timetableFilterSelected": "Sélectionnés",
+  "timetableNoCourses": "Aucun cours ne correspond à votre recherche.",
+  "timetableEmpty": "L'emploi du temps n'a pas encore été publié.",
+  "timetableLoadError": "Impossible de charger l'emploi du temps. Vérifiez votre connexion et réessayez.",
+  "timetableSaveError": "Impossible de mettre à jour vos rappels. Réessayez.",
+  "timetableRetry": "Réessayer",
+  "timetableSelectedCount": "{count} sélectionné(s)",
+  "timetableMoreSlots": "+{count} de plus"
 }

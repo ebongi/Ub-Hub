@@ -3287,4 +3287,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String weeklyProgressNothingOnFutureDate(String day) {
     return 'Nothing scheduled for $day';
   }
+
+  @override
+  String get timetableRemindersTitle => 'Class reminders';
+
+  @override
+  String get timetableRemindersSubtitle =>
+      'Get reminded before your classes start';
+
+  @override
+  String get timetableRemindersIntro =>
+      'Choose the courses you want a reminder for. You\'ll be notified 15 minutes before each class.';
+
+  @override
+  String get timetableSearchHint => 'Search course code';
+
+  @override
+  String get timetableFilterAll => 'All departments';
+
+  @override
+  String get timetableFilterSelected => 'Selected only';
+
+  @override
+  String get timetableNoCourses => 'No courses match your search.';
+
+  @override
+  String get timetableEmpty => 'The timetable hasn\'t been published yet.';
+
+  @override
+  String get timetableLoadError =>
+      'Couldn\'t load the timetable. Check your connection and try again.';
+
+  @override
+  String get timetableSaveError =>
+      'Couldn\'t update your reminders. Please try again.';
+
+  @override
+  String get timetableRetry => 'Retry';
+
+  @override
+  String timetableSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String timetableMoreSlots(int count) {
+    return '+$count more';
+  }
 }

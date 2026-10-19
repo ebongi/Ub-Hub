@@ -6001,6 +6001,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing scheduled for {day}'**
   String weeklyProgressNothingOnFutureDate(String day);
+
+  /// No description provided for @timetableRemindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Class reminders'**
+  String get timetableRemindersTitle;
+
+  /// No description provided for @timetableRemindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get reminded before your classes start'**
+  String get timetableRemindersSubtitle;
+
+  /// No description provided for @timetableRemindersIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the courses you want a reminder for. You\'ll be notified 15 minutes before each class.'**
+  String get timetableRemindersIntro;
+
+  /// No description provided for @timetableSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search course code'**
+  String get timetableSearchHint;
+
+  /// No description provided for @timetableFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All departments'**
+  String get timetableFilterAll;
+
+  /// No description provided for @timetableFilterSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected only'**
+  String get timetableFilterSelected;
+
+  /// No description provided for @timetableNoCourses.
+  ///
+  /// In en, this message translates to:
+  /// **'No courses match your search.'**
+  String get timetableNoCourses;
+
+  /// No description provided for @timetableEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The timetable hasn\'t been published yet.'**
+  String get timetableEmpty;
+
+  /// No description provided for @timetableLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the timetable. Check your connection and try again.'**
+  String get timetableLoadError;
+
+  /// No description provided for @timetableSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update your reminders. Please try again.'**
+  String get timetableSaveError;
+
+  /// No description provided for @timetableRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get timetableRetry;
+
+  /// No description provided for @timetableSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String timetableSelectedCount(int count);
+
+  /// No description provided for @timetableMoreSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String timetableMoreSlots(int count);
 }
 
 class _AppLocalizationsDelegate

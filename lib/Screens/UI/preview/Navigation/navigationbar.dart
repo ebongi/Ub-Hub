@@ -12,6 +12,7 @@ import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/timetable_reminder_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_study/core/app_tour_keys.dart';
 
@@ -55,6 +56,8 @@ class _NavBarState extends State<NavBar> {
     _selectedIndex = widget.initialIndex;
     _pendingRequestsStream = FriendsService().getPendingRequestsStream();
     _unreadNotificationCountStream = NotificationService().unreadCountStream;
+    // Pick up a reloaded timetable: re-sync the user's class reminders.
+    TimetableReminderService.syncFromServer();
     _widgetOptions = <Widget>[
       const Home(),
       ChatbotScreen(onCollapse: () => _onItemTapped(_previousIndex)),

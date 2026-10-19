@@ -1335,5 +1335,28 @@
     "placeholders": {
       "day": { "type": "String" }
     }
+  },
+  "timetableRemindersTitle": "Class reminders",
+  "timetableRemindersSubtitle": "Get reminded before your classes start",
+  "timetableRemindersIntro": "Choose the courses you want a reminder for. You'll be notified 15 minutes before each class.",
+  "timetableSearchHint": "Search course code",
+  "timetableFilterAll": "All departments",
+  "timetableFilterSelected": "Selected only",
+  "timetableNoCourses": "No courses match your search.",
+  "timetableEmpty": "The timetable hasn't been published yet.",
+  "timetableLoadError": "Couldn't load the timetable. Check your connection and try again.",
+  "timetableSaveError": "Couldn't update your reminders. Please try again.",
+  "timetableRetry": "Retry",
+  "timetableSelectedCount": "{count} selected",
+  "@timetableSelectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "timetableMoreSlots": "+{count} more",
+  "@timetableMoreSlots": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }

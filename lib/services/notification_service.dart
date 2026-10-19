@@ -454,6 +454,64 @@ class NotificationService {
     await _notificationsPlugin.cancel(id);
   }
 
+  /// Cancels every pending local notification whose id is in [from, to].
+  Future<void> cancelNotificationsInRange(int from, int to) async {
+    final pending = await _notificationsPlugin.pendingNotificationRequests();
+    for (final p in pending) {
+      if (p.id >= from && p.id <= to) await _notificationsPlugin.cancel(p.id);
+    }
+  }
+
+  /// Schedules a notification that repeats every week on [weekday] (ISO,
+  /// 1 = Monday) at [minutesOfDay] local time.
+  Future<void> scheduleWeeklyReminder({
+    required int id,
+    required String title,
+    required String body,
+    required int weekday,
+    required int minutesOfDay,
+    String? payload,
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var next = tz.TZDateTime(tz.local, now.year, now.month, now.day,
+        minutesOfDay ~/ 60, minutesOfDay % 60);
+    while (next.weekday != weekday || !next.isAfter(now)) {
+      next = next.add(const Duration(days: 1));
+      // Re-anchor to wall-clock time so a DST change can't shift the hour.
+      next = tz.TZDateTime(tz.local, next.year, next.month, next.day,
+          minutesOfDay ~/ 60, minutesOfDay % 60);
+    }
+
+    final scheduleMode = await _canScheduleExactAlarms()
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+
+    await _notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      next,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'go_study_reminders',
+          'GoStudy Reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: payload,
+    );
+  }
+
   // --- Supabase Persistence ---
 
   /// Get notifications stream for the current user

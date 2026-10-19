@@ -6,6 +6,7 @@ import 'package:go_study/Screens/UI/preview/Settings/developer_info_screen.dart'
 import 'package:go_study/Screens/UI/preview/Settings/privacy_policy_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/terms_of_service_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/notifications.dart';
+import 'package:go_study/Screens/UI/preview/Settings/timetable_reminders_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/feedback.dart';
 import 'package:go_study/Screens/UI/preview/Settings/support_dialog.dart';
 import 'package:go_study/core/error_handler.dart';
@@ -170,6 +171,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const Notifications(),
+                          ),
+                        ),
+                      ),
+                      SettingsRow(
+                        icon: Icons.schedule_rounded,
+                        title: l10n.timetableRemindersTitle,
+                        subtitle: l10n.timetableRemindersSubtitle,
+                        tint: const Color(0xFF1A73E8),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const TimetableRemindersScreen(),
                           ),
                         ),
                       ),
