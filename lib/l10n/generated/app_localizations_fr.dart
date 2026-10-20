@@ -3431,4 +3431,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get timetableBatteryNote =>
       'Si les rappels n\'arrivent pas à l\'heure, réglez la consommation de batterie de GoStudy sur « Sans restriction » et autorisez le démarrage automatique dans les paramètres de votre téléphone. Certains téléphones empêchent les applications d\'envoyer des alertes en arrière-plan.';
+
+  @override
+  String nextClassMore(int count) {
+    return '+$count de plus';
+  }
+
+  @override
+  String timetableClashWith(String courses) {
+    return 'En conflit avec $courses';
+  }
+
+  @override
+  String timetableClashSnack(String course, String others) {
+    return '$course est en conflit avec $others. Vous recevrez les rappels des deux.';
+  }
 }

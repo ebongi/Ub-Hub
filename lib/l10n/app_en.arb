@@ -1396,5 +1396,24 @@
       "minutes": { "type": "int" }
     }
   },
-  "timetableBatteryNote": "If reminders don't arrive on time, set GoStudy's battery usage to \"Unrestricted\" and allow auto-start in your phone's settings. Some phones stop apps from sending alerts in the background."
+  "timetableBatteryNote": "If reminders don't arrive on time, set GoStudy's battery usage to \"Unrestricted\" and allow auto-start in your phone's settings. Some phones stop apps from sending alerts in the background.",
+  "nextClassMore": "+{count} more",
+  "@nextClassMore": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "timetableClashWith": "Clashes with {courses}",
+  "@timetableClashWith": {
+    "placeholders": {
+      "courses": { "type": "String" }
+    }
+  },
+  "timetableClashSnack": "{course} clashes with {others}. You'll get reminders for both.",
+  "@timetableClashSnack": {
+    "placeholders": {
+      "course": { "type": "String" },
+      "others": { "type": "String" }
+    }
+  }
 }

@@ -12,16 +12,25 @@ class ClassOccurrence {
   Duration untilEnd(DateTime now) => end.difference(now);
 }
 
-/// What's happening right now: the class in session (if any) and the next
-/// one to start (if any). Both can be set at once, e.g. mid-lecture with
-/// another class later today.
+/// What's happening right now: every class in session and every class due
+/// to start next (the ones sharing the earliest upcoming start time). Both
+/// can be non-empty at once, e.g. mid-lecture with another class later today.
 class TimetableStatus {
-  final ClassOccurrence? ongoing;
-  final ClassOccurrence? next;
+  /// In session now, most recently started first.
+  final List<ClassOccurrence> ongoingAll;
 
-  const TimetableStatus({this.ongoing, this.next});
+  /// Classes starting together at the earliest upcoming start time.
+  final List<ClassOccurrence> nextAll;
 
-  bool get isEmpty => ongoing == null && next == null;
+  const TimetableStatus({this.ongoingAll = const [], this.nextAll = const []});
+
+  /// The primary class in session (the one that started most recently).
+  ClassOccurrence? get ongoing => ongoingAll.isEmpty ? null : ongoingAll.first;
+
+  /// The primary next class (first of those starting together).
+  ClassOccurrence? get next => nextAll.isEmpty ? null : nextAll.first;
+
+  bool get isEmpty => ongoingAll.isEmpty && nextAll.isEmpty;
 }
 
 /// Pure schedule maths — no network or clock access, so it works offline and
@@ -38,12 +47,9 @@ class TimetableService {
     return ClassOccurrence(entry, at(entry.startMinutes), at(entry.endMinutes));
   }
 
-  static TimetableStatus statusAt(
-    List<TimetableEntry> entries,
-    DateTime now,
-  ) {
-    ClassOccurrence? ongoing;
-    ClassOccurrence? next;
+  static TimetableStatus statusAt(List<TimetableEntry> entries, DateTime now) {
+    final ongoing = <ClassOccurrence>[];
+    var upcoming = <ClassOccurrence>[];
 
     final valid = entries.where((e) => e.isValid).toList();
     final today = DateTime(now.year, now.month, now.day);
@@ -55,26 +61,37 @@ class TimetableService {
       for (final entry in valid.where((e) => e.dayOfWeek == day.weekday)) {
         final occ = _on(entry, day);
         if (!occ.start.isAfter(now) && occ.end.isAfter(now)) {
-          // Overlapping slots: prefer the one that started most recently.
-          if (ongoing == null || occ.start.isAfter(ongoing.start)) {
-            ongoing = occ;
-          }
+          ongoing.add(occ);
         } else if (occ.start.isAfter(now)) {
-          if (next == null || occ.start.isBefore(next.start)) next = occ;
+          upcoming.add(occ);
         }
       }
-      if (next != null) {
-        // Anything on a later day starts later, so the first day with an
-        // upcoming class holds the earliest one.
-        break;
-      }
+      // Anything on a later day starts later, so the first day with an
+      // upcoming class holds the earliest start.
+      if (upcoming.isNotEmpty) break;
     }
 
-    return TimetableStatus(ongoing: ongoing, next: next);
+    // Most recently started first; the sort is stable, so ties keep the
+    // caller's order.
+    ongoing.sort((a, b) => b.start.compareTo(a.start));
+
+    DateTime? earliest;
+    for (final o in upcoming) {
+      if (earliest == null || o.start.isBefore(earliest)) earliest = o.start;
+    }
+    upcoming = [
+      for (final o in upcoming)
+        if (o.start == earliest) o,
+    ];
+
+    return TimetableStatus(ongoingAll: ongoing, nextAll: upcoming);
   }
 
   /// All slots for one ISO weekday, earliest first.
-  static List<TimetableEntry> forDay(List<TimetableEntry> entries, int weekday) {
+  static List<TimetableEntry> forDay(
+    List<TimetableEntry> entries,
+    int weekday,
+  ) {
     return entries.where((e) => e.dayOfWeek == weekday).toList()
       ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
   }

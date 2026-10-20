@@ -12,7 +12,7 @@ class FakeRepo extends TimetableRepository {
   final bool fail;
 
   FakeRepo(this.classes, {Set<String>? selected, this.fail = false})
-      : selected = selected ?? {};
+    : selected = selected ?? {};
 
   @override
   Future<List<TimetableClass>> fetchClasses() async {
@@ -39,18 +39,20 @@ TimetableClass slot(String code, int day, int start, int end, {String? hall}) =>
     );
 
 Widget app(Widget child) => MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: child),
-    );
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(body: child),
+);
 
 Future<void> pump(WidgetTester tester, FakeRepo repo, DateTime now) async {
-  await tester.pumpWidget(app(NextClassCard(repository: repo, clock: () => now)));
+  await tester.pumpWidget(
+    app(NextClassCard(repository: repo, clock: () => now)),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -110,8 +112,9 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('a class days away shows the weekday, no countdown',
-      (tester) async {
+  testWidgets('a class days away shows the weekday, no countdown', (
+    tester,
+  ) async {
     await pump(
       tester,
       FakeRepo(classes, selected: {'MAT201'}),
@@ -122,8 +125,9 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('invites the user to pick courses when none are chosen',
-      (tester) async {
+  testWidgets('invites the user to pick courses when none are chosen', (
+    tester,
+  ) async {
     await pump(tester, FakeRepo(classes), DateTime(2026, 10, 19, 9));
 
     expect(find.text('Never miss a class'), findsOneWidget);
@@ -131,12 +135,66 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('stays hidden when the timetable cannot be loaded',
-      (tester) async {
-    await pump(tester, FakeRepo(classes, fail: true), DateTime(2026, 10, 19, 9));
+  testWidgets('stays hidden when the timetable cannot be loaded', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      FakeRepo(classes, fail: true),
+      DateTime(2026, 10, 19, 9),
+    );
 
     expect(find.byType(Container), findsNothing);
     expect(find.text('Never miss a class'), findsNothing);
+    await unmount(tester);
+  });
+
+  testWidgets('lists every class in session and starting together', (
+    tester,
+  ) async {
+    final clash = [
+      slot('CSC301', 1, 480, 600, hall: 'AMPHI 150 E'),
+      slot('PHY203', 1, 480, 600, hall: 'U-BLOCK F'),
+      slot('MAT201', 1, 840, 960, hall: 'G102-G103'),
+      slot('CHM201', 1, 840, 960, hall: 'AMPHI 600'),
+    ];
+    await pump(
+      tester,
+      FakeRepo(clash, selected: {'CSC301', 'PHY203', 'MAT201', 'CHM201'}),
+      DateTime(2026, 10, 19, 9),
+    );
+
+    // Both in session.
+    expect(find.text('CSC301'), findsOneWidget);
+    expect(find.text('PHY203'), findsOneWidget);
+    // Both starting together.
+    expect(find.text('CHM201'), findsOneWidget);
+    expect(find.text('MAT201'), findsOneWidget);
+    expect(find.textContaining('more'), findsNothing);
+    await unmount(tester);
+  });
+
+  testWidgets('summarises the rest as "+N more" beyond two', (tester) async {
+    final many = [
+      slot('AAA101', 1, 480, 600),
+      slot('BBB101', 1, 480, 600),
+      slot('CCC101', 1, 480, 600),
+      slot('DDD101', 1, 480, 600),
+      slot('EEE101', 1, 840, 960), // the only class after these
+    ];
+    await pump(
+      tester,
+      FakeRepo(
+        many,
+        selected: {'AAA101', 'BBB101', 'CCC101', 'DDD101', 'EEE101'},
+      ),
+      DateTime(2026, 10, 19, 9),
+    );
+
+    expect(find.text('AAA101'), findsOneWidget);
+    expect(find.text('BBB101'), findsOneWidget);
+    expect(find.text('CCC101'), findsNothing);
+    expect(find.text('+2 more'), findsOneWidget);
     await unmount(tester);
   });
 }

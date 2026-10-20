@@ -13,7 +13,7 @@ class FakeRepo extends TimetableRepository {
   final writes = <String>[];
 
   FakeRepo(this.classes, {Set<String>? selected, this.failWrites = false})
-      : selected = selected ?? {};
+    : selected = selected ?? {};
 
   @override
   Future<List<TimetableClass>> fetchClasses() async => classes;
@@ -40,15 +40,15 @@ TimetableClass slot(String dept, String code, int day, int start) =>
     );
 
 Widget app(Widget child) => MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: child,
-    );
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: child,
+);
 
 void main() {
   final classes = [
@@ -57,12 +57,16 @@ void main() {
     slot('PHYSICS', 'PHY203', 2, 420),
   ];
 
-  testWidgets('lists departments and courses, search and filter narrow them',
-      (tester) async {
-    await tester.pumpWidget(app(TimetableRemindersScreen(
-      repository: FakeRepo(classes),
-      scheduleReminders: (_) async {},
-    )));
+  testWidgets('lists departments and courses, search and filter narrow them', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: FakeRepo(classes),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('CSC301'), findsOneWidget);
@@ -81,45 +85,69 @@ void main() {
     expect(find.text('CSC301'), findsNothing);
   });
 
-  testWidgets('ticking a course saves it and reschedules reminders',
-      (tester) async {
+  testWidgets('ticking a course saves it', (
+    tester,
+  ) async {
     final repo = FakeRepo(classes);
-    List<TimetableClass>? scheduled;
-    await tester.pumpWidget(app(TimetableRemindersScreen(
-      repository: repo,
-      scheduleReminders: (slots) async => scheduled = slots,
-    )));
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: repo,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(CheckboxListTile, 'CSC301'));
     await tester.pumpAndSettle();
 
     expect(repo.writes, ['+CSC301']);
-    expect(scheduled!.map((s) => s.courseCode), ['CSC301']);
-    expect(tester.widget<CheckboxListTile>(find.widgetWithText(CheckboxListTile, 'CSC301')).value, isTrue);
+    expect(
+      tester
+          .widget<CheckboxListTile>(
+            find.widgetWithText(CheckboxListTile, 'CSC301'),
+          )
+          .value,
+      isTrue,
+    );
   });
 
-  testWidgets('a failed save reverts the tick and shows a message',
-      (tester) async {
-    await tester.pumpWidget(app(TimetableRemindersScreen(
-      repository: FakeRepo(classes, failWrites: true),
-      scheduleReminders: (_) async {},
-    )));
+  testWidgets('a failed save reverts the tick and shows a message', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: FakeRepo(classes, failWrites: true),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(CheckboxListTile, 'CSC301'));
     await tester.pumpAndSettle();
 
-    expect(tester.widget<CheckboxListTile>(find.widgetWithText(CheckboxListTile, 'CSC301')).value, isFalse);
+    expect(
+      tester
+          .widget<CheckboxListTile>(
+            find.widgetWithText(CheckboxListTile, 'CSC301'),
+          )
+          .value,
+      isFalse,
+    );
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  testWidgets('selected-only filter shows just the chosen courses',
-      (tester) async {
-    await tester.pumpWidget(app(TimetableRemindersScreen(
-      repository: FakeRepo(classes, selected: {'PHY203'}),
-      scheduleReminders: (_) async {},
-    )));
+  testWidgets('selected-only filter shows just the chosen courses', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: FakeRepo(classes, selected: {'PHY203'}),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Selected only (1)'), findsOneWidget);
@@ -129,13 +157,63 @@ void main() {
     expect(find.text('CSC301'), findsNothing);
   });
 
-  testWidgets('shows the empty state when no timetable is published',
-      (tester) async {
-    await tester.pumpWidget(app(TimetableRemindersScreen(
-      repository: FakeRepo(const []),
-      scheduleReminders: (_) async {},
-    )));
+  testWidgets('shows the empty state when no timetable is published', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: FakeRepo(const []),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
-    expect(find.text("The timetable hasn't been published yet."), findsOneWidget);
+    expect(
+      find.text("The timetable hasn't been published yet."),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('flags clashing chosen courses and warns when ticking one', (
+    tester,
+  ) async {
+    final clashing = [
+      slot('D', 'AAA101', 1, 420), // Mon 07:00-09:00
+      slot('D', 'BBB101', 1, 420), // same time
+      slot('D', 'CCC101', 2, 420), // Tue, no clash
+    ];
+    await tester.pumpWidget(
+      app(
+        TimetableRemindersScreen(
+          repository: FakeRepo(clashing, selected: {'AAA101'}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Nothing clashes yet.
+    expect(find.textContaining('Clashes with'), findsNothing);
+
+    await tester.tap(find.widgetWithText(CheckboxListTile, 'BBB101'));
+    await tester.pumpAndSettle();
+
+    // Both ticked courses show the flag; the unrelated one doesn't.
+    expect(find.text('Clashes with BBB101'), findsOneWidget);
+    expect(find.text('Clashes with AAA101'), findsOneWidget);
+    // And the user is told, but nothing is blocked.
+    expect(find.textContaining('BBB101 clashes with AAA101'), findsOneWidget);
+    expect(
+      tester
+          .widget<CheckboxListTile>(
+            find.widgetWithText(CheckboxListTile, 'BBB101'),
+          )
+          .value,
+      isTrue,
+    );
+
+    // Ticking a non-clashing course adds no warning.
+    await tester.tap(find.widgetWithText(CheckboxListTile, 'CCC101'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('CCC101 clashes'), findsNothing);
   });
 }

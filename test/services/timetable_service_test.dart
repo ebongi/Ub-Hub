@@ -8,15 +8,14 @@ TimetableEntry slot(
   String end, {
   String title = 'Class',
   String? venue,
-}) =>
-    TimetableEntry(
-      userId: 'u',
-      title: title,
-      venue: venue,
-      dayOfWeek: day,
-      startMinutes: TimetableEntry.parseTime(start),
-      endMinutes: TimetableEntry.parseTime(end),
-    );
+}) => TimetableEntry(
+  userId: 'u',
+  title: title,
+  venue: venue,
+  dayOfWeek: day,
+  startMinutes: TimetableEntry.parseTime(start),
+  endMinutes: TimetableEntry.parseTime(end),
+);
 
 void main() {
   // 2026-10-19 is a Monday.
@@ -121,6 +120,55 @@ void main() {
     test('invalid slots are ignored', () {
       final bad = [slot(1, '10:00', '09:00')];
       expect(TimetableService.statusAt(bad, at(19, 8)).isEmpty, isTrue);
+    });
+  });
+
+  group('classes at the same time', () {
+    test('every class in session is returned, most recently started first', () {
+      final entries = [
+        slot(1, '08:00', '11:00', title: 'Long'),
+        slot(1, '09:00', '10:00', title: 'Short'),
+        slot(1, '09:00', '10:00', title: 'Short B'),
+      ];
+      final s = TimetableService.statusAt(entries, at(19, 9, 30));
+      expect(s.ongoingAll.map((o) => o.entry.title), [
+        'Short',
+        'Short B',
+        'Long',
+      ]);
+      expect(s.ongoing!.entry.title, 'Short');
+    });
+
+    test('classes starting together are all "next"', () {
+      final entries = [
+        slot(1, '14:00', '16:00', title: 'A'),
+        slot(1, '14:00', '16:00', title: 'B'),
+        slot(1, '17:00', '19:00', title: 'Later'),
+      ];
+      final s = TimetableService.statusAt(entries, at(19, 12));
+      expect(s.nextAll.map((o) => o.entry.title), ['A', 'B']);
+      expect(s.next!.entry.title, 'A');
+    });
+
+    test('a later start is not grouped with the earliest', () {
+      final entries = [
+        slot(1, '14:00', '16:00', title: 'A'),
+        slot(1, '15:00', '17:00', title: 'B'),
+      ];
+      final s = TimetableService.statusAt(entries, at(19, 12));
+      expect(s.nextAll.map((o) => o.entry.title), ['A']);
+    });
+
+    test('ongoing and next groups coexist', () {
+      final entries = [
+        slot(1, '08:00', '10:00', title: 'Now1'),
+        slot(1, '08:00', '10:00', title: 'Now2'),
+        slot(1, '14:00', '16:00', title: 'Next1'),
+        slot(1, '14:00', '16:00', title: 'Next2'),
+      ];
+      final s = TimetableService.statusAt(entries, at(19, 9));
+      expect(s.ongoingAll.length, 2);
+      expect(s.nextAll.length, 2);
     });
   });
 

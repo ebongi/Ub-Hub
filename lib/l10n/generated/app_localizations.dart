@@ -6151,6 +6151,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If reminders don\'t arrive on time, set GoStudy\'s battery usage to \"Unrestricted\" and allow auto-start in your phone\'s settings. Some phones stop apps from sending alerts in the background.'**
   String get timetableBatteryNote;
+
+  /// No description provided for @nextClassMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String nextClassMore(int count);
+
+  /// No description provided for @timetableClashWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Clashes with {courses}'**
+  String timetableClashWith(String courses);
+
+  /// No description provided for @timetableClashSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'{course} clashes with {others}. You\'ll get reminders for both.'**
+  String timetableClashSnack(String course, String others);
 }
 
 class _AppLocalizationsDelegate

@@ -108,45 +108,49 @@ class _NextClassCardState extends State<NextClassCard>
     final isDark = theme.brightness == Brightness.dark;
 
     Widget card(Widget child) => GestureDetector(
-          onTap: _openPicker,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? theme.colorScheme.surfaceContainerLow
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.grey.withOpacity(0.15),
-              ),
-            ),
-            child: child,
+      onTap: _openPicker,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: isDark ? theme.colorScheme.surfaceContainerLow : Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.grey.withOpacity(0.15),
           ),
-        );
+        ),
+        child: child,
+      ),
+    );
 
     if (!_hasSelection) {
-      return card(Row(
-        children: [
-          Icon(Icons.schedule_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.nextClassPromptTitle,
-                    style: AppText.cardTitle(context)),
-                const SizedBox(height: 2),
-                Text(l10n.nextClassPromptBody,
-                    style: AppText.cardSubtitle(context)),
-              ],
+      return card(
+        Row(
+          children: [
+            Icon(Icons.schedule_rounded, color: theme.colorScheme.primary),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.nextClassPromptTitle,
+                    style: AppText.cardTitle(context),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.nextClassPromptBody,
+                    style: AppText.cardSubtitle(context),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.chevron_right_rounded),
-        ],
-      ));
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
+      );
     }
 
     final now = _now;
@@ -156,72 +160,112 @@ class _NextClassCardState extends State<NextClassCard>
     final locale = Localizations.localeOf(context).toString();
     final rows = <Widget>[];
 
-    final ongoing = status.ongoing;
-    if (ongoing != null) {
-      rows.add(_ClassRow(
-        label: l10n.nextClassNowLabel,
-        color: const Color(0xFF34A853),
-        code: ongoing.entry.courseCode ?? ongoing.entry.title,
-        detail: [
-          if (ongoing.entry.venue != null) ongoing.entry.venue!,
-          l10n.nextClassEndsIn(_duration(l10n, ongoing.untilEnd(now))),
-        ].join(' · '),
-      ));
+    if (status.ongoingAll.isNotEmpty) {
+      rows.add(
+        _ClassRow(
+          label: l10n.nextClassNowLabel,
+          color: const Color(0xFF34A853),
+          items: [
+            for (final o in status.ongoingAll)
+              _ClassItem(
+                o.entry.courseCode ?? o.entry.title,
+                [
+                  if (o.entry.venue != null) o.entry.venue!,
+                  l10n.nextClassEndsIn(_duration(l10n, o.untilEnd(now))),
+                ].join(' · '),
+              ),
+          ],
+          moreLabel: l10n.nextClassMore,
+        ),
+      );
     }
 
-    final next = status.next;
-    if (next != null) {
-      final dayLabel = switch (relativeDay(now, next.start)) {
+    if (status.nextAll.isNotEmpty) {
+      // Classes in this group start together, so the day/time/countdown is
+      // the same for all of them.
+      final first = status.nextAll.first;
+      final dayLabel = switch (relativeDay(now, first.start)) {
         RelativeDay.today => l10n.nextClassToday,
         RelativeDay.tomorrow => l10n.nextClassTomorrow,
-        RelativeDay.other => DateFormat.E(locale).format(next.start),
+        RelativeDay.other => DateFormat.E(locale).format(first.start),
       };
-      final until = next.untilStart(now);
-      rows.add(_ClassRow(
-        label: l10n.nextClassNextLabel,
-        color: theme.colorScheme.primary,
-        code: next.entry.courseCode ?? next.entry.title,
-        detail: [
-          '$dayLabel ${TimetableEntry.formatTime(next.entry.startMinutes)}',
-          if (next.entry.venue != null) next.entry.venue!,
-          if (until < const Duration(hours: 24))
-            l10n.nextClassInDuration(_duration(l10n, until)),
-        ].join(' · '),
-      ));
+      final until = first.untilStart(now);
+      final when = [
+        '$dayLabel ${TimetableEntry.formatTime(first.entry.startMinutes)}',
+      ];
+      rows.add(
+        _ClassRow(
+          label: l10n.nextClassNextLabel,
+          color: theme.colorScheme.primary,
+          items: [
+            for (final o in status.nextAll)
+              _ClassItem(
+                o.entry.courseCode ?? o.entry.title,
+                [
+                  ...when,
+                  if (o.entry.venue != null) o.entry.venue!,
+                  if (until < const Duration(hours: 24))
+                    l10n.nextClassInDuration(_duration(l10n, until)),
+                ].join(' · '),
+              ),
+          ],
+          moreLabel: l10n.nextClassMore,
+        ),
+      );
     }
 
-    return card(Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.md),
-          rows[i],
+    return card(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.md),
+            rows[i],
+          ],
         ],
-      ],
-    ));
+      ),
+    );
   }
 }
 
+class _ClassItem {
+  const _ClassItem(this.code, this.detail);
+
+  final String code;
+  final String detail;
+}
+
+/// A labelled group of classes (all in session, or all starting together).
+/// Shows up to [maxShown] and summarises the rest as "+N more".
 class _ClassRow extends StatelessWidget {
   const _ClassRow({
     required this.label,
     required this.color,
-    required this.code,
-    required this.detail,
+    required this.items,
+    required this.moreLabel,
   });
+
+  static const maxShown = 2;
 
   final String label;
   final Color color;
-  final String code;
-  final String detail;
+  final List<_ClassItem> items;
+  final String Function(int count) moreLabel;
 
   @override
   Widget build(BuildContext context) {
+    final shown = items.take(maxShown).toList();
+    final hidden = items.length - shown.length;
+
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
+          margin: const EdgeInsets.only(top: 1),
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
           decoration: BoxDecoration(
             color: color.withOpacity(0.12),
             borderRadius: BorderRadius.circular(AppRadius.chip),
@@ -229,7 +273,10 @@ class _ClassRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-                color: color, fontWeight: FontWeight.w600, fontSize: 12),
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -237,9 +284,21 @@ class _ClassRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(code, style: AppText.cardTitle(context)),
-              const SizedBox(height: 2),
-              Text(detail, style: AppText.cardSubtitle(context)),
+              for (var i = 0; i < shown.length; i++) ...[
+                if (i > 0) const SizedBox(height: AppSpacing.sm),
+                Text(shown[i].code, style: AppText.cardTitle(context)),
+                const SizedBox(height: 2),
+                Text(shown[i].detail, style: AppText.cardSubtitle(context)),
+              ],
+              if (hidden > 0) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  moreLabel(hidden),
+                  style: AppText.cardSubtitle(
+                    context,
+                  ).copyWith(color: color, fontWeight: FontWeight.w600),
+                ),
+              ],
             ],
           ),
         ),

@@ -56,8 +56,8 @@ class _NavBarState extends State<NavBar> {
     _selectedIndex = widget.initialIndex;
     _pendingRequestsStream = FriendsService().getPendingRequestsStream();
     _unreadNotificationCountStream = NotificationService().unreadCountStream;
-    // Pick up a reloaded timetable: re-sync the user's class reminders.
-    TimetableReminderService.syncFromServer();
+    // Class reminders are server-sent pushes now; drop the old local ones.
+    TimetableReminderService.retireLocalReminders();
     _widgetOptions = <Widget>[
       const Home(),
       ChatbotScreen(onCollapse: () => _onItemTapped(_previousIndex)),

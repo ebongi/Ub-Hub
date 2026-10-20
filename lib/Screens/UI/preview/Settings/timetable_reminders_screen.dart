@@ -7,7 +7,6 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/timetable_catalog.dart';
 import 'package:go_study/services/timetable_class.dart';
 import 'package:go_study/services/timetable_entry.dart';
-import 'package:go_study/services/timetable_reminder_service.dart';
 import 'package:go_study/services/timetable_repository.dart';
 import 'package:go_study/theme/app_radius.dart';
 import 'package:go_study/theme/app_spacing.dart';
@@ -19,15 +18,7 @@ import 'package:go_study/theme/app_text_styles.dart';
 class TimetableRemindersScreen extends StatefulWidget {
   final TimetableRepository? repository;
 
-  /// Reschedules the weekly reminders for the chosen slots. Injectable so
-  /// tests don't need the notification plugin.
-  final Future<void> Function(List<TimetableClass> slots)? scheduleReminders;
-
-  const TimetableRemindersScreen({
-    super.key,
-    this.repository,
-    this.scheduleReminders,
-  });
+  const TimetableRemindersScreen({super.key, this.repository});
 
   @override
   State<TimetableRemindersScreen> createState() =>
@@ -93,9 +84,24 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
     });
     try {
       await _repo.setSelected(code, value);
-      await (widget.scheduleReminders ?? TimetableReminderService.schedule)(
-        catalog.slotsFor(_selected),
-      );
+      // Clashes are allowed (the user gets reminders for both) — just tell
+      // them about it when they tick the course that causes one.
+      final others = value ? catalog.clashes(_selected)[code] : null;
+      if (mounted && others != null && others.isNotEmpty) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.timetableClashSnack(
+                  code,
+                  (others.toList()..sort()).join(', '),
+                ),
+              ),
+            ),
+          );
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _selected = previous);
@@ -270,6 +276,8 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
       onlyCodes: _selectedOnly ? _selected : null,
     );
 
+    final clashes = catalog.clashes(_selected);
+
     // Courses arrive sorted by department; group consecutive runs.
     final groups = <String, List<TimetableCourse>>{};
     for (final c in courses) {
@@ -369,6 +377,7 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
                       l10n,
                       entry.value[i],
                       _look(entry.key, catalog),
+                      clashes[entry.value[i].code],
                     ),
                   ],
                 ],
@@ -385,10 +394,13 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
     AppLocalizations l10n,
     TimetableCourse course,
     ({IconData icon, Color color}) look,
+    Set<String>? clashesWith,
   ) {
     final theme = Theme.of(context);
     final selected = _selected.contains(course.code);
     final extra = course.slots.length - 2;
+    final clash = selected && clashesWith != null && clashesWith.isNotEmpty;
+    const warn = Color(0xFFD97706);
 
     return CheckboxListTile(
       value: selected,
@@ -419,15 +431,44 @@ class _TimetableRemindersScreenState extends State<TimetableRemindersScreen> {
       title: Text(course.code, style: AppText.cardTitle(context)),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 2),
-        child: Text(
-          [
-            ...course.slots.take(2).map((s) => _slotText(context, s)),
-            if (extra > 0) l10n.timetableMoreSlots(extra),
-          ].join('\n'),
-          style: AppText.cardSubtitle(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              [
+                ...course.slots.take(2).map((s) => _slotText(context, s)),
+                if (extra > 0) l10n.timetableMoreSlots(extra),
+              ].join('\n'),
+              style: AppText.cardSubtitle(context),
+            ),
+            if (clash) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 14,
+                    color: warn,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      l10n.timetableClashWith(
+                        (clashesWith.toList()..sort()).join(', '),
+                      ),
+                      key: ValueKey('clash-${course.code}'),
+                      style: AppText.cardSubtitle(
+                        context,
+                      ).copyWith(color: warn, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
-      isThreeLine: course.slots.length > 1,
+      isThreeLine: course.slots.length > 1 || clash,
     );
   }
 }

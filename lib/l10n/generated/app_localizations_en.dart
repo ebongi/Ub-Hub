@@ -3382,4 +3382,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get timetableBatteryNote =>
       'If reminders don\'t arrive on time, set GoStudy\'s battery usage to \"Unrestricted\" and allow auto-start in your phone\'s settings. Some phones stop apps from sending alerts in the background.';
+
+  @override
+  String nextClassMore(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String timetableClashWith(String courses) {
+    return 'Clashes with $courses';
+  }
+
+  @override
+  String timetableClashSnack(String course, String others) {
+    return '$course clashes with $others. You\'ll get reminders for both.';
+  }
 }

@@ -1144,5 +1144,8 @@
   "nextClassMinutes": "{count} min",
   "nextClassHours": "{hours} h",
   "nextClassHoursMinutes": "{hours} h {minutes} min",
-  "timetableBatteryNote": "Si les rappels n'arrivent pas à l'heure, réglez la consommation de batterie de GoStudy sur « Sans restriction » et autorisez le démarrage automatique dans les paramètres de votre téléphone. Certains téléphones empêchent les applications d'envoyer des alertes en arrière-plan."
+  "timetableBatteryNote": "Si les rappels n'arrivent pas à l'heure, réglez la consommation de batterie de GoStudy sur « Sans restriction » et autorisez le démarrage automatique dans les paramètres de votre téléphone. Certains téléphones empêchent les applications d'envoyer des alertes en arrière-plan.",
+  "nextClassMore": "+{count} de plus",
+  "timetableClashWith": "En conflit avec {courses}",
+  "timetableClashSnack": "{course} est en conflit avec {others}. Vous recevrez les rappels des deux."
 }
