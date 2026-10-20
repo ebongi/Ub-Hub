@@ -48,3 +48,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# goldie (App Store/Play Store screenshot generator) rendered output
+goldie/out/
