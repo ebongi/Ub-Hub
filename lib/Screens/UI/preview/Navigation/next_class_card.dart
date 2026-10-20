@@ -176,6 +176,7 @@ class _NextClassCardState extends State<NextClassCard>
               ),
           ],
           moreLabel: l10n.nextClassMore,
+          lessLabel: l10n.nextClassShowLess,
         ),
       );
     }
@@ -210,6 +211,7 @@ class _NextClassCardState extends State<NextClassCard>
               ),
           ],
           moreLabel: l10n.nextClassMore,
+          lessLabel: l10n.nextClassShowLess,
         ),
       );
     }
@@ -236,13 +238,15 @@ class _ClassItem {
 }
 
 /// A labelled group of classes (all in session, or all starting together).
-/// Shows up to [maxShown] and summarises the rest as "+N more".
-class _ClassRow extends StatelessWidget {
+/// Shows up to [maxShown]; the rest sit behind a "+N more" toggle that
+/// expands the group in place.
+class _ClassRow extends StatefulWidget {
   const _ClassRow({
     required this.label,
     required this.color,
     required this.items,
     required this.moreLabel,
+    required this.lessLabel,
   });
 
   static const maxShown = 2;
@@ -251,11 +255,22 @@ class _ClassRow extends StatelessWidget {
   final Color color;
   final List<_ClassItem> items;
   final String Function(int count) moreLabel;
+  final String lessLabel;
+
+  @override
+  State<_ClassRow> createState() => _ClassRowState();
+}
+
+class _ClassRowState extends State<_ClassRow> {
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
-    final shown = items.take(maxShown).toList();
-    final hidden = items.length - shown.length;
+    final color = widget.color;
+    final shown = _expanded
+        ? widget.items
+        : widget.items.take(_ClassRow.maxShown).toList();
+    final hidden = widget.items.length - _ClassRow.maxShown;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +286,7 @@ class _ClassRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.chip),
           ),
           child: Text(
-            label,
+            widget.label,
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w600,
@@ -290,15 +305,33 @@ class _ClassRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(shown[i].detail, style: AppText.cardSubtitle(context)),
               ],
-              if (hidden > 0) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  moreLabel(hidden),
-                  style: AppText.cardSubtitle(
-                    context,
-                  ).copyWith(color: color, fontWeight: FontWeight.w600),
+              if (hidden > 0)
+                InkWell(
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _expanded
+                              ? widget.lessLabel
+                              : widget.moreLabel(hidden),
+                          style: AppText.cardSubtitle(
+                            context,
+                          ).copyWith(color: color, fontWeight: FontWeight.w600),
+                        ),
+                        Icon(
+                          _expanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: color,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
             ],
           ),
         ),

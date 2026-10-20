@@ -6158,6 +6158,12 @@ abstract class AppLocalizations {
   /// **'+{count} more'**
   String nextClassMore(int count);
 
+  /// No description provided for @nextClassShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get nextClassShowLess;
+
   /// No description provided for @timetableClashWith.
   ///
   /// In en, this message translates to:

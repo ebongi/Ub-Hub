@@ -3438,6 +3438,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get nextClassShowLess => 'Voir moins';
+
+  @override
   String timetableClashWith(String courses) {
     return 'En conflit avec $courses';
   }

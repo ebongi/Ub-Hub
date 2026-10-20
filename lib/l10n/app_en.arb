@@ -1403,6 +1403,7 @@
       "count": { "type": "int" }
     }
   },
+  "nextClassShowLess": "Show less",
   "timetableClashWith": "Clashes with {courses}",
   "@timetableClashWith": {
     "placeholders": {

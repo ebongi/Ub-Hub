@@ -3389,6 +3389,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get nextClassShowLess => 'Show less';
+
+  @override
   String timetableClashWith(String courses) {
     return 'Clashes with $courses';
   }

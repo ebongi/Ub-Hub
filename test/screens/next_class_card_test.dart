@@ -195,6 +195,42 @@ void main() {
     expect(find.text('BBB101'), findsOneWidget);
     expect(find.text('CCC101'), findsNothing);
     expect(find.text('+2 more'), findsOneWidget);
+
+    // Tapping the toggle expands the group in place...
+    await tester.tap(find.text('+2 more'));
+    await tester.pumpAndSettle();
+    expect(find.text('CCC101'), findsOneWidget);
+    expect(find.text('DDD101'), findsOneWidget);
+    expect(find.text('Show less'), findsOneWidget);
+
+    // ...and tapping again collapses it.
+    await tester.tap(find.text('Show less'));
+    await tester.pumpAndSettle();
+    expect(find.text('CCC101'), findsNothing);
+    expect(find.text('+2 more'), findsOneWidget);
+    await unmount(tester);
+  });
+
+  testWidgets('classes in session expand the same way', (tester) async {
+    final many = [
+      slot('AAA101', 1, 480, 600),
+      slot('BBB101', 1, 481, 600),
+      slot('CCC101', 1, 482, 600),
+      slot('DDD101', 1, 840, 960), // later today, so "Next" is just this
+    ];
+    await pump(
+      tester,
+      FakeRepo(many, selected: {'AAA101', 'BBB101', 'CCC101', 'DDD101'}),
+      DateTime(2026, 10, 19, 9),
+    );
+
+    expect(find.text('Now'), findsOneWidget);
+    expect(find.text('AAA101'), findsNothing); // oldest start is hidden
+    expect(find.text('+1 more'), findsOneWidget);
+
+    await tester.tap(find.text('+1 more'));
+    await tester.pumpAndSettle();
+    expect(find.text('AAA101'), findsOneWidget);
     await unmount(tester);
   });
 }
