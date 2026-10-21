@@ -28,15 +28,15 @@ class TermsOfServiceScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _buildSection(
               "1. Introduction",
-              "Welcome to GO-Study. By using our application, you agree to these terms. Please read them carefully. GO-Study is an academic companion designed specifically for University of Buea students to manage courses, materials, and study resources.",
+              "Welcome to GoStudy. By using our application, you agree to these terms. Please read them carefully. GoStudy is an academic companion designed specifically for University of Buea students to manage courses, materials, and study resources.",
             ),
             _buildSection(
               "2. Application Information",
-              "GO-Study (v1.0.0+1) is developed to enhance student productivity. The app provides access to department-specific materials, AI-powered study assistance, and collaborative features like global chat.",
+              "GoStudy (v1.0.0+1) is developed to enhance student productivity. The app provides access to department-specific materials, AI-powered study assistance, and collaborative features like global chat.",
             ),
             _buildSection(
               "3. Third-Party Packages & Licenses",
-              "GO-Study relies on several open-source packages to provide a rich experience. These include:\n"
+              "GoStudy relies on several open-source packages to provide a rich experience. These include:\n"
                   "• Supabase (Database & Auth)\n"
                   "• Google Generative AI (Gemini)\n"
                   "• Syncfusion PDF Viewer\n"
@@ -51,11 +51,11 @@ class TermsOfServiceScreen extends StatelessWidget {
             ),
             _buildSection(
               "5. Intellectual Property",
-              "All uploaded materials remain the property of their respective owners. GO-Study serves as a platform for sharing and accessing these resources for educational purposes only.",
+              "All uploaded materials remain the property of their respective owners. GoStudy serves as a platform for sharing and accessing these resources for educational purposes only.",
             ),
             _buildSection(
               "6. Limitation of Liability",
-              "GO-Study is provided 'as is'. We do not guarantee the accuracy of AI-generated responses or the constant availability of all materials. We are not liable for any academic consequences resulting from the use or misuse of the app.",
+              "GoStudy is provided 'as is'. We do not guarantee the accuracy of AI-generated responses or the constant availability of all materials. We are not liable for any academic consequences resulting from the use or misuse of the app.",
             ),
             const SizedBox(height: 30),
             Center(

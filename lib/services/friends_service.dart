@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/services/notification_model.dart';
@@ -63,6 +65,20 @@ class FriendsService {
     return 'dm_${sorted[0]}_${sorted[1]}';
   }
 
+  static final RegExp _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  /// Guards against building a raw `.or()` PostgREST filter string out of a
+  /// value that isn't actually a UUID — otherwise a caller-supplied id
+  /// containing filter syntax (commas, parens, colons) could reshape the
+  /// query instead of just being compared against.
+  static void _assertValidUuid(String id) {
+    if (!_uuidPattern.hasMatch(id)) {
+      throw ArgumentError.value(id, 'userId', 'Expected a UUID');
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Send a friend request
   // ---------------------------------------------------------------------------
@@ -97,11 +113,14 @@ class FriendsService {
   // Respond to an incoming friend request
   // ---------------------------------------------------------------------------
   Future<void> respondToRequest(String requestId, bool accept) async {
-    // 1. Fetch request details to get sender_id and receiver (me) name
+    // 1. Fetch request details to get sender_id and receiver (me) name.
+    // Scoped to receiver_id = me as defense in depth alongside RLS, so this
+    // can only ever act on a request actually addressed to the caller.
     final request = await _supabase
         .from('friend_requests')
         .select('sender_id, receiver_id')
         .eq('id', requestId)
+        .eq('receiver_id', _myId)
         .single();
 
     final senderId = request['sender_id'] as String;
@@ -119,7 +138,8 @@ class FriendsService {
     await _supabase
         .from('friend_requests')
         .update({'status': accept ? 'accepted' : 'declined'})
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .eq('receiver_id', _myId);
 
     // 4. Trigger notification to the original sender
     if (accept) {
@@ -137,6 +157,7 @@ class FriendsService {
   // Remove a friend (delete the accepted request row)
   // ---------------------------------------------------------------------------
   Future<void> removeFriend(String otherUserId) async {
+    _assertValidUuid(otherUserId);
     // Delete whichever direction the accepted row exists
     await _supabase
         .from('friend_requests')
@@ -148,67 +169,115 @@ class FriendsService {
   }
 
   // ---------------------------------------------------------------------------
-  // Stream of accepted friends (both directions)
+  // Stream of accepted friends (both directions), with each friend's last
+  // DM message. Rebuilds whenever the friend_requests table changes (a new
+  // friend accepted/removed) OR a relevant DM message is inserted — the
+  // latter is needed because a new message never touches friend_requests,
+  // so without it the conversation list's preview/ordering would only ever
+  // refresh incidentally, not in response to the message that caused it.
   // ---------------------------------------------------------------------------
   Stream<List<FriendProfile>> getFriendsStream() {
-    // Fetch accepted requests where current user is sender or receiver
-    return _supabase
+    final controller = StreamController<List<FriendProfile>>.broadcast();
+
+    List<Map<String, dynamic>> latestAcceptedRows = [];
+    var hasRequestsSnapshot = false;
+    var rebuildSequence = 0;
+
+    Future<void> rebuild() async {
+      final sequence = ++rebuildSequence;
+
+      final myFriendRows = latestAcceptedRows
+          .where((r) => r['sender_id'] == _myId || r['receiver_id'] == _myId)
+          .toList();
+
+      if (myFriendRows.isEmpty) {
+        if (sequence == rebuildSequence) controller.add(<FriendProfile>[]);
+        return;
+      }
+
+      final friendIds = myFriendRows
+          .map(
+            (r) => r['sender_id'] == _myId ? r['receiver_id'] : r['sender_id'],
+          )
+          .toSet()
+          .toList();
+
+      final profiles = await _supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .filter('id', 'in', '(${friendIds.join(',')})');
+
+      final friendProfiles =
+          profiles.map((p) => FriendProfile.fromJson(p)).toList();
+
+      // Fetch each friend's last message in parallel instead of one at a
+      // time — this ran serially before, so render time grew linearly with
+      // friend count on every single emission.
+      final lastMessages = await Future.wait(
+        friendProfiles.map((friend) {
+          final roomId = dmRoomId(_myId, friend.id);
+          return _supabase
+              .from('messages')
+              .select('content, created_at')
+              .eq('room_id', roomId)
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+        }),
+      );
+
+      // A slower, now-stale rebuild finishing after a newer one must not
+      // clobber it with older data.
+      if (sequence != rebuildSequence) return;
+
+      final enrichedProfiles = [
+        for (var i = 0; i < friendProfiles.length; i++)
+          FriendProfile(
+            id: friendProfiles[i].id,
+            name: friendProfiles[i].name,
+            avatarUrl: friendProfiles[i].avatarUrl,
+            lastMessage: lastMessages[i]?['content'] as String?,
+            lastMessageTime: lastMessages[i] != null
+                ? DateTime.parse(lastMessages[i]!['created_at'] as String)
+                : null,
+          ),
+      ];
+
+      controller.add(enrichedProfiles);
+    }
+
+    final requestsSubscription = _supabase
         .from('friend_requests')
         .stream(primaryKey: ['id'])
         .eq('status', 'accepted')
-        .asyncMap((rows) async {
-          final myFriendRows = rows
-              .where(
-                (r) => r['sender_id'] == _myId || r['receiver_id'] == _myId,
-              )
-              .toList();
-
-          if (myFriendRows.isEmpty) return <FriendProfile>[];
-
-          final friendIds = myFriendRows
-              .map(
-                (r) =>
-                    r['sender_id'] == _myId ? r['receiver_id'] : r['sender_id'],
-              )
-              .toSet()
-              .toList();
-
-          final profiles = await _supabase
-              .from('profiles')
-              .select('id, name, avatar_url')
-              .filter('id', 'in', '(${friendIds.join(',')})');
-
-          final friendProfiles = profiles
-              .map((p) => FriendProfile.fromJson(p))
-              .toList();
-
-          // Fetch last message for each friend
-          final List<FriendProfile> enrichedProfiles = [];
-          for (var friend in friendProfiles) {
-            final roomId = dmRoomId(_myId, friend.id);
-            final lastMsgRow = await _supabase
-                .from('messages')
-                .select('content, created_at')
-                .eq('room_id', roomId)
-                .order('created_at', ascending: false)
-                .limit(1)
-                .maybeSingle();
-
-            enrichedProfiles.add(
-              FriendProfile(
-                id: friend.id,
-                name: friend.name,
-                avatarUrl: friend.avatarUrl,
-                lastMessage: lastMsgRow?['content'] as String?,
-                lastMessageTime: lastMsgRow != null
-                    ? DateTime.parse(lastMsgRow['created_at'] as String)
-                    : null,
-              ),
-            );
-          }
-
-          return enrichedProfiles;
+        .listen((rows) {
+          latestAcceptedRows = rows;
+          hasRequestsSnapshot = true;
+          rebuild();
         });
+
+    final messagesChannel = _supabase
+        .channel('friends_last_message_$_myId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          callback: (payload) {
+            if (!hasRequestsSnapshot) return;
+            final roomId = payload.newRecord['room_id'] as String? ?? '';
+            final isRelevantDm = roomId.startsWith('dm_') &&
+                roomId.split('_').skip(1).contains(_myId);
+            if (isRelevantDm) rebuild();
+          },
+        )
+        .subscribe();
+
+    controller.onCancel = () async {
+      await requestsSubscription.cancel();
+      await messagesChannel.unsubscribe();
+    };
+
+    return controller.stream;
   }
 
   // ---------------------------------------------------------------------------
@@ -271,6 +340,7 @@ class FriendsService {
   // Returns: 'none' | 'pending_sent' | 'pending_received' | 'accepted'
   // ---------------------------------------------------------------------------
   Future<String> getRelationshipStatus(String otherUserId) async {
+    _assertValidUuid(otherUserId);
     final rows = await _supabase
         .from('friend_requests')
         .select('id, sender_id, status')

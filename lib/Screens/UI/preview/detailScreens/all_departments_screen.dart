@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/home.dart'
-    show DepartmentUIData, NoInternetWidget;
+    show NoInternetWidget;
+import 'package:go_study/Screens/UI/preview/detailScreens/department_grid_card.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/department_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/department.dart';
 import 'package:go_study/services/departments_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_study/Screens/Shared/shimmer_loading.dart';
 import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/ComputerCourses/add_department_dialog.dart';
 import 'package:go_study/Screens/Shared/constanst.dart';
 import 'package:go_study/services/profile.dart';
+import 'package:go_study/theme/app_radius.dart';
+import 'package:go_study/theme/app_spacing.dart';
+import 'package:go_study/theme/app_text_styles.dart';
 
 class AllDepartmentsScreen extends StatefulWidget {
   const AllDepartmentsScreen({super.key});
@@ -60,16 +62,18 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final departmentsProvider = Provider.of<DepartmentsProvider>(context);
     final departments = departmentsProvider.departments;
     final userModel = Provider.of<UserModel>(context);
     final canCreate = userModel.role == UserRole.admin;
+    final screenTitle = l10n.allDepartmentsTitle;
 
     if (departments == null) {
       if (departmentsProvider.hasError) {
         return Scaffold(
-          appBar: AppBar(title: Text(l10n.allDepartmentsTitle)),
+          appBar: AppBar(title: Text(screenTitle)),
           body: NoInternetWidget(onRetry: departmentsProvider.retry),
         );
       }
@@ -99,7 +103,7 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
-              title: Text(l10n.allDepartmentsTitle),
+              title: Text(screenTitle, style: AppText.sectionTitle(context)),
               floating: true,
               pinned: true,
               snap: false,
@@ -107,20 +111,35 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                 automaticallyImplyLeading: false,
                 title: Container(
                   width: double.infinity,
-                  height: 40,
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                   decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(10),
+                    color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withOpacity(isDark ? 0.4 : 0.6),
+                    ),
                   ),
                   child: Center(
                     child: TextField(
                       controller: _searchController,
+                      style: AppText.body(context),
                       decoration: InputDecoration(
+                        isDense: true,
                         hintText: l10n.searchForDepartmentHint,
-                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: AppText.body(context).copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear),
+                                icon: Icon(
+                                  Icons.clear_rounded,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                                 onPressed: () => _searchController.clear(),
                               )
                             : null,
@@ -143,128 +162,19 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final department = filteredDepartments[index];
-                    final uiData = DepartmentUIData.fromDepartmentName(
-                      department.name,
-                    );
                     final isPending = department.id.startsWith('temp_');
-                    
+
                     return FadeInSlide(
                       delay: index * 0.05,
-                      child: GestureDetector(
-                        onTap: isPending
-                            ? null
-                            : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DepartmentScreen(
-                                      departmentName: department.name,
-                                      departmentId: department.id,
-                                    ),
-                                  ),
-                                ),
-                        child: Opacity(
-                          opacity: isPending ? 0.6 : 1.0,
-                          child: Card(
-                            elevation: 4,
-                            shadowColor: uiData.primaryColor.withOpacity(0.2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Container(
-                                  color: uiData.primaryColor.withOpacity(0.1),
-                                  child: (department.imageUrl != null &&
-                                          department.imageUrl!.isNotEmpty)
-                                      ? CachedNetworkImage(
-                                          imageUrl: department.imageUrl!,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Container(
-                                            color: uiData.primaryColor.withOpacity(0.1),
-                                            child: const Center(
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          ),
-                                          errorWidget: (context, url, error) =>
-                                              Container(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  uiData.primaryColor,
-                                                  uiData.secondaryColor,
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: Icon(
-                                              uiData.icon,
-                                              size: 40,
-                                              color: Colors.white.withOpacity(0.2),
-                                            ),
-                                          ),
-                                        )
-                                      : Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                uiData.primaryColor,
-                                                uiData.secondaryColor,
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            uiData.icon,
-                                            size: 40,
-                                            color: Colors.white.withOpacity(0.2),
-                                          ),
-                                        ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.black.withOpacity(0.8),
-                                        Colors.transparent,
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      stops: const [0.0, 0.4],
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 10,
-                                  left: 10,
-                                  child: Icon(
-                                    uiData.icon,
-                                    size: 20,
-                                    color: Colors.white.withOpacity(0.8),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 12,
-                                  left: 12,
-                                  right: 12,
-                                  child: Text(
-                                    department.name,
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.1,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                      child: DepartmentGridCard(
+                        department: department,
+                        isPending: isPending,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DepartmentScreen(
+                              departmentName: department.name,
+                              departmentId: department.id,
                             ),
                           ),
                         ),
@@ -278,13 +188,19 @@ class _AllDepartmentsScreenState extends State<AllDepartmentsScreen> {
           ],
         ),
       ),
-      floatingActionButton: canCreate 
+      floatingActionButton: canCreate
           ? FloatingActionButton.extended(
               onPressed: _addDepartment,
               icon: const Icon(Icons.add_rounded),
               label: Text(l10n.newDeptButton),
               backgroundColor: theme.colorScheme.primaryContainer,
               foregroundColor: theme.colorScheme.onPrimaryContainer,
+              extendedTextStyle: AppText.cardTitle(context).copyWith(
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.chip),
+              ),
             )
           : null,
     );

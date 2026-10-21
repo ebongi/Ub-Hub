@@ -9,6 +9,13 @@ class SubscriptionService {
 
   static const int freeTierDownloadLimit = 5;
 
+  // Point cost of redeeming an App Plan tier directly with accumulated
+  // points instead of paying via Fapshi — enforced server-side in
+  // redeem_points_for_plan() (reward_material_approval_and_points_redemption.sql);
+  // kept here only for confirm-dialog/balance copy.
+  static const int pointsCostMonthly = 5000;
+  static const int pointsCostYearly = 35000;
+
   static String getTierName(SubscriptionTier tier) {
     switch (tier) {
       case SubscriptionTier.monthly:

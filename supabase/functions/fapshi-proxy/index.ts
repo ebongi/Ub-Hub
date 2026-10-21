@@ -4,11 +4,17 @@
 // them in plaintext headers from the device. Supabase's function gateway
 // rejects requests with a missing/invalid user JWT before this code runs
 // (verify_jwt = true in config.toml).
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const FAPSHI_API_USER = Deno.env.get("FAPSHI_API_USER") ?? "";
 const FAPSHI_API_KEY = Deno.env.get("FAPSHI_API_KEY") ?? "";
 const FAPSHI_ENV = (Deno.env.get("FAPSHI_ENV") ?? "sandbox").toLowerCase();
+
+// Used only to reconcile a confirmed payment server-side (see the
+// "payment-status" case below) — never exposed to the client.
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const BASE_URL =
   FAPSHI_ENV === "production" || FAPSHI_ENV === "prod" || FAPSHI_ENV === "live"
@@ -88,18 +94,53 @@ Deno.serve(async (req) => {
       });
       break;
 
-    case "payment-status":
+    case "payment-status": {
       if (!body.transId) {
         return new Response(JSON.stringify({ error: "Missing 'transId'" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      upstream = await fetch(`${BASE_URL}/payment-status/${body.transId}`, {
+      const statusUpstream = await fetch(`${BASE_URL}/payment-status/${body.transId}`, {
         method: "GET",
         headers: fapshiHeaders,
       });
-      break;
+      const rawText = await statusUpstream.text();
+
+      // Reconcile server-side: if Fapshi itself confirms this transId as
+      // SUCCESSFUL, flip the matching payment_transactions row to 'success'
+      // here (via the service-role client, bypassing RLS) so that status is
+      // never reachable through a forged client REST write. See
+      // complete_payment_transaction in supabase/migrations/ — it fails
+      // closed (no-ops/raises) on a missing row or amount mismatch, so a
+      // failure here never blocks returning Fapshi's raw response below.
+      if (statusUpstream.ok && SUPABASE_URL && SERVICE_ROLE_KEY) {
+        try {
+          const data = JSON.parse(rawText);
+          if (
+            typeof data?.status === "string" &&
+            data.status.toUpperCase() === "SUCCESSFUL" &&
+            typeof data?.amount === "number"
+          ) {
+            const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+            const { error } = await admin.rpc("complete_payment_transaction", {
+              p_fapshi_trans_id: body.transId,
+              p_amount: data.amount,
+            });
+            if (error) {
+              console.error("complete_payment_transaction failed:", error.message);
+            }
+          }
+        } catch (e) {
+          console.error("payment-status reconciliation error:", e);
+        }
+      }
+
+      return new Response(rawText, {
+        status: statusUpstream.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     default:
       return new Response(JSON.stringify({ error: `Unknown action: ${body.action}` }), {

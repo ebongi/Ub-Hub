@@ -810,7 +810,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
                   }
                 } catch (e) {
                   setDialogState(() => isProcessing = false);
-                  ErrorHandler.showErrorSnackBar(context, "Error: $e");
+                  ErrorHandler.showErrorSnackBar(context, e);
                 }
               },
             ),

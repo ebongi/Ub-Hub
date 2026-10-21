@@ -6,6 +6,7 @@ import 'package:go_study/services/exam_event.dart';
 import 'package:go_study/services/notification_service.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_study/core/error_handler.dart';
 
 class CreateExamScreen extends StatefulWidget {
   final ExamEvent? exam;
@@ -160,8 +161,19 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
         } else {
           await dbService.updateExam(examEvent);
         }
+      } catch (e) {
+        if (mounted) {
+          ErrorHandler.showErrorSnackBar(context, e);
+        }
+        return;
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
 
-        // Schedule notification for the exam
+      // The exam is saved at this point. Scheduling the reminder is best-effort:
+      // a failure here (e.g. notifications disabled) must not read as a save
+      // failure or keep the user stuck on the form.
+      try {
         await NotificationService().scheduleNotification(
           id: examEvent.hashCode,
           title: l10n.upcomingExamNotificationTitle(examEvent.name),
@@ -173,17 +185,11 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
             const Duration(minutes: 30),
           ), // 30 mins before
         );
-
-        if (mounted) Navigator.pop(context);
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error saving exam: $e')));
-        }
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+        debugPrint('Exam reminder scheduling failed: $e');
       }
+
+      if (mounted) Navigator.pop(context);
     }
   }
 

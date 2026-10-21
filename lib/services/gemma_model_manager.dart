@@ -45,6 +45,7 @@ class GemmaModelManager {
   Future<InferenceModel> getOrLoadModel({int maxTokens = 1024}) async {
     final cached = _cachedModel;
     if (cached != null) return cached;
+    await ensureEngineRegistered();
     final model = await FlutterGemma.getActiveModel(maxTokens: maxTokens);
     _cachedModel = model;
     return model;

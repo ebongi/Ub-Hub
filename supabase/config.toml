@@ -6,3 +6,18 @@ verify_jwt = true
 
 [functions.delete-account]
 verify_jwt = true
+
+[functions.send-push-notification]
+verify_jwt = true
+
+[functions.send-study-reminder]
+verify_jwt = true
+
+[functions.send-upload-nudge]
+verify_jwt = true
+
+[functions.send-weekly-greeting]
+verify_jwt = true
+
+[functions.send-class-reminders]
+verify_jwt = true

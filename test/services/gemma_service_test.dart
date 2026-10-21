@@ -97,5 +97,12 @@ void main() {
     test('summarizePdf throws UnimplementedError (Phase 3 scope)', () {
       expect(() => gemmaService.summarizePdf(null), throwsUnimplementedError);
     });
+
+    test('generateFlashcards throws UnimplementedError (Phase 3 scope)', () {
+      expect(
+        () => gemmaService.generateFlashcards(null, count: 10),
+        throwsUnimplementedError,
+      );
+    });
   });
 }
