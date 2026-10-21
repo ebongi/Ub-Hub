@@ -4,8 +4,8 @@ import 'package:go_study/theme/app_radius.dart';
 import 'package:go_study/theme/app_spacing.dart';
 import 'package:go_study/theme/app_text_styles.dart';
 
-/// Coursera-style "big image thumbnail" content card: an image (or a
-/// gradient + icon fallback) fills the top of the card with a small
+/// Coursera-style "big image thumbnail" content card: an image (or the
+/// University of Buea logo as the default) fills the top of the card with a small
 /// circular icon badge overlaid on it, and the title/subtitle/action
 /// sit below the image rather than overlaid on it.
 ///
@@ -147,24 +147,19 @@ class ContentMediaCard extends StatelessWidget {
           color: primaryColor.withOpacity(0.1),
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         ),
-        errorWidget: (context, url, error) => _gradientFallback(),
+        errorWidget: (context, url, error) => _defaultImage(),
       );
     }
-    return _gradientFallback();
+    return _defaultImage();
   }
 
-  Widget _gradientFallback() {
+  /// Departments without an uploaded image (or whose image fails to load)
+  /// show the University of Buea crest.
+  Widget _defaultImage() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, secondaryColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: Icon(icon, size: 36, color: Colors.white.withOpacity(0.35)),
-      ),
+      color: Colors.white,
+      padding: const EdgeInsets.all(8),
+      child: Image.asset('assets/images/ub_logo.png', fit: BoxFit.contain),
     );
   }
 }
