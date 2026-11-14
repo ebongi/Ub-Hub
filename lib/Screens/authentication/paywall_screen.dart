@@ -4,11 +4,9 @@ import 'package:go_study/Screens/Shared/animations.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/auth.dart';
-import 'package:go_study/services/profile.dart';
 
 class PaywallScreen extends StatelessWidget {
-  final UserProfile profile;
-  const PaywallScreen({super.key, required this.profile});
+  const PaywallScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +61,7 @@ class PaywallScreen extends StatelessWidget {
                   
                   // Title
                   FadeInSlide(
-                    delay: 200,
+                    delay: 0.2,
                     child: Text(
                       l10n.trialPeriodEndedTitle,
                       textAlign: TextAlign.center,
@@ -79,7 +77,7 @@ class PaywallScreen extends StatelessWidget {
                   
                   // Subtitle
                   FadeInSlide(
-                    delay: 400,
+                    delay: 0.4,
                     child: Text(
                       l10n.trialExpiredBody,
                       textAlign: TextAlign.center,
@@ -95,7 +93,7 @@ class PaywallScreen extends StatelessWidget {
                   
                   // Upgrade Button
                   FadeInSlide(
-                    delay: 600,
+                    delay: 0.6,
                     child: SizedBox(
                       width: double.infinity,
                       height: 60,
@@ -104,7 +102,7 @@ class PaywallScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SubscriptionPlansScreen(userProfile: profile),
+                              builder: (_) => const SubscriptionPlansScreen(),
                             ),
                           );
                         },
@@ -131,7 +129,7 @@ class PaywallScreen extends StatelessWidget {
                   
                   // Logout Option
                   FadeInSlide(
-                    delay: 800,
+                    delay: 0.8,
                     child: TextButton(
                       onPressed: () => Authentication().signUserOut(),
                       child: Text(

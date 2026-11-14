@@ -84,6 +84,31 @@ void main() {
     );
 
     test(
+      'generateFlashcards should call sendMessage with flashcard prompt and PDF attachment',
+      () async {
+        when(
+          () => mockClient.sendMessage(
+            any(),
+            attachments: any(named: 'attachments'),
+          ),
+        ).thenAnswer((_) async => '{"title": "Deck", "cards": []}');
+
+        final result = await geminiService.generateFlashcards(
+          Uint8List(0),
+          count: 12,
+        );
+
+        expect(result, '{"title": "Deck", "cards": []}');
+        verify(
+          () => mockClient.sendMessage(
+            any(that: contains('study flashcards')),
+            attachments: any(named: 'attachments'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
       'summarizePdf should call sendMessageStream and return summary',
       () async {
         when(

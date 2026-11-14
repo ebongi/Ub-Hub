@@ -1,0 +1,342 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
+import 'package:go_study/core/error_handler.dart';
+import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/services/course_material.dart';
+import 'package:go_study/services/database.dart';
+import 'package:go_study/services/fapshi_service.dart';
+import 'package:go_study/services/payment_models.dart';
+import 'package:go_study/services/profile.dart';
+import 'package:go_study/services/storage_service.dart';
+import 'package:go_study/services/subscription_service.dart';
+
+/// Resolves the download fee for a material — shared between the price
+/// shown to the user (handleMaterialDownload) and the amount actually
+/// charged (_processDownloadPayment), so the two can never diverge.
+double _resolveDownloadFee(CourseMaterial material) {
+  if (material.price > 0) return material.price;
+  switch (material.materialCategory) {
+    case 'past_question':
+      return FapshiService.getPastQuestionDownloadFee();
+    case 'answer':
+      return FapshiService.getAnswerDownloadFee();
+    default:
+      return FapshiService.getDocumentDownloadFee();
+  }
+}
+
+/// Opens a material — a PDF is shown in-app via [PDFViewerScreen], anything
+/// else falls through to a direct download. Both paths go through the same
+/// free-count/payment gate ([_ensureAccessAndRun]) before granting access,
+/// so viewing a PDF in-app can't be used to skip the download limit that
+/// non-PDF files are already subject to. Shared across `DepartmentScreen`,
+/// `CourseDetailScreen`, and `SubjectScreen` so the gated flow lives in
+/// exactly one place.
+Future<void> openMaterialFile({
+  required BuildContext context,
+  required DatabaseService dbService,
+  required UserProfile? userProfile,
+  required CourseMaterial material,
+}) async {
+  if (material.fileType.toLowerCase() == 'pdf') {
+    await _ensureAccessAndRun(
+      context: context,
+      dbService: dbService,
+      userProfile: userProfile,
+      material: material,
+      onGranted: (signedUrl) async {
+        await _secureForOffline(context: context, material: material, signedUrl: signedUrl);
+        if (!context.mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PDFViewerScreen(url: signedUrl, title: material.title),
+          ),
+        );
+      },
+    );
+    return;
+  }
+  await handleMaterialDownload(
+    context: context,
+    dbService: dbService,
+    userProfile: userProfile,
+    material: material,
+  );
+}
+
+/// Downloads a material. Free-download-eligible users go straight through;
+/// everyone else sees a Fapshi payment dialog first.
+Future<void> handleMaterialDownload({
+  required BuildContext context,
+  required DatabaseService dbService,
+  required UserProfile? userProfile,
+  required CourseMaterial material,
+}) async {
+  await _ensureAccessAndRun(
+    context: context,
+    dbService: dbService,
+    userProfile: userProfile,
+    material: material,
+    onGranted: (signedUrl) async {
+      await _secureForOffline(context: context, material: material, signedUrl: signedUrl);
+      final uri = Uri.parse(signedUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else if (context.mounted) {
+        ErrorHandler.showErrorSnackBar(context, "Could not launch download link");
+      }
+    },
+  );
+}
+
+/// Shared gate in front of any material access, regardless of what
+/// "access" ends up meaning for the caller (launching a direct download vs.
+/// pushing an in-app viewer) — free-download-eligible users pass straight
+/// through (consuming a free-download credit, unless unlimited), everyone
+/// else is asked to pay via Fapshi first. [onGranted] runs exactly once,
+/// at the point access is actually confirmed.
+Future<void> _ensureAccessAndRun({
+  required BuildContext context,
+  required DatabaseService dbService,
+  required UserProfile? userProfile,
+  required CourseMaterial material,
+  required Future<void> Function(String signedUrl) onGranted,
+}) async {
+  final l10n = AppLocalizations.of(context)!;
+  if (userProfile != null && SubscriptionService.canDownloadForFree(userProfile)) {
+    // request_material_access() re-checks eligibility and consumes the free
+    // credit itself server-side — it's the actual gate now, this client
+    // check is only to skip straight past the payment dialog.
+    final signedUrl = await dbService.requestMaterialAccess(material.id);
+    await onGranted(signedUrl);
+    return;
+  }
+
+  final phoneController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  bool isProcessing = false;
+
+  final fee = _resolveDownloadFee(material);
+
+  await showPremiumGeneralDialog(
+    context: context,
+    barrierLabel: l10n.downloadTooltip,
+    child: Builder(
+      builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+            surfaceTintColor: Colors.transparent,
+            contentPadding: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PremiumDialogHeader(
+                  title: l10n.downloadMaterialTitle,
+                  subtitle: l10n.secureAccessSubtitle,
+                  icon: Icons.download_for_offline_rounded,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : theme.colorScheme.primary.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.1)
+                                  : theme.colorScheme.primary.withOpacity(0.1),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.downloadFeeNotice(
+                              material.title,
+                              material.materialCategory.replaceAll('_', ' '),
+                              fee.toInt(),
+                            ),
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        PremiumTextField(
+                          controller: phoneController,
+                          label: l10n.paymentPhoneLabel,
+                          hint: l10n.paymentPhoneHint,
+                          icon: Icons.phone_android_rounded,
+                          keyboardType: TextInputType.phone,
+                          enabled: !isProcessing,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? l10n.requiredValidator : null,
+                        ),
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                onPressed:
+                                    isProcessing ? null : () => Navigator.pop(context),
+                                child: Text(
+                                  l10n.cancel,
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: PremiumSubmitButton(
+                                label: l10n.payAndDownloadButton,
+                                isLoading: isProcessing,
+                                onPressed: () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  setState(() => isProcessing = true);
+                                  try {
+                                    await _processDownloadPayment(
+                                      context: context,
+                                      dbService: dbService,
+                                      material: material,
+                                      phoneNumber: phoneController.text,
+                                      onGranted: onGranted,
+                                    );
+                                    if (context.mounted) Navigator.pop(context);
+                                  } catch (e) {
+                                    setState(() => isProcessing = false);
+                                    if (context.mounted) {
+                                      ErrorHandler.showErrorSnackBar(context, e);
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Future<void> _processDownloadPayment({
+  required BuildContext context,
+  required DatabaseService dbService,
+  required CourseMaterial material,
+  required String phoneNumber,
+  required Future<void> Function(String signedUrl) onGranted,
+}) async {
+  final userId = dbService.uid;
+  if (userId == null) throw "User not authenticated";
+
+  final paymentRef = FapshiService.generatePaymentRef();
+  final amount = _resolveDownloadFee(material);
+  final formattedPhone = FapshiService.formatPhoneNumber(phoneNumber);
+
+  final transaction = PaymentTransaction(
+    id: '',
+    userId: userId,
+    paymentRef: paymentRef,
+    amount: amount,
+    currency: FapshiService.getCurrency(),
+    status: PaymentStatus.pending,
+    materialId: material.id,
+    itemType: 'download',
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
+
+  await dbService.createPaymentTransaction(transaction);
+
+  final collectResponse = await FapshiService.collectPayment(
+    amount: amount,
+    phoneNumber: formattedPhone,
+    description: 'Download: ${material.title}',
+  );
+
+  final nkwaPaymentId = collectResponse['id'] ?? collectResponse['paymentId'];
+  final redirectUrl = collectResponse['redirectUrl'];
+
+  if (nkwaPaymentId == null) throw "Failed to initiate payment";
+
+  await dbService.attachPaymentProviderRef(paymentRef, nkwaPaymentId.toString());
+
+  if (redirectUrl != null) {
+    final uri = Uri.parse(redirectUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw "Could not open payment link";
+    }
+  }
+
+  final status = await FapshiService.waitForSuccessfulPayment(nkwaPaymentId.toString());
+
+  if (status != PaymentStatus.success) {
+    // The edge function already flips a confirmed payment to 'success'
+    // server-side; only non-success outcomes need recording here.
+    await dbService.updatePaymentStatus(paymentRef, status, materialId: material.id);
+    throw "Payment failed or timed out.";
+  }
+
+  // Redeems the just-confirmed payment for a signed URL — request_material_access()
+  // re-verifies the payment server-side (status='success', not already consumed)
+  // rather than trusting that waitForSuccessfulPayment() alone.
+  final signedUrl = await dbService.requestMaterialAccess(
+    material.id,
+    paymentRef: paymentRef,
+  );
+  await onGranted(signedUrl);
+}
+
+Future<void> _secureForOffline({
+  required BuildContext context,
+  required CourseMaterial material,
+  required String signedUrl,
+}) async {
+  try {
+    await StorageService().downloadAndEncrypt(signedUrl, material);
+    if (context.mounted) {
+      ErrorHandler.showSuccessSnackBar(
+        context,
+        AppLocalizations.of(context)!.materialSecuredOfflineMessage,
+      );
+    }
+  } catch (e) {
+    debugPrint("Offline cache failed: $e");
+  }
+}

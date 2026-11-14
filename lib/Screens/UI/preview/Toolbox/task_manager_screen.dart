@@ -5,8 +5,10 @@ import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/task_model.dart';
 import 'package:go_study/services/notification_service.dart';
+import 'package:go_study/services/points_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_view.dart';
 
 class TaskManagerScreen extends StatefulWidget {
   const TaskManagerScreen({super.key});
@@ -413,7 +415,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
+                  return ErrorView(onRetry: () => setState(() {}));
                 }
 
                 final allTasks = snapshot.data ?? [];
@@ -433,21 +435,38 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                   return Center(child: Text(l10n.noTasksFound));
                 }
 
-                return ListView(
+                final rows = <_TaskRow>[];
+                for (final entry in groups.entries.where(
+                  (e) => e.value.isNotEmpty,
+                )) {
+                  rows.add(_TaskRow.header(entry.key, entry.value.length));
+                  for (var i = 0; i < entry.value.length; i++) {
+                    rows.add(
+                      _TaskRow.task(
+                        entry.value[i],
+                        isLastInGroup: i == entry.value.length - 1,
+                      ),
+                    );
+                  }
+                }
+
+                return ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  children: groups.entries
-                      .where((e) => e.value.isNotEmpty)
-                      .expand((entry) {
-                        return [
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) {
+                    final row = rows[index];
+                    if (row.task == null) {
+                      return Column(
+                        children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  _taskGroupDisplayName(l10n, entry.key),
+                                  _taskGroupDisplayName(l10n, row.groupKey!),
                                   style: GoogleFonts.outfit(
-                                    color: entry.key == "Overdue"
+                                    color: row.groupKey == "Overdue"
                                         ? Colors.red
                                         : Colors.blue,
                                     fontWeight: FontWeight.bold,
@@ -455,18 +474,23 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                                   ),
                                 ),
                                 Text(
-                                  "${entry.value.length}",
+                                  "${row.count}",
                                   style: const TextStyle(color: Colors.grey),
                                 ),
                               ],
                             ),
                           ),
                           const Divider(thickness: 1.5),
-                          ...entry.value.map((task) => _buildTaskTile(task, l10n)),
-                          const SizedBox(height: 16),
-                        ];
-                      })
-                      .toList(),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        _buildTaskTile(row.task!, l10n),
+                        if (row.isLastInGroup) const SizedBox(height: 16),
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -533,8 +557,16 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
               priority: task.priority,
               category: task.category,
               isDone: val ?? false,
+              completedAt: (val ?? false) ? DateTime.now() : null,
             );
             await _dbService.updateTask(updatedTask);
+            if (val == true && !task.isDone) {
+              // Best-effort — a points hiccup shouldn't block marking the
+              // task done. Gated on the false->true transition so unrelated
+              // re-renders/toggles can't double-award (award_points()'s
+              // daily cap is a second line of defense, not the only one).
+              PointsService().awardPoints('task_completed').catchError((_) => 0);
+            }
           },
         ),
         title: Text(
@@ -638,4 +670,21 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
         return Colors.green;
     }
   }
+}
+
+/// A flattened row for the task list's `ListView.builder`: either a group
+/// header (Overdue/Today/Upcoming/Completed) or a task tile, so lazy
+/// building works across the grouped layout.
+class _TaskRow {
+  const _TaskRow.header(this.groupKey, this.count)
+      : task = null,
+        isLastInGroup = false;
+  const _TaskRow.task(this.task, {required this.isLastInGroup})
+      : groupKey = null,
+        count = null;
+
+  final String? groupKey;
+  final int? count;
+  final TodoTask? task;
+  final bool isLastInGroup;
 }

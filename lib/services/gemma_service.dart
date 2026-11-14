@@ -96,4 +96,20 @@ class GemmaService implements AIService {
       '(Phase 3 scope).',
     );
   }
+
+  @override
+  Future<String> generateFlashcards(dynamic source, {int count = 15}) {
+    throw UnimplementedError(
+      'GemmaService does not support generateFlashcards in Phase 1 '
+      '(Phase 3 scope).',
+    );
+  }
+
+  @override
+  Future<String> answerQuestion(dynamic pdfSource) {
+    throw UnimplementedError(
+      'GemmaService does not support answerQuestion in Phase 1 '
+      '(Phase 3 scope).',
+    );
+  }
 }

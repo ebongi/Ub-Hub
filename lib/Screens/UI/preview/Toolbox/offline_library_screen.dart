@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
 import 'package:go_study/services/storage_service.dart';
-import 'package:go_study/services/database.dart';
 import 'package:go_study/services/course_material.dart';
-import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/UI/preview/detailScreens/pdf_viewer_screen.dart';
 import 'package:go_study/Screens/UI/preview/Settings/subscription_plans_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_study/Screens/Shared/premium_dialog.dart';
+import 'package:go_study/core/error_handler.dart';
 
 class OfflineLibraryScreen extends StatefulWidget {
   const OfflineLibraryScreen({super.key});
@@ -19,9 +17,6 @@ class OfflineLibraryScreen extends StatefulWidget {
 
 class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
   final _storageService = StorageService();
-  final _dbService = DatabaseService(
-    uid: Supabase.instance.client.auth.currentUser?.id,
-  );
 
   List<CourseMaterial> _offlineMaterials = [];
   bool _isLoading = true;
@@ -35,29 +30,17 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
   Future<void> _loadOfflineMaterials() async {
     setState(() => _isLoading = true);
     try {
-      final ids = await _storageService.getOfflineMaterialIds();
-      if (ids.isEmpty) {
-        setState(() {
-          _offlineMaterials = [];
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Fetch full material details from DB using the IDs
-      // Note: In a real offline scenario, we should have cached these details too.
-      // For this implementation, we'll try to fetch them if online.
-      final materials = await _dbService.getMaterialsByIds(ids);
-
+      // Built entirely from on-device metadata (StorageService.
+      // getOfflineMaterials) — no network call, so this works with no
+      // internet connection, which is the whole point of this screen.
+      final materials = await _storageService.getOfflineMaterials();
       setState(() {
         _offlineMaterials = materials;
         _isLoading = false;
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error loading library: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
       setState(() => _isLoading = false);
     }
@@ -76,29 +59,18 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
-      body: StreamBuilder<UserProfile>(
-        stream: _dbService.userProfile,
-        builder: (context, snapshot) {
-          // Always unlocked in free version
-
-          if (_isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (_offlineMaterials.isEmpty) {
-            return _buildEmptyState(l10n);
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(20),
-            itemCount: _offlineMaterials.length,
-            itemBuilder: (context, index) {
-              final material = _offlineMaterials[index];
-              return _buildMaterialCard(material, colorScheme, l10n);
-            },
-          );
-        },
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _offlineMaterials.isEmpty
+          ? _buildEmptyState(l10n)
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _offlineMaterials.length,
+              itemBuilder: (context, index) {
+                final material = _offlineMaterials[index];
+                return _buildMaterialCard(material, colorScheme, l10n);
+              },
+            ),
     );
   }
 
@@ -194,9 +166,7 @@ class _OfflineLibraryScreenState extends State<OfflineLibraryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to decrypt file: $e")));
+        ErrorHandler.showErrorSnackBar(context, e);
       }
     }
   }

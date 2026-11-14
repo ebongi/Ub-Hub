@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:go_study/services/course_material.dart';
 
 class StorageService {
   static const _storage = FlutterSecureStorage();
@@ -25,12 +28,12 @@ class StorageService {
     return encrypt.Key.fromBase64(keyStr);
   }
 
-  /// Download and encrypt a file
-  Future<void> downloadAndEncrypt(
-    String url,
-    String materialId,
-    String fileName,
-  ) async {
+  /// Download and encrypt a file, caching the display metadata (title,
+  /// file type, category) alongside it — that cache is what lets
+  /// [getOfflineMaterials] list this material later without any network
+  /// access, instead of the Offline Library having to re-fetch it from
+  /// Supabase (which fails with no internet) just to know what to show.
+  Future<void> downloadAndEncrypt(String url, CourseMaterial material) async {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode != 200) throw Exception("Failed to download file");
 
@@ -45,12 +48,33 @@ class StorageService {
     if (!await offlineDir.exists()) await offlineDir.create();
 
     // Store IV separately or prepend to file. We'll prepend for simplicity.
-    final file = File('${offlineDir.path}/$materialId.enc');
+    final file = File('${offlineDir.path}/${material.id}.enc');
     final combined = Uint8List.fromList(iv.bytes + encrypted.bytes);
     await file.writeAsBytes(combined);
 
-    // Also save metadata (like original filename) in secure storage or simple JSON
-    await _storage.write(key: 'meta_$materialId', value: fileName);
+    await _storage.write(
+      key: 'meta_${material.id}',
+      value: jsonEncode({
+        'fileName': material.fileName,
+        'title': material.title,
+        'fileType': material.fileType,
+        'materialCategory': material.materialCategory,
+      }),
+    );
+  }
+
+  /// The filename cached by [downloadAndEncrypt] for [materialId], tolerant
+  /// of the old cache format (a bare filename string, from before metadata
+  /// was cached as JSON) for files downloaded before this change.
+  Future<String> _readCachedFileName(String materialId) async {
+    final raw = await _storage.read(key: 'meta_$materialId');
+    if (raw == null) return 'material.pdf';
+    try {
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      return map['fileName'] as String? ?? 'material.pdf';
+    } catch (_) {
+      return raw; // Legacy format: the raw value was the filename itself.
+    }
   }
 
   /// Decrypt and get a temporary file for viewing
@@ -76,8 +100,7 @@ class StorageService {
     );
 
     final tempDir = await getTemporaryDirectory();
-    final fileName =
-        await _storage.read(key: 'meta_$materialId') ?? 'material.pdf';
+    final fileName = await _readCachedFileName(materialId);
     final tempFile = File('${tempDir.path}/$fileName');
     await tempFile.writeAsBytes(decrypted);
 
@@ -109,5 +132,39 @@ class StorageService {
         .whereType<File>()
         .map((f) => f.path.split('/').last.replaceAll('.enc', ''))
         .toList();
+  }
+
+  /// Every locally-downloaded material, built entirely from the metadata
+  /// [downloadAndEncrypt] cached on-device — no network access, so this
+  /// works with no internet connection (unlike fetching the same details
+  /// via DatabaseService.getMaterialsByIds, which needs Supabase). A file
+  /// downloaded before metadata caching existed still lists, with a
+  /// best-effort title/type guessed from its cached bare filename.
+  Future<List<CourseMaterial>> getOfflineMaterials() async {
+    final ids = await getOfflineMaterialIds();
+    final materials = <CourseMaterial>[];
+    for (final id in ids) {
+      final raw = await _storage.read(key: 'meta_$id');
+      Map<String, dynamic>? meta;
+      if (raw != null) {
+        try {
+          meta = jsonDecode(raw) as Map<String, dynamic>;
+        } catch (_) {
+          meta = null; // Legacy format: raw is a bare filename, not JSON.
+        }
+      }
+      materials.add(
+        CourseMaterial(
+          id: id,
+          title: (meta?['title'] as String?) ?? raw ?? id,
+          fileUrl: '', // Never dereferenced offline — see decryptAndGetFile.
+          fileName: (meta?['fileName'] as String?) ?? raw ?? 'material.pdf',
+          fileType: (meta?['fileType'] as String?) ?? 'pdf',
+          uploadedAt: DateTime.now(),
+          materialCategory: (meta?['materialCategory'] as String?) ?? 'regular',
+        ),
+      );
+    }
+    return materials;
   }
 }

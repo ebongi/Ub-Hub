@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_study/services/auth.dart';
 import 'package:go_study/services/database.dart';
 import 'package:go_study/services/profile.dart';
 import 'package:go_study/Screens/UI/preview/Navigation/admin_panel.dart';
+import 'package:go_study/Screens/UI/preview/Navigation/leaderboard_screen.dart';
+import 'package:go_study/services/level_service.dart';
 import 'package:go_study/l10n/generated/app_localizations.dart';
+import 'package:go_study/core/error_handler.dart';
 
 
 import 'package:image_picker/image_picker.dart';
@@ -71,7 +75,7 @@ class _ProfileState extends State<Profile> {
                           0.1,
                         ),
                         backgroundImage: user.avatarUrl != null
-                            ? NetworkImage(user.avatarUrl!)
+                            ? CachedNetworkImageProvider(user.avatarUrl!)
                             : null,
                         child: user.avatarUrl == null
                             ? Icon(
@@ -137,6 +141,8 @@ class _ProfileState extends State<Profile> {
                      ),
                    ],
                  ),
+                const SizedBox(height: 20),
+                _buildPointsCard(context, theme, user.totalPoints),
                 if (user.role == UserRole.admin) ...[
                   const SizedBox(height: 16),
                   SizedBox(
@@ -409,6 +415,96 @@ class _ProfileState extends State<Profile> {
 
 
 
+  Widget _buildPointsCard(BuildContext context, ThemeData theme, int totalPoints) {
+    final level = LevelService.computeLevel(totalPoints);
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.primary.withOpacity(0.75),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.emoji_events_rounded, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Level ${level.level} · ${level.title}',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$totalPoints pts',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: level.progress,
+                minHeight: 8,
+                backgroundColor: Colors.white.withOpacity(0.25),
+                valueColor: const AlwaysStoppedAnimation(Colors.white),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  level.isMaxLevel
+                      ? 'Max level reached!'
+                      : '${level.pointsIntoLevel}/${level.pointsForNextLevel} to next level',
+                  style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.9), fontSize: 12),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'View Leaderboard',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 12),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildUnlimitedBanner(ThemeData theme) {
     return Container(
       width: double.infinity,
@@ -585,9 +681,7 @@ class _ProfileState extends State<Profile> {
         } catch (e) {
           if (mounted) {
             Navigator.pop(context); // Close loading
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Error uploading avatar: $e")),
-            );
+            ErrorHandler.showErrorSnackBar(context, e);
           }
         }
       }

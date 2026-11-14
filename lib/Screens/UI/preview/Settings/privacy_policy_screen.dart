@@ -28,7 +28,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _buildSection(
               "1. Data We Collect",
-              "GO-Study collects information you provide directly, such as your user profile details, academic department, course selections, and study materials you upload. We also store your chat history and exam schedules to provide cloud-sync functionality.",
+              "GoStudy collects information you provide directly, such as your user profile details, academic department, course selections, and study materials you upload. We also store your chat history and exam schedules to provide cloud-sync functionality.",
             ),
             _buildSection(
               "2. How We Use Your Data",

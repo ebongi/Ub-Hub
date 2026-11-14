@@ -1,4 +1,8 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'dart:async';
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kReleaseMode, TargetPlatform;
+import 'package:go_study/services/app_update_service.dart';
 import 'package:go_study/services/gemma_model_manager.dart';
 import 'package:go_study/services/message_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -18,11 +22,37 @@ import 'package:go_study/Screens/UI/preview/Navigation/splash_screen.dart';
 
 import 'package:go_study/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:go_study/firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
+void main() {
+  runZonedGuarded(() async {
+    await _mainImpl();
+  }, (error, stack) {
+    debugPrint('Uncaught zone error: $error\n$stack');
+  });
+}
+
+Future<void> _mainImpl() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exceptionAsString()}\n${details.stack}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('PlatformDispatcher error: $error\n$stack');
+    return true;
+  };
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kReleaseMode) {
+      return const _FriendlyErrorWidget();
+    }
+    return ErrorWidget(details.exception);
+  };
 
   // 1. Load environment variables FIRST
   await AppConfig.init();
@@ -33,7 +63,9 @@ void main() async {
       anonKey: SupabaseConfig.anonKey,
     ),
     SharedPreferences.getInstance(),
-    Firebase.initializeApp().catchError((e) {
+    Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).catchError((e) {
       debugPrint("Firebase initialization failed: $e");
       return Firebase.app(); // Return existing app if already initialized, or just fallback
     }),
@@ -41,14 +73,6 @@ void main() async {
 
   // Initialize notifications without blocking the first frame
   NotificationService().init();
-
-  // On-device AI (Gemma) is Android-only in Phase 1 — flutter_gemma needs
-  // iOS 16+, this app's Podfile isn't set up for that yet. Registered here
-  // (once, app-wide) so GemmaChatScreen's engine is ready the moment a user
-  // opens it from the Toolbox, rather than registering lazily on first use.
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    await GemmaModelManager().ensureEngineRegistered();
-  }
 
   final prefs = initResults[1] as SharedPreferences;
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
@@ -69,7 +93,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MessageProvider()),
-        ChangeNotifierProvider(create: (_) => UserModel()),
+        ChangeNotifierProvider(create: (_) => UserModel(prefs: prefs)),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(
             initialMode: initialThemeMode,
@@ -89,6 +113,19 @@ void main() async {
       child: MyApp(isFirstLaunch: isFirstLaunch),
     ),
   );
+
+  // Fire-and-forget: checks Play Store for an update and, if flexible,
+  // downloads it in the background then prompts the user to restart.
+  AppUpdateService.checkForUpdate(navigatorKey);
+
+  // On-device AI (Gemma) is Android-only in Phase 1 — flutter_gemma needs
+  // iOS 16+, this app's Podfile isn't set up for that yet. Fire-and-forget
+  // so it never blocks first frame; GemmaModelManager.getOrLoadModel()
+  // awaits this itself before touching the model, so a user opening the
+  // Gemma screen before this resolves is still safe.
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    GemmaModelManager().ensureEngineRegistered();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -101,7 +138,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, localeProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
-          title: "GO Study",
+          title: "GoStudy",
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
@@ -150,5 +187,37 @@ class AppEntryPoint extends StatelessWidget {
     for (final image in images) {
       precacheImage(AssetImage('assets/images/$image'), context);
     }
+  }
+}
+
+/// Release-mode fallback rendered by [ErrorWidget.builder] when a widget
+/// throws during build. Deliberately dependency-free (no Localizations,
+/// no Theme lookups) since this can be reached before a MaterialApp/
+/// Directionality ancestor exists.
+class _FriendlyErrorWidget extends StatelessWidget {
+  const _FriendlyErrorWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Container(
+        color: Colors.white,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(24),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+            SizedBox(height: 12),
+            Text(
+              'Sorry, we ran into a problem.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
