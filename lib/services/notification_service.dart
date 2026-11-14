@@ -212,22 +212,30 @@ class NotificationService {
     }
     _fcm.onTokenRefresh.listen(_saveTokenToSupabase);
 
-    // Foreground messages. Broadcast types (material/course/department/news/
-    // system, incl. the scheduled upload nudge and weekly greeting) also
-    // arrive as `notifications` table rows, whose realtime subscription
-    // (_listenForNotifications) already shows an alert — showing them here too
-    // would double up. Chat ('message') has no such row, so show it.
+    // Foreground messages. Every NotificationType push (material, course,
+    // department, news, system, subscription, friendRequest, reward, and 1:1
+    // DMs) is also written as a `notifications` row, whose realtime
+    // subscription (_listenForNotifications) already shows an alert — showing
+    // it here too would double up. Only pushes with no row are shown here:
+    // group/department/global chat messages (messageType == 'group') and
+    // server-scheduled reminders whose type isn't a NotificationType
+    // (class_reminder, study_reminder, ...).
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final data = message.data;
       final type = (data['type'] ?? '').toString();
-      const shownViaRealtime = {
-        'material',
-        'course',
+      const rowBackedTypes = {
         'department',
+        'course',
+        'material',
+        'subscription',
+        'friendRequest',
         'news',
+        'reward',
         'system',
       };
-      if (shownViaRealtime.contains(type)) return;
+      final isGroupChat = type == 'message' && data['messageType'] == 'group';
+      final isDm = type == 'message' && !isGroupChat;
+      if (rowBackedTypes.contains(type) || isDm) return;
 
       final title = data['title'] ?? message.notification?.title;
       if (title == null) return;
