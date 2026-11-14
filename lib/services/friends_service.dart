@@ -191,7 +191,9 @@ class FriendsService {
           .toList();
 
       if (myFriendRows.isEmpty) {
-        if (sequence == rebuildSequence) controller.add(<FriendProfile>[]);
+        if (sequence == rebuildSequence && !controller.isClosed) {
+          controller.add(<FriendProfile>[]);
+        }
         return;
       }
 
@@ -207,8 +209,9 @@ class FriendsService {
           .select('id, name, avatar_url')
           .filter('id', 'in', '(${friendIds.join(',')})');
 
-      final friendProfiles =
-          profiles.map((p) => FriendProfile.fromJson(p)).toList();
+      final friendProfiles = profiles
+          .map((p) => FriendProfile.fromJson(p))
+          .toList();
 
       // Fetch each friend's last message in parallel instead of one at a
       // time — this ran serially before, so render time grew linearly with
@@ -243,18 +246,34 @@ class FriendsService {
           ),
       ];
 
-      controller.add(enrichedProfiles);
+      if (!controller.isClosed) controller.add(enrichedProfiles);
+    }
+
+    // Runs a rebuild without ever leaking an unhandled async error: failures
+    // are forwarded to the stream so listeners can show an error state
+    // instead of hanging on the previous data / a spinner.
+    Future<void> safeRebuild() async {
+      try {
+        await rebuild();
+      } catch (e, st) {
+        if (!controller.isClosed) controller.addError(e, st);
+      }
     }
 
     final requestsSubscription = _supabase
         .from('friend_requests')
         .stream(primaryKey: ['id'])
         .eq('status', 'accepted')
-        .listen((rows) {
-          latestAcceptedRows = rows;
-          hasRequestsSnapshot = true;
-          rebuild();
-        });
+        .listen(
+          (rows) {
+            latestAcceptedRows = rows;
+            hasRequestsSnapshot = true;
+            safeRebuild();
+          },
+          onError: (Object e, StackTrace st) {
+            if (!controller.isClosed) controller.addError(e, st);
+          },
+        );
 
     final messagesChannel = _supabase
         .channel('friends_last_message_$_myId')
@@ -265,16 +284,18 @@ class FriendsService {
           callback: (payload) {
             if (!hasRequestsSnapshot) return;
             final roomId = payload.newRecord['room_id'] as String? ?? '';
-            final isRelevantDm = roomId.startsWith('dm_') &&
+            final isRelevantDm =
+                roomId.startsWith('dm_') &&
                 roomId.split('_').skip(1).contains(_myId);
-            if (isRelevantDm) rebuild();
+            if (isRelevantDm) safeRebuild();
           },
         )
         .subscribe();
 
     controller.onCancel = () async {
       await requestsSubscription.cancel();
-      await messagesChannel.unsubscribe();
+      await _supabase.removeChannel(messagesChannel);
+      await controller.close();
     };
 
     return controller.stream;
@@ -363,8 +384,6 @@ class FriendsService {
   // Stream of ALL friend requests involving the current user (any status)
   // ---------------------------------------------------------------------------
   Stream<List<Map<String, dynamic>>> getAllRequestsStream() {
-    return _supabase
-        .from('friend_requests')
-        .stream(primaryKey: ['id']);
+    return _supabase.from('friend_requests').stream(primaryKey: ['id']);
   }
 }
