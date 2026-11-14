@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
+import { clearStaleFcmTokens, getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
 
 // Periodic, system-triggered reminder — invoked by a pg_cron job (see
 // supabase/migrations/schedule_weekly_greeting.sql), never by a
@@ -130,6 +130,7 @@ serve(async (req: Request) => {
 
     const pushable = users.filter((u) => u.fcm_token);
     let sent = 0;
+    const staleTokens = new Set<string>();
     if (pushable.length > 0) {
       const accessToken = await getFCMAccessToken();
       const BATCH_SIZE = 100;
@@ -144,6 +145,7 @@ serve(async (req: Request) => {
               { type: "system" },
               accessToken,
               projectId,
+              staleTokens,
             )
           ),
         );
@@ -152,6 +154,8 @@ serve(async (req: Request) => {
         ).length;
       }
     }
+
+    await clearStaleFcmTokens(supabase, staleTokens);
 
     return new Response(
       JSON.stringify({ sent, users: users.length, pushable: pushable.length }),

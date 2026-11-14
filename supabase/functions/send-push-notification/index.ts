@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
+import { clearStaleFcmTokens, getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
 
 // ---------------------------------------------------------------------------
 // Recipient resolution — every scope is resolved server-side from real DB
@@ -13,6 +13,9 @@ import { getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
 // ---------------------------------------------------------------------------
 
 type SupabaseClientType = ReturnType<typeof createClient>;
+
+// Max ids per PostgREST .in() filter / rows per bulk insert.
+const CHUNK_SIZE = 200;
 
 async function resolveDepartmentMemberIds(
   supabase: SupabaseClientType,
@@ -75,27 +78,37 @@ async function resolveRecipients(
 
   switch (scope) {
     case "room": {
-      // Group / department / global chat room — open to any authenticated
-      // sender, matching the existing "Authenticated users can send
-      // messages" RLS on the messages table itself.
+      // Group / department / global chat room. The caller must be a member
+      // of the room they're notifying (admins excepted).
       if (!scopeId) throw new Error("scope_id (room id) is required for scope 'room'");
       if (scopeId.startsWith("dm_")) {
         throw new Error("Use scope 'dm' for direct-message rooms");
       }
+      const { data: callerRow } = await supabase
+        .from("profiles")
+        .select("institution_id, department, role")
+        .eq("id", callerUid)
+        .maybeSingle();
+      const isAdmin = callerRow?.role === "admin";
       if (scopeId === "global") {
-        // Scope "global" to the caller's own institution so a global-room
-        // message doesn't blast every user in the database.
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("institution_id")
-          .eq("id", callerUid)
-          .maybeSingle();
-        const institutionId = profile?.institution_id ?? null;
-        ids = institutionId
-          ? await resolveInstitutionMemberIds(supabase, institutionId)
-          : await resolveAllProfileIds(supabase);
+        // Global room is scoped to the caller's own institution; a caller
+        // with no institution may not reach anyone (never fall back to
+        // every profile in the database).
+        const institutionId = callerRow?.institution_id ?? null;
+        if (!institutionId) {
+          throw new Error("Caller has no institution; cannot notify the global room");
+        }
+        ids = await resolveInstitutionMemberIds(supabase, institutionId);
       } else {
         // Every other room id is a department UUID.
+        const { data: dept } = await supabase
+          .from("departments")
+          .select("name")
+          .eq("id", scopeId)
+          .maybeSingle();
+        if (!dept?.name || (!isAdmin && callerRow?.department !== dept.name)) {
+          throw new Error("Caller is not a member of this room");
+        }
         ids = await resolveDepartmentMemberIds(supabase, scopeId);
       }
       break;
@@ -124,7 +137,7 @@ async function resolveRecipients(
         .select("name")
         .eq("id", scopeId)
         .maybeSingle();
-      if (!dept?.name || caller.department !== dept.name) {
+      if (!dept?.name || (caller.role !== "admin" && caller.department !== dept.name)) {
         throw new Error("Caller may only broadcast to their own department");
       }
       ids = await resolveDepartmentMemberIds(supabase, scopeId);
@@ -271,19 +284,35 @@ serve(async (req: Request) => {
         created_at: new Date().toISOString(),
         ...(Object.keys(data).length > 0 ? { data } : {}),
       }));
-      await supabase.from("notifications").insert(rows);
+      // Chunked so a broadcast to thousands of users doesn't hit request
+      // size limits; a failed chunk is logged and the rest still go out.
+      for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+        const { error: insertError } = await supabase
+          .from("notifications")
+          .insert(rows.slice(i, i + CHUNK_SIZE));
+        if (insertError) {
+          console.error("notifications insert failed:", insertError.message);
+        }
+      }
     }
 
-    // 3. Fetch FCM tokens for all recipients
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, fcm_token")
-      .in("id", resolvedIds)
-      .not("fcm_token", "is", null);
-
-    const tokens: string[] = (profiles ?? [])
-      .map((p: { id: string; fcm_token: string | null }) => p.fcm_token!)
-      .filter(Boolean);
+    // 3. Fetch FCM tokens for all recipients. Chunked: .in() puts every id
+    // in the request URL, which overflows URL length limits for large sets.
+    const tokens: string[] = [];
+    for (let i = 0; i < resolvedIds.length; i += CHUNK_SIZE) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, fcm_token")
+        .in("id", resolvedIds.slice(i, i + CHUNK_SIZE))
+        .not("fcm_token", "is", null);
+      if (profilesError) {
+        console.error("fcm token lookup failed:", profilesError.message);
+        continue;
+      }
+      for (const p of (profiles ?? []) as { id: string; fcm_token: string | null }[]) {
+        if (p.fcm_token) tokens.push(p.fcm_token);
+      }
+    }
 
     if (tokens.length === 0) {
       return new Response(
@@ -298,6 +327,7 @@ serve(async (req: Request) => {
     // 5. Send in parallel batches of 100
     const BATCH_SIZE = 100;
     let sent = 0;
+    const staleTokens = new Set<string>();
 
     for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
       const batch = tokens.slice(i, i + BATCH_SIZE);
@@ -317,6 +347,7 @@ serve(async (req: Request) => {
             },
             accessToken,
             projectId,
+            staleTokens,
           )
         ),
       );
@@ -324,6 +355,8 @@ serve(async (req: Request) => {
         (r) => r.status === "fulfilled" && r.value === true,
       ).length;
     }
+
+    await clearStaleFcmTokens(supabase, staleTokens);
 
     return new Response(
       JSON.stringify({ sent, total_recipients: resolvedIds.length, tokens_found: tokens.length }),

@@ -77,6 +77,9 @@ export async function sendFCMMessage(
   data: Record<string, string>,
   accessToken: string,
   projectId: string,
+  // If given, a token FCM reports as UNREGISTERED is added here so the caller
+  // can clear it with clearStaleFcmTokens() instead of retrying it forever.
+  staleTokens?: Set<string>,
 ): Promise<boolean> {
   const res = await fetch(
     `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
@@ -112,14 +115,37 @@ export async function sendFCMMessage(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    // UNREGISTERED / INVALID_ARGUMENT → token is stale, not a real failure
+    // UNREGISTERED → token is stale, not a real failure. INVALID_ARGUMENT is
+    // deliberately NOT treated as stale: it usually means a bad payload
+    // (oversized / non-string data), which must stay visible in the logs.
     const errCode = err?.error?.details?.[0]?.errorCode ?? "";
-    if (errCode === "UNREGISTERED" || errCode === "INVALID_ARGUMENT") {
+    if (errCode === "UNREGISTERED") {
       console.warn(`Stale FCM token (${errCode}), skipping.`);
+      staleTokens?.add(token);
       return false;
     }
     console.error("FCM send error:", JSON.stringify(err));
     return false;
   }
   return true;
+}
+
+/**
+ * Null out profiles.fcm_token for tokens FCM reported as UNREGISTERED. Matches
+ * on the token value itself, so a user who has since registered a fresh token
+ * isn't affected. Best-effort: failures are logged, never thrown, so cleanup
+ * can't break the send that triggered it.
+ */
+// deno-lint-ignore no-explicit-any
+export async function clearStaleFcmTokens(supabase: any, staleTokens: Set<string>): Promise<void> {
+  const tokens = [...staleTokens];
+  const CHUNK = 100; // FCM tokens are long; keep the .in() URL small
+  for (let i = 0; i < tokens.length; i += CHUNK) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ fcm_token: null })
+      .in("fcm_token", tokens.slice(i, i + CHUNK));
+    if (error) console.error("Clearing stale FCM tokens failed:", error.message);
+  }
+  if (tokens.length > 0) console.log(`Cleared ${tokens.length} stale FCM token(s).`);
 }

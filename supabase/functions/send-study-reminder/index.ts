@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
+import { clearStaleFcmTokens, getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
 
 // Periodic, system-triggered reminder — invoked by a pg_cron job (see
 // supabase/migrations/schedule_daily_study_reminder.sql), never by a
@@ -73,6 +73,7 @@ serve(async (req: Request) => {
 
     const BATCH_SIZE = 100;
     let sent = 0;
+    const staleTokens = new Set<string>();
     for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
       const batch = tokens.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
@@ -84,6 +85,7 @@ serve(async (req: Request) => {
             { type: "study_reminder" },
             accessToken,
             projectId,
+            staleTokens,
           )
         ),
       );
@@ -91,6 +93,8 @@ serve(async (req: Request) => {
         (r) => r.status === "fulfilled" && r.value === true,
       ).length;
     }
+
+    await clearStaleFcmTokens(supabase, staleTokens);
 
     return new Response(
       JSON.stringify({ sent, opted_in: tokens.length }),

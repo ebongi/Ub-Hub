@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { isServiceRoleCaller } from "../_shared/auth.ts";
-import { getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
+import { clearStaleFcmTokens, getFCMAccessToken, sendFCMMessage } from "../_shared/fcm.ts";
 
 // Class reminders as FCM pushes. Invoked every minute by pg_cron (see
 // supabase/migrations/20261020120000_schedule_class_reminders.sql): finds the
@@ -169,6 +169,7 @@ serve(async (req: Request) => {
 
     const accessToken = await getFCMAccessToken();
     const pushes: Promise<boolean>[] = [];
+    const staleTokens = new Set<string>();
     for (const [userId, token] of tokenByUser) {
       const slots = (coursesByUser.get(userId) ?? []).flatMap(
         (code) => slotsByCode.get(code) ?? [],
@@ -181,11 +182,12 @@ serve(async (req: Request) => {
       );
       const { title, body } = buildMessage(starting, ongoing);
       pushes.push(
-        sendFCMMessage(token, title, body, { type: "class_reminder" }, accessToken, projectId),
+        sendFCMMessage(token, title, body, { type: "class_reminder" }, accessToken, projectId, staleTokens),
       );
     }
 
     const results = await Promise.allSettled(pushes);
+    await clearStaleFcmTokens(supabase, staleTokens);
     const sent = results.filter((r) => r.status === "fulfilled" && r.value).length;
     return json({ sent, recipients: pushes.length });
   } catch (error) {
